@@ -25,16 +25,15 @@
     "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'. For example johnadmin"
+        "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'. For example: 'cloudadmin'"
       },
-      "defaultValue": "vmadmin"
+      "defaultValue": "cloudadmin"
     },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
         "description": "The password for the administrator account of the new VM and the domain"
-      },
-      "defaultValue": "[concat('Subscription#',subscription().subscriptionId)]"
+      }
     },
     "imageSKU": {
       "type": "string",
@@ -51,7 +50,7 @@
       "type": "int",
       "defaultValue": 1,
       "metadata": {
-        "description": "Number of RemoteDesktopSessionHosts"
+        "description": "Number of Remote Desktop Session Host VMs"
       }
     },
     "rdshVmSize": {
