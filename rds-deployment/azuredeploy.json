@@ -62,7 +62,7 @@
     }
   },
   "variables": {
-    "adAssetLocation": "https://raw.githubusercontent.com/Azure/AzureStack-QuickStart-Templates/master/ad-non-ha",
+    "adAssetLocation": "https://raw.githubusercontent.com/Azure/Azure-QuickStart-Templates/master/active-directory-new-domain",
     "adVMSize": "Standard_A1",
     "adVnetName": "[concat('ADVNET',resourceGroup().name)]",
     "adSubnetName": "[concat('ADStaticSubnet',resourceGroup().name)]",
