@@ -30,10 +30,10 @@
         },
         "rdshVmSize": {
             "type": "string",
-            "defaultValue": "Standard_A2",
             "metadata": {
                 "description": "The size of the RDSH virtual machines"
-            }
+            },
+            "defaultValue": "Standard_A2"
         },
         "userLogoffTimeoutInMinutes": {
             "type": "int",

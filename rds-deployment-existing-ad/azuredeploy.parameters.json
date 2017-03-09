@@ -6,13 +6,7 @@
       "value": "GEN-UNIQUE"
     },
     "adminPassword": {
-        "value": "GEN-PASSWORD"
-    },
-    "existingVnet": {
-      "value": "vnet"
-    },
-    "existingSubnet": {
-      "value": "Subnet"
+      "value": "GEN-PASSWORD"
     }
   }
 }

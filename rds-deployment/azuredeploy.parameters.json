@@ -5,9 +5,6 @@
     "gwdnsLabelPrefix": {
       "value": "GEN-UNIQUE"
     },
-    "adminUsername": {
-      "value": "GEN-UNIQUE"
-    },
     "adminPassword": {
       "value": "GEN-PASSWORD"
     }

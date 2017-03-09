@@ -15,19 +15,19 @@
       },
       "defaultValue": "contoso.com"
     },
-    "existingVnet": {
+    "adVnetName": {
       "type": "string",
-      "defaultValue": "vnet",
       "metadata": {
-        "description": "The VNET name of AD domain. For example johnvnet1"
-      }
+        "description": "The vnet name of AD domain. For example johnvnet1"
+      },
+      "defaultValue": "[concat('ADVNET',resourceGroup().name)]"
     },
-    "existingSubnet": {
+    "adSubnetName": {
       "type": "string",
-      "defaultValue": "Subnet",
       "metadata": {
         "description": "The subnet name of AD domain. For example johnsubnet1"
-      }
+      },
+      "defaultValue": "[concat('ADStaticSubnet',resourceGroup().name)]"
     },
     "adminUsername": {
       "type": "string",
@@ -63,10 +63,25 @@
     },
     "rdshVmSize": {
       "type": "string",
-      "defaultValue": "Standard_A2",
+      "allowedValues": [
+        "Standard_A0",
+        "Standard_A1",
+        "Standard_A2",
+        "Standard_A3",
+        "Standard_A4",
+        "Standard_A5",
+        "Standard_A6",
+        "Standard_A7",
+        "Standard_D1",
+        "Standard_D2",
+        "Standard_D3",
+        "Standard_D4",
+        "Standard_D5"
+      ],
       "metadata": {
         "description": "The size of the RDSH VMs"
-      }
+      },
+      "defaultValue": "Standard_A4"
     }
   },
   "variables": {
@@ -78,7 +93,7 @@
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
     "dnsServerPrivateIp": "10.0.0.4",
-    "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
+    "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('adVnetName')),'/subnets/',parameters('adSubnetName'))]",
     "publicIpRef": "publicIp",
     "brokerIpRef": "brokerpublicIp",
     "gatewayIpRef": "gatewaypublicIp",
