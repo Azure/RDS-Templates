@@ -283,12 +283,7 @@
               ]
             }
           }
-        ],
-        "dnsSettings": {
-          "dnsServers": [
-            "[variables('dnsServerPrivateIp')]"
-          ]
-        }
+        ]
       }
     },
     {
@@ -313,12 +308,7 @@
               }
             }
           }
-        ],
-        "dnsSettings": {
-          "dnsServers": [
-            "[variables('dnsServerPrivateIp')]"
-          ]
-        }
+        ]
       }
     },
     {
@@ -344,12 +334,7 @@
               }
             }
           }
-        ],
-        "dnsSettings": {
-          "dnsServers": [
-            "[variables('dnsServerPrivateIp')]"
-          ]
-        }
+        ]
       }
     },
     {
