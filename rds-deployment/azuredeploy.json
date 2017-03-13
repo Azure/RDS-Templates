@@ -61,70 +61,64 @@
       }
     }
   },
-  "variables": {
-    "adAssetLocation": "https://raw.githubusercontent.com/Azure/AzureStack-QuickStart-Templates/master/ad-non-ha",
-    "adVMSize": "Standard_A1",
-    "adVnetName": "[concat('ADVNET',resourceGroup().name)]",
-    "adSubnetName": "[concat('ADStaticSubnet',resourceGroup().name)]",
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('adVnetName'))]",
-    "staticSubnetID": "[concat(variables('vnetID'),'/subnets/', variables('adSubnetName'))]",
-    "adTemplateURL": "[concat(variables('adAssetLocation'),'/adVmTemplate.json')]",
-    "adStorageName": "[tolower(concat('adsa',uniqueString(resourceGroup().id)))]",
-    "adVmDeployment": "CreateAdVms",
-    "adVmDeploymentId": "[concat('Microsoft.Resources/deployments/', variables('adVmDeployment'))]",
-    "deployPrimaryAdTemplateURL": "[concat(variables('adAssetLocation'),'/deployPrimaryAD.json')]",
-    "deployPrimaryAd": "DeployPrimaryAd",
-    "deployPrimaryAdID": "[concat('Microsoft.Resources/deployments/', variables('deployPrimaryAd'))]",
-    "adPDCVMName": "advm",
-    "vnetwithDNSTemplateURL": "[concat(variables('adAssetLocation'),'/vnet-with-dns-server.json')]",
-    "updateVNetDNS1": "updateVNetDNS",
-    "updateVNetDNS1ID": "[concat('Microsoft.Resources/deployments/', variables('updateVNetDNS1'))]",
-    "nicTemplateURL": "[concat(variables('adAssetLocation'),'/nic.json')]",
-    "publicLBName": "[concat('ADPLB',resourceGroup().name)]",
-    "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
-    "lbFE": "ADLBFE",
-    "rdpNAT": "ADRDPNAT",
-    "publiclbID": "[resourceId('Microsoft.Network/loadBalancers',variables('publicLBName'))]",
-    "publiclbFEConfigID": "[concat(variables('publiclbID'),'/frontendIPConfigurations/',variables('lbFE'))]",
-    "rdpPort": 3389,
-    "adRDPNATRuleID": "[concat(variables('publiclbID'),'/inboundNatRules/',variables('rdpNAT'))]",
-    "adNICName": "[concat('ADNic',resourceGroup().name)]",
-    "lbBE": "ADLBBE",
-    "publicBEAddressPoolID": "[concat(variables('publiclbID'),'/backendAddressPools/',variables('lbBE'))]",
-    "gwLBName": "[concat('GWPLB',resourceGroup().name)]",
-    "publicIPAddressName": "[tolower(concat('adpip',uniqueString(resourceGroup().Id)))]",
-    "gwIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('gwpublicIPAddressName'))]",
-    "gwlbFE": "GWLBFE",
-    "gwlbID": "[resourceId('Microsoft.Network/loadBalancers',variables('gwLBName'))]",
-    "gwlbFEConfigID": "[concat(variables('gwlbID'),'/frontendIPConfigurations/',variables('gwlbFE'))]",
-    "gwlbBE": "GWLBBE",
-    "gwBEAddressPoolID": "[concat(variables('gwlbID'),'/backendAddressPools/',variables('gwlbBE'))]",
-    "dnsLabelPrefix": "[tolower(concat('adns', resourceGroup().name))]",
-    "storageAccountName": "[tolower(concat('rdsa',uniqueString(resourceGroup().id)))]",
-    "storageAccountType": "Standard_LRS",
-    "uniqueStorageAccountContainerName": "[tolower(concat('sc', uniqueString(resourceGroup().id)))]",
-    "imagePublisher": "MicrosoftWindowsServer",
-    "imageOffer": "WindowsServer",
-    "vnetAddressRange": "10.0.0.0/16",
-    "subnetAddressRange": "10.0.0.0/24",
-    "dnsServerPrivateIp": "10.0.0.4",
-    "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('adVnetName')),'/subnets/', variables('adSubnetName'))]",
-    "assetLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment/",
-    "nsgName": "RDSNsg",
-    "nsgID": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
-    "subnets": [
-      {
-        "name": "[variables('adSubnetName')]",
-        "properties": {
-          "addressPrefix": "[variables('subnetAddressRange')]",
-          "networkSecurityGroup": {
-            "id": "[variables('nsgID')]"
-          }
-        }
-      }
-    ]
-
-  },
+    "variables": {
+        "adAssetLocation": "https://raw.githubusercontent.com/Azure/Azure-QuickStart-Templates/master/active-directory-new-domain",
+        "adVMSize": "Standard_A1",
+        "adVnetName": "[concat('ADVNET',resourceGroup().name)]",
+        "adSubnetName": "[concat('ADStaticSubnet',resourceGroup().name)]",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('adVnetName'))]",
+        "staticSubnetID": "[concat(variables('vnetID'),'/subnets/', variables('adSubnetName'))]",
+        "adTemplateURL": "[concat(variables('adAssetLocation'),'/adVmTemplate.json')]",
+        "adStorageName": "[tolower(concat('adsa',uniqueString(resourceGroup().id)))]",
+        "adVmDeployment": "CreateAdVms",
+        "adVmDeploymentId": "[concat('Microsoft.Resources/deployments/', variables('adVmDeployment'))]",
+        "deployPrimaryAdTemplateURL": "[concat(variables('adAssetLocation'),'/deployPrimaryAD.json')]",
+        "deployPrimaryAd": "DeployPrimaryAd",
+        "deployPrimaryAdID": "[concat('Microsoft.Resources/deployments/', variables('deployPrimaryAd'))]",
+        "adPDCVMName": "advm",
+        "vnetwithDNSTemplateURL": "[concat(variables('adAssetLocation'),'/vnet-with-dns-server.json')]",
+        "updateVNetDNS1": "updateVNetDNS",
+        "updateVNetDNS1ID": "[concat('Microsoft.Resources/deployments/', variables('updateVNetDNS1'))]",
+        "nicTemplateURL": "[concat(variables('adAssetLocation'),'/nic.json')]",
+        "publicLBName": "[concat('ADPLB',resourceGroup().name)]",
+        "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
+        "lbFE": "ADLBFE",
+        "publiclbID": "[resourceId('Microsoft.Network/loadBalancers',variables('publicLBName'))]",
+        "lbBE": "ADLBBE",
+        "publicBEAddressPoolID": "[concat(variables('publiclbID'),'/backendAddressPools/',variables('lbBE'))]",
+        "gwLBName": "[concat('GWPLB',resourceGroup().name)]",
+        "publicIPAddressName": "[tolower(concat('adpip',uniqueString(resourceGroup().Id)))]",
+        "gwIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('gwpublicIPAddressName'))]",
+        "gwlbFE": "GWLBFE",
+        "gwlbID": "[resourceId('Microsoft.Network/loadBalancers',variables('gwLBName'))]",
+        "gwlbFEConfigID": "[concat(variables('gwlbID'),'/frontendIPConfigurations/',variables('gwlbFE'))]",
+        "gwlbBE": "GWLBBE",
+        "gwBEAddressPoolID": "[concat(variables('gwlbID'),'/backendAddressPools/',variables('gwlbBE'))]",
+        "dnsLabelPrefix": "[tolower(concat('adns', resourceGroup().name))]",
+        "storageAccountName": "[tolower(concat('rdsa',uniqueString(resourceGroup().id)))]",
+        "storageAccountType": "Standard_LRS",
+        "uniqueStorageAccountContainerName": "[tolower(concat('sc', uniqueString(resourceGroup().id)))]",
+        "imagePublisher": "MicrosoftWindowsServer",
+        "imageOffer": "WindowsServer",
+        "vnetAddressRange": "10.0.0.0/16",
+        "subnetAddressRange": "10.0.0.0/24",
+        "dnsServerPrivateIp": "10.0.0.4",
+        "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('adVnetName')),'/subnets/', variables('adSubnetName'))]",
+        "assetLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment/",
+        "nsgName": "RDSNsg",
+        "nsgID": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
+        "subnets": [
+            {
+                "name": "[variables('adSubnetName')]",
+                "properties": {
+                    "addressPrefix": "[variables('subnetAddressRange')]",
+                    "networkSecurityGroup": {
+                        "id": "[variables('nsgID')]"
+                    }
+                }
+            }
+        ]
+    },
   "resources": [
     {
       "name": "[variables('nsgName')]",
@@ -247,20 +241,6 @@
           {
             "name": "[variables('lbBE')]"
           }
-        ],
-        "inboundNatRules": [
-          {
-            "name": "[variables('rdpNAT')]",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[variables('publiclbFEConfigID')]"
-              },
-              "protocol": "tcp",
-              "frontendPort": "[variables('rdpPort')]",
-              "backendPort": 3389,
-              "enableFloatingIP": false
-            }
-          }
         ]
       }
     },
@@ -290,7 +270,7 @@
         ],
         "loadBalancingRules": [
           {
-            "name": "LBRule01",
+            "name": "https",
             "properties": {
               "frontendIPConfiguration": {
                 "id": "[variables('gwlbFEConfigID')]"
@@ -305,12 +285,12 @@
               "idleTimeoutInMinutes": 5,
               "loadDistribution": "SourceIPProtocol",
               "probe": {
-                "id": "[concat(variables('gwlbID'),'/probes/tcpProbe')]"
+                "id": "[concat(variables('gwlbID'),'/probes/httpsProbe')]"
               }
             }
           },
           {
-            "name": "LBRule02",
+            "name": "udp",
             "properties": {
               "frontendIPConfiguration": {
                 "id": "[variables('gwlbFEConfigID')]"
@@ -325,14 +305,14 @@
               "idleTimeoutInMinutes": 5,
               "loadDistribution": "SourceIPProtocol",
               "probe": {
-                "id": "[concat(variables('gwlbID'),'/probes/tcpProbe')]"
+                "id": "[concat(variables('gwlbID'),'/probes/udpProbe')]"
               }
             }
           }
         ],
         "probes": [
           {
-            "name": "tcpProbe",
+            "name": "httpsProbe",
             "properties": {
               "protocol": "Tcp",
               "port": 443,
@@ -341,7 +321,7 @@
             }
           },
           {
-            "name": "tcpProbe01",
+            "name": "udpProbe",
             "properties": {
               "protocol": "Tcp",
               "port": 3391,
@@ -349,21 +329,6 @@
               "numberOfProbes": 2
             }
           }
-        ],
-        "inboundNatRules": [
-          {
-            "name": "rdp",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[variables('gwlbFEConfigID')]"
-              },
-              "protocol": "tcp",
-              "frontendPort": 3389,
-              "backendPort": 3389,
-              "enableFloatingIP": false
-            }
-          }
-
         ]
       }
     },
@@ -387,9 +352,6 @@
           "adminPassword": {
             "value": "[parameters('adminPassword')]"
           },
-          "adRDPNATRuleID": {
-            "value": "[variables('adRDPNATRuleID')]"
-          },
           "storageAccount": {
             "value": "[variables('adStorageName')]"
           },
@@ -407,9 +369,6 @@
           },
           "vmSize": {
             "value": "[variables('adVMSize')]"
-          },
-          "adDNicName": {
-            "value": "[variables('adNICName')]"
           }
         }
       }
@@ -507,11 +466,6 @@
               "loadBalancerBackendAddressPools": [
                 {
                   "id": "[variables('gwBEAddressPoolID')]"
-                }
-              ],
-              "loadBalancerInboundNatRules": [
-                {
-                  "id": "[concat(variables('gwlbID'),'/inboundNatRules/rdp')]"
                 }
               ]
             }
