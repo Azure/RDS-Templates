@@ -820,5 +820,19 @@
         "typeHandlerVersion": "2.11"
       }
     }
-  ]
+  ],
+  "outputs": {
+    "fqdn": {
+        "type": "string",
+        "value": "[reference(parameters('gwpublicIPAddressName')).dnsSettings.fqdn]"
+    },
+    "ipaddress": {
+        "type": "string",
+        "value": "[reference(parameters('gwpublicIPAddressName')).ipAddress]"
+    },
+    "rdWebUrl": {
+        "type": "string",
+        "value": "[concat('https://', reference(parameters('gwpublicIPAddressName')).dnsSettings.fqdn, '/rdweb')]"
+    }
+  }
 }

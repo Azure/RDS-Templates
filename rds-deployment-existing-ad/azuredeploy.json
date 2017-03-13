@@ -588,5 +588,19 @@
         }
       }
     }
-  ]
+  ],
+  "outputs": {
+    "fqdn": {
+        "type": "string",
+        "value": "[reference(variables('gatewayIpRef')).dnsSettings.fqdn]"
+    },
+    "ipaddress": {
+        "type": "string",
+        "value": "[reference(variables('gatewayIpRef')).ipAddress]"
+    },
+    "rdWebUrl": {
+        "type": "string",
+        "value": "[concat('https://', reference(variables('gatewayIpRef')).dnsSettings.fqdn, '/rdweb')]"
+    }
+  }
 }
