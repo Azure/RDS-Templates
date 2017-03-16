@@ -164,12 +164,10 @@
     "rdGatewayWebHAexistingRDSTemplate": "azuredeploy.json",
     "rdGatewayWebHAexistingRDS": "CreateRDGatewayWebAccessHA",
     "rdGatewayWebHAURL": "[concat(variables('rdGatewayWebHAexistingRDSLocation'),'/',variables('rdGatewayWebHAexistingRDSTemplate'))]",
-    //Location below is temp, needs to chanhe when quick start template location is available
     "sslDeploymentexistingRDSLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-update-certificate",
     "sslDeploymentexistingRDSTemplate": "azuredeploy.json",
     "sslDeploymentexistingRDS": "configureSSLonRDSDeployment",
     "sslDeploymentURL": "[concat(variables('sslDeploymentexistingRDSLocation'),'/',variables('sslDeploymentexistingRDSTemplate'))]",
-    //Location below is temp, needs to chanhe when quick start template location is available
     "RdcbHaDeploymentexistingRDSLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-broker",
     "RdcbHaDeploymentexistingRDSTemplate": "azuredeploy.json",
     "RdcbHaDeploymentexistingRDS": "configureRdcbHaonRDSDeployment",
