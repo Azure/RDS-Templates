@@ -1,4 +1,4 @@
-﻿# Provide High Availability to RD Connection Broker Servers in RDS deployment
+﻿### Provide High Availability to RD Connection Broker Servers in RDS deployment
 
 This template deploys the following resources:
 
