@@ -1,8 +1,8 @@
-﻿### Provide High Availability to RD Connection Broker Servers in RDS deployment
+﻿# Provide High Availability to RD Connection Broker servers in RDS deployment
 
 This template deploys the following resources:
 
-* a second RD Connection Broker VMs (number defined by 'numberOfWebGwInstances' parameter)
+* a second RD Connection Broker VM including a NIC and StorageAccount
 
 The template will
 
@@ -19,6 +19,8 @@ Current Template is an extension to the Basic RDS Deployment Template, and it is
 
 * RDS deployment on pre-existing VNET and AD  
   https://github.com/Azure/azure-quickstart-templates/tree/master/rds-deployment-existing-ad
+
+* An Azure SQL Database, or a VM running SQL Server also needs to be in place to house the RDCB Database
 
 This template expects the same names of resources from RDS deployment, if resource names are changed in your deployment then please edit the parameters and resources accordingly, example of such resources are below:
 <ul>
