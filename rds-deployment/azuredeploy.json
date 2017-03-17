@@ -2,20 +2,20 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "gwdnsLabelPrefix": {
+    "dnsLabelPrefix": {
       "type": "string",
       "metadata": {
-        "description": "Unique gateway public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'. For example johndns1 will result the final RDWEB access url like https://johndns1.westus.cloudapp.azure.com/RDWeb"
+        "description": "Unique gateway public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.<location>.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'. For example johndns1 will result the final RDWEB access url like https://johndns1.westus.cloudapp.azure.com/RDWeb"
       }
     },
-    "gwpublicIPAddressName": {
+    "publicIPAddressName": {
       "type": "string",
       "metadata": {
         "description": "The name of gateway PublicIPAddress object"
       },
       "defaultValue": "gwpip"
     },
-    "adDomainName": {
+    "domainName": {
       "type": "string",
       "metadata": {
         "description": "The name of the AD domain. For example contoso.com"
@@ -25,14 +25,14 @@
     "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'. For example: 'cloudadmin'"
+        "description": "The name of the domain admin. Exclusion list: 'administrator'."
       },
       "defaultValue": "cloudadmin"
     },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The password for the administrator account of the new VM and the domain"
+        "description": "The password for domain admin account. Must meet domain admin password complexity requirements."
       }
     },
     "imageSKU": {
@@ -62,24 +62,22 @@
     }
   },
     "variables": {
-        "adAssetLocation": "https://raw.githubusercontent.com/Azure/Azure-QuickStart-Templates/master/active-directory-new-domain",
+        "adTemplateAssetLocation": "https://raw.githubusercontent.com/Azure/Azure-QuickStart-Templates/master/active-directory-new-domain",
         "adVMSize": "Standard_A1",
-        "adVnetName": "[concat('ADVNET',resourceGroup().name)]",
-        "adSubnetName": "[concat('ADStaticSubnet',resourceGroup().name)]",
-        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('adVnetName'))]",
-        "staticSubnetID": "[concat(variables('vnetID'),'/subnets/', variables('adSubnetName'))]",
-        "adTemplateURL": "[concat(variables('adAssetLocation'),'/adVmTemplate.json')]",
+        "vnetName": "[concat('ADVNET',resourceGroup().name)]",
+        "subnetName": "[concat('ADStaticSubnet',resourceGroup().name)]",
+        "staticSubnetID": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')),'/subnets/', variables('subnetName'))]",
         "adStorageName": "[tolower(concat('adsa',uniqueString(resourceGroup().id)))]",
         "adVmDeployment": "CreateAdVms",
         "adVmDeploymentId": "[concat('Microsoft.Resources/deployments/', variables('adVmDeployment'))]",
-        "deployPrimaryAdTemplateURL": "[concat(variables('adAssetLocation'),'/deployPrimaryAD.json')]",
+        "deployPrimaryAdTemplateURL": "[concat(variables('adTemplateAssetLocation'),'/deployPrimaryAD.json')]",
         "deployPrimaryAd": "DeployPrimaryAd",
         "deployPrimaryAdID": "[concat('Microsoft.Resources/deployments/', variables('deployPrimaryAd'))]",
         "adPDCVMName": "advm",
-        "vnetwithDNSTemplateURL": "[concat(variables('adAssetLocation'),'/vnet-with-dns-server.json')]",
+        "vnetwithDNSTemplateURL": "[concat(variables('adTemplateAssetLocation'),'/vnet-with-dns-server.json')]",
         "updateVNetDNS1": "updateVNetDNS",
         "updateVNetDNS1ID": "[concat('Microsoft.Resources/deployments/', variables('updateVNetDNS1'))]",
-        "nicTemplateURL": "[concat(variables('adAssetLocation'),'/nic.json')]",
+        "nicTemplateURL": "[concat(variables('adTemplateAssetLocation'),'/nic.json')]",
         "publicLBName": "[concat('ADPLB',resourceGroup().name)]",
         "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
         "lbFE": "ADLBFE",
@@ -88,7 +86,7 @@
         "publicBEAddressPoolID": "[concat(variables('publiclbID'),'/backendAddressPools/',variables('lbBE'))]",
         "gwLBName": "[concat('GWPLB',resourceGroup().name)]",
         "publicIPAddressName": "[tolower(concat('adpip',uniqueString(resourceGroup().Id)))]",
-        "gwIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('gwpublicIPAddressName'))]",
+        "gwIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIPAddressName'))]",
         "gwlbFE": "GWLBFE",
         "gwlbID": "[resourceId('Microsoft.Network/loadBalancers',variables('gwLBName'))]",
         "gwlbFEConfigID": "[concat(variables('gwlbID'),'/frontendIPConfigurations/',variables('gwlbFE'))]",
@@ -103,13 +101,13 @@
         "vnetAddressRange": "10.0.0.0/16",
         "subnetAddressRange": "10.0.0.0/24",
         "dnsServerPrivateIp": "10.0.0.4",
-        "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('adVnetName')),'/subnets/', variables('adSubnetName'))]",
+        "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')),'/subnets/', variables('subnetName'))]",
         "assetLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment/",
         "nsgName": "RDSNsg",
         "nsgID": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
         "subnets": [
             {
-                "name": "[variables('adSubnetName')]",
+                "name": "[variables('subnetName')]",
                 "properties": {
                     "addressPrefix": "[variables('subnetAddressRange')]",
                     "networkSecurityGroup": {
@@ -144,7 +142,7 @@
       }
     },
     {
-      "name": "[variables('adVnetName')]",
+      "name": "[variables('vnetName')]",
       "type": "Microsoft.Network/virtualNetworks",
       "location": "[resourceGroup().location]",
       "apiVersion": "2015-06-15",
@@ -159,7 +157,7 @@
         },
         "subnets": [
           {
-            "name": "[variables('adSubnetName')]",
+            "name": "[variables('subnetName')]",
             "properties": {
               "addressPrefix": "[variables('subnetAddressRange')]",
               "networkSecurityGroup": {
@@ -176,27 +174,12 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2015-06-15",
       "dependsOn": [
-        "[variables('vnetID')]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
       ],
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
           "domainNameLabel": "[variables('dnsLabelPrefix')]"
-        }
-      }
-    },
-    {
-      "name": "[parameters('gwpublicIPAddressName')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2015-06-15",
-      "dependsOn": [
-        "[variables('deployPrimaryAdID')]"
-      ],
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('gwdnsLabelPrefix')]"
         }
       }
     },
@@ -217,32 +200,6 @@
       "type": "Microsoft.Compute/availabilitySets",
       "name": "rdsh-availabilityset",
       "location": "[resourceGroup().location]"
-    },
-    {
-      "name": "[variables('publiclbName')]",
-      "type": "Microsoft.Network/loadBalancers",
-      "apiVersion": "2015-06-15",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[variables('publicIPAddressID')]"
-      ],
-      "properties": {
-        "frontendIPConfigurations": [
-          {
-            "name": "[variables('lbFE')]",
-            "properties": {
-              "publicIPAddress": {
-                "id": "[variables('publicIPAddressID')]"
-              }
-            }
-          }
-        ],
-        "backendAddressPools": [
-          {
-            "name": "[variables('lbBE')]"
-          }
-        ]
-      }
     },
     {
       "name": "[variables('gwlbName')]",
@@ -342,7 +299,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[variables('adTemplateURL')]",
+          "uri": "[variables('adTemplateURL')]",   <<< "adTemplateURL": "[concat(variables('adAssetLocation'),'/adVmTemplate.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -383,7 +340,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[variables('deployPrimaryAdTemplateURL')]",
+          "uri": "[variables('deployPrimaryAdTemplateURL')]",    <<< "adTemplateURL": "[concat(variables('adAssetLocation'),'/adVmTemplate.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -391,7 +348,7 @@
             "value": "[variables('adPDCVMName')]"
           },
           "domainName": {
-            "value": "[parameters('adDomainName')]"
+            "value": "[parameters('domainName')]"
           },
           "adminUsername": {
             "value": "[parameters('adminUsername')]"
@@ -400,7 +357,7 @@
             "value": "[parameters('adminPassword')]"
           },
           "assetLocation": {
-            "value": "[variables('adAssetLocation')]"
+            "value": "[variables('adTemplateAssetLocation')]"
           }
         }
       }
@@ -420,7 +377,7 @@
         },
         "parameters": {
           "virtualNetworkName": {
-            "value": "[variables('adVnetName')]"
+            "value": "[variables('vnetName')]"
           },
           "virtualNetworkAddressRange": {
             "value": "[variables('vnetAddressRange')]"
@@ -587,7 +544,7 @@
               "modulesUrl": "[concat(variables('assetLocation'),'/Configuration.zip')]",
               "configurationFunction": "Configuration.ps1\\Gateway",
               "Properties": {
-                "DomainName": "[parameters('adDomainName')]",
+                "DomainName": "[parameters('domainName')]",
                 "AdminCreds": {
                   "UserName": "[parameters('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
@@ -672,7 +629,7 @@
               "ModulesUrl": "[concat(variables('assetLocation'),'/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\SessionHost",
               "Properties": {
-                "DomainName": "[parameters('adDomainName')]",
+                "DomainName": "[parameters('domainName')]",
                 "AdminCreds": {
                   "UserName": "[parameters('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
@@ -762,12 +719,12 @@
               "UserName": "[parameters('adminUsername')]",
               "Password": "PrivateSettingsRef:adminPassword"
             },
-            "connectionBroker": "[concat('broker.',parameters('adDomainName'))]",
-            "domainName": "[parameters('adDomainName')]",
-            "externalfqdn": "[reference(parameters('gwpublicIPAddressName')).dnsSettings.fqdn]",
+            "connectionBroker": "[concat('broker.',parameters('domainName'))]",
+            "domainName": "[parameters('domainName')]",
+            "externalfqdn": "[reference(parameters('publicIPAddressName')).dnsSettings.fqdn]",
             "numberOfRdshInstances": "[parameters('numberOfRdshInstances')]",
             "sessionHostNamingPrefix": "rdsh-",
-            "webAccessServer": "[concat('gateway.',parameters('adDomainName'))]"
+            "webAccessServer": "[concat('gateway.',parameters('domainName'))]"
           }
         },
         "type": "DSC",
@@ -778,15 +735,15 @@
   "outputs": {
     "fqdn": {
         "type": "string",
-        "value": "[reference(parameters('gwpublicIPAddressName')).dnsSettings.fqdn]"
+        "value": "[reference(parameters('publicIPAddressName')).dnsSettings.fqdn]"
     },
     "ipaddress": {
         "type": "string",
-        "value": "[reference(parameters('gwpublicIPAddressName')).ipAddress]"
+        "value": "[reference(parameters('publicIPAddressName')).ipAddress]"
     },
     "rdWebUrl": {
         "type": "string",
-        "value": "[concat('https://', reference(parameters('gwpublicIPAddressName')).dnsSettings.fqdn, '/rdweb')]"
+        "value": "[concat('https://', reference(parameters('publicIPAddressName')).dnsSettings.fqdn, '/rdweb')]"
     }
   }
 }
