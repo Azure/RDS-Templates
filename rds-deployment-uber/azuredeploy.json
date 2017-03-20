@@ -373,13 +373,13 @@
           "brokerVmName": {
             "value": "[variables('brokerVmName')]"
           },
-          "existingAdminUsername": {
+          "adminUsername": {
             "value": "[parameters('adminUsername')]"
           },
-          "existingAdminPassword": {
+          "adminPassword": {
             "value": "[parameters('adminPassword')]"
           },
-          "existingAdDomainName": {
+          "adDomainName": {
             "value": "[parameters('adDomainName')]"
           }
         }

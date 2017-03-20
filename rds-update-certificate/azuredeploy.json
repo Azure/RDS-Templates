@@ -39,21 +39,21 @@
       },
       "defaultValue": "cb-vm"
     },
-    "existingAdminUsername": {
+    "adminUsername": {
       "type": "string",
       "metadata": {
         "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator"
       },
       "defaultValue": "vmadmin"
     },
-    "existingAdminPassword": {
+    "adminPassword": {
       "type": "securestring",
       "metadata": {
         "description": "The password for the administrator account of the new VM and the domain"
       },
       "defaultValue": "[concat('Subscription#',subscription().subscriptionId)]"
     },
-    "existingAdDomainName": {
+    "adDomainName": {
       "type": "string",
       "metadata": {
         "description": "The FQDN of the AD domain"
@@ -70,9 +70,9 @@
       "tenantid": "[concat(' -tenantId ', parameters('tenantId'))]",
       "vault": "[concat(' -vaultName ', parameters('vaultName'))]",
       "secret": "[concat(' -secretName ', parameters('certificateName'))]",
-      "adminUsername": "[concat(' -adminUsername ', parameters('existingAdminUsername'))]",
-      "adminPassword": "[concat(' -adminPassword ', parameters('existingAdminPassword'))]",
-      "adDomainName": "[concat(' -adDomainName ', parameters('existingAdDomainName'))]"
+      "adminUsername": "[concat(' -adminUsername ', parameters('adminUsername'))]",
+      "adminPassword": "[concat(' -adminPassword ', parameters('adminPassword'))]",
+      "adDomainName": "[concat(' -adDomainName ', parameters('adDomainName'))]"
     },
     "scriptParameters": "[concat(variables('p').appid, variables('p').apppassword, variables('p').tenantid, variables('p').vault, variables('p').secret, variables('p').adminUsername, variables('p').adminPassword, variables('p').adDomainName)]",
     "scriptFolder": "Scripts",
