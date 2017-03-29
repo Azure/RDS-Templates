@@ -1,6 +1,0 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
-/rds-deployment/deploy.ps1
-/rds-deployment/rds-724929a8-aa00-4139-bf8f-6993254e640a.log
