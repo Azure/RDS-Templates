@@ -598,42 +598,40 @@
                         }
                     ]
                 }
-            }
-        },
-        {
-            "apiVersion": "2016-04-30-preview",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "location": "[resourceGroup().location]",
-            "copy": {
-                "name": "rdsh-vm-extensions-loop",
-                "count": "[parameters('numberOfRdshInstances')]"
             },
-            "name": "[concat('rdsh-', copyindex(), '/configuration')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex()))]"
-            ],
-            "properties": {
-                "type": "DSC",
-                "publisher": "Microsoft.Powershell",
-                "typeHandlerVersion": "2.21",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip', parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\SessionHost",
-                    "Properties": {
-                        "domainName": "[parameters('domainName')]",
-                        "adminCreds": {
-                            "userName": "[parameters('adminUsername')]",
-                            "password": "PrivateSettingsRef:adminPassword"
+            "resources": [
+                {
+                    "apiVersion": "2016-04-30-preview",
+                    "type": "extensions",
+                    "name": "configuration",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex()))]"
+                    ],
+                    "properties": {
+                        "type": "DSC",
+                        "publisher": "Microsoft.Powershell",
+                        "typeHandlerVersion": "2.21",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip', parameters('_artifactsLocationSasToken'))]",
+                            "configurationFunction": "Configuration.ps1\\SessionHost",
+                            "Properties": {
+                                "domainName": "[parameters('domainName')]",
+                                "adminCreds": {
+                                    "userName": "[parameters('adminUsername')]",
+                                    "password": "PrivateSettingsRef:adminPassword"
+                                }
+                            }
+                        },
+                        "protectedSettings": {
+                            "Items": {
+                                "adminPassword": "[parameters('adminPassword')]"
+                            }
                         }
                     }
-                },
-                "protectedSettings": {
-                    "Items": {
-                        "adminPassword": "[parameters('adminPassword')]"
-                    }
                 }
-            }
+            ]
         },
         {
             "apiVersion": "2016-04-30-preview",
@@ -681,7 +679,7 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Compute/virtualMachines', 'cb-vm')]",
                 "[resourceId('Microsoft.Compute/virtualMachines', 'gw-vm')]",
-                "rdsh-vm-extensions-loop"
+                "rdsh-vm-loop"
             ],
             "properties": {
                 "type": "DSC",
