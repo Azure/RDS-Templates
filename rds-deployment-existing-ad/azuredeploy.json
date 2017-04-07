@@ -32,16 +32,15 @@
     "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'. For example johnadmin"
+        "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'. For example: johnadmin"
       },
-      "defaultValue": "vmadmin"
+      "defaultValue": "cloudadmin"
     },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
         "description": "The password for the administrator account of the new VM and the domain"
-      },
-      "defaultValue": "[concat('Subscription#',subscription().subscriptionId)]"
+      }
     },
     "imageSKU": {
       "type": "string",
@@ -174,7 +173,7 @@
         ],
         "loadBalancingRules": [
           {
-            "name": "LBRule01",
+            "name": "https",
             "properties": {
               "frontendIPConfiguration": {
                 "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadbalancer'),'/frontendIPConfigurations/LBFE')]"
@@ -189,12 +188,12 @@
               "idleTimeoutInMinutes": 5,
               "loadDistribution": "SourceIPProtocol",
               "probe": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadbalancer'),'/probes/tcpProbe')]"
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadbalancer'),'/probes/httpsProbe')]"
               }
             }
           },
           {
-            "name": "LBRule02",
+            "name": "udp",
             "properties": {
               "frontendIPConfiguration": {
                 "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadbalancer'),'/frontendIPConfigurations/LBFE')]"
@@ -209,14 +208,14 @@
               "idleTimeoutInMinutes": 5,
               "loadDistribution": "SourceIPProtocol",
               "probe": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadbalancer'),'/probes/tcpProbe')]"
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadbalancer'),'/probes/udpProbe')]"
               }
             }
           }
         ],
         "probes": [
           {
-            "name": "tcpProbe",
+            "name": "httpsProbe",
             "properties": {
               "protocol": "Tcp",
               "port": 443,
@@ -225,7 +224,7 @@
             }
           },
           {
-            "name": "tcpProbe01",
+            "name": "udpProbe",
             "properties": {
               "protocol": "Tcp",
               "port": 3391,
@@ -233,21 +232,6 @@
               "numberOfProbes": 2
             }
           }
-        ],
-        "inboundNatRules": [
-          {
-            "name": "rdp",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadBalancer'),'/frontendIPConfigurations/LBFE')]"
-              },
-              "protocol": "tcp",
-              "frontendPort": 3389,
-              "backendPort": 3389,
-              "enableFloatingIP": false
-            }
-          }
-
         ]
       }
     },
@@ -275,20 +259,10 @@
                 {
                   "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadBalancer'),'/backendAddressPools/LBBAP')]"
                 }
-              ],
-              "loadBalancerInboundNatRules": [
-                {
-                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadBalancer'),'/inboundNatRules/rdp')]"
-                }
               ]
             }
           }
-        ],
-        "dnsSettings": {
-          "dnsServers": [
-            "[variables('dnsServerPrivateIp')]"
-          ]
-        }
+        ]
       }
     },
     {
@@ -313,12 +287,7 @@
               }
             }
           }
-        ],
-        "dnsSettings": {
-          "dnsServers": [
-            "[variables('dnsServerPrivateIp')]"
-          ]
-        }
+        ]
       }
     },
     {
@@ -344,12 +313,7 @@
               }
             }
           }
-        ],
-        "dnsSettings": {
-          "dnsServers": [
-            "[variables('dnsServerPrivateIp')]"
-          ]
-        }
+        ]
       }
     },
     {
@@ -603,5 +567,19 @@
         }
       }
     }
-  ]
+  ],
+  "outputs": {
+    "fqdn": {
+        "type": "string",
+        "value": "[reference(variables('gatewayIpRef')).dnsSettings.fqdn]"
+    },
+    "ipaddress": {
+        "type": "string",
+        "value": "[reference(variables('gatewayIpRef')).ipAddress]"
+    },
+    "rdWebUrl": {
+        "type": "string",
+        "value": "[concat('https://', reference(variables('gatewayIpRef')).dnsSettings.fqdn, '/rdweb')]"
+    }
+  }
 }
