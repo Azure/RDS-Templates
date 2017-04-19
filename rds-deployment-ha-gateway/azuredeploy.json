@@ -249,7 +249,7 @@
         "count": "[parameters('numberOfWebGwInstances')]"
       },
       "dependsOn": [
-        "resourceId('Microsoft.Network/loadBalancers',parameters('loadBalancer'))"
+        "concat('Microsoft.Network/loadBalancers',parameters('loadBalancer'))"
       ],
       "properties": {
         "ipConfigurations": [
