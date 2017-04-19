@@ -248,9 +248,7 @@
         "name": "gw-nic-loop",
         "count": "[parameters('numberOfWebGwInstances')]"
       },
-      "dependsOn": [
-        "concat('Microsoft.Network/loadBalancers/',parameters('loadBalancer'))"
-      ],
+      "dependsOn": [],
       "properties": {
         "ipConfigurations": [
           {
