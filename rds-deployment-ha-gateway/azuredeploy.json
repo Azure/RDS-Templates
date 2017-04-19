@@ -249,7 +249,7 @@
         "count": "[parameters('numberOfWebGwInstances')]"
       },
       "dependsOn": [
-        "Microsoft.Network/loadBalancers/loadBalancer"
+        "resourceId('Microsoft.Network/loadBalancers',parameters('loadBalancer'))"
       ],
       "properties": {
         "ipConfigurations": [
@@ -262,7 +262,7 @@
               },
               "loadBalancerBackendAddressPools": [
                 {
-                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadBalancer'),'/backendAddressPools/',parameters('backendAddressPools'))]"
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('loadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
                 }
               ]
             }
