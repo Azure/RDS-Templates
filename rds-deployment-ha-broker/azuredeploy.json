@@ -106,7 +106,7 @@
     },
     "scriptParameters": "[concat(variables('p').broker, variables('p').connstr, variables('p').domain, variables('p').user, variables('p').pwd, variables('p').can, variables('p').sqlnclient, variables('p').dnsserver, variables('p').sqlserver)]",
     "assetLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment",
-    "scriptLocation": "https://rdsonazureiaas9114.blob.core.windows.net/msftrdsdeployment",
+    "scriptLocation": "https://raw.githubusercontent.com/Alan-AcutePath/RDS-Templates/master/rds-deployment-ha-broker/Scripts",
     "scriptFileName": "RdcbHaPostConfig.ps1",
     "impersonateScript": "https://gallery.technet.microsoft.com/scriptcenter/Impersonate-a-User-9bfeff82/file/127189/1/New-ImpersonateUser.ps1"
   },
