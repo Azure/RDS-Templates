@@ -20,7 +20,7 @@ param
      [string]$clientAccessName,
      [string]$sqlClientUrl,
      [string]$dnsServer,
-     [string]$sqlServer
+     [string]$sqlServer=""
     ) 
 
 $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
@@ -215,7 +215,10 @@ function SetupCB($compName, $clientURL)
     throw
  } 
  Write-Output "Setting up Group membership for $compName on SQL"
- SetupGroups $sqlServer $compName $domainNetbios
+ if(![string]::IsNullOrEmpty($sqlServer)) # only run if $sqlServer is not null
+ {
+	SetupGroups $sqlServer $compName $domainNetbios
+ }
 }
 
 Function WriteLog
