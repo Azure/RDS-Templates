@@ -47,7 +47,7 @@ param(
 
 	#  install AzureRM module
 	#
-	if (-not (get-module AzureRM))
+	if (-not (get-module AzureRM*))
 	{
 		log "installing AzureRm powershell module..."
 		install-module AzureRM -force
