@@ -15,9 +15,16 @@
       },
       "defaultValue": "loadBalancer"
     },
+    "publicIpRef": {
+      "type": "string",
+      "metadata": {
+        "description": "The Pulib IP name must match from the RDS deployment."
+      },
+      "defaultValue": "loadBalancer"
+    },
     "backendAddressPools": {
       "type": "string",
-      "defaultValue": "LBBAP",
+      "defaultValue": "LBBE",
       "metadata": {
         "description": "The backendAddressPools name must match from the RDS deployment. And default value taken by template is LBBAP."
       }
@@ -118,7 +125,6 @@
     "subnetAddressRange": "10.0.0.0/24",
     "dnsServerPrivateIp": "10.0.0.8",
     "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
-    "publicIpRef": "publicIp",
     "assetLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment",
     "apiVersion": "2015-06-15",
     "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]"
@@ -142,7 +148,7 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIpRef')]",
+      "name": "[parameters('publicIpRef')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
@@ -157,15 +163,15 @@
       "name": "[Parameters('Loadbalancer')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/',variables('publicIpRef'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/',parameters('publicIpRef'))]"
       ],
       "properties": {
         "frontendIPConfigurations": [
           {
-            "name": "LBFE",
+            "name": "LBFEConfig",
             "properties": {
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIpRef'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIpRef'))]"
               }
             }
           }
@@ -180,7 +186,7 @@
             "name": "https",
             "properties": {
               "frontendIPConfiguration": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/frontendIPConfigurations/LBFE')]"
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/frontendIPConfigurations/LBFEConfig')]"
               },
               "backendAddressPool": {
                 "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
@@ -200,7 +206,7 @@
             "name": "udp",
             "properties": {
               "frontendIPConfiguration": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/frontendIPConfigurations/LBFE')]"
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/frontendIPConfigurations/LBFEConfig')]"
               },
               "backendAddressPool": {
                 "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
@@ -279,7 +285,7 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
-        "[resourceId('Microsoft.Compute/availabilitySets', 'gw-availabilityset')]",
+        "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]",
         "[concat('Microsoft.Network/networkInterfaces/gw-',copyindex(),'-nic')]"
       ],
       "properties": {
@@ -287,7 +293,7 @@
           "vmSize": "[parameters('vmSize')]"
         },
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', 'gw-availabilityset')]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]"
         },
         "osProfile": {
           "computerName": "[concat('gateway',copyindex())]",
@@ -365,7 +371,7 @@
             "typeHandlerVersion": "1.8",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "fileUris": [ "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1" ]
+              "fileUris": [ "https://raw.githubusercontent.com/Alan-AcutePath/RDS-Templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1" ]
             },
             "protectedSettings": {
               "Items": { "AdminPassword": "[parameters('adminPassword')]" },
