@@ -15,13 +15,6 @@
       },
       "defaultValue": "loadBalancer"
     },
-    "publicIpRef": {
-      "type": "string",
-      "metadata": {
-        "description": "The Pulib IP name must match from the RDS deployment."
-      },
-      "defaultValue": "loadBalancer"
-    },
     "backendAddressPools": {
       "type": "string",
       "defaultValue": "LBBE",
@@ -155,94 +148,6 @@
         "dnsSettings": {
           "domainNameLabel": "[parameters('dnsLabelPrefix')]"
         }
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/loadBalancers",
-      "name": "[Parameters('Loadbalancer')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/',parameters('publicIpRef'))]"
-      ],
-      "properties": {
-        "frontendIPConfigurations": [
-          {
-            "name": "LBFEConfig",
-            "properties": {
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIpRef'))]"
-              }
-            }
-          }
-        ],
-        "backendAddressPools": [
-          {
-            "name": "[parameters('backendAddressPools')]"
-          }
-        ],
-        "loadBalancingRules": [
-          {
-            "name": "https",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/frontendIPConfigurations/LBFEConfig')]"
-              },
-              "backendAddressPool": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
-              },
-              "protocol": "Tcp",
-              "frontendPort": 443,
-              "backendPort": 443,
-              "enableFloatingIP": false,
-              "idleTimeoutInMinutes": 5,
-              "loadDistribution": "SourceIPProtocol",
-              "probe": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/probes/httpsProbe')]"
-              }
-            }
-          },
-          {
-            "name": "udp",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/frontendIPConfigurations/LBFEConfig')]"
-              },
-              "backendAddressPool": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
-              },
-              "protocol": "Tcp",
-              "frontendPort": 3391,
-              "backendPort": 3391,
-              "enableFloatingIP": false,
-              "idleTimeoutInMinutes": 5,
-              "loadDistribution": "SourceIPProtocol",
-              "probe": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/probes/udpProbe')]"
-              }
-            }
-          }
-        ],
-        "probes": [
-          {
-            "name": "httpsProbe",
-            "properties": {
-              "protocol": "Tcp",
-              "port": 443,
-              "intervalInSeconds": 5,
-              "numberOfProbes": 2
-            }
-          },
-          {
-            "name": "udpProbe",
-            "properties": {
-              "protocol": "Tcp",
-              "port": 3391,
-              "intervalInSeconds": 5,
-              "numberOfProbes": 2
-            }
-          }
-        ]
       }
     },
     {
