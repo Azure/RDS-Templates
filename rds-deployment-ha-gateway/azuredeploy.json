@@ -8,12 +8,19 @@
         "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
       }
     },
-    "loadBalancer": {
+    "gatewayloadBalancer": {
       "type": "string",
       "metadata": {
-        "description": "The Loadbalancer name must match from the RDS deployment. And default value taken by template is loadbalancer."
+        "description": "The gateway Loadbalancer name must match from the RDS deployment. And default value taken by template is loadbalancer."
       },
       "defaultValue": "loadBalancer"
+    },
+    "gatewaypublicip": {
+      "type": "string",
+      "metadata": {
+        "description": "The gateway public ip name must match from the RDS deployment. And default value taken by template is gwpip."
+      },
+      "defaultValue": "gwpip"
     },
     "backendAddressPools": {
       "type": "string",
@@ -141,7 +148,7 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[parameters('publicIpRef')]",
+      "name": "[parameters('gatewaypublicip')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
@@ -171,7 +178,7 @@
               },
               "loadBalancerBackendAddressPools": [
                 {
-                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('loadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('gatewayloadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
                 }
               ]
             }
