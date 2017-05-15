@@ -35,7 +35,7 @@ This template expects the same names of resources from RDS deployment, if resour
 
 Click the button below to deploy
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAlan-AcutePath%2FRDS-Templates%2Fmaster%2Frds-deployment-ha-broker%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2Frds-deployment-ha-broker%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 <a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-templates%2Fmaster%2Frds-deployment-ha-broker%2Fazuredeploy.json" target="_blank">

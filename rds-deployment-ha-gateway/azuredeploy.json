@@ -8,14 +8,14 @@
         "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
       }
     },
-    "gatewayloadBalancer": {
+    "gatewayLoadBalancer": {
       "type": "string",
       "metadata": {
-        "description": "The gateway Loadbalancer name must match from the RDS deployment. And default value taken by template is loadbalancer."
+        "description": "The gateway Load balancer name must match from the RDS deployment. And default value taken by template is loadbalancer."
       },
       "defaultValue": "loadBalancer"
     },
-    "gatewaypublicip": {
+    "gatewayPublicip": {
       "type": "string",
       "metadata": {
         "description": "The gateway public ip name must match from the RDS deployment. And default value taken by template is gwpip."
@@ -24,7 +24,7 @@
     },
     "backendAddressPools": {
       "type": "string",
-      "defaultValue": "LBBE",
+      "defaultValue": "LBBAP",
       "metadata": {
         "description": "The backendAddressPools name must match from the RDS deployment. And default value taken by template is LBBAP."
       }
@@ -166,7 +166,6 @@
         "name": "gw-nic-loop",
         "count": "[parameters('numberOfWebGwInstances')]"
       },
-      "dependsOn": [],
       "properties": {
         "ipConfigurations": [
           {
@@ -178,7 +177,7 @@
               },
               "loadBalancerBackendAddressPools": [
                 {
-                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('gatewayloadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('gatewayLoadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
                 }
               ]
             }
@@ -283,7 +282,7 @@
             "typeHandlerVersion": "1.8",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "fileUris": [ "https://raw.githubusercontent.com/Alan-AcutePath/RDS-Templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1" ]
+              "fileUris": [ "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1" ]
             },
             "protectedSettings": {
               "Items": { "AdminPassword": "[parameters('adminPassword')]" },
