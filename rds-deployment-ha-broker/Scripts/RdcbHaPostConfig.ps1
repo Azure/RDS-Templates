@@ -24,7 +24,7 @@ param
     ) 
 
 $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
-$domainNetbios = (Get-ADDomain -Current LocalComputer).NetBIOSName
+$domainNetbios = (Get-WmiObject Win32_NTDomain -Filter "DnsForestName = '$((Get-WmiObject Win32_ComputerSystem).Domain)'").DomainName
 $username = $domainNetbios + "\" + $Username
 $cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
 
@@ -38,7 +38,7 @@ $ConfigData = @{
 } # End of Config Data
 
 $Logfile = ".\CB_PostConfig1.1_{0}.log" -f (get-date -Format "yyyyMMddhhmmss")
- 
+ï¿½
 function GetServersByRole($roleName)
 {
     $RemoteSqlOdbcconn = new-object System.Data.Odbc.OdbcConnection	
@@ -220,10 +220,10 @@ function SetupCB($compName, $clientURL)
 
 Function WriteLog
 {
-   Param ([string]$logstring)
- 
-   Add-content $Logfile -value $logstring
-   Write-Host $logstring
+ï¿½ï¿½ Param ([string]$logstring)
+ï¿½
+ï¿½ï¿½ Add-content $Logfile -value $logstring
+ï¿½ï¿½ Write-Host $logstring
 }
 
 WriteLog("Starting PostConfig on machine $($localhost)")
