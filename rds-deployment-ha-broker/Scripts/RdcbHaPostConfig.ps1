@@ -20,7 +20,7 @@ param
      [string]$clientAccessName,
      [string]$sqlClientUrl,
      [string]$dnsServer,
-     [string]$sqlServer=""
+     [string]$sqlServer
     ) 
 
 $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName

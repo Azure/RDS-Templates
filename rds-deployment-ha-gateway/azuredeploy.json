@@ -15,7 +15,7 @@
       },
       "defaultValue": "loadBalancer"
     },
-    "gatewayPublicip": {
+    "gatewayPublicIp": {
       "type": "string",
       "metadata": {
         "description": "The gateway public ip name must match from the RDS deployment. And default value taken by template is gwpip."
@@ -148,7 +148,7 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[parameters('gatewayPublicip')]",
+      "name": "[parameters('gatewayPublicIp')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
