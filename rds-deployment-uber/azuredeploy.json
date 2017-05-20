@@ -160,7 +160,7 @@
     "basicRDSDeploymentexistingADTemplate": "azuredeploy.json",
     "basicRDSDeploymentexistingAD": "CreateBasicRDSDeploymentExistingAD",
     "basicRDSDeploymentURL": "[concat(variables('basicRDSDeploymentexistingADLocation'),'/',variables('basicRDSDeploymentexistingADTemplate'))]",
-    "rdGatewayWebHAexistingRDSLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway",
+    "rdGatewayWebHAexistingRDSLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway",
     "rdGatewayWebHAexistingRDSTemplate": "azuredeploy.json",
     "rdGatewayWebHAexistingRDS": "CreateRDGatewayWebAccessHA",
     "rdGatewayWebHAURL": "[concat(variables('rdGatewayWebHAexistingRDSLocation'),'/',variables('rdGatewayWebHAexistingRDSTemplate'))]",
