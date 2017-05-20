@@ -173,6 +173,7 @@
     "RdcbHaDeploymentexistingRDS": "configureRdcbHaonRDSDeployment",
     "RdcbHaDeploymentURL": "[concat(variables('RdcbHaDeploymentexistingRDSLocation'),'/',variables('RdcbHaDeploymentexistingRDSTemplate'))]",
     "loadBalancer": "loadBalancer",
+    "gwdnsLabelPrefix": "[concat('gwd', resourceGroup().name)]",
     "gatewaypublicIp": "gatewaypublicIp",
     "backEndAddressPool": "LBBAP",
     "rdgwAvailabilitySet": "gw-availabilityset",
@@ -242,7 +243,7 @@
         },
         "parameters": {
           "dnsLabelPrefix": {
-            "value": "[parameters('dnsLabelPrefix')]"
+            "value": "[variables('gwdnsLabelPrefix')]"
           },
           "gatewayLoadBalancer": {
             "value": "[variables('loadBalancer')]"
