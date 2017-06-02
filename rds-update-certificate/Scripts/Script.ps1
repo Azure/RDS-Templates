@@ -38,7 +38,7 @@ param(
 	#  requires WMF 5.0
 
 	#  verify NuGet package
-	$nuget = get-packageprovider nuget
+	$nuget = get-packageprovider nuget -Force
 	if (-not $nuget -or ($nuget.Version -lt 2.8.5.22))
 	{
 		log "installing nuget package..."
@@ -47,7 +47,7 @@ param(
 
 	#  install AzureRM module
 	#
-	if (-not (get-module AzureRM))
+	if (-not (get-module AzureRM*))
 	{
 		log "installing AzureRm powershell module..."
 		install-module AzureRM -force
