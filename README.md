@@ -5,15 +5,14 @@ This repository contains latest version of RDS deployment templates and DSC reso
 [![Build Status](https://travis-ci.org/Azure/RDS-Templates.svg?branch=master)](https://travis-ci.org/Azure/RDS-Templates)
 
 ### Issues
-Current issues list: [Issues](https://github.com/Azure/rds-templates/issues)
-Old location: [mmarch/issues](https://github.com/mmarch/rds-templates/issues)
+New/current issue tracking location:  [Issues](https://github.com/Azure/rds-templates/issues)   &nbsp; &nbsp;   Old list: [mmarch/rds-templates/Issues](https://github.com/mmarch/rds-templates/issues)
 
 ### Branches
 
 * **master**  
  Main branch, latest stable code (must be a working version, must pass CI tests).  
  Please avoid direct check-ins into master. Any dev work should happen in personal forks and develop branches, and then merged into master via pull requests.
-* **release-yymm**  
+* **release-&lt;yymm&gt;**  
  Branch for merges into and from Azure/azure-quickstart-templates repo. For any pending pull request into azure-quickstart-templates repo the branch is frozen till the PR is merged.
 
 ### Quick links
