@@ -93,6 +93,7 @@ $foundcert = $false
 $san = $false
 
 # look for enhanced key usage having 'server authentication' and ca false
+#
 foreach ($cert in $certCollection)
 {
     if (!($cert.Extensions.CertificateAuthority) -and $cert.EnhancedKeyUsageList -imatch "Server Authentication")
@@ -207,7 +208,7 @@ if ($gatewayConfig -and $gatewayConfig.GatewayExternalFqdn)
     # if one of the local ip addresses matches dns lookup for 'clientaccessname'.%certSubject%
     # then modify clientaccessname suffix to match external suffix for sso
     # if it does not match, do not modify as it will break connection
-
+    #
     if ($haDeployment)
     {
         $oldClientAccessName = (Get-RDConnectionBrokerHighAvailability).ClientAccessName
@@ -228,6 +229,7 @@ if ($gatewayConfig -and $gatewayConfig.GatewayExternalFqdn)
     # check dns to see if oldClientAccessNamePrefix with external domain suffix from cert resolves to one of the ips on broker
     # if so, change client access name
     # this requires a wildcard or san cert
+    #
     $newClientAccessName = "$($newClientAccessNamePrefix).$($certSuffix)"
 
     if ($wildcard -or ($san -and $cert.DnsNameList.Unicode -imatch $newClientAccessName))
@@ -244,21 +246,63 @@ if ($gatewayConfig -and $gatewayConfig.GatewayExternalFqdn)
             {
                 log "local address was found in dns query using external suffix"
                 $clientAccessName = $newClientAccessName
+                $continue = $true
+
+                # update rap on all gateways to include new client access name
+                #
+                foreach ($server in (Get-RDServer -Role RDS-GATEWAY).Server)
+                {
+                    $wmi = Get-WmiObject -ComputerName $server -Namespace root\cimv2\terminalservices `
+                        -Class Win32_TSGatewayResourceGroup | Where-Object Name -eq RDG_DNSRoundRobin
+    
+                    if ($wmi -and $wmi.Resources -inotmatch $clientAccessName)
+                    {
+                        $ret = $wmi.InvokeMethod("AddResources", $clientAccessName)
+                        if ($ret -eq 0)
+                        {
+                            log "updated rap on gateway $server"
+                        }
+                        else
+                        {
+                            log "unable to update rap on gateway  $server"
+                            $continue = $false
+                        }
+                    }
+                    elseif (!$wmi)
+                    {
+                        log "unable to connect to gateway $server"
+                        $continue = $false
+                    }
+                    else
+                    {
+                        log "gateway $server rap already contains $clientAccessName"
+                    }
+
+                    # dont error but dont continue if above fails
+                    #
+                    if (!$continue)
+                    {
+                        break
+                    }
+                } # end for
 
                 if ($haDeployment)
                 {
+                    log "setting client access name for ha sso"
                     $ret = Set-RDClientAccessName -ClientAccessName $clientAccessName
                 }
                 else
                 {
+                    log "setting client access name for sso"
                     # from https://gallery.technet.microsoft.com/Change-published-FQDN-for-2a029b80
                     $ret = $wmi.SetStringProperty("DeploymentRedirectorServer", $clientAccessName).ReturnValue			
                 }
-            }
-        }
-    }
+            } # end if dns match
+        } # end if ips resolved
+    } # end if wildcard or san check
 
     log "setting new client access name to '$clientAccessName'..."
+        
     if ($wildcard)
     {
         $gatewayExternalFQDN = $externalDomainName + '.' + $certSuffix
@@ -279,21 +323,16 @@ if ($gatewayConfig -and $gatewayConfig.GatewayExternalFqdn)
         -BypassLocal $gatewayConfig.BypassLocal `
         -Force
 
-    log "Set-RDDeploymentGatewayConfiguration return value: '$ret'"
-
     $gatewayConfig = get-rddeploymentgatewayconfiguration
     $gatewayConfig | format-list *
-
 }
 	
 #  apply certificate
 #
-
-$roles = @("RDGateway", "RDWebAccess", "RDRedirector", "RDPublishing")
-$roles | ForEach-Object `
+foreach ($role in @("RDGateway", "RDWebAccess", "RDRedirector", "RDPublishing"))
 {
-    log "applying certificate for role: $_..."
-    set-rdcertificate -role $_ -importpath $pfxFilePath -password (convertto-securestring $password -asplaintext -force) -force
+    log "applying certificate for role: $role ..."
+    set-rdcertificate -role $role -importpath $pfxFilePath -password (convertto-securestring $password -asplaintext -force) -force
 }
 
 $gatewayConfig
