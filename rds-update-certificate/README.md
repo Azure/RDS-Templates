@@ -46,8 +46,8 @@ The following certificate types can be used for authentication into an RDS envir
 
 + Self-signed / untrusted
 	+ **NOTE: Self-signed certificates REQUIRE that the certificate be installed on all client machines in the 'Trusted Root' certificate store accessing an RDS environment.**
-	+ [/scripts/rds-certreq.ps1](https://github.com/Azure/azure-quickstart-templates/tree/master/rds-deployment-existing-ad) can be used to generate a self-signed single, multiple (SAN), or wild card certificate with sha256 hash for use with RDS. 
-	
+	+ [/scripts/rds-certreq.ps1](https://github.com/Azure/azure-quickstart-templates/tree/master/rds-update-certificate/scripts/rds-certreq.ps1) can be used to generate a self-signed single, multiple (SAN), or wild card certificate with sha256 hash for use with RDS. 
+
 		Example:
 		```
 		.\rds-certreq.ps1 -subject *.contoso.com -password B@kedPotat0
