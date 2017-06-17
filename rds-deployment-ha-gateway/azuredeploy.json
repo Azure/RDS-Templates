@@ -8,12 +8,19 @@
         "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
       }
     },
-    "loadBalancer": {
+    "gatewayLoadBalancer": {
       "type": "string",
       "metadata": {
-        "description": "The Loadbalancer name must match from the RDS deployment. And default value taken by template is loadbalancer."
+        "description": "The gateway Load balancer name must match from the RDS deployment. And default value taken by template is loadbalancer."
       },
       "defaultValue": "loadBalancer"
+    },
+    "gatewayPublicIp": {
+      "type": "string",
+      "metadata": {
+        "description": "The gateway public ip name must match from the RDS deployment. And default value taken by template is gwpip."
+      },
+      "defaultValue": "gwpip"
     },
     "backendAddressPools": {
       "type": "string",
@@ -118,7 +125,6 @@
     "subnetAddressRange": "10.0.0.0/24",
     "dnsServerPrivateIp": "10.0.0.8",
     "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
-    "publicIpRef": "publicIp",
     "assetLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment",
     "apiVersion": "2015-06-15",
     "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]"
@@ -142,101 +148,13 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIpRef')]",
+      "name": "[parameters('gatewayPublicIp')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
           "domainNameLabel": "[parameters('dnsLabelPrefix')]"
         }
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/loadBalancers",
-      "name": "[Parameters('Loadbalancer')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/',variables('publicIpRef'))]"
-      ],
-      "properties": {
-        "frontendIPConfigurations": [
-          {
-            "name": "LBFE",
-            "properties": {
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIpRef'))]"
-              }
-            }
-          }
-        ],
-        "backendAddressPools": [
-          {
-            "name": "[parameters('backendAddressPools')]"
-          }
-        ],
-        "loadBalancingRules": [
-          {
-            "name": "https",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/frontendIPConfigurations/LBFE')]"
-              },
-              "backendAddressPool": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
-              },
-              "protocol": "Tcp",
-              "frontendPort": 443,
-              "backendPort": 443,
-              "enableFloatingIP": false,
-              "idleTimeoutInMinutes": 5,
-              "loadDistribution": "SourceIPProtocol",
-              "probe": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/probes/httpsProbe')]"
-              }
-            }
-          },
-          {
-            "name": "udp",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/frontendIPConfigurations/LBFE')]"
-              },
-              "backendAddressPool": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
-              },
-              "protocol": "Tcp",
-              "frontendPort": 3391,
-              "backendPort": 3391,
-              "enableFloatingIP": false,
-              "idleTimeoutInMinutes": 5,
-              "loadDistribution": "SourceIPProtocol",
-              "probe": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',Parameters('loadBalancer')),'/probes/udpProbe')]"
-              }
-            }
-          }
-        ],
-        "probes": [
-          {
-            "name": "httpsProbe",
-            "properties": {
-              "protocol": "Tcp",
-              "port": 443,
-              "intervalInSeconds": 5,
-              "numberOfProbes": 2
-            }
-          },
-          {
-            "name": "udpProbe",
-            "properties": {
-              "protocol": "Tcp",
-              "port": 3391,
-              "intervalInSeconds": 5,
-              "numberOfProbes": 2
-            }
-          }
-        ]
       }
     },
     {
@@ -248,9 +166,6 @@
         "name": "gw-nic-loop",
         "count": "[parameters('numberOfWebGwInstances')]"
       },
-      "dependsOn": [
-        "Microsoft.Network/loadBalancers/loadBalancer"
-      ],
       "properties": {
         "ipConfigurations": [
           {
@@ -262,7 +177,7 @@
               },
               "loadBalancerBackendAddressPools": [
                 {
-                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadBalancer'),'/backendAddressPools/',parameters('backendAddressPools'))]"
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers',parameters('gatewayLoadBalancer')),'/backendAddressPools/',parameters('backendAddressPools'))]"
                 }
               ]
             }
@@ -281,7 +196,7 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
-        "[resourceId('Microsoft.Compute/availabilitySets', 'gw-availabilityset')]",
+        "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]",
         "[concat('Microsoft.Network/networkInterfaces/gw-',copyindex(),'-nic')]"
       ],
       "properties": {
@@ -289,7 +204,7 @@
           "vmSize": "[parameters('vmSize')]"
         },
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', 'gw-availabilityset')]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]"
         },
         "osProfile": {
           "computerName": "[concat('gateway',copyindex())]",
@@ -367,7 +282,7 @@
             "typeHandlerVersion": "1.8",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "fileUris": [ "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1" ]
+              "fileUris": [ "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1" ]
             },
             "protectedSettings": {
               "Items": { "AdminPassword": "[parameters('adminPassword')]" },
