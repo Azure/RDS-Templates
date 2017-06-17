@@ -15,7 +15,6 @@ limitations under the License.
 
 .SYNOPSIS
     powershell script to test azure quickstart template rds-deployment
-    this script requires WMF 5.0+ and Azure PowerShell SDK (install-module azure)
 
 .DESCRIPTION
     powershell script to test azure quickstart template rds-deployment
@@ -25,16 +24,16 @@ limitations under the License.
      
 .NOTES
    file name  : art-rds-deployment-test.ps1
-   version    : 170314 changed assumed $adDomainName to lowercase
+   version    : 170314 changed assumed $domainName to lowercase
 
 .EXAMPLE
     .\art-rds-deployment-test.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest
     Example command to deploy rds-deployment with 2 instances using A1 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
 
 .EXAMPLE
-    .\art-rds-deployment-test.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -admin vmadministrator -instances 5 -size Standard_A4 -imagesku 2012-r2-Datacenter
+    .\art-rds-deployment-test.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -admin cloudadmin -instances 5 -size Standard_A4 -imagesku 2012-r2-Datacenter
     Example command to deploy rds-deployment with 5 instances using A4 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab. 
-    the admin account is vmadministrator and OS is 2012-r2-datacenter
+    the admin account is cloudadmin and OS is 2012-r2-datacenter
 
 .EXAMPLE
     .\art-rds-deployment-test.ps1 -useJson .\myexistingparameterfile.json
@@ -47,11 +46,11 @@ limitations under the License.
     before calling New-AzureRmResourceGroupDeployment, the powershell monitor script will be called.
     after successful deployment, the post connect powershell script will be called.
 
-.PARAMETER adDomainName
+.PARAMETER domainName
     if specified, is the new AD domain fqdn used for this deployment. by default %resourceGroup%.lab will be used.
 
 .PARAMETER adminUsername
-    if specified, the name of the administrator account. by default vmadmin is used
+    if specified, the name of the administrator account. by default cloudadmin is used
 
 .PARAMETER adminPassword
     if specified, the administrator account password in clear text. password needs to meet azure password requirements.
@@ -60,10 +59,10 @@ limitations under the License.
 .PARAMETER credentials
     can be used for administrator account password. password needs to meet azure password requirements.
 
-.PARAMETER gwdnsLabelPrefix
+.PARAMETER dnsLabelPrefix
     If specified, is the public DNS name label for gateway. default is the AD Domain prefix.
 
-.PARAMETER gwpublicIPAddressName
+.PARAMETER publicIPAddressName
     If specified, is the public ip address name. by default will use gwpip
 
 .PARAMETER imageSKU
@@ -99,79 +98,93 @@ limitations under the License.
 #>
 
 param(
-    [Parameter(Mandatory=$false)]
-    [string]$adDomainName = "",
-    [Parameter(Mandatory=$false)]
-    [string]$adminUsername = "vmadmin",
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
+    [string]$domainName = "",
+    [Parameter(Mandatory = $false)]
+    [string]$adminUsername = "cloudadmin",
+    [Parameter(Mandatory = $false)]
     [string]$adminPassword = "", 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [pscredential]$credentials,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$deploymentName,
-    [Parameter(Mandatory=$false)]
-    [string]$gwdnsLabelPrefix,
-    [Parameter(Mandatory=$false)]
-    [string]$gwpublicIPAddressName = "gwpip",
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
+    [string]$dnsLabelPrefix,
+    [Parameter(Mandatory = $false)]
+    [string]$publicIPAddressName = "gwpip",
+    [Parameter(Mandatory = $false)]
     [string][ValidateSet('2012-R2-Datacenter', '2016-Datacenter')]
     [string]$imageSKU = "2016-Datacenter",
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [int]$numberofRdshInstances = 2,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$location,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$monitor,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
+    [string]$parameterFile = "",
+    [Parameter(Mandatory = $false)]
     [switch]$postConnect,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$rdshVmSize = "Standard_A1",
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$resourceGroup,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$savePassword,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
+    [string]$templateFile = "",
+    [Parameter(Mandatory = $false)]
     [switch]$test,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$useJson
 )
 
 # shouldnt need modification
 $error.Clear()
-$ErrorActionPreference = "Continue"
+$ErrorActionPreference = "Stop" #"Continue"
 $quickStartTemplate = "rds-deployment"
-$parameterFile = ".\$($quickStartTemplate).azuredeploy.parameters.json" 
-$templateFile = "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/$($quickstartTemplate)/azuredeploy.json" 
+Import-Module azurerm
 
-if([string]::IsNullOrEmpty($deploymentName))
+if ([string]::IsNullOrEmpty($parameterFile))
+{
+    $parameterFile = ".\$($quickStartTemplate).azuredeploy.parameters.json" 
+}
+
+if ([string]::IsNullOrEmpty($templateFile))
+{
+    $templateFile = "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/$($quickstartTemplate)/azuredeploy.json" 
+}
+
+if ([string]::IsNullOrEmpty($deploymentName))
 {
     $deploymentName = $resourceGroup
 }
 
-if(![string]::IsNullOrEmpty($useJson))
+if (![string]::IsNullOrEmpty($useJson))
 {
     $parameterFile = $useJson
 }
 
-if(!(test-path $parameterFile))
+if (!(test-path $parameterFile))
 {
     write-host "unable to find json file $($parameterFile)"
 
     # create new json if not exist
-    if(![IO.File]::Exists($parameterFile))
+    if (![IO.File]::Exists($parameterFile))
     {
-        $ujson = @{'$schema'="https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#";
-            "contentVersion"="1.0.0.0";
-            "parameters"= @{
-            "adDomainName" = @{ "value"= $adDomainName };
-            "adminPassword" = @{ "value"= "" };
-            "adminUsername" = @{ "value"= $adminUsername };
-            "gwdnsLabelPrefix" = @{ "value"= $gwdnsLabelPrefix };
-            "gwpublicIPAddressName" = @{ "value"= $gwpublicIPAddressName };
-            "imageSKU" = @{ "value"= $imageSKU };
-            "numberOfRdshInstances" = @{ "value"= $numberofRdshInstances };
-            "rdshVmSize" = @{ "value"= $rdshVmSize };
-        }}
+        $ujson = @{'$schema' = "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#";
+            "contentVersion" = "1.0.0.0";
+            "parameters"     = @{
+                "domainName"            = @{ "value" = $domainName };
+                "adminPassword"         = @{ "value" = "" };
+                "adminUsername"         = @{ "value" = $adminUsername };
+                "dnsLabelPrefix"        = @{ "value" = $dnsLabelPrefix };
+                "publicIPAddressName"   = @{ "value" = $publicIPAddressName };
+                "imageSKU"              = @{ "value" = $imageSKU };
+                "numberOfRdshInstances" = @{ "value" = $numberofRdshInstances };
+                "rdshVmSize"            = @{ "value" = $rdshVmSize };
+            }
+        }
 
         $ujson | ConvertTo-Json | Out-File $parameterFile
     }
@@ -202,22 +215,22 @@ catch
 write-host "reading parameter file $($parameterFile)"
 $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFile)
 
-if(![string]::IsNullOrEmpty($useJson))
+if (![string]::IsNullOrEmpty($useJson))
 {
-    $adDomainName = $ujson.parameters.adDomainName.value
+    $domainName = $ujson.parameters.domainName.value
     $adminPassword = $ujson.parameters.adminPassword.value
     $adminUsername = $ujson.parameters.adminUsername.value
-    $gwdnsLabelPrefix = $ujson.parameters.gwdnsLabelPrefix.value
-    $gwpublicIPAddressName = $ujson.parameters.gwpublicIPAddressName.value
+    $dnsLabelPrefix = $ujson.parameters.dnsLabelPrefix.value
+    $publicIPAddressName = $ujson.parameters.publicIPAddressName.value
     $imageSKU = $ujson.parameters.imageSKU.value
     $numberofRdshInstances = $ujson.parameters.numberofRdshInstances.value
     $rdshVmSize = $ujson.parameters.rdshVmSize.value
-    #$resourceGroup = $ujson.parameters.gwdnsLabelPrefix.value
+    #$resourceGroup = $ujson.parameters.dnsLabelPrefix.value
 }
 
 write-host "checking resource group"
 
-if([string]::IsNullOrEmpty($resourceGroup))
+if ([string]::IsNullOrEmpty($resourceGroup))
 {
     write-warning "resourcegroup is a mandatory argument. supply -resourceGroup argument and restart script."
     exit 1
@@ -225,35 +238,36 @@ if([string]::IsNullOrEmpty($resourceGroup))
 
 write-host "checking ad domain name"
 
-if([string]::IsNullOrEmpty($adDomainName))
+if ([string]::IsNullOrEmpty($domainName))
 {
-    $adDomainName = "$($resourceGroup.ToLower()).lab"
-    write-host "setting adDomainName to $($adDomainName)"
+    $domainName = "$($resourceGroup.ToLower()).lab"
+    write-host "setting domainName to $($domainName)"
 }
 
-if([string]::IsNullOrEmpty($adDomainName.Split(".")[1]))
+if ([string]::IsNullOrEmpty($domainName.Split(".")[1]))
 {
-    $adDomainName = "$($adDomainName).lab"
-    write-host "setting adDomainName to $($adDomainName)"
+    $domainName = "$($domainName).lab"
+    write-host "setting domainName to $($domainName)"
 }
 
 write-host "checking dns label"
 
-if([string]::IsNullOrEmpty($gwdnsLabelPrefix))
+if ([string]::IsNullOrEmpty($dnsLabelPrefix))
 {
-    $gwdnsLabelPrefix = $adDomainName.Split(".")[0]
-    write-host "setting gwdnsLabelPrefix to $($gwdnsLabelPrefix)"
+    #$dnsLabelPrefix = $domainName.Split(".")[0]
+    $dnsLabelPrefix = $resourceGroup
+    write-host "setting dnsLabelPrefix to $($dnsLabelPrefix)"
 }
 
-if($gwdnsLabelPrefix.Length -gt 15)
+if ($dnsLabelPrefix.Length -gt 15)
 {
-    write-warning "error: domain name greater than 15 characters $($gwdnsLabelPrefix). shorten name and restart script." -ForegroundColor Yellow
+    write-warning "error: domain name greater than 15 characters $($dnsLabelPrefix). shorten name and restart script." -ForegroundColor Yellow
     return
 }
 
 write-host "checking location"
 
-if(!(Get-AzureRmLocation | Where-Object Location -Like $location) -or [string]::IsNullOrEmpty($location))
+if (!(Get-AzureRmLocation | Where-Object Location -Like $location) -or [string]::IsNullOrEmpty($location))
 {
     (Get-AzureRmLocation).Location
     write-warning "location: $($location) not found. supply -location using one of the above locations and restart script."
@@ -262,7 +276,7 @@ if(!(Get-AzureRmLocation | Where-Object Location -Like $location) -or [string]::
 
 write-host "checking vm size"
 
-if(!(Get-AzureRmVMSize -Location $location | Where-Object Name -Like $rdshVmSize))
+if (!(Get-AzureRmVMSize -Location $location | Where-Object Name -Like $rdshVmSize))
 {
     Get-AzureRmVMSize -Location $location
     write-warning "rdshVmSize: $($rdshVmSize) not found in $($location). correct -rdshVmSize using one of the above options and restart script."
@@ -271,7 +285,7 @@ if(!(Get-AzureRmVMSize -Location $location | Where-Object Name -Like $rdshVmSize
 
 write-host "checking sku"
 
-if(!(Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsServer -Offer WindowsServer | Where-Object Skus -Like $imageSKU))
+if (!(Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsServer -Offer WindowsServer | Where-Object Skus -Like $imageSKU))
 {
     Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsServer -Offer WindowsServer 
     write-warning "image sku: $($imageSku) not found in $($location). correct -imageSKU using one of the above options and restart script."
@@ -280,9 +294,9 @@ if(!(Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsSe
 
 write-host "checking password"
 
-if(!$credentials)
+if (!$credentials)
 {
-    if([string]::IsNullOrEmpty($adminPassword))
+    if ([string]::IsNullOrEmpty($adminPassword))
     {
         $global:credential = Get-Credential
     }
@@ -302,15 +316,15 @@ $adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.Int
 
 $count = 0
 # uppercase check
-if($adminPassword -match "[A-Z]") { $count++ }
+if ($adminPassword -match "[A-Z]") { $count++ }
 # lowercase check
-if($adminPassword -match "[a-z]") { $count++ }
+if ($adminPassword -match "[a-z]") { $count++ }
 # numeric check
-if($adminPassword -match "\d") { $count++ }
+if ($adminPassword -match "\d") { $count++ }
 # specialKey check
-if($adminPassword -match "\W") { $count++ } 
+if ($adminPassword -match "\W") { $count++ } 
 
-if($adminPassword.Length -lt 8 -or $adminPassword.Length -gt 123 -or $count -lt 3)
+if ($adminPassword.Length -lt 8 -or $adminPassword.Length -gt 123 -or $count -lt 3)
 {
     Write-warning @"
         azure password requirements at time of writing (3/2017):
@@ -327,17 +341,17 @@ if($adminPassword.Length -lt 8 -or $adminPassword.Length -gt 123 -or $count -lt 
 
 write-host "modifying json of $($parameterFile) template with params"
 
-$ujson.parameters.adDomainName.value = $adDomainName
+$ujson.parameters.domainName.value = $domainName
 
-if($savePassword)
+if ($savePassword)
 {
     write-warning "saving password into json in clear text. this is not best practice"
     $ujson.parameters.adminPassword.value = $adminPassword
 }
 
 $ujson.parameters.adminUsername.value = $adminUsername
-$ujson.parameters.gwdnsLabelPrefix.value = $gwdnsLabelPrefix
-$ujson.parameters.gwpublicIPAddressName.value = $gwpublicIPAddressName
+$ujson.parameters.dnsLabelPrefix.value = $dnsLabelPrefix
+$ujson.parameters.publicIPAddressName.value = $publicIPAddressName
 $ujson.parameters.imageSKU.value = $imageSKU
 $ujson.parameters.numberOfRdshInstances.value = $numberofRdshInstances
 $ujson.parameters.rdshVmSize.value = $rdshVmSize
@@ -348,9 +362,9 @@ $ujson | ConvertTo-Json
 
 write-host "checking for existing deployment"
 
-if((Get-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup -Name $deploymentName -ErrorAction SilentlyContinue))
+if ((Get-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup -Name $deploymentName -ErrorAction SilentlyContinue))
 {
-    if((read-host "resource group deployment exists! Do you want to delete?[y|n]") -ilike 'y')
+    if ((read-host "resource group deployment exists! Do you want to delete?[y|n]") -ilike 'y')
     {
         Remove-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup -Name $deploymentName -Confirm
     }
@@ -358,16 +372,16 @@ if((Get-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup -Name $
 
 write-host "checking for existing resource group"
 
-if((Get-AzureRmResourceGroup -Name $resourceGroup -ErrorAction SilentlyContinue))
+if ((Get-AzureRmResourceGroup -Name $resourceGroup -ErrorAction SilentlyContinue))
 {
-    if((read-host "resource group exists! Do you want to delete?[y|n]") -ilike 'y')
+    if ((read-host "resource group exists! Do you want to delete?[y|n]") -ilike 'y')
     {
         Remove-AzureRmResourceGroup -Name $resourceGroup
     }
 }
 
 # create resource group if it does not exist
-if(!(Get-AzureRmResourceGroup -Name $resourceGroup -ErrorAction SilentlyContinue))
+if (!(Get-AzureRmResourceGroup -Name $resourceGroup -ErrorAction SilentlyContinue))
 {
     Write-Host "creating resource group $($resourceGroup) in location $($location)"   
     New-AzureRmResourceGroup -Name $resourceGroup -Location $location
@@ -381,54 +395,54 @@ $ret = Test-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup `
     -Mode Complete `
     -adminUsername $global:credential.UserName `
     -adminPassword $global:credential.Password `
-    -TemplateParameterFile $parameterFile 
+    -TemplateParameterFile $parameterFile     
 
-if(![string]::IsNullOrEmpty($ret))
+if (![string]::IsNullOrEmpty($ret))
 {
     Write-Error "template validation failed. error: `n`n$($ret.Code)`n`n$($ret.Message)`n`n$($ret.Details)"
     exit 1
 }
 
-if($monitor)
+if ($monitor)
 {
     write-host "$([DateTime]::Now) starting monitor"
     $monitorScript = "$(get-location)\azure-rm-log-reader.ps1"
     
-    if(![IO.File]::Exists($monitorScript))
+    if (![IO.File]::Exists($monitorScript))
     {
         [IO.File]::WriteAllText($monitorScript, 
-            (Invoke-WebRequest -UseBasicParsing -Uri "https://aka.ms/azure-rm-log-reader.ps1").ToString().Replace("???",""))
+            (Invoke-WebRequest -UseBasicParsing -Uri "https://aka.ms/azure-rm-log-reader.ps1").ToString().Replace("???", ""))
     }
 
     Start-Process -FilePath "powershell.exe" -ArgumentList "-WindowStyle Minimized -ExecutionPolicy Bypass $($monitorScript)"
 }
 
-if(!$test)
+if (!$test)
 {
     write-host "$([DateTime]::Now) creating deployment"
     $error.Clear() 
    
     New-AzureRmResourceGroupDeployment -Name $deploymentName `
-      -ResourceGroupName $resourceGroup `
-      -DeploymentDebugLogLevel All `
-      -TemplateFile $templateFile `
-      -adminUsername $global:credential.UserName `
-      -adminPassword $global:credential.Password `
-      -TemplateParameterFile $parameterFile 
+        -ResourceGroupName $resourceGroup `
+        -DeploymentDebugLogLevel All `
+        -TemplateFile $templateFile `
+        -adminUsername $global:credential.UserName `
+        -adminPassword $global:credential.Password `
+        -TemplateParameterFile $parameterFile 
 
-    if(!$error -and $postConnect)
+    if (!$error -and $postConnect)
     {
         write-host "$([DateTime]::Now) starting post connect"
         $connectScript = "$(get-location)\azure-rm-rdp-post-deployment.ps1"
     
-        if(![IO.File]::Exists($connectScript))
+        if (![IO.File]::Exists($connectScript))
         {
             # get script content from url and remove BOM
-            string $scriptContent = (Invoke-WebRequest -UseBasicParsing -Uri "https://aka.ms/azure-rm-rdp-post-deployment.ps1").ToString().Replace("???","")
+            string $scriptContent = (Invoke-WebRequest -UseBasicParsing -Uri "https://aka.ms/azure-rm-rdp-post-deployment.ps1").ToString().Replace("???", "")
             [IO.File]::WriteAllText($connectScript, $scriptContent)
         }
         
-        $rdWebSite = "https://$($gwdnsLabelPrefix).$($location).cloudapp.azure.com/RDWeb"
+        $rdWebSite = "https://$($dnsLabelPrefix).$($location).cloudapp.azure.com/RDWeb"
         write-host "connecting to $($rdWebSite)"
         Invoke-Expression -Command "$($connectScript) -rdWebUrl `"$($rdWebSite)`""
     }

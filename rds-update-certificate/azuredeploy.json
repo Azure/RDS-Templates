@@ -37,7 +37,7 @@
             "metadata": {
                 "description": "Name of the RD Connection Broker VM resource in the deployment (the configure certificates script is executed on this VM)."
             },
-            "defaultValue": "cb-vm"
+            "defaultValue": "rdcb-01"
         },
         "existingDomainName": {
             "type": "string",

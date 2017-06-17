@@ -16,9 +16,9 @@ PARAMETERS
         Default value                %resourceGroup%
         
     -adminUsername <String>
-        if specified, the name of the administrator account. by default vmadmin is used
+        if specified, the name of the administrator account. by default cloudadmin is used
         Required?                    false
-        Default value                vmadmin
+        Default value                cloudadmin
         
     -adminPassword <String>
         if specified, the administrator account password in clear text. password needs to meet azure password requirements.
@@ -98,9 +98,9 @@ PARAMETERS
     Example command to deploy rds-deployment with 2 instances using A1 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
     
     -------------------------- EXAMPLE 2 --------------------------
-    PS C:\>.\art-rds-deployment-test.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -admin vmadministrator -instances 5 -size Standard_A4 -imagesku 2012-r2-Datacenter
+    PS C:\>.\art-rds-deployment-test.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -admin cloudadmin -instances 5 -size Standard_A4 -imagesku 2012-r2-Datacenter
     Example command to deploy rds-deployment with 5 instances using A4 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab. 
-    the admin account is vmadministrator and OS is 2012-r2-datacenter
+    the admin account is cloudadmin and OS is 2012-r2-datacenter
     
     -------------------------- EXAMPLE 3 --------------------------
     PS C:\>.\art-rds-deployment-test.ps1 -useJson .\myexistingparameterfile.json

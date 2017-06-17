@@ -76,6 +76,14 @@
         }
     },
     "variables": {
+        "vmPrefix": "",
+        "adVmName": "[concat(variables('vmPrefix'), 'addc-01')]",
+        "adNicName": "[concat(variables('adVmName'), '-nic')]",
+        "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",
+        "brokerNicName": "[concat(variables('brokerVmName'), '-nic')]",
+        "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
+        "gatewayNicName": "[concat(variables('gatewayVmName'), '-nic')]",
+        "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
         "vnet": {
             "name": "vnet",
             "addressRange": "10.0.0.0/16",
@@ -96,9 +104,9 @@
             "rdsh": "rdsh-availabilityset"
         },
         "adVm": {
-            "name": "dc-vm",
+            "name": "[variables('adVmName')]",
             "size": "Standard_A2",
-            "nic": "dc-nic",
+            "nic": "[variables('adNicName')]",
             "ip": "10.0.0.4"
         },
         "createAdTemplate": {
@@ -407,7 +415,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "gw-nic",
+            "name": "[variables('gatewayNicName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'updateVnetDns')]"
@@ -442,7 +450,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "cb-nic",
+            "name": "[variables('brokerNicName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/deployments', 'updateVnetDns')]"
@@ -464,7 +472,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat('rdsh-', copyindex(), '-nic')]",
+            "name": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), '-nic')]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-nic-loop",
@@ -490,10 +498,10 @@
         {
             "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "gw-vm",
+            "name": "[variables('gatewayVmName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "Microsoft.Network/networkInterfaces/gw-nic"
+                "[concat('Microsoft.Network/networkInterfaces/', variables('gatewayNicName'))]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -503,7 +511,7 @@
                     "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySets').gateway)]"
                 },
                 "osProfile": {
-                    "computerName": "gateway",
+                    "computerName": "[variables('gatewayVmName')]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
@@ -519,7 +527,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces','gw-nic')]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('gatewayNicName'))]"
                         }
                     ]
                 }
@@ -531,7 +539,7 @@
                     "name": "configuration",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', 'gw-vm')]"
+                        "[resourceId('Microsoft.Compute/virtualMachines', variables('gatewayVmName'))]"
                     ],
                     "properties": {
                         "publisher": "Microsoft.Powershell",
@@ -566,9 +574,9 @@
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('numberOfRdshInstances')]"
             },
-            "name": "[concat('rdsh-', copyindex())]",
+            "name": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'))]",
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(), '-nic')]"
+                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), '-nic')]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -578,7 +586,7 @@
                     "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySets').rdsh)]"
                 },
                 "osProfile": {
-                    "computerName": "[concat('rdsh-', copyIndex())]",
+                    "computerName": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'))]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
@@ -594,7 +602,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('rdsh-', copyindex(), '-nic'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), '-nic'))]"
                         }
                     ]
                 }
@@ -606,7 +614,7 @@
                     "name": "configuration",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex()))]"
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0')))]"
                     ],
                     "properties": {
                         "type": "DSC",
@@ -636,10 +644,10 @@
         {
             "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "cb-vm",
+            "name": "[variables('brokerVmName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "Microsoft.Network/networkInterfaces/cb-nic"
+                "[concat('Microsoft.Network/networkInterfaces/', variables('brokerNicName'))]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -649,7 +657,7 @@
                     "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySets').broker)]"
                 },
                 "osProfile": {
-                    "computerName": "broker",
+                    "computerName": "[variables('brokerVmName')]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
@@ -665,7 +673,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces','cb-nic')]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('brokerNicName'))]"
                         }
                     ]
                 }
@@ -673,12 +681,12 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "cb-vm/rdsdeployment",
+            "name": "[concat(variables('brokerVmName'), '/rdsdeployment')]",
             "apiVersion": "2016-04-30-preview",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachines', 'cb-vm')]",
-                "[resourceId('Microsoft.Compute/virtualMachines', 'gw-vm')]",
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('brokerVmName'))]",
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('gatewayVmName'))]",
                 "rdsh-vm-loop"
             ],
             "properties": {
@@ -694,12 +702,13 @@
                             "UserName": "[parameters('adminUsername')]",
                             "Password": "PrivateSettingsRef:adminPassword"
                         },
-                        "connectionBroker": "[concat('broker.',parameters('domainName'))]",
+                        "connectionBroker": "[concat(variables('brokerVmName'), '.', parameters('domainName'))]",
                         "domainName": "[parameters('domainName')]",
                         "externalfqdn": "[reference(parameters('publicIPAddressName')).dnsSettings.fqdn]",
                         "numberOfRdshInstances": "[parameters('numberOfRdshInstances')]",
-                        "sessionHostNamingPrefix": "rdsh-",
-                        "webAccessServer": "[concat('gateway.',parameters('domainName'))]"
+                        "sessionHostNamingPrefix": "[variables('rdshVmName')]",
+                        "webAccessServer": "[concat(variables('gatewayVmName'), '.', parameters('domainName'))]",
+                        "vmPrefix": "[variables('vmPrefix')]"
                     }
                 },
                 "protectedSettings": {

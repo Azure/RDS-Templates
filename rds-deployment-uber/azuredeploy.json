@@ -34,7 +34,7 @@
       "metadata": {
         "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'. For example johnadmin"
       },
-      "defaultValue": "vmadmin"
+      "defaultValue": "cloudadmin"
     },
     "adminPassword": {
       "type": "securestring",
@@ -136,7 +136,7 @@
     },
     "dnsServer": {
       "type": "string",
-      "defaultValue": "dc",
+      "defaultValue": "addc-01",
       "metadata": {
         "description": "The name of the DNS Server to add the DNS entry to for the Connection Broker Names"
       }
@@ -176,11 +176,13 @@
     "backEndAddressPool": "LBBAP",
     "rdgwAvailabilitySet": "gw-availabilityset",
     "rdcbAvailabilitySet": "cb-availabilityset",
-    "rdBrokerServer": "[concat('broker.',parameters('adDomainName'))]",
-    "rdGatewayWebURL": "[concat('gateway.',parameters('adDomainName'))]",
+    "rdBrokerServer": "[concat(variables('brokerVmName'), '.', parameters('adDomainName'))]",
+    "rdGatewayWebURL": "[concat(variables('gatewayVmName'), '.', parameters('adDomainName'))]",
     "storageAccountName": "[tolower(concat('rdsa', uniqueString(resourceGroup().id)))]",
-    "brokerVmName": "cb-vm",
-    "brokerHostName": "broker"
+    "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
+    "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",
+    "brokerHostName": "[variables('brokerVmName')]",
+    "vmPrefix": ""
   },
   "resources": [
     {

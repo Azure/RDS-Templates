@@ -120,7 +120,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat('rdsh-', copyindex(),variables('iteration'), '-nic')]",
+            "name": "[concat('rdsh-', variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'), '-nic')]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-nic-loop",
@@ -149,14 +149,14 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat('rdsh-', copyindex(),variables('iteration'))]",
+            "name": "[concat('rdsh-', variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'))]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(),variables('iteration'), '-nic')]"
+                "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'), '-nic')]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -166,13 +166,13 @@
                     "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySet'))]"
                 },
                 "osProfile": {
-                    "computerName": "[concat('rdsh-', copyindex(),variables('iteration'))]",
+                    "computerName": "[concat('rdsh-', variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'))]",
                     "adminUsername": "[parameters('existingAdminUsername')]",
                     "adminPassword": "[parameters('existingAdminPassword')]"
                 },
                 "storageProfile": {
                     "osDisk": {
-                        "name": "[concat('rdsh-', copyindex(),variables('iteration'),'-osDisk')]",
+                        "name": "[concat('rdsh-', variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'),'-osDisk')]",
                         "osType": "Windows",
                         "caching": "ReadWrite",
                         "createOption": "FromImage",
@@ -180,7 +180,7 @@
                             "uri": "[parameters('rdshTemplateImageUri')]"
                         },
                         "vhd": {
-                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob, 'vhds/rdsh-', copyindex(), variables('iteration'), '-osdisk.vhd')]"
+                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob, 'vhds/rdsh-', variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'), '-osdisk.vhd')]"
                         }
 
                     }
@@ -188,7 +188,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('rdsh-', copyindex(),variables('iteration'), '-nic'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('rdsh-', variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'), '-nic'))]"
                         }
                     ]
                 },
@@ -203,10 +203,10 @@
                 {
                     "apiVersion": "2015-06-15",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat('rdsh-',copyindex(),variables('iteration'),'/sessionhost')]",
+                    "name": "[concat('rdsh-',variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'),'/sessionhost')]",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex(),variables('iteration')))]"
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', variables('iteration'),padLeft(add(copyindex(), 1), 2, '0')))]"
                     ],
                     "properties": {
                         "publisher": "Microsoft.Powershell",

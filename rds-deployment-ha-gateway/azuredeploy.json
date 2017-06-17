@@ -119,6 +119,8 @@
     }
   },
   "variables": {
+    "vmPrefix": "",
+    "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-')]",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
     "vnetAddressRange": "10.0.0.0/16",
@@ -158,7 +160,7 @@
       }
     },
     {
-      "name": "[concat('gw-',copyindex(),'-nic')]",
+      "name": "[concat(variables('gatewayVmName'), add(copyIndex(), 1), '-nic')]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
       "apiVersion": "[variables('apiversion')]",
@@ -186,7 +188,7 @@
       }
     },
     {
-      "name": "[concat('gw-vm-',copyindex())]",
+      "name": "[concat(variables('gatewayVmName'),add(copyIndex(), 1))]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
       "apiVersion": "[variables('apiversion')]",
@@ -197,7 +199,7 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
         "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]",
-        "[concat('Microsoft.Network/networkInterfaces/gw-',copyindex(),'-nic')]"
+        "[concat('Microsoft.Network/networkInterfaces/' , variables('gatewayVmName'), add(copyIndex(), 1), '-nic')]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -207,7 +209,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]"
         },
         "osProfile": {
-          "computerName": "[concat('gateway',copyindex())]",
+          "computerName": "[concat('gateway',add(copyIndex(), 1))]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -221,7 +223,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/gateway',copyindex(),'-osdisk.vhd')]"
+              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/gateway',add(copyIndex(), 1),'-osdisk.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -230,19 +232,19 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('gw-',copyindex(),'-nic'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('gatewayVmName'),add(copyIndex(), 1),'-nic'))]"
             }
           ]
         }
       },
       "resources": [
         {
-          "name": "[concat('gw-vm-',copyindex(),'/Gateway')]",
+          "name": "[concat(variables('gatewayVmName'),add(copyIndex(), 1),'/Gateway')]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "location": "[resourceGroup().location]",
           "apiVersion": "[variables('apiversion')]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', Concat('gw-vm-',copyindex()))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', Concat(variables('gatewayVmName'),add(copyIndex(), 1)))]"
           ],
           "properties": {
             "publisher": "Microsoft.Powershell",
@@ -268,13 +270,13 @@
           }
         },
         {
-          "name": "[concat('gw-vm-',copyindex(),'/WebAndGwFarmAdd_PostConfig1.1')]",
+          "name": "[concat(variables('gatewayVmName'),add(copyIndex(), 1),'/WebAndGwFarmAdd_PostConfig1.1')]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "location": "[resourceGroup().location]",
           "apiVersion": "[variables('apiversion')]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', Concat('gw-vm-',copyindex()))]",
-            "[concat('Microsoft.Compute/virtualMachines/gw-vm-',copyindex(),'/extensions/','Gateway')]"
+            "[resourceId('Microsoft.Compute/virtualMachines', Concat(variables('gatewayVmName'),add(copyIndex(), 1)))]",
+            "[concat('Microsoft.Compute/virtualMachines/',variables('gatewayVmName'),add(copyIndex(), 1),'/extensions/','Gateway')]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",

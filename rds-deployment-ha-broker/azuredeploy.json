@@ -11,7 +11,7 @@
     },
     "dnsServer": {
       "type": "string",
-      "defaultValue": "dc",
+      "defaultValue": "addc-01",
       "metadata": {
         "description": "The name of the DNS Server to add the DNS entry to for the Connection Broker Names"
       }
@@ -24,6 +24,7 @@
     },
     "existingAdminUsername": {
       "type": "string",
+      "defaultValue": "cloudAdmin",
       "metadata": {
         "description": "Name of domain user account with administrative priveledges to manage RDS deployment"
       }
@@ -37,7 +38,7 @@
     },
     "existingBrokerHostname": {
       "type": "string",
-      "defaultValue": "broker",
+      "defaultValue": "rdcb-01",
       "metadata": {
         "description": "The host name of the existing Connection Broker vm"
       }
@@ -89,8 +90,9 @@
   },
 
   "variables": {
-    "brokerVmName": "cb-vm-2",
-    "brokerNicName": "cb-2-nic",
+    "vmPrefix": "",
+    "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-02')]",
+    "brokerNicName": "[concat(variables('brokerVmName'), '-nic')]",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'rdsstorage2')]",
     "sqlClientUrl": "http://go.microsoft.com/fwlink/?LinkID=239648&clcid=0x409",
     "p": {
@@ -159,7 +161,7 @@
                     "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('existingBrokerAvailabilitySet'))]"
                 },
                 "osProfile": {
-                    "computerName": "cb-vm-2",
+                    "computerName": "[variables('brokerVmName')]",
                     "adminUsername": "[parameters('existingAdminUsername')]",
                     "adminPassword": "[parameters('existingAdminPassword')]"
                 },
