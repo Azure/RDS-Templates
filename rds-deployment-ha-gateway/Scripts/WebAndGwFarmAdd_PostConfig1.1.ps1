@@ -1,8 +1,6 @@
 ﻿
 param 
     ( 
-        
-     [String]$WebGwServer,
      [String]$BrokerServer,
      [String]$WebURL,
      [String]$Domainname,
@@ -115,7 +113,7 @@ configuration RDGatewaydeployment
         
         # RD Session Host count and naming prefix
         [Int]$numberOfRdshInstances = 1,
-        [String]$sessionHostNamingPrefix = "SessionHost-",
+        [String]$sessionHostNamingPrefix = "rdsh-",
 
         # Collection Name
         [String]$collectionName,
@@ -182,16 +180,9 @@ Write-Host "Username : $($username),   Password: $($password)"
 #$cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
 $webServernameArray = New-Object System.Collections.ArrayList
 
-for ($i = 0; $i -le $numberofwebServers; $i++)
+for ($i = 1; $i -le $numberofwebServers; $i++)
 { 
-    if ($i -eq 0)
-    {
-        $webServername = "Gateway"
-        #Write-Host "For i = 0, srvername = $($webServername)"
-    }
-    else{
-    $servercount = $i - 1
-    $webServername = "gateway" + $servercount.ToString()
+    $webServername = $ServerName + $i.ToString("D2")
     #Write-Host "For $($i), servername = $($webServername)"
         }
     $webServernameArray.Add($webServername) | Out-Null

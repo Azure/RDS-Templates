@@ -79,14 +79,16 @@
     "dnsServerPrivateIp": "10.0.0.4",
     "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
     "publicIpRef": "publicIp",
-    "vmPrefix": "",
     "brokerIpRef": "brokerpublicIp",
     "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",
-    "brokerNicName": "[concat(variables('brokerVmName'),'-nic')]",
+    "brokerNicName": "[concat(variables('brokerVmName'),variables('networkNameSuffix'))]",
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
-    "gatewayNicName": "[concat(variables('gatewayVmName'),'-nic')]",
+    "gatewayNicName": "[concat(variables('gatewayVmName'),variables('networkNameSuffix'))]",
     "gatewayIpRef": "gatewaypublicIp",
-    "assetLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment/"
+    "assetLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment/",
+    "networkNameSuffix": "-nic",
+    "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
+    "vmPrefix": ""
   },
   "resources": [
     {
@@ -298,7 +300,7 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat('rdsh-', add(copyindex(), 1), '-nic')]",
+      "name": "[concat(variables('rdshVmName'), add(copyindex(), 1), variables('networkNameSuffix'))]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "rdsh-nic-loop",
@@ -404,7 +406,7 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat('rdsh-', add(copyindex(), 1))]",
+      "name": "[concat(variables('rdshVmName'), add(copyindex(), 1))]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "rdsh-vm-loop",
@@ -413,7 +415,7 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
         "[resourceId('Microsoft.Compute/availabilitySets', 'rdsh-availabilityset')]",
-        "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', add(copyindex(), 1), '-nic')]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('rdshVmName'), add(copyindex(), 1), variables('networkNameSuffix'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -423,7 +425,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', 'rdsh-availabilityset')]"
         },
         "osProfile": {
-          "computerName": "[concat('rdsh-', add(copyindex(), 1))]",
+          "computerName": "[concat(variables('rdshVmName'), add(copyindex(), 1))]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -437,7 +439,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/','rdsh-',add(copyindex(), 1),'-os-disk.vhd')]"
+              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('rdshVmName'),add(copyindex(), 1),'-os-disk.vhd')]"
 
             },
             "caching": "ReadWrite",
@@ -447,7 +449,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('rdsh-', add(copyindex(), 1), '-nic'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('rdshVmName'), add(copyindex(), 1), variables('networkNameSuffix')))]"
             }
           ]
         }
@@ -456,10 +458,10 @@
         {
           "apiVersion": "2015-06-15",
           "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "[concat('rdsh-', add(copyindex(), 1),'/sessionhost')]",
+          "name": "[concat(variables('rdshVmName'), add(copyindex(), 1),'/sessionhost')]",
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', add(copyindex(), 1)))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('rdshVmName'), add(copyindex(), 1)))]"
           ],
           "properties": {
             "publisher": "Microsoft.Powershell",

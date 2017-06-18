@@ -90,11 +90,11 @@
   },
 
   "variables": {
-    "vmPrefix": "",
     "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-02')]",
     "brokerNicName": "[concat(variables('brokerVmName'), '-nic')]",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'rdsstorage2')]",
     "sqlClientUrl": "http://go.microsoft.com/fwlink/?LinkID=239648&clcid=0x409",
+    "vmPrefix": "",
     "p": {
       "broker": "[concat(' -existingBroker ', parameters('existingBrokerHostname'))]",
       "connstr": "[concat(' -primaryDbConnectionString \"', parameters('primaryDbConnectionString'), '\"')]",

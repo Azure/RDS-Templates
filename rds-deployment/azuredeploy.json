@@ -78,12 +78,13 @@
     "variables": {
         "vmPrefix": "",
         "adVmName": "[concat(variables('vmPrefix'), 'addc-01')]",
-        "adNicName": "[concat(variables('adVmName'), '-nic')]",
+        "adNicName": "[concat(variables('adVmName'), variables('networkNameSuffix'))]",
         "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",
-        "brokerNicName": "[concat(variables('brokerVmName'), '-nic')]",
+        "brokerNicName": "[concat(variables('brokerVmName'), variables('networkNameSuffix'))]",
         "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
-        "gatewayNicName": "[concat(variables('gatewayVmName'), '-nic')]",
+        "gatewayNicName": "[concat(variables('gatewayVmName'), variables('networkNameSuffix'))]",
         "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
+        "networkNameSuffix": "-nic",
         "vnet": {
             "name": "vnet",
             "addressRange": "10.0.0.0/16",
@@ -472,7 +473,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), '-nic')]",
+            "name": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), variables('networkNameSuffix'))]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-nic-loop",
@@ -576,7 +577,7 @@
             },
             "name": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'))]",
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), '-nic')]"
+                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), variables('networkNameSuffix'))]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -602,7 +603,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), '-nic'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), variables('networkNameSuffix')))]"
                         }
                     ]
                 }

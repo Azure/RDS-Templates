@@ -121,6 +121,7 @@
   "variables": {
     "vmPrefix": "",
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-')]",
+    "networkNameSuffix": "-nic",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
     "vnetAddressRange": "10.0.0.0/16",
@@ -160,7 +161,7 @@
       }
     },
     {
-      "name": "[concat(variables('gatewayVmName'), add(copyIndex(), 1), '-nic')]",
+      "name": "[concat(variables('gatewayVmName'), add(copyIndex(), 1), variables('networkNameSuffix'))]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
       "apiVersion": "[variables('apiversion')]",
@@ -199,7 +200,7 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
         "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]",
-        "[concat('Microsoft.Network/networkInterfaces/' , variables('gatewayVmName'), add(copyIndex(), 1), '-nic')]"
+        "[concat('Microsoft.Network/networkInterfaces/' , variables('gatewayVmName'), add(copyIndex(), 1), variables('networkNameSuffix'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -232,7 +233,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('gatewayVmName'),add(copyIndex(), 1),'-nic'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('gatewayVmName'),add(copyIndex(), 1),variables('networkNameSuffix')))]"
             }
           ]
         }
@@ -289,7 +290,7 @@
             "protectedSettings": {
               "Items": { "AdminPassword": "[parameters('adminPassword')]" },
               "storageAccountName": "[parameters('storageaccountname')]",
-              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('adminusername'),'\" ', '-password \"',parameters('adminpassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('WebURL'),'\" ','-Domainname \"',parameters('adDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'))]"
+              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('adminusername'),'\" ', '-password \"',parameters('adminpassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('WebURL'),'\" ','-Domainname \"',parameters('adDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'),'-ServerName ',variables('gatewayVmName'))]"
             }
           }
         }
