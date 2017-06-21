@@ -4,7 +4,7 @@
 ```
 SYNTAX
 
-    .\art-rds-deployment-test.ps1 [[-adDomainName] <String>] [[-adminUsername] <String>] [[-adminPassword] <String>] [[-credentials] <PSCredential>] [[-deploymentName] <String>] [[-gwdnsLabelPrefix] <String>] 
+    .\art-rds-deployment-test.ps1 [[-adDomainName] <String>] [[-adminUsername] <String>] [[-adminPassword] <String>] [[-credentials] <PSCredential>] [[-deploymentName] <String>] [[-dnsLabelPrefix] <String>] 
     [[-gwpublicIPAddressName] <String>] [[-imageSKU] <String>] [[-numberofRdshInstances] <Int32>] [[-location] <String>] [-monitor] [-postConnect] [[-rdshVmSize] <String>] [-resourceGroup] <String> [-savePassword] [-test] 
     [[-useJson] <String>] [<CommonParameters>]
     
@@ -35,7 +35,7 @@ PARAMETERS
         Required?                    false
         Default value                %resourceGroup%
         
-    -gwdnsLabelPrefix <String>
+    -dnsLabelPrefix <String>
         If specified, is the public DNS name label for gateway. default is the AD Domain prefix.
         Required?                    false
         Default value                %resourceGroup%
