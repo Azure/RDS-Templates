@@ -113,7 +113,7 @@ configuration RDGatewaydeployment
         
         # RD Session Host count and naming prefix
         [Int]$numberOfRdshInstances = 1,
-        [String]$sessionHostNamingPrefix = "rdsh-",
+        [String]$sessionHostNamingPrefix = "SessionHost",
 
         # Collection Name
         [String]$collectionName,
@@ -184,7 +184,6 @@ for ($i = 1; $i -le $numberofwebServers; $i++)
 { 
     $webServername = $ServerName + $i.ToString("D2")
     #Write-Host "For $($i), servername = $($webServername)"
-        }
     $webServernameArray.Add($webServername) | Out-Null
 }
 

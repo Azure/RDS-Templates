@@ -708,8 +708,7 @@
                         "externalfqdn": "[reference(parameters('publicIPAddressName')).dnsSettings.fqdn]",
                         "numberOfRdshInstances": "[parameters('numberOfRdshInstances')]",
                         "sessionHostNamingPrefix": "[variables('rdshVmName')]",
-                        "webAccessServer": "[concat(variables('gatewayVmName'), '.', parameters('domainName'))]",
-                        "vmPrefix": "[variables('vmPrefix')]"
+                        "webAccessServer": "[concat(variables('gatewayVmName'), '.', parameters('domainName'))]"
                     }
                 },
                 "protectedSettings": {
