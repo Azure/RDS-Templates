@@ -93,6 +93,7 @@
     "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-02')]",
     "brokerNicName": "[concat(variables('brokerVmName'), '-nic')]",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'rdsstorage2')]",
+    "storageAccountType": "Standard_LRS",
     "sqlClientUrl": "http://go.microsoft.com/fwlink/?LinkID=239648&clcid=0x409",
     "vmPrefix": "",
     "p": {
@@ -120,7 +121,7 @@
             "name": "[variables('storageAccountName')]",
             "location": "[resourceGroup().location]",
             "properties": {
-                "accountType": "Standard_LRS"
+                "accountType": "[variables('storageAccountType')]"
             }
         },
         {
@@ -145,7 +146,7 @@
             }
         },
         {
-            "apiVersion": "2015-06-15",
+            "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[variables('brokerVmName')]",
             "location": "[resourceGroup().location]",
@@ -173,12 +174,10 @@
                         "version": "latest"
                     },
                     "osDisk": {
-                        "name": "osdisk",
-                        "vhd": {
-                            "uri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/vhds/',variables('brokerVmName'),'-osdisk.vhd')]"
-                        },
-                        "caching": "ReadWrite",
-                        "createOption": "FromImage"
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                        "storageAccountType": "[variables('storageAccountType')]"
+                      }
                     }
                 },
                 "networkProfile": {
