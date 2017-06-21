@@ -130,7 +130,8 @@
     "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
     "assetLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment",
     "apiVersion": "2015-06-15",
-    "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]"
+    "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]",
+    "storageAccountType": "Standard_LRS"
   },
   "resources": [
     {
@@ -139,7 +140,7 @@
       "name": "[parameters('storageAccountName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "accountType": "Standard_LRS"
+        "accountType": "[variables('storageAccountType')]"
       }
     },
     {
@@ -192,7 +193,7 @@
       "name": "[concat(variables('gatewayVmName'),add(copyIndex(), 1))]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
-      "apiVersion": "[variables('apiversion')]",
+      "apiVersion": "2016-04-30-preview",
       "copy": {
         "name": "gw-vm-loop",
         "count": "[parameters('numberOfWebGwInstances')]"
@@ -222,13 +223,11 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "osdisk",
-            "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/gateway',add(copyIndex(), 1),'-osdisk.vhd')]"
-            },
-            "caching": "ReadWrite",
-            "createOption": "FromImage"
-          }
+              "createOption": "FromImage",
+              "managedDisk": {
+                  "storageAccountType": "[variables('storageAccountType')]"
+                }
+            }
         },
         "networkProfile": {
           "networkInterfaces": [
