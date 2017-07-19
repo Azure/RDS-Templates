@@ -86,9 +86,7 @@
     },
     "scriptParameters": "[concat(variables('p').appid, variables('p').apppassword, variables('p').tenantid, variables('p').vault, variables('p').secret, variables('p').adminUsername, variables('p').adminPassword, variables('p').adDomainName)]",
     "scriptFolder": "Scripts",
-    "scriptFileName": "Script.ps1",
-    "impersonateScript": "https://gallery.technet.microsoft.com/scriptcenter/Impersonate-a-User-9bfeff82/file/127189/1/New-ImpersonateUser.ps1",
-    "setPublishedNameScript": "https://gallery.technet.microsoft.com/Change-published-FQDN-for-2a029b80/file/103829/2/Set-RDPublishedName.ps1"
+    "scriptFileName": "Script.ps1"
   },
 
   "resources": [
@@ -107,8 +105,6 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
             "fileUris": [
-                "[variables('impersonateScript')]",
-                "[variables('setPublishedNameScript')]",
                 "[concat(parameters('_artifactsLocation'), '/', variables('scriptFolder'), '/', variables('scriptFileName'), parameters('_artifactsLocationSasToken'))]"
             ]
         },

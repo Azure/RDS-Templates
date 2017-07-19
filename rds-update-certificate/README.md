@@ -22,6 +22,56 @@ The certificate with the private key (in .PFX format) must be stored in Azure Ke
 For information on managing certificates with Azure Key Vault see:  [Get started with Azure Key Vault certificates](https://blogs.technet.microsoft.com/kv/2016/09/26/get-started-with-azure-key-vault-certificates/) and  
 [Manage certificates via Azure Key Vault](https://blogs.technet.microsoft.com/kv/2016/09/26/manage-certificates-via-azure-key-vault/).
 
+## Certificate Subject Naming Conventions
+
+The certificate subject name suffix can either be the same or different than the internal Active Directory domain name. An example of each is below:
+
++ Matching DNS domain name suffixes
+	+ certificate subject: gateway.contoso.com
+	+ external domain name: contoso.com
+	+ internal client access name: broker.contoso.com
+	+ High Availability internal client access name / DNS RR: hardcb.contoso.com
+	+ internal Active Directory name: contoso.com
+
++ Non-matching DNS domain name suffixes
+	+ certificate subject: gateway.contoso.com
+	+ external domain name: contoso.com
+	+ internal client access name: broker.contoso.org
+	+ High Availability internal client access name / DNS RR: hardcb.contoso.org
+	+ internal Active Directory name: contoso.org
+
+## Supported Certificate Types
+
+The following certificate types can be used for authentication into an RDS environment using this template. To use a certificate for RDS authentiation, the certificate must contain Enhanced Key Usage Server Authentication (1.3.6.1.5.5.7.3.1) :
+
++ Self-signed / untrusted
+	+ **NOTE: Self-signed certificates REQUIRE that the certificate be installed on all client machines in the 'Trusted Root' certificate store accessing an RDS environment.**
+	+ [/scripts/rds-certreq.ps1](https://github.com/Azure/azure-quickstart-templates/tree/master/rds-update-certificate/scripts/rds-certreq.ps1) can be used to generate a self-signed single, multiple (SAN), or wild card certificate with sha256 hash for use with RDS. 
+
+		Example:
+		```
+		.\rds-certreq.ps1 -subject *.contoso.com -password B@kedPotat0
+		```
+	+ [Azure Resource Manager Post Deployment RDP Connectivity](https://aka.ms/azure-rm-rdp-post-deployment.ps1) script can be used to connect to RDWeb web site, download certificate, install certificate into Trusted Root certificate store
++ Trusted
+	+ Trusted certificates should not require modification of client machines accessing an RDS environment assuming that the intermediate and / or root CA is installed.
++ Wildcard trusted / untrusted
+	+ option for single sign-on
++ Subject Alternative Name (SAN) / Multi-Domain trusted / untrusted
+	+ option for single sign-on
+
+
+## Single sign-on
+
+For single sign-on, a SAN or wildcard certificate is required. In addition, if using different domain suffixes, the client access name needs to be resolvable using the external domain suffix. This would require adding A records for each brokers internal IP address to the external DNS domain. During template deployment, if all conditions are met, the client access name domain suffix will be modified from internal AD domain name to external domain name.
+
+Example SAN domain names when using different domain suffixes:
++ SAN for certificate: gateway.contoso.com, broker.contoso.com
++ High Availability SAN for certificate: gateway.contoso.com, hardcb.contoso.com
++ external domain name: contoso.com
++ internal client access name: broker.contoso.com
++ High Availability internal client access name / DNS RR: hardcb.contoso.com
++ internal Active Directory name: contoso.org
 
 ## Pre-Requisites
 
@@ -66,12 +116,17 @@ For information on managing certificates with Azure Key Vault see:  [Get started
 	```PowerShell
 	$tenantId = (Get-AzureRmSubscription).TenantId | select -Unique
 	```
+3. If configuring for single sign-on, and using different internal vs external domain names, add A records to external domain DNS for brokers internal IP address.
 
 ## Running the Template
 
 Template applies same certificate to all 4 roles in the deployment: `{ RDGateway | RDWebAccess | RDRedirector | RDPublishing }`.
 
 Template performs the following steps:
++ installs azurerm powershell sdk
 + downloads certificate from the key vault using Service Principal credentials;
-+ invokes [Set-RDCertificate](https://technet.microsoft.com/en-us/library/jj215464.aspx) cmdlet to apply the certificate for each of the roles;
-+ calls [Set-RDClientAccessName](https://technet.microsoft.com/en-us/library/jj215484.aspx) to update Client Access Name on RD Connection Broker to match the certificate.
++ impersonates provided domain admin credentials
++ checks certificate type
++ checks gatewayExternalFqdn
++ checks client access name
++ if external and internal domain suffixes are different, certificate is SAN or wildcard, and client access name resolves to the internal IP address of broker, client access name will be modified to use external domain suffix for single sign-on
