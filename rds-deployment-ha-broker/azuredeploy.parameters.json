@@ -6,7 +6,7 @@
       "value": "HARDCB"
     },
     "dnsServer": {
-      "value": "advm"
+      "value": "dc-vm"
     },
     "existingAdminPassword": {
       "value": ""
