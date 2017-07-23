@@ -190,7 +190,7 @@
             "properties": {
                 "platformFaultDomainCount": 2,
                 "platformUpdateDomainCount": 2,
-                "managed": true
+                "managed": false
             }
         },
         {
@@ -205,7 +205,7 @@
             "properties": {
                 "platformFaultDomainCount": 2,
                 "platformUpdateDomainCount": 2,
-                "managed": true
+                "managed": false
             }
         },
         {
@@ -220,7 +220,7 @@
             "properties": {
                 "platformFaultDomainCount": 2,
                 "platformUpdateDomainCount": 2,
-                "managed": true
+                "managed": false
             }
         },
         {
@@ -343,7 +343,19 @@
                         },
                         "caching": "ReadWrite",
                         "createOption": "FromImage"
-                    }
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "datadisk",
+                            "vhd": {
+                                "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('adStorageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/', concat(variables('adVm').name,'-data-disk.vhd'))]"
+                            },
+                            "caching": "None",
+                            "createOption": "Empty",
+                            "diskSizeGB": "100",
+                            "lun": 0
+                        }
+                    ]
                 },
                 "networkProfile": {
                     "networkInterfaces": [
