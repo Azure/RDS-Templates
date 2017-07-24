@@ -28,7 +28,7 @@
 
 .EXAMPLE
     .\art-rds-deployment-test.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest
-    Example command to deploy rds-deployment with 2 instances using A1 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
+    Example command to deploy rds-deployment with 2 instances using A2 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
 
 .EXAMPLE
     .\art-rds-deployment-test.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -admin cloudadmin -instances 5 -size Standard_A4 -imagesku 2012-r2-Datacenter
@@ -42,7 +42,7 @@
 
 .EXAMPLE
     .\art-rds-deployment-test.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -monitor -postConnect
-    Example command to deploy rds-deployment with 2 instances using A1 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
+    Example command to deploy rds-deployment with 2 instances using A2 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
     before calling New-AzureRmResourceGroupDeployment, the powershell monitor script will be called.
     after successful deployment, the post connect powershell script will be called.
 
@@ -81,7 +81,7 @@
     If specified, will run "https://aka.ms/azure-rm-rdp-post-deployment.ps1" following deployment
 
 .PARAMETER rdshVmSize
-    size is the size of the azure vm's to use. If not specified, A1 will be used.
+    size is the size of the azure vm's to use. If not specified, A2 will be used.
 
 .PARAMETER resourceGroup
     resourceGroup is a mandatory parameter and is the azure arm resourcegroup to use / create for this deployment
@@ -126,7 +126,7 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$postConnect,
     [Parameter(Mandatory = $false)]
-    [string]$rdshVmSize = "Standard_A1",
+    [string]$rdshVmSize = "Standard_A2",
     [Parameter(Mandatory = $true)]
     [string]$resourceGroup,
     [Parameter(Mandatory = $false)]
