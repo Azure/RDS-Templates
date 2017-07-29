@@ -244,7 +244,7 @@ if ([string]::IsNullOrEmpty($domainName))
     write-host "setting domainName to $($domainName)"
 }
 
-if ([string]::IsNullOrEmpty($domainName.Split(".")[1]))
+if (!$domainName.Contains("."))
 {
     $domainName = "$($domainName).lab"
     write-host "setting domainName to $($domainName)"
