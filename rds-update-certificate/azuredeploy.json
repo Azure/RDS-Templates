@@ -93,7 +93,7 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('brokerVmName'),'/customscript')]",
+      "name": "[concat(parameters('brokerVmName'),'/rds-update-certificate')]",
       "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "script"
