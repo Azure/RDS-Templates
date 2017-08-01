@@ -110,7 +110,10 @@
             "sku": "[parameters('imageSKU')]",
             "version": "latest"
         },
-        "storageAccountType": "Standard_LRS"
+        "adStorageAccountName": "[tolower(concat('adsa',uniqueString(resourceGroup().id)))]",
+        "storageAccountName": "[tolower(concat('rdsa',uniqueString(resourceGroup().id)))]",
+        "storageAccountType": "Standard_LRS",
+        "uniqueStorageAccountContainerName": "[tolower(concat('sc', uniqueString(resourceGroup().id)))]"
     },
     "resources": [
         {
@@ -187,7 +190,7 @@
             "properties": {
                 "platformFaultDomainCount": 2,
                 "platformUpdateDomainCount": 2,
-                "managed": true
+                "managed": false
             }
         },
         {
@@ -202,7 +205,7 @@
             "properties": {
                 "platformFaultDomainCount": 2,
                 "platformUpdateDomainCount": 2,
-                "managed": true
+                "managed": false
             }
         },
         {
@@ -217,7 +220,7 @@
             "properties": {
                 "platformFaultDomainCount": 2,
                 "platformUpdateDomainCount": 2,
-                "managed": true
+                "managed": false
             }
         },
         {
@@ -296,11 +299,30 @@
             }
         },
         {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "accountType": "[variables('storageAccountType')]"
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('adStorageAccountName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "accountType": "[variables('storageAccountType')]"
+            }
+        },
+        {
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[variables('adVm').name]",
             "apiVersion": "2016-04-30-preview",
             "location": "[resourceGroup().location]",
             "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('adStorageAccountName'))]",
                 "[resourceId('Microsoft.Network/networkInterfaces', variables('adVm').nic)]"
             ],
             "properties": {
@@ -315,16 +337,23 @@
                 "storageProfile": {
                     "imageReference": "[variables('imageReference')]",
                     "osDisk": {
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "[variables('storageAccountType')]"
-                        }
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('adStorageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/', concat(variables('adVm').name,'-os-disk.vhd'))]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
                     },
                     "dataDisks": [
                         {
-                            "lun": 0,
-                            "diskSizeGB": 1023,
-                            "createOption": "Empty"
+                            "name": "datadisk",
+                            "vhd": {
+                                "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('adStorageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/', concat(variables('adVm').name,'-data-disk.vhd'))]"
+                            },
+                            "caching": "None",
+                            "createOption": "Empty",
+                            "diskSizeGB": "100",
+                            "lun": 0
                         }
                     ]
                 },
@@ -493,6 +522,7 @@
             "name": "gw-vm",
             "location": "[resourceGroup().location]",
             "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
                 "Microsoft.Network/networkInterfaces/gw-nic"
             ],
             "properties": {
@@ -510,10 +540,12 @@
                 "storageProfile": {
                     "imageReference": "[variables('imageReference')]",
                     "osDisk": {
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "[variables('storageAccountType')]"
-                        }
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/','gw-vm-os-disk.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
                     }
                 },
                 "networkProfile": {
@@ -568,6 +600,7 @@
             },
             "name": "[concat('rdsh-', copyindex())]",
             "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
                 "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(), '-nic')]"
             ],
             "properties": {
@@ -585,10 +618,12 @@
                 "storageProfile": {
                     "imageReference": "[variables('imageReference')]",
                     "osDisk": {
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "[variables('storageAccountType')]"
-                        }
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/','rdsh-',copyindex(),'-os-disk.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
                     }
                 },
                 "networkProfile": {
@@ -639,6 +674,7 @@
             "name": "cb-vm",
             "location": "[resourceGroup().location]",
             "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
                 "Microsoft.Network/networkInterfaces/cb-nic"
             ],
             "properties": {
@@ -656,10 +692,12 @@
                 "storageProfile": {
                     "imageReference": "[variables('imageReference')]",
                     "osDisk": {
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "[variables('storageAccountType')]"
-                        }
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/','cb-vm-os-disk.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
                     }
                 },
                 "networkProfile": {
