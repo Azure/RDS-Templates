@@ -12,7 +12,7 @@
       "value": "mydomain.local"
     },
     "numberOfWebGwInstances": {
-      "value": 2
+      "value": 1
     },
     "brokerServer": {
       "value": "Broker.Mydomain.local"
