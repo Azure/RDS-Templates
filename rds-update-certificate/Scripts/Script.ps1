@@ -252,12 +252,22 @@ if ($gatewayConfig -and $gatewayConfig.GatewayExternalFqdn)
                 #
                 foreach ($server in (Get-RDServer -Role RDS-GATEWAY).Server)
                 {
-                    $wmi = Get-WmiObject -ComputerName $server -Namespace root\cimv2\terminalservices `
-                        -Class Win32_TSGatewayResourceGroup | Where-Object Name -eq RDG_DNSRoundRobin
-    
+                    $wmi = Invoke-Command -ComputerName $server -ScriptBlock `
+                    {
+                        Get-WmiObject -Namespace root\cimv2\terminalservices -Class Win32_TSGatewayResourceGroup | Where-Object Name -eq RDG_DNSRoundRobin
+                    }
+                    
+                    log $wmi 
+                    
                     if ($wmi -and $wmi.Resources -inotmatch $clientAccessName)
                     {
-                        $ret = $wmi.InvokeMethod("AddResources", $clientAccessName)
+                        $ret = Invoke-Command -ComputerName $server -ScriptBlock `
+                        {
+                            (Get-WmiObject -Namespace root\cimv2\terminalservices -Class Win32_TSGatewayResourceGroup | Where-Object Name -eq RDG_DNSRoundRobin).InvokeMethod("AddResources", $clientAccessName)
+                        }
+
+                        log $ret
+                        
                         if ($ret -eq 0)
                         {
                             log "updated rap on gateway $server"
