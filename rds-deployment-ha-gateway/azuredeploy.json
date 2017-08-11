@@ -2,25 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "dnsLabelPrefix": {
-      "type": "string",
-      "metadata": {
-        "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
-      }
-    },
     "gatewayLoadBalancer": {
       "type": "string",
       "metadata": {
         "description": "The gateway Load balancer name must match from the RDS deployment. And default value taken by template is loadbalancer."
       },
       "defaultValue": "loadBalancer"
-    },
-    "gatewayPublicIp": {
-      "type": "string",
-      "metadata": {
-        "description": "The gateway public ip name must match from the RDS deployment. And default value taken by template is gwpip."
-      },
-      "defaultValue": "gwpip"
     },
     "backendAddressPools": {
       "type": "string",
@@ -54,7 +41,7 @@
         "description": "The password for the administrator account of the new VM and the domain"
       }
     },
-    "numberOfWebGwInstances": {
+    "numberOfNewWebGwInstances": {
       "type": "int",
       "defaultValue": 2,
       "metadata": {
@@ -67,7 +54,7 @@
         "description": "FQDN for Broker Server"
       }
     },
-    "WebURL": {
+    "publicIPAddressDNSName": {
       "type": "string",
       "metadata": {
         "description": "This is RD Gateway external FQDN. This shall be picked from existing basic RDS deploment."
@@ -121,13 +108,9 @@
   "variables": {
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
-    "vnetAddressRange": "10.0.0.0/16",
-    "subnetAddressRange": "10.0.0.0/24",
-    "dnsServerPrivateIp": "10.0.0.8",
     "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
     "assetLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment",
     "apiVersion": "2015-06-15",
-    "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]"
   },
   "resources": [
     {
@@ -146,25 +129,13 @@
       "location": "[resourceGroup().location]"
     },
     {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[parameters('gatewayPublicIp')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('dnsLabelPrefix')]"
-        }
-      }
-    },
-    {
       "name": "[concat('gw-',copyindex(),'-nic')]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
       "apiVersion": "[variables('apiversion')]",
       "copy": {
         "name": "gw-nic-loop",
-        "count": "[parameters('numberOfWebGwInstances')]"
+        "count": "[parameters('numberOfNewWebGwInstances')]"
       },
       "properties": {
         "ipConfigurations": [
@@ -192,7 +163,7 @@
       "apiVersion": "[variables('apiversion')]",
       "copy": {
         "name": "gw-vm-loop",
-        "count": "[parameters('numberOfWebGwInstances')]"
+        "count": "[parameters('numberOfNewWebGwInstances')]"
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
@@ -287,7 +258,7 @@
             "protectedSettings": {
               "Items": { "AdminPassword": "[parameters('adminPassword')]" },
               "storageAccountName": "[parameters('storageaccountname')]",
-              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('adminusername'),'\" ', '-password \"',parameters('adminpassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('WebURL'),'\" ','-Domainname \"',parameters('adDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'))]"
+              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('adminusername'),'\" ', '-password \"',parameters('adminpassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('publicIPAddressDNSName'),'\" ','-Domainname \"',parameters('adDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfNewWebGwInstances'))]"
             }
           }
         }
