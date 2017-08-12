@@ -2,38 +2,38 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "availabilitySet": {
-            "value": "rdsh-availabilityset"
-        },
-        "existingDomainName": {
-            "value": "contoso.com"
-        },
-        "existingAdminUsername": {
-            "value": "cloudadmin"
-        },
-        "existingAdminPassword": {
-            "value": ""
-        },
-        "rdshTemplateImageUri": {
-            "value": "https://{enter_storage_account_name_here}.core.windows.net/vhds/{enter_template_image_name_here}.vhd"
-        },
-        "rdshUpdateIteration": {
-            "value": "a"
-        },
-        "userLogoffTimeoutInMinutes": {
-            "value": 60
-        },
-        "existingVnetName": {
-            "value": "vnet"
-        },
-        "existingSubnetName": {
-            "value": "subnet"
-        },
         "_artifactsLocation": {
             "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-update-rdsh-collection"
         },
         "_artifactsLocationSasToken": {
             "value": ""
+        },
+        "availabilitySet": {
+            "value": "rdsh-availabilityset"
+        },
+        "existingAdminPassword": {
+            "value": ""
+        },
+        "existingAdminUsername": {
+            "value": "cloudadmin"
+        },
+        "existingDomainName": {
+            "value": "contoso.com"
+        },
+        "existingSubnetName": {
+            "value": "subnet"
+        },
+        "existingVnetName": {
+            "value": "vnet"
+        },
+        "rdshTemplateImageUri": {
+            "value": "https://{enter_storage_account_name_here}.core.windows.net/vhds/{enter_template_image_name_here}.vhd"
+        },
+        "rdshUpdateIteration": {
+            "value": "1"
+        },
+        "userLogoffTimeoutInMinutes": {
+            "value": 60
         }
     }
 }

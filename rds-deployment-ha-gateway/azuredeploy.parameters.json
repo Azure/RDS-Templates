@@ -2,32 +2,38 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "WebURL": {
+      "value": "{enter_external_fqdn_here(example: gateway.contoso.com)}"
+    },
+    "_artifactsLocation": {
+      "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/"
+    },
+    "adDomainName": {
+      "value": "contoso.com"
+    },
     "adminPassword": {
       "value": "{enter_existing_adminUsername_password_here}"
     },
     "adminUsername": {
       "value": "cloudadmin"
     },
-    "adDomainName": {
-      "value": "contoso.com"
-    },
-    "numberOfWebGwInstances": {
-      "value": 1
+    "backendAddressPools": {
+      "value": "backendAddressPool"
     },
     "brokerServer": {
       "value": "rdcb-01.contoso.com"
     },
-    "WebURL": {
-      "value": "{enter_external_fqdn_here(example: gateway.contoso.com)}"
+    "dnsLabelPrefix": {
+      "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
     },
     "domainNetbios": {
       "value": "contoso"
     },
-    "dnsLabelPrefix": {
-      "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
+    "existingSubnet": {
+      "value": "Subnet"
     },
-    "storageAccountName": {
-      "value": "{enter_existing_storage_account_here}"
+    "existingVnet": {
+      "value": "vnet"
     },
     "gw-availabilityset": {
       "value": "gw-availabilityset"
@@ -35,17 +41,11 @@
     "loadBalancer": {
       "value": "loadBalancer"
     },
-    "backendAddressPools": {
-      "value": "backendAddressPool"
+    "numberOfWebGwInstances": {
+      "value": 1
     },
-    "existingVnet": {
-      "value": "vnet"
-    },
-    "existingSubnet": {
-      "value": "Subnet"
-    },
-    "_artifactsLocation": {
-      "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/"
+    "storageAccountName": {
+      "value": "{enter_existing_storage_account_here}"
     }
   }
 }

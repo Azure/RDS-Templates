@@ -2,11 +2,11 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "vaultName": {
-            "value": "{enter_existing_vault_name_here}"
+        "_artifactsLocation": {
+            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-update-certificate/"
         },
-        "certificateName": {
-            "value": "{enter_existing_vault_certificate_name_here}"
+        "_artifactsLocationSasToken": {
+            "value": ""
         },
         "applicationId": {
             "value": "{enter_existing_vault_certificate_application_id_here}"
@@ -14,26 +14,26 @@
         "applicationPassword": {
             "value": "{enter_existing_vault_certificate_password_here}"
         },
-        "tenantId": {
-            "value": "{enter_existing_subscription_tenant_id_here}"
-        },
         "brokerVmName": {
             "value": "rdcb-01"
         },
-        "existingDomainName": {
-            "value": "contoso.com"
-        },
-        "existingAdminUsername": {
-            "value": "cloudadmin"
+        "certificateName": {
+            "value": "{enter_existing_vault_certificate_name_here}"
         },
         "existingAdminPassword": {
             "value": "{enter_existing_adminUsername_password_here}"
         },
-        "_artifactsLocation": {
-            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-update-certificate/"
+        "existingAdminUsername": {
+            "value": "cloudadmin"
         },
-        "_artifactsLocationSasToken": {
-            "value": ""
+        "existingDomainName": {
+            "value": "contoso.com"
+        },
+        "tenantId": {
+            "value": "{enter_existing_subscription_tenant_id_here}"
+        },
+        "vaultName": {
+            "value": "{enter_existing_vault_name_here}"
         }
     }
 }

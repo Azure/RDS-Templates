@@ -2,32 +2,32 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "rdshVmSize": {
-      "value": "Standard_A2"
+    "DomainName": {
+      "value": "contoso.com"
     },
-    "numberOfRdshInstances": {
-      "value": 2
-    },
-    "dnsLabelPrefix": {
-      "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
+    "_artifactsLocation": {
+      "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment/"
     },
     "adminPassword": {
       "value": "GEN-PASSWORD"
     },
-    "publicIPAddressName": {
-      "value": "gwpip"
-    },
-    "DomainName": {
-      "value": "contoso.com"
-    },
     "adminUsername": {
       "value": "cloudadmin"
+    },
+    "dnsLabelPrefix": {
+      "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
     },
     "imageSKU": {
       "value": "2016-Datacenter"
     },
-    "_artifactsLocation": {
-      "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment/"
+    "numberOfRdshInstances": {
+      "value": 2
+    },
+    "publicIPAddressName": {
+      "value": "gwpip"
+    },
+    "rdshVmSize": {
+      "value": "Standard_A2"
     }
   }
 }
