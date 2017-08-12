@@ -97,8 +97,36 @@ param(
     }
 
 
-	log "attempting impersonate as $domain\$username..."
-	.\New-ImpersonateUser.ps1 -Username $username -Domain $domain -Password $password
+#  impersonate as admin 
+#  from .\New-ImpersonateUser.ps1 in gallery https://gallery.technet.microsoft.com/scriptcenter/Impersonate-a-User-9bfeff82
+#
+$ImpersonatedUser = @{}
+log "impersonating as '$username'..."
+Add-Type -Namespace Import -Name Win32 -MemberDefinition @'
+        [DllImport("advapi32.dll", SetLastError = true)]
+        public static extern bool LogonUser(string user, string domain, string password, int logonType, int logonProvider, out IntPtr token);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool CloseHandle(IntPtr handle);
+'@
+
+$tokenHandle = 0
+$returnValue = [Import.Win32]::LogonUser($userName, $domain, $password, 2, 0, [ref]$tokenHandle)
+
+if (!$returnValue)
+{
+    $errCode = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error();
+    log "failed a call to LogonUser with error code: $errCode"
+    throw [System.ComponentModel.Win32Exception]$errCode
+}
+else
+{
+    $ImpersonatedUser.ImpersonationContext = [System.Security.Principal.WindowsIdentity]::Impersonate($tokenHandle)
+    [void][Import.Win32]::CloseHandle($tokenHandle)
+    log "impersonating user $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name) returnValue: '$returnValue'"
+}
+
+whoami
 
 	try 
 	{
@@ -231,7 +259,7 @@ param(
 	finally 
 	{
 		log "remove impersonation..."
-		Remove-ImpersonateUser
+		$ImpersonatedUser.ImpersonationContext.Undo()
 	}
 
     log "done. success."

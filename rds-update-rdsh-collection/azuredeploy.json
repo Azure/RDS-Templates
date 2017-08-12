@@ -101,7 +101,6 @@
     "variables": {
         "iteration": "[toLower(parameters('rdshUpdateIteration'))]",
         "storageAccountName": "[split( split( parameters('rdshTemplateImageUri'), '/')[2], '.' )[0]]",
-        "impersonateScript": "https://gallery.technet.microsoft.com/scriptcenter/Impersonate-a-User-9bfeff82/file/127189/1/New-ImpersonateUser.ps1",
         "networkNameSuffix": "-nic",
         "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
         "vmPrefix": "",
@@ -254,7 +253,6 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "fileUris": [
-                        "[variables('impersonateScript')]",
                         "[concat(parameters('_artifactsLocation'), '/', variables('scriptFolder'), '/', variables('scriptFileName'), parameters('_artifactsLocationSasToken'))]"
                     ]
                 },
