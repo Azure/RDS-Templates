@@ -116,6 +116,13 @@
         "description": "The subnet name of AD domain. For example johnsubnet1"
       },
       "defaultValue": "Subnet"
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+      },
+      "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/"
     }
   },
   "variables": {
@@ -128,7 +135,6 @@
     "subnetAddressRange": "10.0.0.0/24",
     "dnsServerPrivateIp": "10.0.0.8",
     "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
-    "_artifactsLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway",
     "assetLocation": "[variables('_artifactsLocation')]",
     "apiVersion": "2015-06-15",
     "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]",
@@ -224,11 +230,11 @@
             "version": "latest"
           },
           "osDisk": {
-              "createOption": "FromImage",
-              "managedDisk": {
-                  "storageAccountType": "[variables('storageAccountType')]"
-                }
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "[variables('storageAccountType')]"
             }
+          }
         },
         "networkProfile": {
           "networkInterfaces": [
@@ -285,10 +291,14 @@
             "typeHandlerVersion": "1.8",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "fileUris": [ "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1" ]
+              "fileUris": [
+                "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1"
+              ]
             },
             "protectedSettings": {
-              "Items": { "AdminPassword": "[parameters('existingAdminPassword')]" },
+              "Items": {
+                "AdminPassword": "[parameters('existingAdminPassword')]"
+              },
               "storageAccountName": "[parameters('storageaccountname')]",
               "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('existingAdminUserName'),'\" ', '-password \"',parameters('existingAdminPassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('externalFqdn'),'\" ','-Domainname \"',parameters('existingDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'),'-ServerName ',variables('gatewayVmName'))]"
             }

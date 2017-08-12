@@ -66,6 +66,13 @@
       "metadata": {
         "description": "The size of the RDSH VMs"
       }
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+      },
+      "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-existing-ad/"
     }
   },
   "variables": {
@@ -85,7 +92,6 @@
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
     "gatewayNicName": "[concat(variables('gatewayVmName'),variables('networkNameSuffix'))]",
     "gatewayIpRef": "gatewaypublicIp",
-    "_artifactsLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment-existing-ad/",
     "assetLocation": "[variables('_artifactsLocation')]",
     "networkNameSuffix": "-nic",
     "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
@@ -441,7 +447,6 @@
             "name": "osdisk",
             "vhd": {
               "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('rdshVmName'),add(copyindex(), 1),'-os-disk.vhd')]"
-
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -579,16 +584,16 @@
   ],
   "outputs": {
     "fqdn": {
-        "type": "string",
-        "value": "[reference(variables('gatewayIpRef')).dnsSettings.fqdn]"
+      "type": "string",
+      "value": "[reference(variables('gatewayIpRef')).dnsSettings.fqdn]"
     },
     "ipaddress": {
-        "type": "string",
-        "value": "[reference(variables('gatewayIpRef')).ipAddress]"
+      "type": "string",
+      "value": "[reference(variables('gatewayIpRef')).ipAddress]"
     },
     "rdWebUrl": {
-        "type": "string",
-        "value": "[concat('https://', reference(variables('gatewayIpRef')).dnsSettings.fqdn, '/rdweb')]"
+      "type": "string",
+      "value": "[concat('https://', reference(variables('gatewayIpRef')).dnsSettings.fqdn, '/rdweb')]"
     }
   }
 }
