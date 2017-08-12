@@ -15,7 +15,7 @@
       "value": 2
     },
     "brokerServer": {
-      "value": "Broker.Mydomain.local"
+      "value": "rdcb-01.Mydomain.local"
     },
     "WebURL": {
       "value": "RDS-WebURL"

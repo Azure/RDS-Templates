@@ -18,7 +18,7 @@
             "value": "GEN-UNIQUE"
         },
         "brokerVmName": {
-            "value": "cb-vm"
+            "value": "rdcb-01"
         },
         "existingDomainName": {
             "value": "mydomain.local"

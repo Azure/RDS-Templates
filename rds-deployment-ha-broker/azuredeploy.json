@@ -11,7 +11,7 @@
     },
     "dnsServer": {
       "type": "string",
-      "defaultValue": "dc",
+      "defaultValue": "addc-01",
       "metadata": {
         "description": "The name of the DNS Server to add the DNS entry to for the Connection Broker Names"
       }
@@ -24,6 +24,7 @@
     },
     "existingAdminUsername": {
       "type": "string",
+      "defaultValue": "cloudAdmin",
       "metadata": {
         "description": "Name of domain user account with administrative priveledges to manage RDS deployment"
       }
@@ -37,7 +38,7 @@
     },
     "existingBrokerHostname": {
       "type": "string",
-      "defaultValue": "broker",
+      "defaultValue": "rdcb-01",
       "metadata": {
         "description": "The host name of the existing Connection Broker vm"
       }
@@ -89,10 +90,12 @@
   },
 
   "variables": {
-    "brokerVmName": "cb-vm-2",
-    "brokerNicName": "cb-2-nic",
+    "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-02')]",
+    "brokerNicName": "[concat(variables('brokerVmName'), '-nic')]",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'rdsstorage2')]",
+    "storageAccountType": "Standard_LRS",
     "sqlClientUrl": "http://go.microsoft.com/fwlink/?LinkID=239648&clcid=0x409",
+    "vmPrefix": "",
     "p": {
       "broker": "[concat(' -existingBroker ', parameters('existingBrokerHostname'))]",
       "connstr": "[concat(' -primaryDbConnectionString \"', parameters('primaryDbConnectionString'), '\"')]",
@@ -118,7 +121,7 @@
             "name": "[variables('storageAccountName')]",
             "location": "[resourceGroup().location]",
             "properties": {
-                "accountType": "Standard_LRS"
+                "accountType": "[variables('storageAccountType')]"
             }
         },
         {
@@ -143,7 +146,7 @@
             }
         },
         {
-            "apiVersion": "2015-06-15",
+            "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[variables('brokerVmName')]",
             "location": "[resourceGroup().location]",
@@ -159,7 +162,7 @@
                     "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('existingBrokerAvailabilitySet'))]"
                 },
                 "osProfile": {
-                    "computerName": "cb-vm-2",
+                    "computerName": "[variables('brokerVmName')]",
                     "adminUsername": "[parameters('existingAdminUsername')]",
                     "adminPassword": "[parameters('existingAdminPassword')]"
                 },
@@ -171,12 +174,10 @@
                         "version": "latest"
                     },
                     "osDisk": {
-                        "name": "osdisk",
-                        "vhd": {
-                            "uri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/vhds/',variables('brokerVmName'),'-osdisk.vhd')]"
-                        },
-                        "caching": "ReadWrite",
-                        "createOption": "FromImage"
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                        "storageAccountType": "[variables('storageAccountType')]"
+                      }
                     }
                 },
                 "networkProfile": {

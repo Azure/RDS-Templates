@@ -102,6 +102,9 @@
         "iteration": "[toLower(parameters('rdshUpdateIteration'))]",
         "storageAccountName": "[split( split( parameters('rdshTemplateImageUri'), '/')[2], '.' )[0]]",
         "impersonateScript": "https://gallery.technet.microsoft.com/scriptcenter/Impersonate-a-User-9bfeff82/file/127189/1/New-ImpersonateUser.ps1",
+        "networkNameSuffix": "-nic",
+        "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
+        "vmPrefix": "",
         "p": {
             "domain": "[concat(' -domain ', parameters('existingDomainName'))]",
             "user": "[concat(' -username ', parameters('existingAdminUsername'))]",
@@ -120,7 +123,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat('rdsh-', copyindex(),variables('iteration'), '-nic')]",
+            "name": "[concat(variables('rdshVmName'), variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'), variables('networkNameSuffix'))]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-nic-loop",
@@ -149,14 +152,14 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat('rdsh-', copyindex(),variables('iteration'))]",
+            "name": "[concat(variables('rdshVmName'), variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'))]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(),variables('iteration'), '-nic')]"
+                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshVmName'), variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'), variables('networkNameSuffix'))]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -166,13 +169,13 @@
                     "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySet'))]"
                 },
                 "osProfile": {
-                    "computerName": "[concat('rdsh-', copyindex(),variables('iteration'))]",
+                    "computerName": "[concat(variables('rdshVmName'), variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'))]",
                     "adminUsername": "[parameters('existingAdminUsername')]",
                     "adminPassword": "[parameters('existingAdminPassword')]"
                 },
                 "storageProfile": {
                     "osDisk": {
-                        "name": "[concat('rdsh-', copyindex(),variables('iteration'),'-osDisk')]",
+                        "name": "[concat(variables('rdshVmName'), variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'),'-osDisk')]",
                         "osType": "Windows",
                         "caching": "ReadWrite",
                         "createOption": "FromImage",
@@ -180,7 +183,7 @@
                             "uri": "[parameters('rdshTemplateImageUri')]"
                         },
                         "vhd": {
-                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob, 'vhds/rdsh-', copyindex(), variables('iteration'), '-osdisk.vhd')]"
+                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob, 'vhds/rdsh-', variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'), '-osdisk.vhd')]"
                         }
 
                     }
@@ -188,7 +191,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('rdsh-', copyindex(),variables('iteration'), '-nic'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('rdshVmName'), variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'), variables('networkNameSuffix')))]"
                         }
                     ]
                 },
@@ -203,10 +206,10 @@
                 {
                     "apiVersion": "2015-06-15",
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat('rdsh-',copyindex(),variables('iteration'),'/sessionhost')]",
+                    "name": "[concat(variables('rdshVmName'),variables('iteration'),padLeft(add(copyindex(), 1), 2, '0'),'/sessionhost')]",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex(),variables('iteration')))]"
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('rdshVmName'), variables('iteration'),padLeft(add(copyindex(), 1), 2, '0')))]"
                     ],
                     "properties": {
                         "publisher": "Microsoft.Powershell",
