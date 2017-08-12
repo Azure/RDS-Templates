@@ -3,31 +3,37 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "vaultName": {
-            "value": "myVault"
+            "value": "{enter_existing_vault_name_here}"
         },
         "certificateName": {
-            "value": "certificate"
+            "value": "{enter_existing_vault_certificate_name_here}"
         },
         "applicationId": {
-            "value": "GEN-UNIQUE"
+            "value": "{enter_existing_vault_certificate_application_id_here}"
         },
         "applicationPassword": {
-            "value": "GEN-PASSWORD"
+            "value": "{enter_existing_vault_certificate_password_here}"
         },
         "tenantId": {
-            "value": "GEN-UNIQUE"
+            "value": "{enter_existing_subscription_tenant_id_here}"
         },
         "brokerVmName": {
             "value": "rdcb-01"
         },
         "existingDomainName": {
-            "value": "mydomain.local"
+            "value": "contoso.com"
         },
         "existingAdminUsername": {
-            "value": "GEN-USER"
+            "value": "cloudadmin"
         },
         "existingAdminPassword": {
-            "value": "GEN-PASSWORD"
+            "value": "{enter_existing_adminUsername_password_here}"
+        },
+        "_artifactsLocation": {
+            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-update-certificate/"
+        },
+        "_artifactsLocationSasToken": {
+            "value": ""
         }
     }
 }

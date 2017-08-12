@@ -128,7 +128,8 @@
     "subnetAddressRange": "10.0.0.0/24",
     "dnsServerPrivateIp": "10.0.0.8",
     "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
-    "assetLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment",
+    "_artifactsLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway",
+    "assetLocation": "[variables('_artifactsLocation')]",
     "apiVersion": "2015-06-15",
     "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]",
     "storageAccountType": "Standard_LRS"
@@ -252,7 +253,7 @@
             "typeHandlerVersion": "2.19",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "ModulesUrl": "[concat(variables('assetLocation'),'/Configuration.zip')]",
+              "ModulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\Gateway",
               "properties": {
                 "DomainName": "[parameters('adDomainName')]",

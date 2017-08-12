@@ -6,10 +6,10 @@
       "value": "HARDCB"
     },
     "dnsServer": {
-      "value": "dc-vm"
+      "value": "addc-01"
     },
     "existingAdminPassword": {
-      "value": ""
+      "value": "{enter_existing_adminUsername_password_here}"
     },
     "existingAdminUsername": {
       "value": "cloudadmin"
@@ -18,10 +18,10 @@
       "value": "cb-availabilityset"
     },
     "existingBrokerHostname": {
-      "value": "broker"
+      "value": "rdcb-01"
     },
     "existingDomainName": {
-      "value": ""
+      "value": "contoso.com"
     },
     "existingSubnetName": {
       "value": "subnet"
@@ -37,6 +37,9 @@
     },
     "windowsServerVersion": {
       "value": "2016-Datacenter"
-    }
+    },
+        "_artifactsLocation": {
+            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-broker/"
+        }
   }
 }

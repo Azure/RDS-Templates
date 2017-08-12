@@ -8,7 +8,7 @@
         "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'. For example johndns1 will result the final RDWEB access url like https://johndns1.westus.cloudapp.azure.com/RDWeb"
       }
     },
-    "adDomainName": {
+    "existingDomainName": {
       "type": "string",
       "metadata": {
         "description": "The name of the AD domain. For example contoso.com"
@@ -24,19 +24,19 @@
     },
     "existingSubnet": {
       "type": "string",
-      "defaultValue": "Subnet",
+      "defaultValue": "subnet",
       "metadata": {
         "description": "The subnet name of AD domain. For example johnsubnet1"
       }
     },
-    "adminUsername": {
+    "existingAdminUserName": {
       "type": "string",
       "metadata": {
         "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'. For example: johnadmin"
       },
       "defaultValue": "cloudadmin"
     },
-    "adminPassword": {
+    "existingAdminPassword": {
       "type": "securestring",
       "metadata": {
         "description": "The password for the administrator account of the new VM and the domain"
@@ -55,7 +55,7 @@
     },
     "numberOfRdshInstances": {
       "type": "int",
-      "defaultValue": 1,
+      "defaultValue": 2,
       "metadata": {
         "description": "Number of RemoteDesktopSessionHosts"
       }
@@ -85,7 +85,8 @@
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
     "gatewayNicName": "[concat(variables('gatewayVmName'),variables('networkNameSuffix'))]",
     "gatewayIpRef": "gatewaypublicIp",
-    "assetLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment/",
+    "_artifactsLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment-existing-ad/",
+    "assetLocation": "[variables('_artifactsLocation')]",
     "networkNameSuffix": "-nic",
     "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
     "vmPrefix": ""
@@ -342,8 +343,8 @@
         },
         "osProfile": {
           "computerName": "gateway",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminUsername": "[parameters('existingAdminUserName')]",
+          "adminPassword": "[parameters('existingAdminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -387,16 +388,16 @@
               "ModulesUrl": "[concat(variables('assetLocation'),'/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\Gateway",
               "Properties": {
-                "DomainName": "[parameters('adDomainName')]",
+                "DomainName": "[parameters('existingDomainName')]",
                 "AdminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
+                  "UserName": "[parameters('existingAdminUserName')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
                 }
               }
             },
             "protectedSettings": {
               "Items": {
-                "AdminPassword": "[parameters('adminPassword')]"
+                "AdminPassword": "[parameters('existingAdminPassword')]"
               }
             }
           }
@@ -426,8 +427,8 @@
         },
         "osProfile": {
           "computerName": "[concat(variables('rdshVmName'), add(copyindex(), 1))]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminUsername": "[parameters('existingAdminUserName')]",
+          "adminPassword": "[parameters('existingAdminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -469,19 +470,19 @@
             "typeHandlerVersion": "2.11",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "ModulesUrl": "[concat(variables('assetLocation'),'/Configuration.zip')]",
+              "ModulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\SessionHost",
               "Properties": {
-                "DomainName": "[parameters('adDomainName')]",
+                "DomainName": "[parameters('existingDomainName')]",
                 "AdminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
+                  "UserName": "[parameters('existingAdminUserName')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
                 }
               }
             },
             "protectedSettings": {
               "Items": {
-                "AdminPassword": "[parameters('adminPassword')]"
+                "AdminPassword": "[parameters('existingAdminPassword')]"
               }
             }
           }
@@ -508,8 +509,8 @@
         },
         "osProfile": {
           "computerName": "[variables('brokerVmName')]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminUsername": "[parameters('existingAdminUserName')]",
+          "adminPassword": "[parameters('existingAdminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -556,21 +557,21 @@
           "configurationFunction": "Configuration.ps1\\RDSDeployment",
           "Properties": {
             "adminCreds": {
-              "UserName": "[parameters('adminUsername')]",
+              "UserName": "[parameters('existingAdminUserName')]",
               "Password": "PrivateSettingsRef:adminPassword"
             },
-            "connectionBroker": "[concat(variables('brokerVmName'), '.', parameters('adDomainName'))]",
-            "domainName": "[parameters('adDomainName')]",
+            "connectionBroker": "[concat(variables('brokerVmName'), '.', parameters('existingDomainName'))]",
+            "domainName": "[parameters('existingDomainName')]",
             "externalfqdn": "[reference(variables('gatewayIpRef')).dnsSettings.fqdn]",
             "numberOfRdshInstances": "[parameters('numberOfRdshInstances')]",
             "sessionHostNamingPrefix": "rdsh-",
-            "webAccessServer": "[concat('gateway.',parameters('adDomainName'))]",
+            "webAccessServer": "[concat('gateway.',parameters('existingDomainName'))]",
             "vmPrefix": "[variables('vmPrefix')]"
           }
         },
         "protectedSettings": {
           "Items": {
-            "adminPassword": "[parameters('adminPassword')]"
+            "adminPassword": "[parameters('existingAdminPassword')]"
           }
         }
       }

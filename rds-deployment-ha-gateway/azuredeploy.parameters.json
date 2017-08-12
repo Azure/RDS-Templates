@@ -3,31 +3,31 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "adminPassword": {
-      "value": "GEN-PASSWORD"
+      "value": "{enter_existing_adminUsername_password_here}"
     },
     "adminUsername": {
-      "value": "GEN-USER"
+      "value": "cloudadmin"
     },
     "adDomainName": {
-      "value": "mydomain.local"
+      "value": "contoso.com"
     },
     "numberOfWebGwInstances": {
-      "value": 2
+      "value": 1
     },
     "brokerServer": {
-      "value": "rdcb-01.Mydomain.local"
+      "value": "rdcb-01.contoso.com"
     },
     "WebURL": {
-      "value": "RDS-WebURL"
+      "value": "{enter_external_fqdn_here(example: gateway.contoso.com)}"
     },
     "domainNetbios": {
-      "value": "Mydomain"
+      "value": "contoso"
     },
     "dnsLabelPrefix": {
-      "value": "GEN-UNIQUE"
+      "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
     },
     "storageAccountName": {
-      "value": "GEN-UNIQUE"
+      "value": "{enter_existing_storage_account_here}"
     },
     "gw-availabilityset": {
       "value": "gw-availabilityset"
@@ -36,13 +36,16 @@
       "value": "loadBalancer"
     },
     "backendAddressPools": {
-      "value": "LBBAP"
+      "value": "backendAddressPool"
     },
     "existingVnet": {
       "value": "vnet"
     },
     "existingSubnet": {
       "value": "Subnet"
+    },
+    "_artifactsLocation": {
+      "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/"
     }
   }
 }

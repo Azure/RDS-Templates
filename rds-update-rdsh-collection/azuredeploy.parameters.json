@@ -2,17 +2,20 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "availabilitySet": {
+            "value": "rdsh-availabilityset"
+        },
         "existingDomainName": {
-            "value": "mydomain.local"
+            "value": "contoso.com"
         },
         "existingAdminUsername": {
-            "value": "GEN-USER"
+            "value": "cloudadmin"
         },
         "existingAdminPassword": {
-            "value": "GEN-PASSWORD"
+            "value": ""
         },
         "rdshTemplateImageUri": {
-            "value": "https://rdsstorage.blob.core.windows.net/vhds/MyWindowServerOSImage.vhd"
+            "value": "https://{enter_storage_account_name_here}.core.windows.net/vhds/{enter_template_image_name_here}.vhd"
         },
         "rdshUpdateIteration": {
             "value": "a"
@@ -26,8 +29,11 @@
         "existingSubnetName": {
             "value": "subnet"
         },
-        "availabilitySet": {
-            "value": "rdsh-availabilityset"
+        "_artifactsLocation": {
+            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-update-rdsh-collection"
+        },
+        "_artifactsLocationSasToken": {
+            "value": ""
         }
     }
 }
