@@ -8,15 +8,6 @@
     "_artifactsLocation": {
       "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/"
     },
-    "adDomainName": {
-      "value": "contoso.com"
-    },
-    "adminPassword": {
-      "value": "{enter_existing_adminUsername_password_here}"
-    },
-    "adminUsername": {
-      "value": "cloudadmin"
-    },
     "backendAddressPools": {
       "value": "backendAddressPool"
     },
@@ -28,6 +19,15 @@
     },
     "domainNetbios": {
       "value": "contoso"
+    },
+    "existingAdminPassword": {
+      "value": "{enter_existing_adminUsername_password_here}"
+    },
+    "existingAdminUsername": {
+      "value": "cloudadmin"
+    },
+    "existingDomainName": {
+      "value": "contoso.com"
     },
     "existingSubnet": {
       "value": "Subnet"

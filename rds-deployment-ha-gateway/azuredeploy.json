@@ -36,19 +36,19 @@
         "description": "The gw-availabilityset name must match from the RDS deployment. And default value taken by template is gw-availabilityset."
       }
     },
-    "adDomainName": {
+    "existingDomainName": {
       "type": "string",
       "metadata": {
         "description": "The FQDN of the AD domain"
       }
     },
-    "adminUsername": {
+    "existingAdminUserName": {
       "type": "string",
       "metadata": {
         "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'"
       }
     },
-    "adminPassword": {
+    "existingAdminPassword": {
       "type": "securestring",
       "metadata": {
         "description": "The password for the administrator account of the new VM and the domain"
@@ -213,8 +213,8 @@
         },
         "osProfile": {
           "computerName": "[concat('gateway',add(copyIndex(), 1))]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminUsername": "[parameters('existingAdminUserName')]",
+          "adminPassword": "[parameters('existingAdminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -256,16 +256,16 @@
               "ModulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\Gateway",
               "properties": {
-                "DomainName": "[parameters('adDomainName')]",
+                "DomainName": "[parameters('existingDomainName')]",
                 "AdminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
+                  "UserName": "[parameters('existingAdminUserName')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
                 }
               }
             },
             "protectedSettings": {
               "Items": {
-                "AdminPassword": "[parameters('adminPassword')]"
+                "AdminPassword": "[parameters('existingAdminPassword')]"
               }
             }
           }
@@ -288,9 +288,9 @@
               "fileUris": [ "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1" ]
             },
             "protectedSettings": {
-              "Items": { "AdminPassword": "[parameters('adminPassword')]" },
+              "Items": { "AdminPassword": "[parameters('existingAdminPassword')]" },
               "storageAccountName": "[parameters('storageaccountname')]",
-              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('adminusername'),'\" ', '-password \"',parameters('adminpassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('WebURL'),'\" ','-Domainname \"',parameters('adDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'),'-ServerName ',variables('gatewayVmName'))]"
+              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('existingAdminUserName'),'\" ', '-password \"',parameters('existingAdminPassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('WebURL'),'\" ','-Domainname \"',parameters('existingDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'),'-ServerName ',variables('gatewayVmName'))]"
             }
           }
         }
