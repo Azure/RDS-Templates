@@ -218,7 +218,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]"
         },
         "osProfile": {
-          "computerName": "[concat('gateway',add(copyIndex(), 1))]",
+          "computerName": "[concat(variables('gatewayVmName'),add(copyIndex(), 1))]",
           "adminUsername": "[parameters('existingAdminUserName')]",
           "adminPassword": "[parameters('existingAdminPassword')]"
         },
@@ -230,10 +230,12 @@
             "version": "latest"
           },
           "osDisk": {
-            "createOption": "FromImage",
-            "managedDisk": {
-              "storageAccountType": "[variables('storageAccountType')]"
-            }
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/',concat(variables('gatewayVmName'),add(copyIndex(), 1)),'-osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
           }
         },
         "networkProfile": {
@@ -292,7 +294,7 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
               "fileUris": [
-                "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1"
+                "[concat(parameters('_artifactsLocation','Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1'))"
               ]
             },
             "protectedSettings": {
