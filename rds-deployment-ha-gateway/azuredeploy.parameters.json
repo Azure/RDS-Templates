@@ -2,7 +2,7 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "WebURL": {
+    "externalFqdn": {
       "value": "{enter_external_fqdn_here(example: gateway.contoso.com)}"
     },
     "_artifactsLocation": {
