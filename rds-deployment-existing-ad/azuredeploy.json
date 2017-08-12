@@ -92,7 +92,7 @@
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
     "gatewayNicName": "[concat(variables('gatewayVmName'),variables('networkNameSuffix'))]",
     "gatewayIpRef": "gatewaypublicIp",
-    "assetLocation": "[variables('_artifactsLocation')]",
+    "assetLocation": "[parameters('_artifactsLocation')]",
     "networkNameSuffix": "-nic",
     "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
     "vmPrefix": ""

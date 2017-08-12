@@ -114,8 +114,8 @@
       "sqlserver": "[concat(' -sqlServer \"', parameters('sqlServer'), '\"')]"
     },
     "scriptParameters": "[concat(variables('p').broker, variables('p').connstr, variables('p').domain, variables('p').user, variables('p').pwd, variables('p').can, variables('p').sqlnclient, variables('p').dnsserver, variables('p').sqlserver)]",
-    "assetLocation": "[variables('_artifactsLocation')]",
-    "scriptLocation": "[concat(variables('_artifactsLocation'), '/Scripts')]",
+    "assetLocation": "[parameters('_artifactsLocation')]",
+    "scriptLocation": "[concat(parameters('_artifactsLocation'), '/Scripts')]",
     "scriptFileName": "RdcbHaPostConfig.ps1"
   },
   "resources": [
