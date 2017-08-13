@@ -25,8 +25,7 @@ param
 
 $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
 $domainNetbios = (Get-ADDomain -Current LocalComputer).NetBIOSName
-$username = $domainNetbios + "\" + $Username
-$cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
+$cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($domainNetbios + "\" + $username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
 
 $ConfigData = @{
     AllNodes = @(
