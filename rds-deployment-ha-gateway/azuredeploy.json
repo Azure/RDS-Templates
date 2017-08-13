@@ -127,7 +127,7 @@
   },
   "variables": {
     "vmPrefix": "",
-    "vmNameStartIndex": 2,
+    "vmNameStartIndex": 1,
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-')]",
     "networkNameSuffix": "-nic",
     "imagePublisher": "MicrosoftWindowsServer",
@@ -170,7 +170,7 @@
       }
     },
     {
-      "name": "[concat(variables('gatewayVmName'), add(add(copyIndex(), variables('vmNameStartIndex')), 1), variables('networkNameSuffix'))]",
+      "name": "[concat(variables('gatewayVmName'), padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0'), variables('networkNameSuffix'))]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
       "apiVersion": "[variables('apiversion')]",
@@ -198,7 +198,7 @@
       }
     },
     {
-      "name": "[concat(variables('gatewayVmName'),add(add(copyIndex(), variables('vmNameStartIndex')), 1))]",
+      "name": "[concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0'))]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-04-30-preview",
@@ -209,7 +209,7 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
         "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]",
-        "[concat('Microsoft.Network/networkInterfaces/' , variables('gatewayVmName'), add(add(copyIndex(), variables('vmNameStartIndex')), 1), variables('networkNameSuffix'))]"
+        "[concat('Microsoft.Network/networkInterfaces/' , variables('gatewayVmName'), padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0'), variables('networkNameSuffix'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -219,7 +219,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]"
         },
         "osProfile": {
-          "computerName": "[concat(variables('gatewayVmName'),add(add(copyIndex(), variables('vmNameStartIndex')), 1))]",
+          "computerName": "[concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0'))]",
           "adminUsername": "[parameters('existingAdminUserName')]",
           "adminPassword": "[parameters('existingAdminPassword')]"
         },
@@ -233,7 +233,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/',concat(variables('gatewayVmName'),add(add(copyIndex(), variables('vmNameStartIndex')), 1)),'-osdisk.vhd')]"
+              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/',concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0')),'-osdisk.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -242,19 +242,19 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('gatewayVmName'),add(add(copyIndex(), variables('vmNameStartIndex')), 1),variables('networkNameSuffix')))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0'),variables('networkNameSuffix')))]"
             }
           ]
         }
       },
       "resources": [
         {
-          "name": "[concat(variables('gatewayVmName'),add(add(copyIndex(), variables('vmNameStartIndex')), 1),'/Gateway')]",
+          "name": "[concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0'),'/Gateway')]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "location": "[resourceGroup().location]",
           "apiVersion": "[variables('apiversion')]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', Concat(variables('gatewayVmName'),add(add(copyIndex(), variables('vmNameStartIndex')), 1)))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', Concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0')))]"
           ],
           "properties": {
             "publisher": "Microsoft.Powershell",
@@ -280,13 +280,13 @@
           }
         },
         {
-          "name": "[concat(variables('gatewayVmName'),add(add(copyIndex(), variables('vmNameStartIndex')), 1),'/WebAndGwFarmAdd_PostConfig1.1')]",
+          "name": "[concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0'),'/WebAndGwFarmAdd_PostConfig1.1')]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "location": "[resourceGroup().location]",
           "apiVersion": "[variables('apiversion')]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', Concat(variables('gatewayVmName'),add(add(copyIndex(), variables('vmNameStartIndex')), 1)))]",
-            "[concat('Microsoft.Compute/virtualMachines/',variables('gatewayVmName'),add(add(copyIndex(), variables('vmNameStartIndex')), 1),'/extensions/','Gateway')]"
+            "[resourceId('Microsoft.Compute/virtualMachines', Concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0')))]",
+            "[concat('Microsoft.Compute/virtualMachines/',variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0'),'/extensions/','Gateway')]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
