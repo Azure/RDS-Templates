@@ -295,7 +295,7 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
               "fileUris": [
-                "[concat(parameters('_artifactsLocation','Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1'))"
+                "[concat(parameters('_artifactsLocation'),'Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1')]"
               ]
             },
             "protectedSettings": {
@@ -303,7 +303,7 @@
                 "AdminPassword": "[parameters('existingAdminPassword')]"
               },
               "storageAccountName": "[parameters('storageaccountname')]",
-              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('existingAdminUserName'),'\" ', '-password \"',parameters('existingAdminPassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('externalFqdn'),'\" ','-Domainname \"',parameters('existingDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'),'-ServerName ',variables('gatewayVmName'))]"
+              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('existingAdminUserName'),'\" ', '-password \"',parameters('existingAdminPassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('externalFqdn'),'\" ','-Domainname \"',parameters('existingDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'),'-ServerName ',concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0')))]"
             }
           }
         }
