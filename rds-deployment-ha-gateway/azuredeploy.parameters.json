@@ -17,9 +17,6 @@
     "dnsLabelPrefix": {
       "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
     },
-    "domainNetbios": {
-      "value": "contoso"
-    },
     "existingAdminPassword": {
       "value": "{enter_existing_adminUsername_password_here}"
     },
