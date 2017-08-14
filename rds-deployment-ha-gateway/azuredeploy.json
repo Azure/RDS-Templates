@@ -73,12 +73,6 @@
         "description": "This is RD Gateway external FQDN. This shall be picked from existing basic RDS deployment."
       }
     },
-    "domainNetbios": {
-      "type": "string",
-      "metadata": {
-        "description": "Netbios Name for Domain"
-      }
-    },
     "storageAccountName": {
       "type": "string",
       "metadata": {
@@ -303,7 +297,7 @@
                 "AdminPassword": "[parameters('existingAdminPassword')]"
               },
               "storageAccountName": "[parameters('storageaccountname')]",
-              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('existingAdminUserName'),'\" ', '-password \"',parameters('existingAdminPassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('externalFqdn'),'\" ','-Domainname \"',parameters('existingDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'),' -ServerName ',concat(variables('gatewayVmName'),padLeft(add(add(copyIndex(), variables('vmNameStartIndex')), 1), 2, '0')))]"
+              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('existingAdminUserName'),'\" ', '-password \"',parameters('existingAdminPassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-externalFqdn \"',parameters('externalFqdn'),'\" ','-Domainname \"',parameters('existingDomainName'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'),' -ServerName ', variables('gatewayVmName'), ' -vmNameStartIndex ', variables('vmNameStartIndex'))]"
             }
           }
         }
