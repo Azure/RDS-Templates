@@ -70,7 +70,7 @@
     },
     "numberOfWebGwInstances": {
       "type": "int",
-      "defaultValue": 2,
+      "defaultValue": 1,
       "metadata": {
         "description": "Number of RD Gateway / RD Web Access servers"
       }
