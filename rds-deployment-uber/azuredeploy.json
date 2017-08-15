@@ -15,7 +15,7 @@
       },
       "defaultValue": "contoso.com"
     },
-    "adVnetName": {
+    "vnetName": {
       "type": "string",
       "metadata": {
         "description": "The vnet name of AD domain. For example johnvnet1"
@@ -184,8 +184,8 @@
           "domainName": {
             "value": "[parameters('domainName')]"
           },
-          "adVnetName": {
-            "value": "[parameters('adVnetName')]"
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
           },
           "adSubnetName": {
             "value": "[parameters('adSubnetName')]"
@@ -262,7 +262,7 @@
             "value": "[parameters('imageSKU')]"
           },
           "existingVnet": {
-            "value": "[parameters('adVnetName')]"
+            "value": "[parameters('vnetName')]"
           },
           "existingSubnet": {
             "value": "[parameters('adSubnetName')]"
@@ -309,7 +309,7 @@
             "value": "[parameters('adSubnetName')]"
           },
           "existingVnetName": {
-            "value": "[parameters('adVnetName')]"
+            "value": "[parameters('vnetName')]"
           },
           "primaryDbConnectionString": {
             "value": "[parameters('primaryDbConnectionString')]"
