@@ -90,13 +90,6 @@
         "description": "Number of RD Gateway / RD Web Access servers"
       }
     },
-    "domainNetbios": {
-      "type": "string",
-      "metadata": {
-        "description": "Netbios Name for the Domain"
-      },
-      "defaultValue": "contoso"
-    },
     "vaultName": {
       "type": "string",
       "metadata": {
@@ -276,9 +269,6 @@
           },
           "WebURL": {
             "value": "[variables('rdGatewayWebURL')]"
-          },
-          "domainNetbios": {
-            "value": "[parameters('domainNetbios')]"
           },
           "storageAccountName": {
             "value": "[variables('storageAccountName')]"
