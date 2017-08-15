@@ -13,10 +13,9 @@ param(
     [string]$iteration,
     [parameter(mandatory = $true)] 
     [int]$nServers,
-
     [parameter(mandatory = $true)] 
-    [int]$nTimeoutMinutes,
-
+	[int]$nTimeoutMinutes,
+	[string]$sessionHostNamingPrefix= "rdsh-",
     [Parameter(ValueFromRemainingArguments = $true)]
     $extraParameters
     )
@@ -133,21 +132,28 @@ whoami
 
 		ipmo remotedesktop -DisableNameChecking    # 4>$null
 
-	  # $domain = (gwmi win32_computersystem).Domain
-
-	  	$newServers = 1..$($nServers) | % { "rdsh-$($iteration)$($_.ToString().PadLeft(2,"0")).$($domain)" }
-		log "list of new servers:"
-		$newServers | % { "    $($_.tolower())" }
-
-
 		#  1. add new servers to the deployment
 		#
 		log "current list of servers in the rds deployment:"
 		$existingServers = (get-rdserver).Server
 		$existingServers |  % { "    $($_.tolower())" }
+		$count = 0
 
-		$newServers | ? { -not ($_ -in $existingServers) } | % { add-server $_ }
-
+		while($count -lt $nServers)
+		{
+			$newServerName = ("$($sessionHostNamingPrefix)$($iteration)$($count.ToString("D2")).$($domain)").ToLower()
+			if ($existingServers -and ($existingServers -ieq $newServerName))
+			{
+				log "server $($newServerName) already exists, skipping..."
+				continue
+			}
+			else 
+			{
+				log "adding server $($newServerName) to rds deployment"
+				add-server $newServerName
+				$count++
+			}
+		}
 
 		#  2. add new  servers to the rdsh collection
 		#
