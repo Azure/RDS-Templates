@@ -8,7 +8,7 @@
         "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'. For example johndns1 will result the final RDWEB access url like https://johndns1.westus.cloudapp.azure.com/RDWeb"
       }
     },
-    "adDomainName": {
+    "domainName": {
       "type": "string",
       "metadata": {
         "description": "The name of the AD domain. For example contoso.com"
@@ -156,8 +156,8 @@
     "backEndAddressPool": "LBBAP",
     "rdgwAvailabilitySet": "gw-availabilityset",
     "rdcbAvailabilitySet": "cb-availabilityset",
-    "rdBrokerServer": "[concat(variables('brokerVmName'), '.', parameters('adDomainName'))]",
-    "rdGatewayexternalFqdn": "[concat(variables('gatewayVmName'), '.', parameters('adDomainName'))]",
+    "rdBrokerServer": "[concat(variables('brokerVmName'), '.', parameters('domainName'))]",
+    "rdGatewayexternalFqdn": "[concat(variables('gatewayVmName'), '.', parameters('domainName'))]",
     "storageAccountName": "[tolower(concat('rdsa', uniqueString(resourceGroup().id)))]",
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
     "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",
@@ -181,8 +181,8 @@
           "dnsLabelPrefix": {
             "value": "[parameters('dnsLabelPrefix')]"
           },
-          "adDomainName": {
-            "value": "[parameters('adDomainName')]"
+          "domainName": {
+            "value": "[parameters('domainName')]"
           },
           "adVnetName": {
             "value": "[parameters('adVnetName')]"
@@ -237,8 +237,8 @@
           "gw-AvailabilitySet": {
             "value": "[variables('rdgwAvailabilitySet')]"
           },
-          "adDomainName": {
-            "value": "[parameters('adDomainName')]"
+          "domainName": {
+            "value": "[parameters('domainName')]"
           },
           "adminUsername": {
             "value": "[parameters('adminUsername')]"
@@ -303,7 +303,7 @@
             "value": "[variables('brokerHostName')]"
           },
           "existingDomainName": {
-            "value": "[parameters('adDomainName')]"
+            "value": "[parameters('domainName')]"
           },
           "existingSubnetName": {
             "value": "[parameters('adSubnetName')]"
@@ -362,7 +362,7 @@
             "value": "[parameters('adminPassword')]"
           },
           "existingDomainName": {
-            "value": "[parameters('adDomainName')]"
+            "value": "[parameters('domainName')]"
           }
         }
       }
