@@ -56,7 +56,7 @@
     },
     "numberOfRdshInstances": {
       "type": "int",
-      "defaultValue": 1,
+      "defaultValue": 2,
       "metadata": {
         "description": "Number of RemoteDesktopSessionHosts"
       }
