@@ -172,7 +172,7 @@
     "rdgwAvailabilitySet": "gw-availabilityset",
     "rdcbAvailabilitySet": "cb-availabilityset",
     "rdBrokerServer": "[concat(variables('brokerVmName'), '.', parameters('adDomainName'))]",
-    "rdGatewayWebURL": "[concat(variables('gatewayVmName'), '.', parameters('adDomainName'))]",
+    "rdGatewayexternalFqdn": "[concat(variables('gatewayVmName'), '.', parameters('adDomainName'))]",
     "storageAccountName": "[tolower(concat('rdsa', uniqueString(resourceGroup().id)))]",
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
     "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",
@@ -267,8 +267,8 @@
           "brokerServer": {
             "value": "[variables('rdBrokerServer')]"
           },
-          "WebURL": {
-            "value": "[variables('rdGatewayWebURL')]"
+          "externalFqdn": {
+            "value": "[variables('rdGatewayexternalFqdn')]"
           },
           "storageAccountName": {
             "value": "[variables('storageAccountName')]"
