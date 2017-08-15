@@ -138,6 +138,7 @@ whoami
 		$existingServers = (get-rdserver).Server
 		$existingServers |  % { "    $($_.tolower())" }
 		$count = 0
+		$newServers = new-object Collections.ArrayList
 
 		while($count -lt $nServers)
 		{
@@ -151,6 +152,7 @@ whoami
 			{
 				log "adding server $($newServerName) to rds deployment"
 				add-server $newServerName
+				$newServers.Add($newServerName)
 				$count++
 			}
 		}
