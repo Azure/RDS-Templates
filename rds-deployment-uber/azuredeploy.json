@@ -22,7 +22,7 @@
       },
       "defaultValue": "[concat('ADVNET',resourceGroup().name)]"
     },
-    "adSubnetName": {
+    "subnetName": {
       "type": "string",
       "metadata": {
         "description": "The subnet name of AD domain. For example johnsubnet1"
@@ -187,8 +187,8 @@
           "vnetName": {
             "value": "[parameters('vnetName')]"
           },
-          "adSubnetName": {
-            "value": "[parameters('adSubnetName')]"
+          "subnetName": {
+            "value": "[parameters('subnetName')]"
           },
           "adminUsername": {
             "value": "[parameters('adminUsername')]"
@@ -265,7 +265,7 @@
             "value": "[parameters('vnetName')]"
           },
           "existingSubnet": {
-            "value": "[parameters('adSubnetName')]"
+            "value": "[parameters('subnetName')]"
           }
         }
       }
@@ -306,7 +306,7 @@
             "value": "[parameters('domainName')]"
           },
           "existingSubnetName": {
-            "value": "[parameters('adSubnetName')]"
+            "value": "[parameters('subnetName')]"
           },
           "existingVnetName": {
             "value": "[parameters('vnetName')]"
