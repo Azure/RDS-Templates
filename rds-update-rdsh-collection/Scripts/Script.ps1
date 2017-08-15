@@ -135,7 +135,7 @@ whoami
 
 	  # $domain = (gwmi win32_computersystem).Domain
 
-		$newServers = 0..$($nServers - 1) | % { "rdsh-$_$iteration.$domain" }
+	  	$newServers = 1..$($nServers) | % { "rdsh-$($iteration)$($_.ToString().PadLeft(2,"0")).$($domain)" }
 		log "list of new servers:"
 		$newServers | % { "    $($_.tolower())" }
 
