@@ -240,7 +240,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('brokerVmName'), '/customscript')]",
+            "name": "[concat(variables('brokerVmName'), '/rdsUpdateRdshCollection')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "rdsh-vm-loop"
