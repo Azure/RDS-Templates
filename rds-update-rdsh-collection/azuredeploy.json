@@ -114,8 +114,8 @@
             "iteration": "[concat(' -iteration ', toLower(parameters('rdshUpdateIteration')))]",
             "servers": "[concat(' -nServers ', parameters('rdshNumberOfInstances'))]",
             "timeout": "[concat(' -nTimeoutMinutes ', parameters('userLogoffTimeoutInMinutes'))]",
-            "sessionHostNamingPrefix": "[concat(' -sessionHostNamingPrefix', variables('rdshVmName'))]",
-            "vmNameStartIndex": "[concat(' -vmNameStartIndex', variables('vmNameStartIndex'))]"
+            "sessionHostNamingPrefix": "[concat(' -sessionHostNamingPrefix ', variables('rdshVmName'))]",
+            "vmNameStartIndex": "[concat(' -vmNameStartIndex ', variables('vmNameStartIndex'))]"
         },
         "scriptParameters": "[concat(variables('p').domain, variables('p').user, variables('p').pwd, variables('p').collection, variables('p').iteration, variables('p').servers, variables('p').timeout, variables('p').sessionHostNamingPrefix, variables('p').vmNameStartIndex)]",
         "scriptFolder": "Scripts",
