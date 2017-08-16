@@ -16,6 +16,7 @@ param(
     [parameter(mandatory = $true)] 
 	[int]$nTimeoutMinutes,
 	[string]$sessionHostNamingPrefix= "rdsh-",
+	[int]$vmNameStartIndex=1,
     [Parameter(ValueFromRemainingArguments = $true)]
     $extraParameters
     )
@@ -137,18 +138,16 @@ whoami
 		log "current list of servers in the rds deployment:"
 		$existingServers = (get-rdserver).Server
 		$existingServers |  % { "    $($_.tolower())" }
-		$count = 0
+		$count = $vmNameStartIndex
 		$loopcount = 0
 		$newServers = new-object Collections.ArrayList
 		
 		while($loopcount -lt $nServers)
 		{
-            $count++
 			$newServerName = ("$($sessionHostNamingPrefix)$($iteration)$($count.ToString("D2")).$($domain)").ToLower()
 			if ($existingServers -and ($existingServers -ieq $newServerName))
 			{
 				log "server $($newServerName) already exists, skipping..."
-                continue				
 			}
 			else 
 			{
@@ -157,6 +156,8 @@ whoami
 				$newServers.Add($newServerName)
                 $loopcount++
 			}
+
+			$count++
 		}
 
 		#  2. add new  servers to the rdsh collection
