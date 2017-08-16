@@ -121,7 +121,7 @@
   },
   "variables": {
     "vmPrefix": "",
-    "vmNameStartIndex": 1,
+    "vmNameStartIndex": 2,
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-')]",
     "networkNameSuffix": "-nic",
     "imagePublisher": "MicrosoftWindowsServer",
