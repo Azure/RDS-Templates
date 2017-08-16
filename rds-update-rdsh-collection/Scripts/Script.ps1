@@ -138,22 +138,24 @@ whoami
 		$existingServers = (get-rdserver).Server
 		$existingServers |  % { "    $($_.tolower())" }
 		$count = 0
+		$loopcount = 0
 		$newServers = new-object Collections.ArrayList
-
-		while($count -lt $nServers)
+		
+		while($loopcount -lt $nServers)
 		{
+            $count++
 			$newServerName = ("$($sessionHostNamingPrefix)$($iteration)$($count.ToString("D2")).$($domain)").ToLower()
 			if ($existingServers -and ($existingServers -ieq $newServerName))
 			{
 				log "server $($newServerName) already exists, skipping..."
-				continue
+                continue				
 			}
 			else 
 			{
 				log "adding server $($newServerName) to rds deployment"
 				add-server $newServerName
 				$newServers.Add($newServerName)
-				$count++
+                $loopcount++
 			}
 		}
 
