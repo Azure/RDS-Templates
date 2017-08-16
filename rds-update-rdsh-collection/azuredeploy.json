@@ -103,6 +103,7 @@
         "storageAccountName": "[split( split( parameters('rdshTemplateImageUri'), '/')[2], '.' )[0]]",
         "networkNameSuffix": "-nic",
         "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
+        "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",
         "vmPrefix": "",
         "p": {
             "domain": "[concat(' -domain ', parameters('existingDomainName'))]",
@@ -238,7 +239,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "cb-vm/customscript",
+            "name": "[concat(variables('brokerVmName'), '/customscript')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "rdsh-vm-loop"
