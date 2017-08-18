@@ -131,22 +131,29 @@
       "metadata": {
         "description": "The name of the SQL server that the database is located on (only required for the Dedicated database server case w/Windows Auth)"
       }
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI repository where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+      },
+      "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/"
     }
   },
   "variables": {
-    "basicRDSDeploymentexistingADLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-existing-ad",
+    "basicRDSDeploymentexistingADLocation": "[concat(parameters('_artifactsLocation'),'rds-deployment-existing-ad')]",
     "basicRDSDeploymentexistingADTemplate": "azuredeploy.json",
     "basicRDSDeploymentexistingAD": "CreateBasicRDSDeploymentExistingAD",
     "basicRDSDeploymentURL": "[concat(variables('basicRDSDeploymentexistingADLocation'),'/',variables('basicRDSDeploymentexistingADTemplate'))]",
-    "rdGatewayWebHAexistingRDSLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway",
+    "rdGatewayWebHAexistingRDSLocation": "[concat(parameters('_artifactsLocation'),'rds-deployment-ha-gateway')]",
     "rdGatewayWebHAexistingRDSTemplate": "azuredeploy.json",
     "rdGatewayWebHAexistingRDS": "CreateRDGatewayWebAccessHA",
     "rdGatewayWebHAURL": "[concat(variables('rdGatewayWebHAexistingRDSLocation'),'/',variables('rdGatewayWebHAexistingRDSTemplate'))]",
-    "sslDeploymentexistingRDSLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-update-certificate",
+    "sslDeploymentexistingRDSLocation": "[concat(parameters('_artifactsLocation'),'rds-update-certificate')]",
     "sslDeploymentexistingRDSTemplate": "azuredeploy.json",
     "sslDeploymentexistingRDS": "configureSSLonRDSDeployment",
     "sslDeploymentURL": "[concat(variables('sslDeploymentexistingRDSLocation'),'/',variables('sslDeploymentexistingRDSTemplate'))]",
-    "RdcbHaDeploymentexistingRDSLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-broker",
+    "RdcbHaDeploymentexistingRDSLocation": "[concat(parameters('_artifactsLocation'),'rds-deployment-ha-broker')]",
     "RdcbHaDeploymentexistingRDSTemplate": "azuredeploy.json",
     "RdcbHaDeploymentexistingRDS": "configureRdcbHaonRDSDeployment",
     "RdcbHaDeploymentURL": "[concat(variables('RdcbHaDeploymentexistingRDSLocation'),'/',variables('RdcbHaDeploymentexistingRDSTemplate'))]",
