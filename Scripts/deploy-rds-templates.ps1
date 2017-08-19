@@ -252,12 +252,11 @@ function main()
     $error.Clear()
     write-host "$(get-date) starting" -foregroundcolor cyan
     $timer = (get-date)
+    get-variable | out-string
+
     write-host "using random:$($random)" -foregroundcolor yellow
     write-host "using password: $($adminPassword)" -foregroundcolor yellow
     write-host "using resource group: $($resourceGroup)" -foregroundcolor yellow
-    get-variable | out-string
-    
-
     write-host "authenticating to azure"
     authenticate-azureRm
 
@@ -285,25 +284,21 @@ function main()
         }
     } # end foreach
 
+    $rdWebSite = "https://$($dnsLabelPrefix).$($location).cloudapp.azure.com/RDWeb"
+
     if ($postConnect)
     {
         write-host "$([DateTime]::Now) starting post connect"
-        $connectScript = "$(get-location)\azure-rm-rdp-post-deployment.ps1"
-    
-        if (![IO.File]::Exists($connectScript))
-        {
-            # get script content from url and remove BOM
-            string $scriptContent = (Invoke-WebRequest -UseBasicParsing -Uri "https://aka.ms/azure-rm-rdp-post-deployment.ps1").ToString().Replace("???", "")
-            [IO.File]::WriteAllText($connectScript, $scriptContent)
-        }
+        $connectScript = "$($env:TEMP)\azure-rm-rdp-post-deployment.ps1"
+        get-urlScriptFile -updateUrl "https://aka.ms/azure-rm-rdp-post-deployment.ps1" -destinationFile $connectScript
         
-        $rdWebSite = "https://$($dnsLabelPrefix).$($location).cloudapp.azure.com/RDWeb"
         write-host "connecting to $($rdWebSite)"
         Invoke-Expression -Command "$($connectScript) -rdWebUrl `"$($rdWebSite)`""
     }
 
     write-host "errors: $($error | out-string)"
     write-host "admin password: $($adminPassword)" -foregroundcolor yellow
+    write-host "rdweb site: $($rdWebSite)"
     write-host "$(get-date) finished. total time: $((get-date) -$timer)" -foregroundcolor cyan
 }
 
@@ -460,17 +455,18 @@ function check-deployment($deployment)
 # ----------------------------------------------------------------------------------------------------------------
 function check-parameterFile($parameterFile, $deployment)
 {
-    $ret = $false
     write-host "checking parameter file $($parameterFile) for $($deployment)"
-    if ((test-path $parameterFile))
+    $ret = $false
+    
+    if ([IO.File]::Exists($parameterFile))
     {
-        $ret = true
+        $ret = $true
     }
     else
     {
         # check repo
         write-host "downloading template from repo"
-        if (get-urlFile -updateUrl "$($templateBaseUrl)/$($templateFileName)" -destinationFile $parameterFile)
+        if (get-urlJsonFile -updateUrl "$($templateBaseUrl)/$($deployment)/$($templateFileName)" -destinationFile $parameterFile)
         {
             $ret = $true
         }
@@ -478,7 +474,7 @@ function check-parameterFile($parameterFile, $deployment)
     if ($ret)
     {
         write-host "parameter file:"
-        write-host "$(ConvertFrom-Json $parameterFile | out-string)"
+        write-host "$(ConvertFrom-Json (get-content -Raw -Path $parameterFile) | out-string)"
         return $true
     }
     else
@@ -635,7 +631,7 @@ function check-parameters()
         
         if (![IO.File]::Exists($monitorScript))
         {
-            get-urlFile -updateUrl "https://aka.ms/azure-rm-log-reader.ps1" -destinationFile $monitorScript
+            get-urlJsonFile -updateUrl "https://aka.ms/azure-rm-log-reader.ps1" -destinationFile $monitorScript
         }
     
         if (!$whatIf)
@@ -749,9 +745,10 @@ function deploy-template($templateFile, $parameterFile, $deployment)
     $ret = Test-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup `
         -TemplateFile $templateFile `
         -Mode Complete `
-        -adminUsername $global:credential.UserName `
-        -adminPassword $global:credential.Password `
-        -TemplateParameterFile $parameterFile 
+        -TemplateParameterFile $parameterFile #`
+        #-adminUsername $global:credential.UserName `
+        #-adminPassword $global:credential.Password `
+        
     
     if ($ret)
     {
@@ -763,25 +760,36 @@ function deploy-template($templateFile, $parameterFile, $deployment)
 
     $error.Clear() 
     
-    if (!$whatIf)
-    {
-        write-host "$([DateTime]::Now) creating deployment"
-        write-host "New-AzureRmResourceGroupDeployment -Name $deployment `
-                        -ResourceGroupName $resourceGroup `
-                        -DeploymentDebugLogLevel All `
-                        -TemplateFile $templateFile `
-                        -adminUsername $global:credential.UserName `
-                        -adminPassword $global:credential.Password `
-                        -TemplateParameterFile $parameterFile "
+    write-host "$([DateTime]::Now) creating deployment"
+    write-host "New-AzureRmResourceGroupDeployment -Name $deployment `
+                    -ResourceGroupName $resourceGroup `
+                    -DeploymentDebugLogLevel All `
+                    -TemplateFile $templateFile `
+                    -adminUsername $global:credential.UserName `
+                    -adminPassword $global:credential.Password `
+                    -TemplateParameterFile $parameterFile "
 
-        $error.Clear() 
+    $error.Clear() 
+    if(!$whatIf)
+    {
         $ret = New-AzureRmResourceGroupDeployment -Name $deployment `
             -ResourceGroupName $resourceGroup `
             -DeploymentDebugLogLevel All `
             -TemplateFile $templateFile `
             -adminUsername $global:credential.UserName `
             -adminPassword $global:credential.Password `
-            -TemplateParameterFile $parameterFile 
+            -TemplateParameterFile $parameterFile
+    }
+    else
+    {
+        $ret = New-AzureRmResourceGroupDeployment -Name $deployment `
+                -ResourceGroupName $resourceGroup `
+                -DeploymentDebugLogLevel All `
+                -TemplateFile $templateFile `
+                -adminUsername $global:credential.UserName `
+                -adminPassword $global:credential.Password `
+                -TemplateParameterFile $parameterFile `
+                -WhatIf
     }
 
     if ($error)
@@ -797,20 +805,50 @@ function deploy-template($templateFile, $parameterFile, $deployment)
 }
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------
-function get-urlFile($updateUrl, $destinationFile)
+function get-urlJsonFile($updateUrl, $destinationFile)
 {
-    write-host "get-urlFile:checking for remote file: $($updateUrl)"
-    $file = ""
-    $git = $null
+    write-host "get-urlJsonFile:checking for remote file: $($updateUrl)"
+    $jsonFile = $null
 
     try 
     {
-        $git = Invoke-RestMethod -Method Get -Uri $updateUrl 
+        #$jsonFile = ConvertFrom-Json -InputObject (Invoke-RestMethod -UseBasicParsing -Method Get -Uri $updateUrl)
+        $jsonFile = Invoke-RestMethod -UseBasicParsing -Method Get -Uri $updateUrl
+
+        if ([IO.File]::Exists($destinationFile))
+        {
+            [IO.File]::Delete($destinationFile)
+        }
+
+        $jsonFile | ConvertTo-Json | Out-File $destinationFile        
+        return $true
+    }
+    catch [System.Exception] 
+    {
+        write-host "get-urlJsonFile:exception: $($error)"
+        $error.Clear()
+        return $false    
+    }
+}
+
+# ----------------------------------------------------------------------------------------------------------------
+function get-urlScriptFile($updateUrl, $destinationFile)
+{
+    write-host "get-urlScriptFile:checking for updated script: $($updateUrl)"
+    $file = ""
+    $scriptFile = $null
+
+    try 
+    {
+        $scriptFile = Invoke-RestMethod -Method Get -Uri $updateUrl 
+
+        # gallery has bom 
+        $scriptFile = $scriptFile.Replace("???","")
 
         # git may not have carriage return
-        if ([regex]::Matches($git, "`r").Count -eq 0)
+        if ([regex]::Matches($scriptFile, "`r").Count -eq 0)
         {
-            $git = [regex]::Replace($git, "`n", "`r`n")
+            $scriptFile = [regex]::Replace($scriptFile, "`n", "`r`n")
         }
 
         if ([IO.File]::Exists($destinationFile))
@@ -818,22 +856,22 @@ function get-urlFile($updateUrl, $destinationFile)
             $file = [IO.File]::ReadAllText($destinationFile)
         }
 
-        if (([string]::Compare($git, $file) -ne 0))
+        if (([string]::Compare($scriptFile, $file) -ne 0))
         {
-            write-host "copying file to $($destinationFile)"
-            [IO.File]::WriteAllText($destinationFile, $git)
+            write-host "copying script $($destinationFile)"
+            [IO.File]::WriteAllText($destinationFile, $scriptFile)
             return $true
         }
         else
         {
-            write-host "file is up to date"
+            write-host "script is up to date"
         }
         
         return $false
     }
     catch [System.Exception] 
     {
-        write-host "get-urlFile:exception: $($error)"
+        write-host "get-urlScriptFile:exception: $($error)"
         $error.Clear()
         return $false    
     }
@@ -864,7 +902,7 @@ function start-rds-deployment()
     }
     
     $ujson.parameters
-    deploy-template -templateFile "$($templateBaseUrl)\RDS-Templates\rds-deployment\azuredeploy.json" `
+    deploy-template -templateFile "$($templateBaseUrl)/$($deployment)/azuredeploy.json" `
         -parameterFile $parameterFileRdsDeployment `
         -deployment $installOption
 }
@@ -901,7 +939,7 @@ function start-rds-update-certificate()
 
     $ujson.parameters
     
-    deploy-template -templateFile "$($templateBaseUrl)rds-update-certificate/azuredeploy.json" `
+    deploy-template -templateFile "$($templateBaseUrl)/$($deployment)/azuredeploy.json" `
         -parameterFile $parameterFileRdsUpdateCertificate `
         -deployment $installOption
 
@@ -931,7 +969,7 @@ function start-rds-deployment-ha-broker()
     
     $ujson.parameters
     
-    deploy-template -templateFile "$($templateBaseUrl)rds-deployment-ha-broker/azuredeploy.json" `
+    deploy-template -templateFile "$($templateBaseUrl)/$($deployment)/azuredeploy.json" `
         -parameterFile $parameterFileRdsHaBroker `
         -deployment $installOption
 }
@@ -960,7 +998,7 @@ function start-rds-deployment-ha-gateway()
     }
     $ujson.parameters
     
-    deploy-template -templateFile "$($templateBaseUrl)rds-deployment-ha-gateway/azuredeploy.json" `
+    deploy-template -templateFile "$($templateBaseUrl)/$($deployment)/azuredeploy.json" `
         -parameterFile $parameterFileRdsHaGateway `
         -deployment $installOption
 }
@@ -1016,7 +1054,7 @@ function start-rds-deployment-uber()
     }
     $ujson.parameters
     
-    deploy-template -templateFile "$($templateBaseUrl)rds-deployment-uber/azuredeploy.json" `
+    deploy-template -templateFile "$($templateBaseUrl)/$($deployment)/azuredeploy.json" `
         -ParameterFile $parameterFileRdsUber `
         -deployment $installOption
 
@@ -1032,7 +1070,7 @@ function start-rds-update-rdsh-collection()
     check-deployment -deployment $deployment
 
     .\art-rds-update-rdsh-collection-test.ps1 -resourceGroup $resourceGroup `
-        -TemplateFile "$($templateBaseUrl)rds-update-rdsh-collection/azuredeploy.json" `
+        -TemplateFile "$($templateBaseUrl)/$($deployment)/azuredeploy.json" `
         -TemplateParameterFile $parameterFileRdsUpdateRdshCollection `
         -artifactsLocation "$($templateBaseUrl)rds-update-rdsh-collection"
 
