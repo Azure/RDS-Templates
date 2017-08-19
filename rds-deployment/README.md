@@ -113,6 +113,6 @@ This script can be used review deployment events. This script requires at least 
 [Azure Resource Manager Deployment Log Reader](https://aka.ms/azure-rm-log-reader.ps1)
 
 ## Validation / Example deployment script
-In /scripts, [art-rds-deployment-test.ps1](scripts/art-rds-deployment-test.ps1) script is an example validation / deployment powershell script that can used for rds-deployment template testing. It performs basic validation of given parameters and will by default deploy a new deployment. See [/scripts/README.md](scripts/) for additional information about this script. 
+In github.com/azure/rds-templates/scripts, [deploy-rds-templates.ps1](https://github.com/Azure/rds-templates/Scripts/deploy-rds-templates.ps1) script is an example validation / deployment powershell script that can used for rds-deployment template testing. It performs basic validation of given parameters and will by default deploy a new deployment. See [/scripts/README.md](https://github.com/Azure/rds-templates/scripts) for additional information about this script. 
 
 `Tags: Remote Desktop Services, RDS`
