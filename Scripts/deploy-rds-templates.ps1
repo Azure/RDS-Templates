@@ -81,7 +81,9 @@
     default is addc-01
 
 .PARAMETER domainName
-    new AD domain fqdn used for this deployment. by default %resourceGroup%.lab will be used.
+    new AD domain fqdn used for this deployment. 
+    NOTE: base domain name for example 'contoso' can not be longer than 15 chars
+    default is contoso.com.
 
 .PARAMETER imageSKU
     default 2016-datacenter or optional 2012-r2-datacenter for OS selection type
@@ -202,10 +204,11 @@
 #>
 [CMDLETBINDING()]
 param(
+    [string]$random = (get-random), # positional requirement
     [string]$adminUserName = "cloudadmin",
-    [string]$adminPassword = "Password$(get-random)!", 
-    [string]$resourceGroup = "resourceGroup$(get-random)",
-    [string]$domainName = "$($resourceGroup).lab",
+    [string]$adminPassword = "Password$($random)!", 
+    [string]$resourceGroup = "resourceGroup$($random)",
+    [string]$domainName = "contoso.com",
     [string]$certificateName = "$($resourceGroup)Certificate",
     [string]$certificatePass = $adminPassword,
     [string]$clientAccessName = "HARDCB",
@@ -219,12 +222,12 @@ param(
     [switch]$monitor,
     [int]$numberOfRdshInstances = 2,
     [int]$numberOfWebGwInstances = 1,
-    [string]$parameterFileRdsDeployment = "$($privateScripts)\rds-deployment.azuredeploy.parameters.json",
-    [string]$parameterFileRdsUpdateCertificate = "$($privateScripts)\rds-update-certificate.azuredeploy.parameters.json",
-    [string]$parameterFileRdsHaBroker = "$($privateScripts)\rds-deployment-ha-broker.azuredeploy.parameters.json",
-    [string]$parameterFileRdsHaGateway = "$($privateScripts)\rds-deployment-ha-gateway.azuredeploy.parameters.json",
-    [string]$parameterFileRdsUber = "$($privateScripts)\rds-deployment-uber.azuredeploy.parameters.json",
-    [string]$parameterFileRdsUpdateRdshCollection = "$($privateScripts)\rds-update-rdsh-collection.azuredeploy.parameters.json",
+    [string]$parameterFileRdsDeployment = "$($env:TEMP)\rds-deployment.azuredeploy.parameters.json",
+    [string]$parameterFileRdsUpdateCertificate = "$($env:TEMP)\rds-update-certificate.azuredeploy.parameters.json",
+    [string]$parameterFileRdsHaBroker = "$($env:TEMP)\rds-deployment-ha-broker.azuredeploy.parameters.json",
+    [string]$parameterFileRdsHaGateway = "$($env:TEMP)\rds-deployment-ha-gateway.azuredeploy.parameters.json",
+    [string]$parameterFileRdsUber = "$($env:TEMP)\rds-deployment-uber.azuredeploy.parameters.json",
+    [string]$parameterFileRdsUpdateRdshCollection = "$($env:TEMP)\rds-update-rdsh-collection.azuredeploy.parameters.json",
     [switch]$pause,
     [switch]$postConnect,
     [string]$publicIpAddressName = "gwpip",
@@ -237,32 +240,28 @@ param(
     [switch]$useJson,
     [string]$vaultName = "$($resourceGroup)Cert",
     [string]$vnetName = "vnet",
-
-    $githubPath = "c:\github",
-    $privateScripts = "$($gitHubPath)\azrdav-pr",
-    $publicScripts = "$($gitHubPath)\powershellscripts"
+    [switch]$whatIf
 )
 
 $maxRdshTestInstances = 10
-$random = 0
+$templateFileName = "azuredeploy.parameters.json"
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function main()
 {
     $error.Clear()
     write-host "$(get-date) starting" -foregroundcolor cyan
     $timer = (get-date)
-    $currentDir = get-location
-    get-variable | out-string
+    write-host "using random:$($random)" -foregroundcolor yellow
     write-host "using password: $($adminPassword)" -foregroundcolor yellow
     write-host "using resource group: $($resourceGroup)" -foregroundcolor yellow
-    $random = get-random
-    write-host "using random:$($random)" -foregroundcolor yellow
+    get-variable | out-string
+    
+
     write-host "authenticating to azure"
     authenticate-azureRm
 
     write-host "checking parameters"
-    Set-Location -Path $privateScripts
     check-parameters   
     check-resourceGroup
 
@@ -303,13 +302,12 @@ function main()
         Invoke-Expression -Command "$($connectScript) -rdWebUrl `"$($rdWebSite)`""
     }
 
-    Set-Location -Path $currentDir
     write-host "errors: $($error | out-string)"
     write-host "admin password: $($adminPassword)" -foregroundcolor yellow
     write-host "$(get-date) finished. total time: $((get-date) -$timer)" -foregroundcolor cyan
 }
 
-# ----------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
 function authenticate-azureRm()
 {
     # make sure at least wmf 5.0 installed
@@ -444,7 +442,7 @@ function authenticate-azureRm()
 
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function check-deployment($deployment)
 {
     write-host "checking for existing deployment $($deployment)"
@@ -459,21 +457,41 @@ function check-deployment($deployment)
     
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function check-parameterFile($parameterFile, $deployment)
 {
-    write-host "checking parameter file $($paramterFile) for $($deployment)"
+    $ret = $false
+    write-host "checking parameter file $($parameterFile) for $($deployment)"
     if ((test-path $parameterFile))
     {
+        $ret = true
+    }
+    else
+    {
+        # check repo
+        write-host "downloading template from repo"
+        if (get-urlFile -updateUrl "$($templateBaseUrl)/$($templateFileName)" -destinationFile $parameterFile)
+        {
+            $ret = $true
+        }
+    }
+    if ($ret)
+    {
+        write-host "parameter file:"
+        write-host "$(ConvertFrom-Json $parameterFile | out-string)"
         return $true
     }
+    else
+    {
+        write-error "missing parameter file $($parameterFile)"
+        write-host "exiting"
+        exit 1
+    }
 
-    write-error "missing parameter file $($parameterFile)"
-    write-host "exiting"
-    exit 1
+    return $ret
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function check-parameters()
 {
     write-host "checking number of instances"
@@ -483,14 +501,14 @@ function check-parameters()
         exit 1
     }
 
-    if ([string]::IsNullOrEmpty($deploymentName))
+    if (!$deploymentName)
     {
         $deploymentName = $resourceGroup
     }
 
     write-host "checking resource group"
 
-    if ([string]::IsNullOrEmpty($resourceGroup))
+    if (!$resourceGroup)
     {
         write-warning "resourcegroup is a mandatory argument. supply -resourceGroup argument and restart script."
         exit 1
@@ -498,7 +516,7 @@ function check-parameters()
 
     write-host "checking ad domain name"
 
-    if ([string]::IsNullOrEmpty($domainName))
+    if (!$domainName)
     {
         $domainName = "$($resourceGroup.ToLower()).lab"
         write-host "domain name '$($domainName)' should populated. example: contoso.com"
@@ -513,9 +531,16 @@ function check-parameters()
         exit 1
     }
 
+    if ($domainName.IndexOf(".") -gt 15)
+    {
+        write-host "error: base domain name greater than 15 characters $($domainName). shorten name and restart script." -ForegroundColor Yellow
+        write-host "exiting"
+        exit 1
+    }
+
     write-host "checking dns label"
 
-    if ([string]::IsNullOrEmpty($dnsLabelPrefix))
+    if (!$dnsLabelPrefix)
     {
         write-host "dns label prefix '$($dnsLabelPrefix)' should be populated. example: 'rdsgateway' or '$($resourceGroup)'"
         write-host "exiting"
@@ -529,16 +554,9 @@ function check-parameters()
         exit 1
     }
 
-    if ($dnsLabelPrefix.Length -gt 15)
-    {
-        write-warning "error: domain name greater than 15 characters $($dnsLabelPrefix). shorten name and restart script." -ForegroundColor Yellow
-        write-host "exiting"
-        exit 1
-    }
-
     write-host "checking location"
 
-    if (!(Get-AzureRmLocation | Where-Object Location -Like $location) -or [string]::IsNullOrEmpty($location))
+    if (!(Get-AzureRmLocation | Where-Object Location -Like $location) -or !$location)
     {
         (Get-AzureRmLocation).Location
         write-warning "location: $($location) not found. supply -location using one of the above locations and restart script."
@@ -567,7 +585,7 @@ function check-parameters()
 
     if (!$credentials)
     {
-        if ([string]::IsNullOrEmpty($adminPassword))
+        if (!$adminPassword)
         {
             $global:credential = Get-Credential
         }
@@ -617,16 +635,18 @@ function check-parameters()
         
         if (![IO.File]::Exists($monitorScript))
         {
-            [IO.File]::WriteAllText($monitorScript, 
-                (Invoke-WebRequest -UseBasicParsing -Uri "https://aka.ms/azure-rm-log-reader.ps1").ToString().Replace("???", ""))
+            get-urlFile -updateUrl "https://aka.ms/azure-rm-log-reader.ps1" -destinationFile $monitorScript
         }
     
-        Start-Process -FilePath "powershell.exe" -ArgumentList "-WindowStyle Minimized -ExecutionPolicy Bypass $($monitorScript)"
+        if (!$whatIf)
+        {
+            Start-Process -FilePath "powershell.exe" -ArgumentList "-WindowStyle Minimized -ExecutionPolicy Bypass $($monitorScript)"
+        }
     }
     
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function check-resourceGroup()
 {
     write-host "checking for existing resource group $($resourceGroup)"
@@ -635,7 +655,10 @@ function check-resourceGroup()
     {
         if ((read-host "resource group exists! Do you want to delete?[y|n]") -ilike 'y')
         {
-            Remove-AzureRmResourceGroup -Name $resourceGroup
+            if (!$whatIf)
+            {
+                Remove-AzureRmResourceGroup -Name $resourceGroup
+            }
         }
     }
     
@@ -643,82 +666,122 @@ function check-resourceGroup()
     if (!(Get-AzureRmResourceGroup -Name $resourceGroup -ErrorAction SilentlyContinue))
     {
         Write-Host "creating resource group $($resourceGroup) in location $($location)"   
-        New-AzureRmResourceGroup -Name $resourceGroup -Location $location
+        if (!$whatIf)
+        {
+            New-AzureRmResourceGroup -Name $resourceGroup -Location $location
+        }
     }
     
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function create-cert
 {
     write-host "$(get-date) create-cert..." -foregroundcolor cyan
-    Set-Location -Path $publicScripts
-    Get-ChildItem -Path cert:\LocalMachine\My -Recurse |? Subject -Match $domainName | Remove-Item -Force
-    .\ps-certreq.ps1  -subject "*.$($domainName)"
-    $mypwd = ConvertTo-SecureString -String $adminPassword -Force -AsPlainText
-    $pfxFilePath = "$($privateScripts)\$($domainName).pfx"
-    Get-ChildItem -Path cert:\LocalMachine\My -Recurse |? Subject -Match $domainName | Export-PfxCertificate -Password $mypwd -FilePath $pfxFilePath -Force
-    # use post import to trusted root
-    Get-ChildItem -Path cert:\LocalMachine\My -Recurse |? Subject -Match $domainName | Remove-Item -Force
+
+    if (!$whatIf)
+    {
+        Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force
+        .\ps-certreq.ps1  -subject "*.$($domainName)"
+        $mypwd = ConvertTo-SecureString -String $adminPassword -Force -AsPlainText
+        $pfxFilePath = "$($env:TEMP)\$($domainName).pfx"
+        Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Export-PfxCertificate -Password $mypwd -FilePath $pfxFilePath -Force
+        # use post import to trusted root
+        Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force
     
-    write-host "$(get-date) create-vault..." -foregroundcolor cyan
-    Set-Location -Path $privateScripts
-    $ret = .\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
-        -certPassword $certificatePass `
-        -certNameInVault $certificateName `
-        -vaultName $vaultName `
-        -uri "https://$($resourceGroup)/$($domainName)" `
-        -resourceGroup $resourceGroup `
-        -adApplicationName "cert$($resourceGroup)$($domainName)"
-    return $ret
+        write-host "$(get-date) create-vault..." -foregroundcolor cyan
+    }
+    write-host ".\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
+                    -certPassword $certificatePass `
+                    -certNameInVault $certificateName `
+                    -vaultName $vaultName `
+                    -uri 'https://$($resourceGroup)/$($domainName)' `
+                    -resourceGroup $resourceGroup `
+                    -adApplicationName 'cert$($resourceGroup)$($domainName)'"
+    if (!$whatIf)
+    {
+        $ret = .\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
+            -certPassword $certificatePass `
+            -certNameInVault $certificateName `
+            -vaultName $vaultName `
+            -uri "https://$($resourceGroup)/$($domainName)" `
+            -resourceGroup $resourceGroup `
+            -adApplicationName "cert$($resourceGroup)$($domainName)"
+        return $ret
+    }
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function create-sql
 {
     write-host "$(get-date) sql..." -foregroundcolor cyan
-    Set-Location -Path $publicScripts
-    $ret = .\azure-rm-sql-create.ps1 -resourceGroupName $resourceGroup `
-        -location $location `
-        -databaseName RdsCb `
-        -adminPassword $adminPassword `
-        -generateUniqueName
-    #$ret
-    $match = [regex]::Match($ret, "connection string ODBC Native client:`r`n(DRIVER.+;)", [Text.RegularExpressions.RegexOptions]::Singleline -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase)
-    $odbcstring = ($match.Captures[0].Groups[1].Value).Replace("`r`n", "")
-    return $odbcstring
+    write-host ".\azure-rm-sql-create.ps1 -resourceGroupName $resourceGroup `
+                    -location $location `
+                    -databaseName RdsCb `
+                    -adminPassword $adminPassword `
+                    -generateUniqueName "
+
+    if (!$whatIf)
+    {
+        $ret = .\azure-rm-sql-create.ps1 -resourceGroupName $resourceGroup `
+            -location $location `
+            -databaseName RdsCb `
+            -adminPassword $adminPassword `
+            -servername "sql-server$($random)"
+        #$ret
+        $match = [regex]::Match($ret, "connection string ODBC Native client:`r`n(DRIVER.+;)", [Text.RegularExpressions.RegexOptions]::Singleline -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+        $odbcstring = ($match.Captures[0].Groups[1].Value).Replace("`r`n", "")
+        return $odbcstring
+    }
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function deploy-template($templateFile, $parameterFile, $deployment)
 {
     write-host "validating template"
-    $error.Clear() 
+    write-host "Test-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup `
+                    -TemplateFile $templateFile `
+                    -Mode Complete `
+                    -adminUsername $global:credential.UserName `
+                    -adminPassword $global:credential.Password `
+                    -TemplateParameterFile $parameterFile "
     $ret = $null
-        $ret = Test-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup `
+    $ret = Test-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup `
+        -TemplateFile $templateFile `
+        -Mode Complete `
+        -adminUsername $global:credential.UserName `
+        -adminPassword $global:credential.Password `
+        -TemplateParameterFile $parameterFile 
+    
+    if ($ret)
+    {
+        Write-Error "template validation failed. error: `n`n$($ret.Code)`n`n$($ret.Message)`n`n$($ret.Details)"
+        Write-Error "error: $($error | out-string)"
+        write-host "exiting"
+        exit 1
+    }
+
+    $error.Clear() 
+    
+    if (!$whatIf)
+    {
+        write-host "$([DateTime]::Now) creating deployment"
+        write-host "New-AzureRmResourceGroupDeployment -Name $deployment `
+                        -ResourceGroupName $resourceGroup `
+                        -DeploymentDebugLogLevel All `
+                        -TemplateFile $templateFile `
+                        -adminUsername $global:credential.UserName `
+                        -adminPassword $global:credential.Password `
+                        -TemplateParameterFile $parameterFile "
+
+        $error.Clear() 
+        $ret = New-AzureRmResourceGroupDeployment -Name $deployment `
+            -ResourceGroupName $resourceGroup `
+            -DeploymentDebugLogLevel All `
             -TemplateFile $templateFile `
-            -Mode Complete `
             -adminUsername $global:credential.UserName `
             -adminPassword $global:credential.Password `
             -TemplateParameterFile $parameterFile 
-    
-    if (![string]::IsNullOrEmpty($ret))
-    {
-        Write-Error "template validation failed. error: `n`n$($ret.Code)`n`n$($ret.Message)`n`n$($ret.Details)"
-        exit 1
-    }
- 
-    if(!$WhatIfPreference)
-    {
-        write-host "$([DateTime]::Now) creating deployment"
-        $error.Clear() 
-            $ret = New-AzureRmResourceGroupDeployment -Name $deployment `
-              -ResourceGroupName $resourceGroup `
-              -DeploymentDebugLogLevel All `
-              -TemplateFile $templateFile `
-              -adminUsername $global:credential.UserName `
-              -adminPassword $global:credential.Password `
-              -TemplateParameterFile $parameterFile 
     }
 
     if ($error)
@@ -733,13 +796,55 @@ function deploy-template($templateFile, $parameterFile, $deployment)
    
 }
 
-# -----------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+function get-urlFile($updateUrl, $destinationFile)
+{
+    write-host "get-urlFile:checking for remote file: $($updateUrl)"
+    $file = ""
+    $git = $null
+
+    try 
+    {
+        $git = Invoke-RestMethod -Method Get -Uri $updateUrl 
+
+        # git may not have carriage return
+        if ([regex]::Matches($git, "`r").Count -eq 0)
+        {
+            $git = [regex]::Replace($git, "`n", "`r`n")
+        }
+
+        if ([IO.File]::Exists($destinationFile))
+        {
+            $file = [IO.File]::ReadAllText($destinationFile)
+        }
+
+        if (([string]::Compare($git, $file) -ne 0))
+        {
+            write-host "copying file to $($destinationFile)"
+            [IO.File]::WriteAllText($destinationFile, $git)
+            return $true
+        }
+        else
+        {
+            write-host "file is up to date"
+        }
+        
+        return $false
+    }
+    catch [System.Exception] 
+    {
+        write-host "get-urlFile:exception: $($error)"
+        $error.Clear()
+        return $false    
+    }
+}
+
+# ----------------------------------------------------------------------------------------------------------------
 function start-rds-deployment()
 {
     $deployment = "rds-deployment"
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
     
-    Set-Location -Path $privateScripts
     check-parameterFile -parameterFile $parameterFileRdsDeployment -deployment $deployment
     check-deployment -deployment $deployment
 
@@ -759,12 +864,12 @@ function start-rds-deployment()
     }
     
     $ujson.parameters
-    deploy-template -templateFile "$($githubPath)\RDS-Templates\rds-deployment\azuredeploy.json" `
+    deploy-template -templateFile "$($templateBaseUrl)\RDS-Templates\rds-deployment\azuredeploy.json" `
         -parameterFile $parameterFileRdsDeployment `
         -deployment $installOption
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function start-rds-update-certificate()
 {
     $deployment = "rds-update-certificate"
@@ -802,7 +907,7 @@ function start-rds-update-certificate()
 
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function start-rds-deployment-ha-broker()
 {
     $deployment = "rds-deployment-ha-broker"
@@ -831,7 +936,7 @@ function start-rds-deployment-ha-broker()
         -deployment $installOption
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function start-rds-deployment-ha-gateway()
 {
     $deployment = "rds-deployment-ha-gateway"
@@ -860,15 +965,15 @@ function start-rds-deployment-ha-gateway()
         -deployment $installOption
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function start-rds-deployment-uber()
 {
     $deployment = "rds-deployment-uber"
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
 
-    if(!($installOptions -imatch "rds-deployment"))
+    if (!($installOptions -imatch "rds-deployment"))
     {
-        if((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'rds-deployment' first?[y|n]" -imatch "y"))
+        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'rds-deployment' first?[y|n]" -imatch "y"))
         {
             start-rds-deployment
         }
@@ -917,7 +1022,7 @@ function start-rds-deployment-uber()
 
 }
 
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 function start-rds-update-rdsh-collection()
 {
     $deployment = "rds-update-rdsh-collection"
@@ -926,7 +1031,6 @@ function start-rds-update-rdsh-collection()
     check-parameterFile -parameterFile $updateParameterFile -deployment $deployment
     check-deployment -deployment $deployment
 
-    Set-Location -Path $privateScripts
     .\art-rds-update-rdsh-collection-test.ps1 -resourceGroup $resourceGroup `
         -TemplateFile "$($templateBaseUrl)rds-update-rdsh-collection/azuredeploy.json" `
         -TemplateParameterFile $parameterFileRdsUpdateRdshCollection `
@@ -934,6 +1038,6 @@ function start-rds-update-rdsh-collection()
 
 }
 
-# -----------------------------------------------------------------------
-# -----------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------
 main
