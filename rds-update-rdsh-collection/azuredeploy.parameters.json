@@ -29,7 +29,7 @@
         "existingVnetName": {
             "value": "vnet"
         },
-        "rdshNumberOfInstances": {
+        "numberOfRdshInstances": {
             "value": 2
         },
         "rdshTemplateImageUri": {
