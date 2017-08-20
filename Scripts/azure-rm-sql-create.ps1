@@ -105,34 +105,22 @@
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$resourceGroupName,
-    [Parameter(Mandatory=$false)]
     [string]$location,
-    [Parameter(Mandatory=$false)]
     [string]$servername,
-    [Parameter(Mandatory=$false)]
     [string]$adminUserName = "sql-administrator",
-    [Parameter(Mandatory=$false)]
     [string]$adminPassword,
-    [Parameter(Mandatory=$false)]
     [pscredential]$credentials,
-    [Parameter(Mandatory=$false)]
     [string]$nsgStartIpAllow = "0.0.0.0",
-    [Parameter(Mandatory=$false)]
     [string]$nsgEndIpAllow = "255.255.255.255",
-    [Parameter(Mandatory=$false)]
     [string]$databaseName,
-    [Parameter(Mandatory=$false)]
     [switch]$generateUniqueName,
-    [Parameter(Mandatory=$false)]
     [switch]$maskPassword,
-    [Parameter(Mandatory=$false)]
     [switch]$listAvailable,
-    [Parameter(Mandatory=$false)]
-    [string]$serviceTier="Basic", #cheapest
-    [Parameter(Mandatory=$false)]
-    [string]$sqlServerVersion="12.0"
+    [switch]$nolog,
+    [string]$serviceTier = "Basic", #cheapest
+    [string]$sqlServerVersion = "12.0"
 )
 
 $erroractionpreference = "Continue"
@@ -149,9 +137,9 @@ function main()
 {
     log-info "$([System.DateTime]::Now):starting"
 
-    if(!(Get-Module AzureRM -ListAvailable))
+    if (!(Get-Module AzureRM -ListAvailable))
     {
-        if((read-host "powershell module azure rm sdk (azurerm) is required for this script. is it ok to install?[y|n]") -imatch "y")
+        if ((read-host "powershell module azure rm sdk (azurerm) is required for this script. is it ok to install?[y|n]") -imatch "y")
         {
             Install-Module AzureRM
             Import-Module AzureRM
@@ -165,17 +153,17 @@ function main()
     # see if we need to auth
     authenticate-azureRm
 
-    if($listAvailable)
+    if ($listAvailable)
     {
         list-availableSqlServers
         return
     }
 
-    if($location)
+    if ($location)
     {
         log-info "checking location $($location)"
 
-        if(!(Get-AzureRmLocation | Where-Object Location -Like $location) -or [string]::IsNullOrEmpty($location))
+        if (!(Get-AzureRmLocation | Where-Object Location -Like $location) -or [string]::IsNullOrEmpty($location))
         {
             (Get-AzureRmLocation).Location
             write-warning "location: $($location) not found. supply -location using one of the above locations and restart script."
@@ -188,9 +176,9 @@ function main()
     # create resource group if it does not exist
     $resourceGroupInfo = Get-AzureRmResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
 
-    if(!$resourceGroupInfo)
+    if (!$resourceGroupInfo)
     {
-        if($location)
+        if ($location)
         {
             log-info "creating resource group $($resourceGroupName) in location $($location)"   
             New-AzureRmResourceGroup -Name $resourceGroupName -Location $location
@@ -204,7 +192,7 @@ function main()
     else
     {
         log-info "resource group $($resourceGroupName) already exists."
-        if(!$location)
+        if (!$location)
         {
             $location = $resourceGroupInfo.Location
         }
@@ -215,7 +203,7 @@ function main()
     $sqlAvailable = Get-AzureRmSqlCapability -LocationName $location
     log-info "sql server capability in $($location) : $($sqlAvailable.Status)"
 
-    if(!$sqlAvailable)
+    if (!$sqlAvailable)
     {
         log-info "sql not available in this region. exiting"
         return
@@ -223,7 +211,7 @@ function main()
 
     # verify edition
     $editions = $sqlAvailable.SupportedServerVersions.supportedEditions.EditionName
-    if(!($editions -ieq $serviceTier))
+    if (!($editions -ieq $serviceTier))
     {
         log-info "please choose another service tier."
         log-info "tiers available in this location:"
@@ -233,7 +221,7 @@ function main()
 
     # verify version
     $versions = $sqlAvailable.SupportedServerVersions.ServerVersionName
-    if(!($versions -ieq $sqlServerVersion))
+    if (!($versions -ieq $sqlServerVersion))
     {
         log-info "please choose another version."
         log-info "versions available in this location:"
@@ -243,7 +231,7 @@ function main()
 
     $created = create-database
    
-    if(!$created -and $generateUniqueName)
+    if (!$created -and $generateUniqueName)
     {
         # retry 1 time in case of server name issue or db exists on server specified and -generateUniqueName was passed
         log-info "clearing server name and retrying 1 time"
@@ -251,9 +239,9 @@ function main()
         $created = create-database
     }
 
-    if($created)
+    if ($created)
     {
-        if($maskPassword -or !$script:createSqlServer)
+        if ($maskPassword -or !$script:createSqlServer)
         {
             $adminPassword = "{enter_sql_password_here}"
         }
@@ -346,7 +334,7 @@ function check-credentials()
     try
     {
         log-info "checking adminUserName account name $($adminUsername)"
-        if($adminUsername.ToLower() -eq "admin" -or $adminUsername.ToLower() -eq "administrator")
+        if ($adminUsername.ToLower() -eq "admin" -or $adminUsername.ToLower() -eq "administrator")
         {
             log-info "adminUserName cannot be 'admin' or 'administrator'. exiting"
             return
@@ -355,9 +343,9 @@ function check-credentials()
         log-info "using admin name: $($adminUserName)"
         log-info "checking password"
 
-        if(!$credentials)
+        if (!$credentials)
         {
-            if([string]::IsNullOrEmpty($adminPassword))
+            if ([string]::IsNullOrEmpty($adminPassword))
             {
                 $script:credential = Get-Credential
             }
@@ -377,15 +365,15 @@ function check-credentials()
         $count = 0
 
         # uppercase check
-        if($adminPassword -match "[A-Z]") { $count++ }
+        if ($adminPassword -match "[A-Z]") { $count++ }
         # lowercase check
-        if($adminPassword -match "[a-z]") { $count++ }
+        if ($adminPassword -match "[a-z]") { $count++ }
         # numeric check
-        if($adminPassword -match "\d") { $count++ }
+        if ($adminPassword -match "\d") { $count++ }
         # specialKey check
-        if($adminPassword -match "\W") { $count++ } 
+        if ($adminPassword -match "\W") { $count++ } 
 
-        if($adminPassword.Length -lt 8 -or $adminPassword.Length -gt 123 -or $count -lt 3)
+        if ($adminPassword.Length -lt 8 -or $adminPassword.Length -gt 123 -or $count -lt 3)
         {
             Write-warning @"
                 azure password requirements at time of writing (3/2017):
@@ -417,35 +405,35 @@ function create-database()
     $script:createSqlDatabase = $false
     $sqlServersAvailable = @(enum-sqlServers -sqlServer $script:servername -resourceGroup $resourceGroupName)
 
-    if(!$generateUniqueName -and $sqlServersAvailable.Count -gt 0 -and !$script:servername)
+    if (!$generateUniqueName -and $sqlServersAvailable.Count -gt 0 -and !$script:servername)
     {
         log-info $sqlServersAvailable
         $script:servername = read-host "enter server name to use for new database"
     }
-    elseif(!$script:servername -and $generateUniqueName)
+    elseif (!$script:servername -and $generateUniqueName)
     {
         $script:servername = "sql-server-$(Get-Random)"
         log-info "server name not provided. using random name $($script:servername)"
     }
 
-    if(!$script:serverName)
+    if (!$script:serverName)
     {
         log-info "error: need server name or use -generateUniqueName. exiting"
         return $false
     }
 
-    if($sqlServersAvailable.Count -lt 1 -or $sqlServersAvailable.ServerName -inotmatch $script:servername)
+    if ($sqlServersAvailable.Count -lt 1 -or $sqlServersAvailable.ServerName -inotmatch $script:servername)
     {
         $script:createSqlServer = $true
     }
     
-    if(!$script:databasename -and $generateUniqueName)
+    if (!$script:databasename -and $generateUniqueName)
     {
         $script:databasename = "sql-database-$(Get-Random)"
         log-info "database name not provided. using random name $($script:databasename)"
     }
 
-    if(!$script:createSqlServer)
+    if (!$script:createSqlServer)
     {
         # for odbc string in case server wasnt created
         $adminUserName = (enum-sqlServers -resourceGroup $resourceGroupName -sqlServer $script:servername).SqlAdministratorLogin
@@ -453,24 +441,24 @@ function create-database()
         # if database name specified / generated and it exists, exit
         $sqlDatabasesAvailable = @(enum-sqlDatabases -sqlServer $script:servername -resourceGroup $resourceGroupName)
 
-        if($script:databasename -and $sqlDatabasesAvailable.DatabaseName -imatch $script:databasename)
+        if ($script:databasename -and $sqlDatabasesAvailable.DatabaseName -imatch $script:databasename)
         {
             log-info "error: database $($script:databaseName) already exists on server $($script:servername). exiting"
             return $false
         }
-   }
+    }
    
-   if($script:databasename)
-   {
+    if ($script:databasename)
+    {
         $script:createSqlDatabase = $true
-   }
+    }
 
-   # everything should be populated, if not exit
-   if(!$script:createSqlServer -and !$script:createSqlDatabase)
-   {
+    # everything should be populated, if not exit
+    if (!$script:createSqlServer -and !$script:createSqlDatabase)
+    {
         log-info "error:invalid configuration. see help. exiting"
         return $false
-   }
+    }
 
     log-info "using server name $($script:servername)"
     log-info "creating sql server : $($script:createSqlServer) creating sql db : $($script:createSqlDatabase)"
@@ -478,10 +466,10 @@ function create-database()
 
     try
     {
-        if($script:createSqlServer)
+        if ($script:createSqlServer)
         {
             log-info "create a logical server"
-            if(!(check-credentials))
+            if (!(check-credentials))
             {
                 return $false
             }
@@ -492,7 +480,7 @@ function create-database()
                 -SqlAdministratorCredentials $script:credential `
                 -ServerVersion $sqlServerVersion
 
-            if($error)
+            if ($error)
             {
                 log-info "error creating sql server. returning: $($error)"
                 $error.Clear()
@@ -507,7 +495,7 @@ function create-database()
                 -ServerName $script:servername `
                 -FirewallRuleName "AllowSome" -StartIpAddress $nsgStartIpAllow -EndIpAddress $nsgEndIpAllow
 
-            if($error)
+            if ($error)
             {
                 log-info "error creating sql server. returning: $($error)"
                 $error.Clear()
@@ -518,7 +506,7 @@ function create-database()
             log-info $ret
         }
 
-        if($script:createSqlDatabase)
+        if ($script:createSqlDatabase)
         {
             log-info "creating empty database $($script:databasename)"
 
@@ -527,7 +515,7 @@ function create-database()
                 -DatabaseName $script:databaseName `
                 -RequestedServiceObjectiveName $serviceTier
 
-            if($error)
+            if ($error)
             {
                 log-info "error creating sql database. returning: $($error)"
                 $error.Clear()
@@ -548,9 +536,9 @@ function create-database()
 }
 
 # ----------------------------------------------------------------------------------------------------------------
-function enum-sqlDatabases($sqlServer,$resourceGroup)
+function enum-sqlDatabases($sqlServer, $resourceGroup)
 {
-    if(!$sqlServer)
+    if (!$sqlServer)
     {
         return $false
     }
@@ -558,7 +546,7 @@ function enum-sqlDatabases($sqlServer,$resourceGroup)
     log-info "checking sql dbs on server $($sqlServer)"
     $sqlDatabasesAvaliable = @()
 
-    if(!$script:databasename)
+    if (!$script:databasename)
     {
         $sqlDatabasesAvaliable = @(Get-AzureRmSqlDatabase -ServerName $sqlServer -ResourceGroupName $resourceGroup -ErrorAction SilentlyContinue)
     }
@@ -575,7 +563,7 @@ function enum-sqlServers($resourceGroup, $sqlServer)
     log-info "checking for sql servers in resource group $($resourceGroup)"
     $serverInfo = @()
 
-    if(!$sqlServer)
+    if (!$sqlServer)
     {
         $serverInfo = @(Get-AzureRmSqlServer -ResourceGroupName $resourceGroup -ErrorAction SilentlyContinue)
         
@@ -593,7 +581,7 @@ function list-availableSqlServers()
 {
     $sqlServersAvailable = new-object Collections.ArrayList
 
-    if($resourceGroupName -eq "*")
+    if ($resourceGroupName -eq "*")
     {
         $resourceGroups = @((Get-AzureRmResourceGroup).ResourceGroupName)
     }
@@ -602,11 +590,11 @@ function list-availableSqlServers()
         $resourceGroups = @($resourceGroupName)
     }
 
-    foreach($resourceGroup in $resourceGroups)
+    foreach ($resourceGroup in $resourceGroups)
     {
         $serverInfo = @(enum-sqlServers -resourceGroup $resourceGroup)
 
-        foreach($server in $serverInfo.ServerName)
+        foreach ($server in $serverInfo.ServerName)
         {
             log-info "--------------------------------"
             log-info "--------------------------------"
@@ -616,7 +604,7 @@ function list-availableSqlServers()
 
             $dbInfo = @(enum-sqlDatabases -sqlServer $server -resourceGroup $resourceGroup)
             
-            foreach($db in $dbInfo)
+            foreach ($db in $dbInfo)
             {
                 log-info "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
                 log-info $db
@@ -637,7 +625,7 @@ function log-info($data)
 {
     $data = $($data | format-list * | out-string)
 
-    if($data -imatch "error|warning|exception|fail|terminate")
+    if ($data -imatch "error|warning|exception|fail|terminate")
     {
         Write-Warning $data
     }
@@ -646,7 +634,10 @@ function log-info($data)
         write-host $data
     }
 
-    out-file -Append -InputObject $data -FilePath $logFile
+    if (!$nolog)
+    {
+        out-file -Append -InputObject $data -FilePath $logFile
+    }
 }
 # ----------------------------------------------------------------------------------------------------------------
 

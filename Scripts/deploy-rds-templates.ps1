@@ -64,6 +64,10 @@
     password to create / use for certificate access
     default is $adminPassword
 
+.PARAMETER clean
+    to clean temporary parameter json files in $env:TEMP
+    this will force a new download of parameter json file from templateBaseRepoUrl
+
 .PARAMETER clientAccessName
     rds client access name for HA only.
     non-ha will use rdcb-01
@@ -208,6 +212,7 @@ param(
     [string]$adminUserName = "cloudadmin",
     [string]$adminPassword = "Password$($random)!", 
     [string]$brokerName = "rdcb-01",
+    [switch]$clean,
     [string]$resourceGroup = "resourceGroup$($random)",
     [string]$domainName = "$($resourceGroup).lab",
     [string]$certificateName = "$($resourceGroup)Certificate",
@@ -216,6 +221,7 @@ param(
     [pscredential]$credentials,
     [string]$dnsLabelPrefix = "$($resourceGroup)",
     [string]$dnsServer = "addc-01",
+    [string]$gatewayLoadBalancer = "loadbalancer",
     [string]$gwAvailabilitySet = "gw-availabilityset",
     [string[]][ValidateSet("rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway", "rds-deployment-uber", "rds-deployment-existing-ad", "rds-update-rdsh-collection")]
     $installOptions = @("rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway"),
@@ -459,9 +465,19 @@ function check-parameterFile($parameterFile, $deployment)
     
     if ([IO.File]::Exists($parameterFile))
     {
-        $ret = $true
+        if($clean)
+        {
+            write-host "removing previous parameter file $($parameterFile)"
+            write-host "$(ConvertFrom-Json (get-content -Raw -Path $parameterFile) | out-string)"
+            [IO.File]::Delete($parameterFile)
+        }
+        else 
+        {
+            $ret = $true    
+        }
     }
-    else
+    
+    if(!$ret)
     {
         # check repo
         write-host "downloading template from repo"
@@ -470,6 +486,7 @@ function check-parameterFile($parameterFile, $deployment)
             $ret = $true
         }
     }
+
     if ($ret)
     {
         write-host "parameter file:"
@@ -656,7 +673,7 @@ function check-resourceGroup()
     
     if ((Get-AzureRmResourceGroup -Name $resourceGroup -ErrorAction SilentlyContinue))
     {
-        if ((read-host "resource group exists! Do you want to delete?[y|n]") -ilike 'y')
+        if ((read-host "resource group exists! this is normally ok unless resetting resource group which WILL DELETE all items in resource group. Do you want to delete resource group?[y|n]") -ilike 'y')
         {
             write-host "Remove-AzureRmResourceGroup -Name $resourceGroup"
             if (!$whatIf)
@@ -725,7 +742,8 @@ function create-sql
                     -location $location `
                     -databaseName RdsCb `
                     -adminPassword $adminPassword `
-                    -generateUniqueName "
+                    -generateUniqueName `
+                    -nolog "
 
     if (!$whatIf)
     {
@@ -733,8 +751,9 @@ function create-sql
             -location $location `
             -databaseName RdsCb `
             -adminPassword $adminPassword `
-            -servername "sql-server$($random)"
-        #$ret
+            -servername "sql-server$($random)" `
+            -nolog
+
         $match = [regex]::Match($ret, "connection string ODBC Native client:`r`n(DRIVER.+;)", [Text.RegularExpressions.RegexOptions]::Singleline -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase)
         $odbcstring = ($match.Captures[0].Groups[1].Value).Replace("`r`n", "")
         return $odbcstring
@@ -987,14 +1006,15 @@ function start-rds-deployment-ha-gateway()
     if (!$useJson)
     {
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
+        $ujson.parameters.brokerServer.value = "$($brokerName).$($domainName)"
         $ujson.parameters.existingDomainName.value = $domainName
         $ujson.parameters.existingAdminUserName.value = $adminUserName
         $ujson.parameters.existingAdminPassword.value = $adminPassword
-        $ujson.parameters.brokerServer.value = "$($brokerName).$($domainName)"
+        $ujson.parameters.gatewayLoadbalancer.value = $gatewayLoadBalancer
         $ujson.parameters.externalFqdn.value = "$($resourceGroup).$($domainName)"
         $ujson.parameters.dnsLabelPrefix.value = $resourceGroup
-        $ujson.parameters.gw-availabilitySet.value = $gwAvailabilitySet
-        $ujson.parameters.storageAccountName.value = "storagehagateway$($random)" # <---- TODO query for real account???
+        $ujson.parameters.'gw-availabilitySet'.value = $gwAvailabilitySet
+        $ujson.parameters.storageAccountName.value = "storage$($random)" # <---- TODO query for real account???
         $ujson | ConvertTo-Json | Out-File $parameterFileRdsHaGateway
     }
     $ujson.parameters
