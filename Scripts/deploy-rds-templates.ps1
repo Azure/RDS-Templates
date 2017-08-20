@@ -842,7 +842,9 @@ function get-urlJsonFile($updateUrl, $destinationFile)
             [IO.File]::Delete($destinationFile)
         }
 
-        $jsonFile = Invoke-RestMethod -UseBasicParsing -Method Get -Uri $updateUrl
+        $jsonFile = Invoke-RestMethod -Method Get -Uri $updateUrl
+        $jsonFile | ConvertTo-Json | Out-File $destinationFile
+        $jsonFile = get-content -Raw -Path $destinationFile
 
         # git may not have carriage return
         # reset by setting all to just lf
