@@ -21,7 +21,7 @@
                 "description": "A unique designator representing update iteration; newly created RDSH instances will have their names in the form: 'rdsh-&lt;index&gt;&lt;iteration&gt;"
             }
         },
-        "rdshNumberOfInstances": {
+        "numberOfRdshInstances": {
             "type": "int",
             "defaultValue": 2,
             "metadata": {
@@ -112,7 +112,7 @@
             "pwd": "[concat(' -password ', parameters('existingAdminPassword'))]",
             "collection": "[concat(' -collection \"', parameters('existingRdshCollectionName'), '\"')]",
             "iteration": "[concat(' -iteration ', toLower(parameters('rdshUpdateIteration')))]",
-            "servers": "[concat(' -nServers ', parameters('rdshNumberOfInstances'))]",
+            "servers": "[concat(' -nServers ', parameters('numberOfRdshInstances'))]",
             "timeout": "[concat(' -nTimeoutMinutes ', parameters('userLogoffTimeoutInMinutes'))]",
             "sessionHostNamingPrefix": "[concat(' -sessionHostNamingPrefix ', variables('rdshVmName'))]",
             "vmNameStartIndex": "[concat(' -vmNameStartIndex ', variables('vmNameStartIndex'))]"
@@ -130,7 +130,7 @@
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-nic-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
+                "count": "[parameters('numberOfRdshInstances')]"
             },
             "properties": {
                 "ipConfigurations": [
@@ -159,7 +159,7 @@
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-vm-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
+                "count": "[parameters('numberOfRdshInstances')]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', variables('rdshVmName'), variables('iteration'), padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0'), variables('networkNameSuffix'))]"
