@@ -30,7 +30,7 @@
             "value": "https://{enter_storage_account_name_here}.core.windows.net/vhds/{enter_template_image_name_here}.vhd"
         },
         "rdshUpdateIteration": {
-            "value": "1"
+            "value": ""
         },
         "userLogoffTimeoutInMinutes": {
             "value": 60
