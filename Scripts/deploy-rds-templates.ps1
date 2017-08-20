@@ -469,7 +469,7 @@ function check-parameterFile($parameterFile, $deployment)
     
     if ([IO.File]::Exists($parameterFile))
     {
-        if($clean)
+        if ($clean)
         {
             write-host "removing previous parameter file $($parameterFile)"
             write-host (get-content -Raw -Path $parameterFile) | out-string
@@ -481,7 +481,7 @@ function check-parameterFile($parameterFile, $deployment)
         }
     }
     
-    if(!$ret)
+    if (!$ret)
     {
         # check repo
         write-host "downloading template from repo"
@@ -842,20 +842,20 @@ function get-urlJsonFile($updateUrl, $destinationFile)
         $jsonFile = Invoke-RestMethod -Method Get -Uri $updateUrl
 
         # depending on how source is encoded, returned type can be different
-        if($jsonFile.GetType() -imatch "PSCustomObject")
+        if ($jsonFile.GetType() -imatch "PSCustomObject")
         {
             $jsonFile | ConvertTo-Json | Out-File $destinationFile
         }
-        elseif($jsonFile.GetType() -imatch "string")
+        elseif ($jsonFile.GetType() -imatch "string")
         {
             # git may not have carriage return
             # reset by setting all to just lf
-            $jsonFile = [regex]::Replace($jsonFile, "`r`n","`n")
+            $jsonFile = [regex]::Replace($jsonFile, "`r`n", "`n")
             # add cr back
             $jsonFile = [regex]::Replace($jsonFile, "`n", "`r`n")
             
             # convertfrom-json does not like BOM. so remove            
-            [System.IO.File]::WriteAllLines($destinationFile, $jsonFile, (new-Object System.Text.UTF8Encoding $False))
+            [IO.File]::WriteAllLines($destinationFile, $jsonFile, (new-object Text.UTF8Encoding $false))
         }
         else
         {
@@ -866,7 +866,7 @@ function get-urlJsonFile($updateUrl, $destinationFile)
     }
     catch [System.Exception] 
     {
-        write-host "get-urlJsonFile:exception: $($error)"
+        write-host "get-urlJsonFile:exception: $($error | out-string)"
         $error.Clear()
         return $false    
     }
@@ -888,7 +888,7 @@ function get-urlScriptFile($updateUrl, $destinationFile)
 
         # git may not have carriage return
         # reset by setting all to just lf
-        $scriptFile = [regex]::Replace($scriptFile, "`r`n","`n")
+        $scriptFile = [regex]::Replace($scriptFile, "`r`n", "`n")
         # add cr back
         $scriptFile = [regex]::Replace($scriptFile, "`n", "`r`n")
 
@@ -912,7 +912,7 @@ function get-urlScriptFile($updateUrl, $destinationFile)
     }
     catch [System.Exception] 
     {
-        write-host "get-urlScriptFile:exception: $($error)" -ForegroundColor Red
+        write-host "get-urlScriptFile:exception: $($error | out-string)" -ForegroundColor Red
         $error.Clear()
         return $false    
     }
@@ -1114,9 +1114,9 @@ function start-rds-update-rdsh-collection()
 
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUpdateRdshCollection)
     
-    if(!$useJson)
+    if (!$useJson)
     {
-        if((read-host "Do you want to install a template vm from gallery into $($resourceGroup)?[y|n]") -imatch 'y')
+        if ((read-host "Do you want to install a template vm from gallery into $($resourceGroup)?[y|n]") -imatch 'y')
         {
             write-host "adding template vm. this will take a while..." -ForegroundColor Green
             write-host ".\azure-rm-vm-create.ps1 -publicIp `
@@ -1144,7 +1144,7 @@ function start-rds-update-rdsh-collection()
         
             $tpIp = (Get-AzureRmPublicIpAddress -Name ([IO.Path]::GetFileName($vm.NetworkProfile.NetworkInterfaces[0].Id)) -ResourceGroupName $resourceGroup).IpAddress
         
-            if([string]::IsNullOrEmpty($vhdUri) -or [string]::IsNullOrEmpty($tpIp))
+            if ([string]::IsNullOrEmpty($vhdUri) -or [string]::IsNullOrEmpty($tpIp))
             {
                 write-host "error. something wrong... returning"
                 exit 1
@@ -1155,11 +1155,11 @@ function start-rds-update-rdsh-collection()
         
             write-host "waiting for machine to shutdown"
         
-            while($true)
+            while ($true)
             {
                 $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001" -Status
 
-                if($vm.Statuses.Code.Contains("PowerState/stopped"))
+                if ($vm.Statuses.Code.Contains("PowerState/stopped"))
                 {
                     write-host "deallocating vm"
                     stop-azurermvm -name $vm.Name -Force -ResourceGroupName $resourceGroup
@@ -1168,7 +1168,7 @@ function start-rds-update-rdsh-collection()
                     set-azurermvm -ResourceGroupName $resourceGroup -Name $vm.Name -Generalized 
                     break    
                 }
-                elseif($vm.Statuses.Code.Contains("PowerState/deallocated")) 
+                elseif ($vm.Statuses.Code.Contains("PowerState/deallocated")) 
                 {
                     break
                 }
@@ -1178,21 +1178,21 @@ function start-rds-update-rdsh-collection()
         }
         else
         {
-            if(!$useJson)
+            if (!$useJson)
             {
                 $vhdUri = $rdshTemplateImageUri
             }
         
-            if(!$vhdUri)
+            if (!$vhdUri)
             {
                 $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001"
                 $vhdUri = $vm.StorageProfile.OsDisk.Vhd.Uri
             }
         
-            if($vhdUri)
+            if ($vhdUri)
             {
                 $vhdUri
-                if((read-host "Is this the correct path to vhd of template image to be used?[y|n]") -imatch 'n')
+                if ((read-host "Is this the correct path to vhd of template image to be used?[y|n]") -imatch 'n')
                 {
                     $ujson.parameters.rdshTemplateImageUri.value = read-host "Enter new vhd path:"
 
@@ -1201,7 +1201,7 @@ function start-rds-update-rdsh-collection()
         
         }
         
-        if($vhdUri)
+        if ($vhdUri)
         {
             write-host "modifying json of $($quickstartTemplate) template with this path for rdshTemplateImageUri: $($vhdUri)"
             $ujson.parameters.rdshTemplateImageUri.value = $vhdUri
@@ -1213,13 +1213,13 @@ function start-rds-update-rdsh-collection()
         }
         
         # to update iteration. only need to increment if running update multiple times against same collection
-        if($ujson.parameters.rdshUpdateIteration.value)
+        if ($ujson.parameters.rdshUpdateIteration.value)
         {
             $nextIteration = "$([int]($ujson.parameters.rdshUpdateIteration.value) + 1)"
         }
         else
         {
-            $nextIteration = ""
+            $nextIteration = "1"
         }
 
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
