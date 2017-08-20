@@ -242,10 +242,13 @@ param(
     [string]$publicIpAddressName = "gwpip",
     [string]$primaryDbConnectionString = "",
     [string]$rdshAvailabilitySet = "rdsh-availabilityset",
+    [string]$rdshCollectionName = "Desktop Collection",
     [string]$rdshVmSize = "Standard_A2",
+    [string]$rdshTemplateImageUri = "",
     [string]$sqlServer = "",
     [string]$subnetName = "subnet",
     [string]$templateBaseRepoUri = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/",
+    [string]$templateVmNamePrefix = "templateVm",
     [string]$tenantId = "",
     [switch]$useJson,
     [string]$vaultName = "$($resourceGroup)Cert",
@@ -256,6 +259,7 @@ param(
 $maxRdshTestInstances = 10
 $templateFileName = "azuredeploy.parameters.json"
 
+
 # ----------------------------------------------------------------------------------------------------------------
 function main()
 {
@@ -264,7 +268,7 @@ function main()
     $timer = (get-date)
     get-variable | out-string
 
-    write-host "using random:$($random)" -foregroundcolor yellow
+    write-host "using random: $($random)" -foregroundcolor yellow
     write-host "using password: $($adminPassword)" -foregroundcolor yellow
     write-host "using resource group: $($resourceGroup)" -foregroundcolor yellow
     write-host "authenticating to azure"
@@ -468,7 +472,7 @@ function check-parameterFile($parameterFile, $deployment)
         if($clean)
         {
             write-host "removing previous parameter file $($parameterFile)"
-            write-host "$(ConvertFrom-Json (get-content -Raw -Path $parameterFile) | out-string)"
+            write-host (get-content -Raw -Path $parameterFile) | out-string
             [IO.File]::Delete($parameterFile)
         }
         else 
@@ -490,7 +494,7 @@ function check-parameterFile($parameterFile, $deployment)
     if ($ret)
     {
         write-host "parameter file:"
-        write-host "$(ConvertFrom-Json (get-content -Raw -Path $parameterFile) | out-string)"
+        write-host (get-content -Raw -Path $parameterFile) | out-string
         return $true
     }
     else
@@ -829,17 +833,26 @@ function get-urlJsonFile($updateUrl, $destinationFile)
 {
     write-host "get-urlJsonFile:checking for remote file: $($updateUrl)"
     $jsonFile = $null
+    $scriptFile = $null
 
     try 
     {
-        $jsonFile = Invoke-RestMethod -UseBasicParsing -Method Get -Uri $updateUrl
-
         if ([IO.File]::Exists($destinationFile))
         {
             [IO.File]::Delete($destinationFile)
         }
 
-        $jsonFile | ConvertTo-Json | Out-File $destinationFile        
+        $jsonFile = Invoke-RestMethod -UseBasicParsing -Method Get -Uri $updateUrl
+
+        # git may not have carriage return
+        # reset by setting all to just lf
+        $jsonFile = [regex]::Replace($jsonFile, "`r`n","`n")
+        # add cr back
+        $jsonFile = [regex]::Replace($jsonFile, "`n", "`r`n")
+        
+        $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+        [System.IO.File]::WriteAllLines($destinationFile, $jsonFile, $Utf8NoBomEncoding)
+        
         return $true
     }
     catch [System.Exception] 
@@ -865,10 +878,10 @@ function get-urlScriptFile($updateUrl, $destinationFile)
         $scriptFile = $scriptFile.Replace("???", "")
 
         # git may not have carriage return
-        if ([regex]::Matches($scriptFile, "`r").Count -eq 0)
-        {
-            $scriptFile = [regex]::Replace($scriptFile, "`n", "`r`n")
-        }
+        # reset by setting all to just lf
+        $scriptFile = [regex]::Replace($scriptFile, "`r`n","`n")
+        # add cr back
+        $scriptFile = [regex]::Replace($scriptFile, "`n", "`r`n")
 
         if ([IO.File]::Exists($destinationFile))
         {
@@ -1087,7 +1100,7 @@ function start-rds-update-rdsh-collection()
     $deployment = "rds-update-rdsh-collection"
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
 
-    check-parameterFile -parameterFile $updateParameterFile -deployment $deployment
+    check-parameterFile -parameterFile $parameterFileRdsUpdateRdshCollection -deployment $deployment
     check-deployment -deployment $deployment
 
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUpdateRdshCollection)
@@ -1102,7 +1115,7 @@ function start-rds-update-rdsh-collection()
                             -location $location `
                             -adminUsername $adminUsername `
                             -adminPassword $adminpassword `
-                            -vmBaseName $templatePrefix `
+                            -vmBaseName $templateVmNamePrefix `
                             -vmStartCount 1 `
                             -vmCount 1 "
                             
@@ -1111,12 +1124,12 @@ function start-rds-update-rdsh-collection()
                 -location $location `
                 -adminUsername $adminUsername `
                 -adminPassword $adminpassword `
-                -vmBaseName $templatePrefix `
+                -vmBaseName $templateVmNamePrefix `
                 -vmStartCount 1 `
                 -vmCount 1
         
             write-host "getting vhd location"
-            $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templatePrefix)-001"
+            $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001"
             $vm
             $vhdUri = $vm.StorageProfile.OsDisk.Vhd.Uri
         
@@ -1128,14 +1141,14 @@ function start-rds-update-rdsh-collection()
                 exit 1
             }
         
-            write-host "use mstsc connection to run sysprep on template c:\windows\system32\sysprep\sysprep.exe -oobe -generalize"
+            write-host "use mstsc connection to run sysprep on template c:\windows\system32\sysprep\sysprep.exe -oobe -generalize" -foregroundcolor Green
             mstsc /v $tpIp /admin
         
             write-host "waiting for machine to shutdown"
         
             while($true)
             {
-                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templatePrefix)-001" -Status
+                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001" -Status
 
                 if($vm.Statuses.Code.Contains("PowerState/stopped"))
                 {
@@ -1156,15 +1169,18 @@ function start-rds-update-rdsh-collection()
         }
         else
         {
-            $vhdUri = $ujson.parameters.rdshTemplateImageUri.value
-        
-            if([string]::IsNullOrEmpty($vhdUri))
+            if(!$useJson)
             {
-                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templatePrefix)-001"
+                $vhdUri = $rdshTemplateImageUri
+            }
+        
+            if(!$vhdUri)
+            {
+                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001"
                 $vhdUri = $vm.StorageProfile.OsDisk.Vhd.Uri
             }
         
-            if(![string]::IsNullOrEmpty($vhdUri))
+            if($vhdUri)
             {
                 $vhdUri
                 if((read-host "Is this the correct path to vhd of template image to be used?[y|n]") -imatch 'n')
@@ -1176,9 +1192,9 @@ function start-rds-update-rdsh-collection()
         
         }
         
-        if(![string]::IsNullOrEmpty($vhdUri))
+        if($vhdUri)
         {
-            write-host "modify json of $($quickstartTemplate) template with this path for rdshTemplateImageUri: $($vhdUri)"
+            write-host "modifying json of $($quickstartTemplate) template with this path for rdshTemplateImageUri: $($vhdUri)"
             $ujson.parameters.rdshTemplateImageUri.value = $vhdUri
         }
         else
@@ -1197,21 +1213,20 @@ function start-rds-update-rdsh-collection()
             $nextIteration = ""
         }
 
-        $ujson.parameters.rdshUpdateIteration.value = $nextIteration
-
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
-        $ujson.parameters.existingRdshCollectionName.value = $existingRdshCollectionName
-        $ujson.parameters.numberOfRdshInstances.value = $numberOfRdshInstances
-        $ujson.parameters.rdshVmSize.value = $rdshVmSize
-        $ujson.parameters.UserLogoffTimeoutInMinutes.value = $logoffTimeInminutes
+        $ujson.parameters._artifactsLocationSasToken.value = ""
+        $ujson.parameters.availabilitySet.value = $rdshAvailabilitySet
         $ujson.parameters.existingDomainName.value = $domainName
         $ujson.parameters.existingAdminusername.value = $adminUsername
         $ujson.parameters.existingAdminPassword.value = $adminPassword
-        $ujson.parameters.existingVnetName.value = $vnetName
+        $ujson.parameters.existingRdshCollectionName.value = $rdshCollectionName
         $ujson.parameters.existingSubnetName.value = $subnetName
-        $ujson.parameters._artifactsLocationSasToken.value = ""
-        $ujson.parameters.availabilitySet.value = $rdshAvailabilitySet
-
+        $ujson.parameters.existingVnetName.value = $vnetName
+        $ujson.parameters.numberOfRdshInstances.value = $numberOfRdshInstances
+        $ujson.parameters.rdshUpdateIteration.value = $nextIteration
+        $ujson.parameters.rdshVmSize.value = $rdshVmSize
+        $ujson.parameters.UserLogoffTimeoutInMinutes.value = $logoffTimeInminutes
+        
         $ujson | ConvertTo-Json | Out-File $parameterFileRdsUpdateRdshCollection
 
         $ujson.parameters
