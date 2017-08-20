@@ -289,7 +289,7 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
               "fileUris": [
-                "[concat(parameters('_artifactsLocation'),'Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1')]"
+                "[concat(parameters('_artifactsLocation'),'/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1')]"
               ]
             },
             "protectedSettings": {
