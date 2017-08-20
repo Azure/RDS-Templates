@@ -2,9 +2,6 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "externalFqdn": {
-      "value": "{enter_external_fqdn_here(example: gateway.contoso.com)}"
-    },
     "_artifactsLocation": {
       "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/"
     },
@@ -32,11 +29,14 @@
     "existingVnet": {
       "value": "vnet"
     },
+    "externalFqdn": {
+      "value": "{enter_external_fqdn_here(example: gateway.contoso.com)}"
+    },
+    "gatewayloadBalancer": {
+      "value": "loadBalancer"
+    },
     "gw-availabilityset": {
       "value": "gw-availabilityset"
-    },
-    "loadBalancer": {
-      "value": "loadBalancer"
     },
     "numberOfWebGwInstances": {
       "value": 1
