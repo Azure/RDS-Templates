@@ -793,7 +793,7 @@ function deploy-template($templateFile, $parameterFile, $deployment)
                     -ResourceGroupName $resourceGroup `
                     -DeploymentDebugLogLevel All `
                     -TemplateFile $templateFile `
-                    -adminUsername $global:credential.UserName "
+                    -TemplateParameterFile $parameterFile "
 
     $error.Clear() 
     if (!$whatIf)
@@ -803,9 +803,6 @@ function deploy-template($templateFile, $parameterFile, $deployment)
             -DeploymentDebugLogLevel All `
             -TemplateFile $templateFile `
             -TemplateParameterFile $parameterFile
-        #-adminUsername $global:credential.UserName `
-        #-adminPassword $global:credential.Password `
-            
     }
     else
     {
@@ -843,17 +840,27 @@ function get-urlJsonFile($updateUrl, $destinationFile)
         }
 
         $jsonFile = Invoke-RestMethod -Method Get -Uri $updateUrl
-        $jsonFile | ConvertTo-Json | Out-File $destinationFile
-        $jsonFile = get-content -Raw -Path $destinationFile
 
-        # git may not have carriage return
-        # reset by setting all to just lf
-        $jsonFile = [regex]::Replace($jsonFile, "`r`n","`n")
-        # add cr back
-        $jsonFile = [regex]::Replace($jsonFile, "`n", "`r`n")
-        
-        $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
-        [System.IO.File]::WriteAllLines($destinationFile, $jsonFile, $Utf8NoBomEncoding)
+        # depending on how source is encoded, returned type can be different
+        if($jsonFile.GetType() -imatch "PSCustomObject")
+        {
+            $jsonFile | ConvertTo-Json | Out-File $destinationFile
+        }
+        elseif($jsonFile.GetType() -imatch "string")
+        {
+            # git may not have carriage return
+            # reset by setting all to just lf
+            $jsonFile = [regex]::Replace($jsonFile, "`r`n","`n")
+            # add cr back
+            $jsonFile = [regex]::Replace($jsonFile, "`n", "`r`n")
+            
+            # convertfrom-json does not like BOM. so remove            
+            [System.IO.File]::WriteAllLines($destinationFile, $jsonFile, (new-Object System.Text.UTF8Encoding $False))
+        }
+        else
+        {
+            throw [exception]
+        }
         
         return $true
     }
