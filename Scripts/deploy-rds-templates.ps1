@@ -216,10 +216,12 @@ param(
     [pscredential]$credentials,
     [string]$dnsLabelPrefix = "$($resourceGroup)",
     [string]$dnsServer = "addc-01",
+    [string]$gwAvailabilitySet = "gw-availabilityset",
     [string[]][ValidateSet("rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway", "rds-deployment-uber", "rds-deployment-existing-ad", "rds-update-rdsh-collection")]
     $installOptions = @("rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway"),
     [string][ValidateSet('2012-R2-Datacenter', '2016-Datacenter')]$imageSku = "2016-Datacenter",
     [string]$location = "eastus",
+    [int]$logoffTimeInminutes = 60,
     [switch]$monitor,
     [int]$numberOfRdshInstances = 2,
     [int]$numberOfWebGwInstances = 1,
@@ -233,6 +235,7 @@ param(
     [switch]$postConnect,
     [string]$publicIpAddressName = "gwpip",
     [string]$primaryDbConnectionString = "",
+    [string]$rdshAvailabilitySet = "rdsh-availabilityset",
     [string]$rdshVmSize = "Standard_A2",
     [string]$sqlServer = "",
     [string]$subnetName = "subnet",
@@ -767,9 +770,7 @@ function deploy-template($templateFile, $parameterFile, $deployment)
                     -ResourceGroupName $resourceGroup `
                     -DeploymentDebugLogLevel All `
                     -TemplateFile $templateFile `
-                    -adminUsername $global:credential.UserName `
-                    -adminPassword $global:credential.Password `
-                    -TemplateParameterFile $parameterFile "
+                    -adminUsername $global:credential.UserName "
 
     $error.Clear() 
     if (!$whatIf)
@@ -778,9 +779,10 @@ function deploy-template($templateFile, $parameterFile, $deployment)
             -ResourceGroupName $resourceGroup `
             -DeploymentDebugLogLevel All `
             -TemplateFile $templateFile `
-            -adminUsername $global:credential.UserName `
-            -adminPassword $global:credential.Password `
             -TemplateParameterFile $parameterFile
+        #-adminUsername $global:credential.UserName `
+        #-adminPassword $global:credential.Password `
+            
     }
     else
     {
@@ -788,8 +790,6 @@ function deploy-template($templateFile, $parameterFile, $deployment)
             -ResourceGroupName $resourceGroup `
             -DeploymentDebugLogLevel All `
             -TemplateFile $templateFile `
-            -adminUsername $global:credential.UserName `
-            -adminPassword $global:credential.Password `
             -TemplateParameterFile $parameterFile `
             -WhatIf
     }
@@ -802,8 +802,7 @@ function deploy-template($templateFile, $parameterFile, $deployment)
         exit 1
     }
 
-    write-host "$([DateTime]::Now) finished deployment"
-   
+    write-host "$([DateTime]::Now) finished deployment" -ForegroundColor Magenta
 }
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -814,7 +813,6 @@ function get-urlJsonFile($updateUrl, $destinationFile)
 
     try 
     {
-        #$jsonFile = ConvertFrom-Json -InputObject (Invoke-RestMethod -UseBasicParsing -Method Get -Uri $updateUrl)
         $jsonFile = Invoke-RestMethod -UseBasicParsing -Method Get -Uri $updateUrl
 
         if ([IO.File]::Exists($destinationFile))
@@ -873,7 +871,7 @@ function get-urlScriptFile($updateUrl, $destinationFile)
     }
     catch [System.Exception] 
     {
-        write-host "get-urlScriptFile:exception: $($error)"
+        write-host "get-urlScriptFile:exception: $($error)" -ForegroundColor Red
         $error.Clear()
         return $false    
     }
@@ -995,6 +993,7 @@ function start-rds-deployment-ha-gateway()
         $ujson.parameters.brokerServer.value = "$($brokerName).$($domainName)"
         $ujson.parameters.externalFqdn.value = "$($resourceGroup).$($domainName)"
         $ujson.parameters.dnsLabelPrefix.value = $resourceGroup
+        $ujson.parameters.gw-availabilitySet.value = $gwAvailabilitySet
         $ujson.parameters.storageAccountName.value = "storagehagateway$($random)" # <---- TODO query for real account???
         $ujson | ConvertTo-Json | Out-File $parameterFileRdsHaGateway
     }
@@ -1071,11 +1070,136 @@ function start-rds-update-rdsh-collection()
     check-parameterFile -parameterFile $updateParameterFile -deployment $deployment
     check-deployment -deployment $deployment
 
-    .\art-rds-update-rdsh-collection-test.ps1 -resourceGroup $resourceGroup `
-        -TemplateFile "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json" `
-        -TemplateParameterFile $parameterFileRdsUpdateRdshCollection `
-        -artifactsLocation "$($templateBaseRepoUri)rds-update-rdsh-collection"
+    $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUpdateRdshCollection)
+    
+    if(!$useJson)
+    {
+        if((read-host "Do you want to install a template vm from gallery into $($resourceGroup)?[y|n]") -imatch 'y')
+        {
+            write-host "adding template vm. this will take a while..." -ForegroundColor Green
+            write-host ".\azure-rm-vm-create.ps1 -publicIp `
+                            -resourceGroupName $resourceGroup `
+                            -location $location `
+                            -adminUsername $adminUsername `
+                            -adminPassword $adminpassword `
+                            -vmBaseName $templatePrefix `
+                            -vmStartCount 1 `
+                            -vmCount 1 "
+                            
+            .\azure-rm-vm-create.ps1 -publicIp `
+                -resourceGroupName $resourceGroup `
+                -location $location `
+                -adminUsername $adminUsername `
+                -adminPassword $adminpassword `
+                -vmBaseName $templatePrefix `
+                -vmStartCount 1 `
+                -vmCount 1
+        
+            write-host "getting vhd location"
+            $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templatePrefix)-001"
+            $vm
+            $vhdUri = $vm.StorageProfile.OsDisk.Vhd.Uri
+        
+            $tpIp = (Get-AzureRmPublicIpAddress -Name ([IO.Path]::GetFileName($vm.NetworkProfile.NetworkInterfaces[0].Id)) -ResourceGroupName $resourceGroup).IpAddress
+        
+            if([string]::IsNullOrEmpty($vhdUri) -or [string]::IsNullOrEmpty($tpIp))
+            {
+                write-host "error. something wrong... returning"
+                exit 1
+            }
+        
+            write-host "use mstsc connection to run sysprep on template c:\windows\system32\sysprep\sysprep.exe -oobe -generalize"
+            mstsc /v $tpIp /admin
+        
+            write-host "waiting for machine to shutdown"
+        
+            while($true)
+            {
+                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templatePrefix)-001" -Status
 
+                if($vm.Statuses.Code.Contains("PowerState/stopped"))
+                {
+                    write-host "deallocating vm"
+                    stop-azurermvm -name $vm.Name -Force -ResourceGroupName $resourceGroup
+                
+                    write-host "setting vm to OSState/generalized"
+                    set-azurermvm -ResourceGroupName $resourceGroup -Name $vm.Name -Generalized 
+                    break    
+                }
+                elseif($vm.Statuses.Code.Contains("PowerState/deallocated")) 
+                {
+                    break
+                }
+        
+                start-sleep -Seconds 1
+            }
+        }
+        else
+        {
+            $vhdUri = $ujson.parameters.rdshTemplateImageUri.value
+        
+            if([string]::IsNullOrEmpty($vhdUri))
+            {
+                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templatePrefix)-001"
+                $vhdUri = $vm.StorageProfile.OsDisk.Vhd.Uri
+            }
+        
+            if(![string]::IsNullOrEmpty($vhdUri))
+            {
+                $vhdUri
+                if((read-host "Is this the correct path to vhd of template image to be used?[y|n]") -imatch 'n')
+                {
+                    $ujson.parameters.rdshTemplateImageUri.value = read-host "Enter new vhd path:"
+
+                }
+            }
+        
+        }
+        
+        if(![string]::IsNullOrEmpty($vhdUri))
+        {
+            write-host "modify json of $($quickstartTemplate) template with this path for rdshTemplateImageUri: $($vhdUri)"
+            $ujson.parameters.rdshTemplateImageUri.value = $vhdUri
+        }
+        else
+        {
+            write-host "error:invalid vhd path. exiting"
+            return
+        }
+        
+        # to update iteration. only need to increment if running update multiple times against same collection
+        if($ujson.parameters.rdshUpdateIteration.value)
+        {
+            $nextIteration = "$([int]($ujson.parameters.rdshUpdateIteration.value) + 1)"
+        }
+        else
+        {
+            $nextIteration = ""
+        }
+
+        $ujson.parameters.rdshUpdateIteration.value = $nextIteration
+
+        $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
+        $ujson.parameters.existingRdshCollectionName.value = $existingRdshCollectionName
+        $ujson.parameters.numberOfRdshInstances.value = $numberOfRdshInstances
+        $ujson.parameters.rdshVmSize.value = $rdshVmSize
+        $ujson.parameters.UserLogoffTimeoutInMinutes.value = $logoffTimeInminutes
+        $ujson.parameters.existingDomainName.value = $domainName
+        $ujson.parameters.existingAdminusername.value = $adminUsername
+        $ujson.parameters.existingAdminPassword.value = $adminPassword
+        $ujson.parameters.existingVnetName.value = $vnetName
+        $ujson.parameters.existingSubnetName.value = $subnetName
+        $ujson.parameters._artifactsLocationSasToken.value = ""
+        $ujson.parameters.availabilitySet.value = $rdshAvailabilitySet
+
+        $ujson | ConvertTo-Json | Out-File $parameterFileRdsUpdateRdshCollection
+
+        $ujson.parameters
+        
+        deploy-template -templateFile "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json" `
+            -ParameterFile $parameterFileRdsUpdateRdshCollection `
+            -deployment $installOption
+    }
 }
 
 # ----------------------------------------------------------------------------------------------------------------
