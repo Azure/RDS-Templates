@@ -20,17 +20,26 @@
         "existingDomainName": {
             "value": "contoso.com"
         },
+        "existingRdshCollectionName": {
+            "value": "Desktop Collection"
+        },
         "existingSubnetName": {
             "value": "subnet"
         },
         "existingVnetName": {
             "value": "vnet"
         },
+        "rdshNumberOfInstances": {
+            "value": 2
+        },
         "rdshTemplateImageUri": {
             "value": "https://{enter_storage_account_name_here}.core.windows.net/vhds/{enter_template_image_name_here}.vhd"
         },
         "rdshUpdateIteration": {
             "value": ""
+        },
+        "rdshVmSize": {
+            "value": "Standard_A2"
         },
         "userLogoffTimeoutInMinutes": {
             "value": 60
