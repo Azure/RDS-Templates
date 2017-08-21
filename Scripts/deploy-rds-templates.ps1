@@ -232,6 +232,7 @@ param(
     [switch]$monitor,
     [int]$numberOfRdshInstances = 2,
     [int]$numberOfWebGwInstances = 1,
+    [string]$parameterFileAdDeployment = "$($env:TEMP)\ad-deployment-only-test.azuredeploy.parameters.json",
     [string]$parameterFileRdsDeployment = "$($env:TEMP)\rds-deployment.azuredeploy.parameters.json",
     [string]$parameterFileRdsDeploymentExistingAd = "$($env:TEMP)\rds-deployment-existing-ad.azuredeploy.parameters.json",
     [string]$parameterFileRdsUpdateCertificate = "$($env:TEMP)\rds-update-certificate.azuredeploy.parameters.json",
@@ -286,7 +287,7 @@ function main()
     {
         switch ($installOption.ToString().ToLower())
         {
-            "ad-domain-only-test" { start-rds-deployment -adOnly $true }
+            "ad-domain-only-test" { start-ad-domain-only-test }
             "rds-deployment" { start-rds-deployment }
             "rds-update-certificate" {  start-rds-update-certificate }
             "rds-deployment-ha-broker" { start-rds-deployment-ha-broker }
@@ -538,7 +539,7 @@ function check-parameters()
     write-host "checking tenant id"
     if (!$tenantId)
     {
-        $tenantId = (Get-AzureRmSubscription).TenantId
+        $tenantId = (Get-AzureRmSubscription -warningAction SilentlyContinue).TenantId
     }
     write-host "checking ad domain name"
 
@@ -934,7 +935,52 @@ function get-urlScriptFile($updateUrl, $destinationFile)
 }
 
 # ----------------------------------------------------------------------------------------------------------------
-function start-rds-deployment([bool]$adOnly = $false)
+function start-ad-domain-only-test()
+{
+    $deployment = "ad-domain-only-test"
+    write-warning "$($deployment) should only be used for testing and NOT production"
+    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    $templateFile = "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/bb24e0c10dd73b818dc492133522ceaf72887cd5/active-directory-new-domain/azuredeploy.json"
+
+    $deployFile = "$($env:TEMP)\azuredeploy.json"
+    if (!(get-urlJsonFile -updateUrl "$($templateFile)" -destinationFile $deployFile))
+    {
+        write-error "unable to get $($templateFile). exiting"
+        exit 1
+    }
+    check-deployment -deployment $deployment
+
+    $ajson = get-content -raw -Path $deployFile
+    $ajson = $ajson.Replace("`"adVMName`": `"adVM`"","`"adVMName`": `"addc-01`"")
+    # convertfrom-json does not like BOM. so remove            
+    [IO.File]::WriteAllLines($deployFile, $ajson, (new-object Text.UTF8Encoding $false))
+    $templateFile = $deployFile
+
+    if(!$useJson)
+    {
+        $ujson = @{'$schema'="https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#";
+            "contentVersion"="1.0.0.0";
+            "parameters"= @{
+                "adminPassword" = @{ "value"= $adminPassword };
+                "adminUsername" = @{ "value"= $adminUsername };
+                "adSubnetName" = @{ "value"= $subnetName };
+                "adVMSize" = @{ "value"= "Standard_D2_v2"};
+                "dnsPrefix" = @{ "value"= "dummy-$($dnsLabelPrefix)" };
+                "domainName" = @{ "value"= $domainName };
+                "virtualNetworkName" = @{ "value"= $vnetName };
+            }
+        }
+        $ujson | ConvertTo-Json | Out-File $parameterFileAdDeployment
+    }
+
+    $ujson.parameters
+    deploy-template -templateFile $templateFile `
+        -parameterFile $parameterFileAdDeployment `
+        -deployment $installOption
+}
+
+# ----------------------------------------------------------------------------------------------------------------
+function start-rds-deployment()
 {
     $deployment = "rds-deployment"
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
@@ -958,29 +1004,6 @@ function start-rds-deployment([bool]$adOnly = $false)
         $ujson | ConvertTo-Json | Out-File $parameterFileRdsDeployment
     }
 
-    if($adOnly)
-    {
-        $templateFile = "$($env:temp)\azuredeploy.json"
-
-        if(get-urlJsonFile -updateUrl "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json" -destinationFile $templateFile)
-        {
-            write-warning "setting rds vm names to dummy  for 'ad-domain-only-test' install" 
-            $ajson = get-content -Raw -Path $templateFile
-            $ajson = $ajson.Replace("rdcb-01","dummy-rdcb-01")
-            $ajson = $ajson.Replace("rdgw-01","dummy-rdgw-01")
-            $ajson = $ajson.Replace("rdsh-","dummy-rdsh-")
-            [IO.File]::WriteAllLines($templateFile, $ajson, (new-object Text.UTF8Encoding $false))
-
-            $ujson.parameters.numberofRdshInstances.value = 1
-            $ujson | ConvertTo-Json | Out-File $parameterFileRdsDeployment
-        }
-        else
-        {
-            write-host "unable to download azuredeploy.json for ad. exiting"
-            exit 1
-        }
-    }
-
     $ujson.parameters
 
     deploy-template -templateFile $templateFile `
@@ -998,9 +1021,9 @@ function start-rds-deployment-existing-ad()
 
     if (!($installOptions -imatch "ad-domain-only-test"))
     {
-        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'rds-deployment' first?[y|n]") -imatch "y")
+        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'ad-domain-only-test' first?[y|n]") -imatch "y")
         {
-            start-rds-deployment -adOnly $true
+            start-ad-domain-only-test
         }
     }
 
@@ -1096,9 +1119,9 @@ function start-rds-deployment-uber()
 
     if (!($installOptions -imatch "ad-domain-only-test"))
     {
-        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'rds-deployment' first?[y|n]" -imatch "y"))
+        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'ad-domain-only-test' first?[y|n]" -imatch "y"))
         {
-            start-rds-deployment -adOnly $true
+            start-ad-domain-only-test
         }
     }
 
@@ -1217,7 +1240,7 @@ function start-rds-update-rdsh-collection()
             }
 
             write-host "getting vhd location"
-            $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001"
+            $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-01"
             $vm
             $vhdUri = $vm.StorageProfile.OsDisk.Vhd.Uri
         
@@ -1236,7 +1259,7 @@ function start-rds-update-rdsh-collection()
         
             while ($true)
             {
-                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001" -Status
+                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-01" -Status
 
                 if ($vm.Statuses.Code.Contains("PowerState/stopped"))
                 {
@@ -1261,7 +1284,7 @@ function start-rds-update-rdsh-collection()
 
             if (!$vhdUri)
             {
-                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001"
+                $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-01"
                 $vhdUri = $vm.StorageProfile.OsDisk.Vhd.Uri
             }
         

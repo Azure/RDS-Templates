@@ -71,6 +71,21 @@ function main()
     $vnetName = check-vnetName -resourceGroupName $resourceGroupName -vnetName $vnetName
     $subnetName = check-subnetName -resourceGroupName $resourceGroupName -vnetName $vnetName -subnetName $subnetName
 
+    for ($i = $vmstartCount; $i -lt $vmstartcount + $VMCount; $i++)
+    {
+        $newVmName = "$($vmBaseName)-$($i.ToString("D2"))"
+        
+        if (Get-AzureRMVM -resourceGroupName $resourceGroupName -Name $newVMName -ErrorAction SilentlyContinue)
+        {
+            Write-Host "vm already exists $newVMName. skipping..."
+        }
+        else
+        {
+            write-host "adding new machine name to list: $($newvmName)"
+            $newVmNames.Add($newVmName)
+        }
+    }
+
     foreach ($VMName in $newVMNames)
     {
         # todo make concurrent with start-job?
@@ -269,20 +284,6 @@ function check-subnetName($resourceGroupName, $vnetName, $subnetName)
         $SubnetConfig = Get-AzureRmVirtualNetworkSubnetConfig -Name $SubnetName -VirtualNetwork $VNetName
     }
 
-    for ($i = $vmstartCount; $i -lt $vmstartcount + $VMCount; $i++)
-    {
-        $newVmName = "$($vmBaseName)-$($i.ToString("D3"))"
-        
-        if (Get-AzureRMVM -resourceGroupName $resourceGroupName -Name $newVMName -ErrorAction SilentlyContinue)
-        {
-            Write-Host "vm already exists $newVMName. skipping..."
-        }
-        else
-        {
-            write-host "adding new machine name to list: $($newvmName)"
-            $newVmNames.Add($newVmName)
-        }
-    }
 }
 # ----------------------------------------------------------------------------------------------------------------
 
