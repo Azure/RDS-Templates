@@ -211,6 +211,7 @@ param(
     [string]$random = (get-random), # positional requirement
     [string]$adminUserName = "cloudadmin",
     [string]$adminPassword = "Password$($random)!", 
+    [string]$applicationId, 
     [string]$brokerName = "rdcb-01",
     [switch]$clean,
     [string]$resourceGroup = "resourceGroup$($random)",
@@ -223,7 +224,7 @@ param(
     [string]$dnsServer = "addc-01",
     [string]$gatewayLoadBalancer = "loadbalancer",
     [string]$gwAvailabilitySet = "gw-availabilityset",
-    [string[]][ValidateSet("rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway", "rds-deployment-uber", "rds-deployment-existing-ad", "rds-update-rdsh-collection")]
+    [string[]][ValidateSet("ad-domain-only-test","rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway", "rds-deployment-uber", "rds-deployment-existing-ad", "rds-update-rdsh-collection")]
     $installOptions = @("rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway"),
     [string][ValidateSet('2012-R2-Datacenter', '2016-Datacenter')]$imageSku = "2016-Datacenter",
     [string]$location = "eastus",
@@ -232,12 +233,14 @@ param(
     [int]$numberOfRdshInstances = 2,
     [int]$numberOfWebGwInstances = 1,
     [string]$parameterFileRdsDeployment = "$($env:TEMP)\rds-deployment.azuredeploy.parameters.json",
+    [string]$parameterFileRdsDeploymentExistingAd = "$($env:TEMP)\rds-deployment-existing-ad.azuredeploy.parameters.json",
     [string]$parameterFileRdsUpdateCertificate = "$($env:TEMP)\rds-update-certificate.azuredeploy.parameters.json",
     [string]$parameterFileRdsHaBroker = "$($env:TEMP)\rds-deployment-ha-broker.azuredeploy.parameters.json",
     [string]$parameterFileRdsHaGateway = "$($env:TEMP)\rds-deployment-ha-gateway.azuredeploy.parameters.json",
     [string]$parameterFileRdsUber = "$($env:TEMP)\rds-deployment-uber.azuredeploy.parameters.json",
     [string]$parameterFileRdsUpdateRdshCollection = "$($env:TEMP)\rds-update-rdsh-collection.azuredeploy.parameters.json",
     [switch]$pause,
+    [string]$pfxFilePath,
     [switch]$postConnect,
     [string]$publicIpAddressName = "gwpip",
     [string]$primaryDbConnectionString = "",
@@ -245,11 +248,12 @@ param(
     [string]$rdshCollectionName = "Desktop Collection",
     [string]$rdshVmSize = "Standard_A2",
     [string]$rdshTemplateImageUri = "",
+    [string]$rdshUpdateIteration = "1",
     [string]$sqlServer = "",
     [string]$subnetName = "subnet",
     [string]$templateBaseRepoUri = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/",
     [string]$templateVmNamePrefix = "templateVm",
-    [string]$tenantId = "",
+    [string]$tenantId,
     [switch]$useJson,
     [string]$vaultName = "$($resourceGroup)Cert",
     [string]$vnetName = "vnet",
@@ -282,12 +286,13 @@ function main()
     {
         switch ($installOption.ToString().ToLower())
         {
+            "ad-domain-only-test" { start-rds-deployment -adOnly $true }
             "rds-deployment" { start-rds-deployment }
             "rds-update-certificate" {  start-rds-update-certificate }
             "rds-deployment-ha-broker" { start-rds-deployment-ha-broker }
             "rds-deployment-ha-gateway" { start-rds-deployment-ha-gateway }
             "rds-deployment-uber" { start-rds-deployment-uber }
-            "rds-deployment-existing-ad" { write-error "$($installOption) not implemented..." }
+            "rds-deployment-existing-ad" { start-rds-deployment-existing-ad }
             "rds-update-rdsh-collection" { start-rds-update-rdsh-collection }
             default: { Write-Error "unknown option $($installOption)" }
         } # end switch
@@ -530,6 +535,11 @@ function check-parameters()
         exit 1
     }
 
+    write-host "checking tenant id"
+    if (!$tenantId)
+    {
+        $tenantId = (Get-AzureRmSubscription).TenantId
+    }
     write-host "checking ad domain name"
 
     if (!$domainName)
@@ -705,36 +715,54 @@ function check-resourceGroup()
 function create-cert
 {
     write-host "$(get-date) create-cert..." -foregroundcolor cyan
-
-    if (!$whatIf)
-    {
-        Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force
-        .\ps-certreq.ps1  -subject "*.$($domainName)"
-        $mypwd = ConvertTo-SecureString -String $adminPassword -Force -AsPlainText
-        $pfxFilePath = "$($env:TEMP)\$($domainName).pfx"
-        Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Export-PfxCertificate -Password $mypwd -FilePath $pfxFilePath -Force
-        # use post import to trusted root
-        Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force
+    write-warning "this is a standalone cert that should only be used for test and NOT production"
     
-        write-host "$(get-date) create-vault..." -foregroundcolor cyan
-    }
-    write-host ".\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
-                    -certPassword $certificatePass `
-                    -certNameInVault $certificateName `
-                    -vaultName $vaultName `
-                    -uri 'https://$($resourceGroup)/$($domainName)' `
-                    -resourceGroup $resourceGroup `
-                    -adApplicationName 'cert$($resourceGroup)$($domainName)'"
-    if (!$whatIf)
+    if(!$pfxFilePath)
     {
-        $ret = .\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
-            -certPassword $certificatePass `
-            -certNameInVault $certificateName `
-            -vaultName $vaultName `
-            -uri "https://$($resourceGroup)/$($domainName)" `
-            -resourceGroup $resourceGroup `
-            -adApplicationName "cert$($resourceGroup)$($domainName)"
-        return $ret
+        write-host "Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force"
+        write-host ".\ps-certreq.ps1  -subject `"*.$($domainName)`""
+        $pfxFilePath = "$($env:TEMP)\$($domainName).pfx"
+        write-host "Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Export-PfxCertificate -Password $mypwd -FilePath $pfxFilePath -Force"
+        write-host "Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force"
+
+        $ret = $null
+
+        if (!$whatIf)
+        {
+            Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force
+            .\ps-certreq.ps1  -subject "*.$($domainName)"
+            $mypwd = ConvertTo-SecureString -String $adminPassword -Force -AsPlainText
+            Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Export-PfxCertificate -Password $mypwd -FilePath $pfxFilePath -Force
+            # use post import to trusted root
+            Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force
+        }
+    }
+
+    if(!$applicationId)
+    {
+        write-host "$(get-date) create-vault..." -foregroundcolor cyan
+        write-host ".\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
+                        -certPassword $certificatePass `
+                        -certNameInVault $certificateName `
+                        -vaultName $vaultName `
+                        -uri 'https://$($resourceGroup)/$($domainName)' `
+                        -resourceGroup $resourceGroup `
+                        -adApplicationName 'cert$($resourceGroup)$($domainName)'"
+        if (!$whatIf)
+        {
+            $ret = .\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
+                -certPassword $certificatePass `
+                -certNameInVault $certificateName `
+                -vaultName $vaultName `
+                -uri "https://$($resourceGroup)/$($domainName)" `
+                -resourceGroup $resourceGroup `
+                -adApplicationName "cert$($resourceGroup)$($domainName)"
+            return $ret
+        }
+    }
+    else
+    {
+        return "application id: $($applicationId)"
     }
 }
 
@@ -788,7 +816,7 @@ function deploy-template($templateFile, $parameterFile, $deployment)
 
     $error.Clear() 
     
-    write-host "$([DateTime]::Now) starting new deployment. this will take a while..." -ForegroundColor Green
+    write-host "$([DateTime]::Now) starting $(deployment). this will take a while..." -ForegroundColor Green
     write-host "New-AzureRmResourceGroupDeployment -Name $deployment `
                     -ResourceGroupName $resourceGroup `
                     -DeploymentDebugLogLevel All `
@@ -919,15 +947,16 @@ function get-urlScriptFile($updateUrl, $destinationFile)
 }
 
 # ----------------------------------------------------------------------------------------------------------------
-function start-rds-deployment()
+function start-rds-deployment([bool]$adOnly = $false)
 {
     $deployment = "rds-deployment"
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
     
     check-parameterFile -parameterFile $parameterFileRdsDeployment -deployment $deployment
     check-deployment -deployment $deployment
-
+    $templateFile = "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json"
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsDeployment)
+
     if (!$useJson)
     {
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
@@ -941,49 +970,73 @@ function start-rds-deployment()
         $ujson.parameters.rdshVmSize.value = $rdshVmSize
         $ujson | ConvertTo-Json | Out-File $parameterFileRdsDeployment
     }
-    
+
+    if($adOnly)
+    {
+        $templateFile = "$($env:temp)\azuredeploy.json"
+
+        if(get-urlJsonFile -updateUrl "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json" -destinationFile $templateFile)
+        {
+            write-warning "setting rds vm names to dummy  for 'ad-domain-only-test' install" 
+            $ajson = ConvertFrom-Json (get-content -Raw -Path $templateFile)
+            $ajson.variables.brokerVmName = "dummy-rdcb-01"
+            $ajson.variables.gatewayVmName = "dummy-rdgw-01"
+            $ajson.variables.rdshVmName = "dummy-rdsh-"
+            $ajson | ConvertTo-Json | Out-File $templateFile
+
+            $ujson.parameters.numberofRdshInstances.value = 1
+            $ujson | ConvertTo-Json | Out-File $parameterFileRdsDeployment
+        }
+        else
+        {
+            write-host "unable to download azuredeploy.json for ad. exiting"
+            exit 1
+        }
+    }
+
     $ujson.parameters
-    deploy-template -templateFile "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json" `
+    
+    deploy-template -templateFile $templateFile `
         -parameterFile $parameterFileRdsDeployment `
         -deployment $installOption
 }
 
 # ----------------------------------------------------------------------------------------------------------------
-function start-rds-update-certificate()
+function start-rds-deployment-existing-ad()
 {
-    $deployment = "rds-update-certificate"
+    $deployment = "rds-deployment-existing-ad"
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
 
-    check-parameterFile -parameterFile $parameterFileRdsUpdateCertificate -deployment $deployment
-    check-deployment -deployment $deployment
-    $ret = create-cert
-    
-    $match = [regex]::Match($ret, "application id: (.+?) ")
-    $applicationId = ($match.Captures[0].Groups[1].Value)
-    $match = [regex]::Match($ret, "tenant id: (.+)")
-    $tenantId = ($match.Captures[0].Groups[1].Value)
-   
-    $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUpdateCertificate)
+    if (!($installOptions -imatch "ad-domain-only-test"))
+    {
+        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'rds-deployment' first?[y|n]" -imatch "y"))
+        {
+            start-rds-deployment -adOnly $true
+        }
+    }
+
+    $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsDeploymentExistingAd)
+
     if (!$useJson)
     {
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
-        $ujson.parameters.applicationId.value = $applicationId
-        $ujson.parameters.applicationPassword.value = $certificatePass
+        $ujson.parameters.dnsLabelPrefix.value = $dnsLabelPrefix
         $ujson.parameters.existingAdminPassword.value = $adminPassword
         $ujson.parameters.existingAdminUserName.value = $adminUserName
         $ujson.parameters.existingDomainName.value = $domainName
-        $ujson.parameters.certificateName.value = $certificateName
-        $ujson.parameters.tenantId.value = $tenantId
-        $ujson.parameters.vaultName.value = $vaultName
-        $ujson | ConvertTo-Json | Out-File $parameterFileRdsUpdateCertificate
+        $ujson.parameters.existingSubnet.value = $subnetName
+        $ujson.parameters.existingVnet.value = $vnetName
+        $ujson.parameters.imageSku.value = $imageSku
+        $ujson.parameters.numberOfRdshInstances.value = $numberOfRdshInstances
+        $ujson.parameters.rdshVmSize.value = $rdshVmSize
+        $ujson | ConvertTo-Json | Out-File $parameterFileRdsDeploymentExistingAd
     }
 
     $ujson.parameters
     
     deploy-template -templateFile "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json" `
-        -parameterFile $parameterFileRdsUpdateCertificate `
+        -parameterFile $parameterFileRdsDeploymentExistingAd `
         -deployment $installOption
-
 }
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -1052,11 +1105,11 @@ function start-rds-deployment-uber()
     $deployment = "rds-deployment-uber"
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
 
-    if (!($installOptions -imatch "rds-deployment"))
+    if (!($installOptions -imatch "ad-domain-only-test"))
     {
         if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'rds-deployment' first?[y|n]" -imatch "y"))
         {
-            start-rds-deployment
+            start-rds-deployment -adOnly $true
         }
     }
 
@@ -1068,8 +1121,6 @@ function start-rds-deployment-uber()
     
     $match = [regex]::Match($ret, "application id: (.+?) ")
     $applicationId = ($match.Captures[0].Groups[1].Value)
-    $match = [regex]::Match($ret, "tenant id: (.+)")
-    $tenantId = ($match.Captures[0].Groups[1].Value)
     
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUber)
     if (!$useJson)
@@ -1104,6 +1155,42 @@ function start-rds-deployment-uber()
 }
 
 # ----------------------------------------------------------------------------------------------------------------
+function start-rds-update-certificate()
+{
+    $deployment = "rds-update-certificate"
+    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+
+    check-parameterFile -parameterFile $parameterFileRdsUpdateCertificate -deployment $deployment
+    check-deployment -deployment $deployment
+    $ret = create-cert
+    
+    $match = [regex]::Match($ret, "application id: (.+?) ")
+    $applicationId = ($match.Captures[0].Groups[1].Value)
+   
+    $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUpdateCertificate)
+    if (!$useJson)
+    {
+        $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
+        $ujson.parameters.applicationId.value = $applicationId
+        $ujson.parameters.applicationPassword.value = $certificatePass
+        $ujson.parameters.existingAdminPassword.value = $adminPassword
+        $ujson.parameters.existingAdminUserName.value = $adminUserName
+        $ujson.parameters.existingDomainName.value = $domainName
+        $ujson.parameters.certificateName.value = $certificateName
+        $ujson.parameters.tenantId.value = $tenantId
+        $ujson.parameters.vaultName.value = $vaultName
+        $ujson | ConvertTo-Json | Out-File $parameterFileRdsUpdateCertificate
+    }
+
+    $ujson.parameters
+    
+    deploy-template -templateFile "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json" `
+        -parameterFile $parameterFileRdsUpdateCertificate `
+        -deployment $installOption
+
+}
+
+# ----------------------------------------------------------------------------------------------------------------
 function start-rds-update-rdsh-collection()
 {
     $deployment = "rds-update-rdsh-collection"
@@ -1128,15 +1215,18 @@ function start-rds-update-rdsh-collection()
                             -vmStartCount 1 `
                             -vmCount 1 "
                             
-            .\azure-rm-vm-create.ps1 -publicIp `
-                -resourceGroupName $resourceGroup `
-                -location $location `
-                -adminUsername $adminUsername `
-                -adminPassword $adminpassword `
-                -vmBaseName $templateVmNamePrefix `
-                -vmStartCount 1 `
-                -vmCount 1
-        
+            if (!$whatIf)
+            {
+                .\azure-rm-vm-create.ps1 -publicIp `
+                    -resourceGroupName $resourceGroup `
+                    -location $location `
+                    -adminUsername $adminUsername `
+                    -adminPassword $adminpassword `
+                    -vmBaseName $templateVmNamePrefix `
+                    -vmStartCount 1 `
+                    -vmCount 1
+            }
+
             write-host "getting vhd location"
             $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001"
             $vm
@@ -1146,7 +1236,7 @@ function start-rds-update-rdsh-collection()
         
             if ([string]::IsNullOrEmpty($vhdUri) -or [string]::IsNullOrEmpty($tpIp))
             {
-                write-host "error. something wrong... returning"
+                write-host "unable to find template public ip. exiting"
                 exit 1
             }
         
@@ -1178,11 +1268,8 @@ function start-rds-update-rdsh-collection()
         }
         else
         {
-            if (!$useJson)
-            {
-                $vhdUri = $rdshTemplateImageUri
-            }
-        
+            $vhdUri = $rdshTemplateImageUri
+
             if (!$vhdUri)
             {
                 $vm = Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "$($templateVmNamePrefix)-001"
@@ -1212,14 +1299,26 @@ function start-rds-update-rdsh-collection()
             return
         }
         
-        # to update iteration. only need to increment if running update multiple times against same collection
-        if ($ujson.parameters.rdshUpdateIteration.value)
+        write-host "checking list of vm's in $($resourceGroup) for possible duplicate"
+        $vms = Get-AzureRmVM -ResourceGroupName $resourceGroup 
+        
+        if ($vms)
         {
-            $nextIteration = "$([int]($ujson.parameters.rdshUpdateIteration.value) + 1)"
-        }
-        else
-        {
-            $nextIteration = "1"
+            # format is rdsh-$($rdshUpdateIteration)01
+            $count = $rdshUpdateIteration
+
+            while ($true)
+            {
+                if ($vms.Name -ieq "rdsh-$($count)01")
+                {
+                    $count++
+                    continue
+                }
+                
+                write-host "updating rdshUpdateIteration to $($count) due to name conflict." -ForegroundColor Yellow
+                $rdshUpdateIteration = $count            
+                break
+            }
         }
 
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
@@ -1232,7 +1331,7 @@ function start-rds-update-rdsh-collection()
         $ujson.parameters.existingSubnetName.value = $subnetName
         $ujson.parameters.existingVnetName.value = $vnetName
         $ujson.parameters.numberOfRdshInstances.value = $numberOfRdshInstances
-        $ujson.parameters.rdshUpdateIteration.value = $nextIteration
+        $ujson.parameters.rdshUpdateIteration.value = $rdshUpdateIteration
         $ujson.parameters.rdshVmSize.value = $rdshVmSize
         $ujson.parameters.UserLogoffTimeoutInMinutes.value = $logoffTimeInminutes
         
