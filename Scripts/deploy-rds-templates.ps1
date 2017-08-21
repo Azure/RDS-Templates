@@ -816,7 +816,7 @@ function deploy-template($templateFile, $parameterFile, $deployment)
 
     $error.Clear() 
     
-    write-host "$([DateTime]::Now) starting $(deployment). this will take a while..." -ForegroundColor Green
+    write-host "$([DateTime]::Now) starting $($deployment). this will take a while..." -ForegroundColor Green
     write-host "New-AzureRmResourceGroupDeployment -Name $deployment `
                     -ResourceGroupName $resourceGroup `
                     -DeploymentDebugLogLevel All `
@@ -858,8 +858,7 @@ function get-urlJsonFile($updateUrl, $destinationFile)
 {
     write-host "get-urlJsonFile:checking for remote file: $($updateUrl)"
     $jsonFile = $null
-    $scriptFile = $null
-
+    
     try 
     {
         if ([IO.File]::Exists($destinationFile))
@@ -867,29 +866,17 @@ function get-urlJsonFile($updateUrl, $destinationFile)
             [IO.File]::Delete($destinationFile)
         }
 
-        $jsonFile = Invoke-RestMethod -Method Get -Uri $updateUrl
+        $jsonFile = (Invoke-WebRequest -Method Get -Uri $updateUrl).Content
 
-        # depending on how source is encoded, returned type can be different
-        if ($jsonFile.GetType() -imatch "PSCustomObject")
-        {
-            $jsonFile | ConvertTo-Json | Out-File $destinationFile
-        }
-        elseif ($jsonFile.GetType() -imatch "string")
-        {
-            # git may not have carriage return
-            # reset by setting all to just lf
-            $jsonFile = [regex]::Replace($jsonFile, "`r`n", "`n")
-            # add cr back
-            $jsonFile = [regex]::Replace($jsonFile, "`n", "`r`n")
-            
-            # convertfrom-json does not like BOM. so remove            
-            [IO.File]::WriteAllLines($destinationFile, $jsonFile, (new-object Text.UTF8Encoding $false))
-        }
-        else
-        {
-            throw [exception]
-        }
+        # git may not have carriage return
+        # reset by setting all to just lf
+        $jsonFile = [regex]::Replace($jsonFile, "`r`n", "`n")
+        # add cr back
+        $jsonFile = [regex]::Replace($jsonFile, "`n", "`r`n")
         
+        # convertfrom-json does not like BOM. so remove            
+        [IO.File]::WriteAllLines($destinationFile, $jsonFile, (new-object Text.UTF8Encoding $false))
+    
         return $true
     }
     catch [System.Exception] 
@@ -909,7 +896,7 @@ function get-urlScriptFile($updateUrl, $destinationFile)
 
     try 
     {
-        $scriptFile = Invoke-RestMethod -Method Get -Uri $updateUrl 
+        $scriptFile = (Invoke-WebRequest -Method Get -Uri $updateUrl).Content
 
         # gallery has bom 
         $scriptFile = $scriptFile.Replace("???", "")
@@ -978,11 +965,11 @@ function start-rds-deployment([bool]$adOnly = $false)
         if(get-urlJsonFile -updateUrl "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json" -destinationFile $templateFile)
         {
             write-warning "setting rds vm names to dummy  for 'ad-domain-only-test' install" 
-            $ajson = ConvertFrom-Json (get-content -Raw -Path $templateFile)
-            $ajson.variables.brokerVmName = "dummy-rdcb-01"
-            $ajson.variables.gatewayVmName = "dummy-rdgw-01"
-            $ajson.variables.rdshVmName = "dummy-rdsh-"
-            $ajson | ConvertTo-Json | Out-File $templateFile
+            $ajson = get-content -Raw -Path $templateFile
+            $ajson = $ajson.Replace("rdcb-01","dummy-rdcb-01")
+            $ajson = $ajson.Replace("rdgw-01","dummy-rdgw-01")
+            $ajson = $ajson.Replace("rdsh-","dummy-rdsh-")
+            [IO.File]::WriteAllLines($templateFile, $ajson, (new-object Text.UTF8Encoding $false))
 
             $ujson.parameters.numberofRdshInstances.value = 1
             $ujson | ConvertTo-Json | Out-File $parameterFileRdsDeployment
@@ -995,7 +982,7 @@ function start-rds-deployment([bool]$adOnly = $false)
     }
 
     $ujson.parameters
-    
+
     deploy-template -templateFile $templateFile `
         -parameterFile $parameterFileRdsDeployment `
         -deployment $installOption
@@ -1006,10 +993,12 @@ function start-rds-deployment-existing-ad()
 {
     $deployment = "rds-deployment-existing-ad"
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    check-parameterFile -parameterFile $parameterFileRdsDeploymentExistingAd -deployment $deployment
+    check-deployment -deployment $deployment
 
     if (!($installOptions -imatch "ad-domain-only-test"))
     {
-        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'rds-deployment' first?[y|n]" -imatch "y"))
+        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'rds-deployment' first?[y|n]") -imatch "y")
         {
             start-rds-deployment -adOnly $true
         }
