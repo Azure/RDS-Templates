@@ -338,7 +338,7 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
         "[resourceId('Microsoft.Compute/availabilitySets', 'gw-availabilityset')]",
-        "Microsoft.Network/networkInterfaces/[variables('gatewayNicName')]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('gatewayNicName'))]"
       ],
       "properties": {
         "hardwareProfile": {
