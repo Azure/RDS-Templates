@@ -268,10 +268,10 @@
           "imageSKU": {
             "value": "[parameters('imageSKU')]"
           },
-          "existingVnet": {
+          "existingVnetName": {
             "value": "[parameters('existingVnetName')]"
           },
-          "existingSubnet": {
+          "existingSubnetName": {
             "value": "[parameters('existingSubnetName')]"
           }
         }
