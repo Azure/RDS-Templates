@@ -569,7 +569,7 @@
             "domainName": "[parameters('existingDomainName')]",
             "externalfqdn": "[reference(variables('gatewayIpRef')).dnsSettings.fqdn]",
             "numberOfRdshInstances": "[parameters('numberOfRdshInstances')]",
-            "sessionHostNamingPrefix": "[variables('vmPrefix')]",
+            "sessionHostNamingPrefix": "[variables('rdshVmName')]",
             "webAccessServer": "[concat(variables('gatewayVmName'), '.', parameters('existingDomainName'))]"
           }
         },
