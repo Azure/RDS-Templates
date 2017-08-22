@@ -250,7 +250,7 @@ param(
     [string]$dnsServer = "addc-01",
     [string]$gatewayLoadBalancer = "loadbalancer",
     [string]$gwAvailabilitySet = "gw-availabilityset",
-    [string[]][ValidateSet("ad-domain-only-test","rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway", "rds-deployment-uber", "rds-deployment-existing-ad", "rds-update-rdsh-collection")]
+    [string[]][ValidateSet("ad-domain-only-test", "rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway", "rds-deployment-uber", "rds-deployment-existing-ad", "rds-update-rdsh-collection")]
     $installOptions = @("rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway"),
     [string][ValidateSet('2012-R2-Datacenter', '2016-Datacenter')]$imageSku = "2016-Datacenter",
     [string]$location = "eastus",
@@ -304,6 +304,12 @@ function main()
     write-host "using resource group: $($resourceGroup)" -foregroundcolor yellow
     write-host "authenticating to azure"
     authenticate-azureRm
+
+    write-host "checking tenant id"
+    if (!$tenantId)
+    {
+        $tenantId = (Get-AzureRmSubscription -warningAction SilentlyContinue).TenantId
+    }
 
     write-host "checking parameters"
     check-parameters   
@@ -573,11 +579,6 @@ function check-parameters()
         exit 1
     }
 
-    write-host "checking tenant id"
-    if (!$tenantId)
-    {
-        $tenantId = (Get-AzureRmSubscription -warningAction SilentlyContinue).TenantId
-    }
     write-host "checking ad domain name"
 
     if (!$domainName)
@@ -725,7 +726,8 @@ function check-resourceGroup()
     
     if ((Get-AzureRmResourceGroup -Name $resourceGroup -ErrorAction SilentlyContinue))
     {
-        if ((read-host "resource group exists! this is normally ok unless resetting resource group which WILL DELETE all items in resource group. Do you want to delete resource group?[y|n]") -ilike 'y')
+        write-host "resource group exists! this is normally ok unless intent is to delete resource group which WILL DELETE all items in resource group. " -ForegroundColor Yellow
+        if ((read-host "Do you want to delete resource group?[y|n]") -ilike 'y')
         {
             write-host "Remove-AzureRmResourceGroup -Name $resourceGroup"
             if (!$whatIf)
@@ -754,7 +756,7 @@ function create-cert
 {
     write-host "$(get-date) create-cert..." -foregroundcolor cyan
     
-    if(!$pfxFilePath)
+    if (!$pfxFilePath)
     {
         write-warning "this is a standalone cert that should only be used for test and NOT production"
         write-host "Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force"
@@ -776,7 +778,7 @@ function create-cert
         }
     }
 
-    if(!$applicationId)
+    if (!$applicationId)
     {
         write-host "$(get-date) create-vault..." -foregroundcolor cyan
         write-host ".\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
@@ -988,23 +990,23 @@ function start-ad-domain-only-test()
     check-deployment -deployment $deployment
 
     $ajson = get-content -raw -Path $deployFile
-    $ajson = $ajson.Replace("`"adVMName`": `"adVM`"","`"adVMName`": `"addc-01`"")
+    $ajson = $ajson.Replace("`"adVMName`": `"adVM`"", "`"adVMName`": `"addc-01`"")
     # convertfrom-json does not like BOM. so remove            
     [IO.File]::WriteAllLines($deployFile, $ajson, (new-object Text.UTF8Encoding $false))
     $templateFile = $deployFile
 
-    if(!$useJson)
+    if (!$useJson)
     {
-        $ujson = @{'$schema'="https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#";
-            "contentVersion"="1.0.0.0";
-            "parameters"= @{
-                "adminPassword" = @{ "value"= $adminPassword };
-                "adminUsername" = @{ "value"= $adminUsername };
-                "adSubnetName" = @{ "value"= $subnetName };
-                "adVMSize" = @{ "value"= "Standard_D2_v2"};
-                "dnsPrefix" = @{ "value"= "dummy-$($dnsLabelPrefix)" };
-                "domainName" = @{ "value"= $domainName };
-                "virtualNetworkName" = @{ "value"= $vnetName };
+        $ujson = @{'$schema' = "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#";
+            "contentVersion" = "1.0.0.0";
+            "parameters"     = @{
+                "adminPassword"      = @{ "value" = $adminPassword };
+                "adminUsername"      = @{ "value" = $adminUsername };
+                "adSubnetName"       = @{ "value" = $subnetName };
+                "adVMSize"           = @{ "value" = "Standard_D2_v2"};
+                "dnsPrefix"          = @{ "value" = "dummy-$($dnsLabelPrefix)" };
+                "domainName"         = @{ "value" = $domainName };
+                "virtualNetworkName" = @{ "value" = $vnetName };
             }
         }
         $ujson | ConvertTo-Json | Out-File $parameterFileAdDeployment
@@ -1177,7 +1179,7 @@ function start-rds-deployment-uber()
         $ujson.parameters.primaryDbConnectionString.value = $primaryDbConnectionString
         $ujson.parameters.rdshVmSize.value = $rdshVmSize
         $ujson.parameters.sqlServer.value = $sqlServer
-        $ujson.parameters.tenantid = $tenantId
+        $ujson.parameters.tenantid.value = $tenantId
         $ujson.parameters.vaultName.value = $vaultName
         
         $ujson | ConvertTo-Json | Out-File $parameterFileRdsUber
