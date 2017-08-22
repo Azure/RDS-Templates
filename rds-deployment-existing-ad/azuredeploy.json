@@ -307,7 +307,7 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(variables('rdshVmName'), add(copyindex(), 1), variables('networkNameSuffix'))]",
+      "name": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), variables('networkNameSuffix'))]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "rdsh-nic-loop",
@@ -413,7 +413,7 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(variables('rdshVmName'), add(copyindex(), 1))]",
+      "name": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'))]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "rdsh-vm-loop",
@@ -422,7 +422,7 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
         "[resourceId('Microsoft.Compute/availabilitySets', 'rdsh-availabilityset')]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('rdshVmName'), add(copyindex(), 1), variables('networkNameSuffix'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), variables('networkNameSuffix'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -432,7 +432,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', 'rdsh-availabilityset')]"
         },
         "osProfile": {
-          "computerName": "[concat(variables('rdshVmName'), add(copyindex(), 1))]",
+          "computerName": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'))]",
           "adminUsername": "[parameters('existingAdminUserName')]",
           "adminPassword": "[parameters('existingAdminPassword')]"
         },
@@ -446,7 +446,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('rdshVmName'),add(copyindex(), 1),'-os-disk.vhd')]"
+              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/',variables('rdshVmName'),padLeft(add(copyindex(), 1), 2, '0'),'-os-disk.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -455,7 +455,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('rdshVmName'), add(copyindex(), 1), variables('networkNameSuffix')))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'), variables('networkNameSuffix')))]"
             }
           ]
         }
@@ -464,10 +464,10 @@
         {
           "apiVersion": "2015-06-15",
           "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "[concat(variables('rdshVmName'), add(copyindex(), 1),'/sessionhost')]",
+          "name": "[concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0'),'/sessionhost')]",
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('rdshVmName'), add(copyindex(), 1)))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('rdshVmName'), padLeft(add(copyindex(), 1), 2, '0')))]"
           ],
           "properties": {
             "publisher": "Microsoft.Powershell",
