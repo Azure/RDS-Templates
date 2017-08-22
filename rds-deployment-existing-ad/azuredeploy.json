@@ -391,7 +391,7 @@
             "typeHandlerVersion": "2.11",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "ModulesUrl": "[concat(variables('assetLocation'),'/Configuration.zip')]",
+              "ModulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\Gateway",
               "Properties": {
                 "DomainName": "[parameters('existingDomainName')]",
