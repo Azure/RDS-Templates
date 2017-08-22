@@ -558,7 +558,7 @@
         "typeHandlerVersion": "2.11",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "modulesUrl": "[concat(variables('assetLocation'),'/Configuration.zip')]",
+          "modulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
           "configurationFunction": "Configuration.ps1\\RDSDeployment",
           "Properties": {
             "adminCreds": {
