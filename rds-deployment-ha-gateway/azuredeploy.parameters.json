@@ -23,10 +23,10 @@
     "existingDomainName": {
       "value": "contoso.com"
     },
-    "existingSubnet": {
-      "value": "Subnet"
+    "existingSubnetName": {
+      "value": "subnet"
     },
-    "existingVnet": {
+    "existingVnetName": {
       "value": "vnet"
     },
     "externalFqdn": {
