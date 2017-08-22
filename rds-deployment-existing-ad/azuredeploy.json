@@ -536,7 +536,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('brokerVmName'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('brokerNicName'))]"
             }
           ]
         }
