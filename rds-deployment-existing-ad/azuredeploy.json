@@ -348,7 +348,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', 'gw-availabilityset')]"
         },
         "osProfile": {
-          "computerName": "gateway",
+          "computerName": "[variables('gatewayVmName')]",
           "adminUsername": "[parameters('existingAdminUserName')]",
           "adminPassword": "[parameters('existingAdminPassword')]"
         },
