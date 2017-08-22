@@ -17,10 +17,10 @@
     "existingDomainName": {
       "value": "contoso.com"
     },
-    "existingSubnet": {
+    "existingSubnetName": {
       "value": "subnet"
     },
-    "existingVnet": {
+    "existingVnetName": {
       "value": "vnet"
     },
     "imageSKU": {

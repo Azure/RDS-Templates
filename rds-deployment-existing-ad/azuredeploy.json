@@ -15,14 +15,14 @@
       },
       "defaultValue": "contoso.com"
     },
-    "existingVnet": {
+    "existingVnetName": {
       "type": "string",
       "defaultValue": "vnet",
       "metadata": {
         "description": "The VNET name of AD domain. For example johnvnet1"
       }
     },
-    "existingSubnet": {
+    "existingSubnetName": {
       "type": "string",
       "defaultValue": "subnet",
       "metadata": {
@@ -84,7 +84,7 @@
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
     "dnsServerPrivateIp": "10.0.0.4",
-    "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
+    "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
     "publicIpRef": "publicIp",
     "brokerIpRef": "brokerpublicIp",
     "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",

@@ -97,14 +97,14 @@
         "description": "Size for the new RD Gateway VMs"
       }
     },
-    "existingVnet": {
+    "existingVnetName": {
       "type": "string",
       "metadata": {
         "description": "The vnet name of AD domain. For example johnvnet1"
       },
       "defaultValue": "vnet"
     },
-    "existingSubnet": {
+    "existingSubnetName": {
       "type": "string",
       "metadata": {
         "description": "The subnet name of AD domain. For example johnsubnet1"
@@ -129,7 +129,7 @@
     "vnetAddressRange": "10.0.0.0/16",
     "subnetAddressRange": "10.0.0.0/24",
     "dnsServerPrivateIp": "10.0.0.8",
-    "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
+    "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
     "assetLocation": "[parameters('_artifactsLocation')]",
     "apiVersion": "2015-06-15",
     "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]",
