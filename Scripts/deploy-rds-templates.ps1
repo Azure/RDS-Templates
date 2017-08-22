@@ -56,13 +56,13 @@
     use -credentials to pass credentials securely
     default is 'Password(get-random)!'
 
+.PARAMETER applicationPassword
+    password to create / use for certificate access
+    default is $adminPassword
+
 .PARAMETER certificateName
     name of certificate to create / use
     default is "$($resourceGroup)Certificate"
-
-.PARAMETER certificatePassword
-    password to create / use for certificate access
-    default is $adminPassword
 
 .PARAMETER clean
     to clean temporary parameter json files in $env:TEMP
@@ -123,41 +123,52 @@
 .PARAMETER parameterFileRdsDeployment
     path to template json parameter file for rds-deployment
     if -useJson, existing json parameter file will be used without validation or modification
-    default is .\rds-deployment.azuredeploy.parameters.json
-    if not exists and not -useJson base template from .\rds-deployment\azuredeploy.parameters.json will be used
+    default is $env:TEMP\rds-deployment.azuredeploy.parameters.json
+    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment/azuredeploy.parameters.json will be used
+
+.PARAMETER parameterFileRdsDeployment
+    path to template json parameter file for rds-deployment-existing-ad
+    if -useJson, existing json parameter file will be used without validation or modification
+    default is $env:TEMP\rds-deployment-existing-ad.azuredeploy.parameters.json
+    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsHaBroker
     path to template json parameter file for rds-deployment-ha-broker
     if -useJson, existing json parameter file will be used without validation or modification
-    default is .\rds-deployment-ha-broker.azuredeploy.parameters.json
-    if not exists and not -useJson base template from .\rds-deployment-ha-broker\azuredeploy.parameters.json will be used
+    default is $env:TEMP\rds-deployment-ha-broker.azuredeploy.parameters.json
+    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-ha-broker/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsHaGateway
     path to template json parameter file for rds-deployment-ha-gateway
     if -useJson, existing json parameter file will be used without validation or modification
-    default is .\rds-deployment-ha-gateway.azuredeploy.parameters.json
-    if not exists and not -useJson base template from .\rds-deployment-ha-gateway\azuredeploy.parameters.json will be used
+    default is $env:TEMP\rds-deployment-ha-gateway.azuredeploy.parameters.json
+    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-ha-gateway/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsUber
     path to template json parameter file for rds-deployment-uber
     if -useJson, existing json parameter file will be used without validation or modification
-    default is .\rds-deployment-uber.azuredeploy.parameters.json
-    if not exists and not -useJson base template from .\rds-deployment-uber\azuredeploy.parameters.json will be used
+    default is $env:TEMP\rds-deployment-uber.azuredeploy.parameters.json
+    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-uber/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsUpdateCertificate
     path to template json parameter file for rds-update-certificate
     if -useJson, existing json parameter file will be used without validation or modification
-    default is .\rds-udpate-certificate.azuredeploy.parameters.json
-    if not exists and not -useJson base template from .\rds-deployment-update-certificate\azuredeploy.parameters.json will be used
+    default is $env:TEMP\rds-udpate-certificate.azuredeploy.parameters.json
+    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-update-certificate/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsUpdateRdshCollection
     path to template json parameter file for rds-update-rdsh-collection
     if -useJson, existing json parameter file will be used without validation or modification
-    default is .\rds-udpate-rdsh-collection.azuredeploy.parameters.json
-    if not exists and not -useJson base template from .\rds-deployment-update-rdsh-collection\azuredeploy.parameters.json will be used
+    default is $env:TEMP\rds-udpate-rdsh-collection.azuredeploy.parameters.json
+    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-update-rdsh-collection/azuredeploy.parameters.json will be used
 
 .PARAMETER pause
     switch to enable pausing between deployments for verification
+
+.PARAMETER pfxFilePath
+    path to existing certificate to use with rds-update-certificate
+    certificate should have private key
+    default will generate a wildcard '*.contoso.com' self signed cert for testing purposes only
 
 .PARAMETER postConnect
     will run "https://aka.ms/azure-rm-rdp-post-deployment.ps1" following deployment
@@ -170,25 +181,37 @@
     is the public ip address name. 
     default is 'gwpip'
 
+.PARAMETER rdshCollectionName
+    name of rds collection for use with rds-update-rdsh-collection
+
 .PARAMETER rdshVmSize
     size is of the azure vm's to use. 
     default is 'Standard_A2'
 
-.PARAMETER resourceGroup
+.PARAMETER rdshTemplateImageUri
+    uri to blob storage containing a vhd of image to use for rds-update-rdsh-collection
+    vhd image should have been sysprepped with c:\windows\system32\sysprep.exe -oobe -generalize
+    image should be marked as -sysprepped in azure
+
+.PARAMETER rdshUpdateIteration
+    used to designate new deployment vm / OS name
+    example:
+        rdsh-01 (default)
+        rdsh-101 (name of vm with rdshUpdateIteration set to 1)
+    default is null
+
+    .PARAMETER resourceGroup
     resourceGroup is a mandatory parameter and is the azure arm resourcegroup to use / create for this deployment. 
     default is 'resourceGroup(get-random)'
 
-.PARAMETER savePassword
-    will save the password in clear text into json file. default is to leave value empty
-
+.PARAMETER sqlServer
+    OS name of existing sql server to use if not using Azure SQL
+    
 .PARAMETER subnetName
     name of subnet to create / use.
     default is 'subnet'
 
-.PARAMETER sqlServer
-    OS name of existing sql server to use if not using Azure SQL
-
-.PARAMETER templateBaseUrl
+.PARAMETER templateBaseRepoUri
     base template path for artifacts / scripts / dsc / templates
     default "https://raw.githubusercontent.com/Azure/RDS-Templates/master/"
 
@@ -205,6 +228,9 @@
 .PARAMETER vnetName
     name of vnet to create / use
     default is 'vnet'
+
+.PARAMETER whatIf
+    to test script with configuration but not deploy
 #>
 [CMDLETBINDING()]
 param(
@@ -217,7 +243,7 @@ param(
     [string]$resourceGroup = "resourceGroup$($random)",
     [string]$domainName = "$($resourceGroup).lab",
     [string]$certificateName = "$($resourceGroup)Certificate",
-    [string]$certificatePass = $adminPassword,
+    [string]$applicationPassword = $adminPassword,
     [string]$clientAccessName = "HARDCB",
     [pscredential]$credentials,
     [string]$dnsLabelPrefix = "$($resourceGroup)",
@@ -468,6 +494,17 @@ function check-deployment($deployment)
 }
 
 # ----------------------------------------------------------------------------------------------------------------
+function check-forExistingAdDeployment()
+{
+    if (!($installOptions -imatch "ad-domain-only-test"))
+    {
+        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'ad-domain-only-test' first?[y|n]") -imatch "y")
+        {
+            start-ad-domain-only-test
+        }
+    }
+}
+# ----------------------------------------------------------------------------------------------------------------
 function check-parameterFile($parameterFile, $deployment)
 {
     write-host "checking parameter file $($parameterFile) for $($deployment)" -foregroundcolor Green
@@ -716,10 +753,10 @@ function check-resourceGroup()
 function create-cert
 {
     write-host "$(get-date) create-cert..." -foregroundcolor cyan
-    write-warning "this is a standalone cert that should only be used for test and NOT production"
     
     if(!$pfxFilePath)
     {
+        write-warning "this is a standalone cert that should only be used for test and NOT production"
         write-host "Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force"
         write-host ".\ps-certreq.ps1  -subject `"*.$($domainName)`""
         $pfxFilePath = "$($env:TEMP)\$($domainName).pfx"
@@ -743,7 +780,7 @@ function create-cert
     {
         write-host "$(get-date) create-vault..." -foregroundcolor cyan
         write-host ".\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
-                        -certPassword $certificatePass `
+                        -certPassword $applicationPassword `
                         -certNameInVault $certificateName `
                         -vaultName $vaultName `
                         -uri 'https://$($resourceGroup)/$($domainName)' `
@@ -752,7 +789,7 @@ function create-cert
         if (!$whatIf)
         {
             $ret = .\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
-                -certPassword $certificatePass `
+                -certPassword $applicationPassword `
                 -certNameInVault $certificateName `
                 -vaultName $vaultName `
                 -uri "https://$($resourceGroup)/$($domainName)" `
@@ -763,7 +800,7 @@ function create-cert
     }
     else
     {
-        return "application id: $($applicationId)"
+        return "application id: $($applicationId) "
     }
 }
 
@@ -1018,14 +1055,7 @@ function start-rds-deployment-existing-ad()
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
     check-parameterFile -parameterFile $parameterFileRdsDeploymentExistingAd -deployment $deployment
     check-deployment -deployment $deployment
-
-    if (!($installOptions -imatch "ad-domain-only-test"))
-    {
-        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'ad-domain-only-test' first?[y|n]") -imatch "y")
-        {
-            start-ad-domain-only-test
-        }
-    }
+    check-forExistingAdDeployment
 
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsDeploymentExistingAd)
 
@@ -1116,18 +1146,10 @@ function start-rds-deployment-uber()
 {
     $deployment = "rds-deployment-uber"
     write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
-
-    if (!($installOptions -imatch "ad-domain-only-test"))
-    {
-        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'ad-domain-only-test' first?[y|n]" -imatch "y"))
-        {
-            start-ad-domain-only-test
-        }
-    }
-
     check-parameterFile -parameterFile $parameterFileRdsUber -deployment $deployment
     check-deployment -deployment $deployment
-
+    check-forExistingAdDeployment
+    
     $primaryDbConnectionString = create-sql
     $ret = create-cert
     
@@ -1138,24 +1160,26 @@ function start-rds-deployment-uber()
     if (!$useJson)
     {
         $ujson.parameters._artifactsLocation.value = $templateBaseRepoUri
-        $ujson.parameters.adminPassword.value = $adminPassword
-        $ujson.parameters.adminUserName.value = $adminUserName
         $ujson.parameters.applicationId.value = $applicationId
-        $ujson.parameters.applicationPassword.value = $certificatePass
+        $ujson.parameters.applicationPassword.value = $applicationPassword
         $ujson.parameters.certificateName.value = $certificateName
         $ujson.parameters.clientAccessName.value = $clientAccessName
         $ujson.parameters.dnsLabelPrefix.value = $dnsLabelPrefix
         $ujson.parameters.dnsServer.value = $dnsServer
-        $ujson.parameters.domainName.value = $domainName
+        $ujson.parameters.existingAdminPassword.value = $adminPassword
+        $ujson.parameters.existingAdminUserName.value = $adminUserName
+        $ujson.parameters.existingDomainName.value = $domainName
+        $ujson.parameters.existingSubnetName.value = $subnetName
+        $ujson.parameters.existingVnetName.value = $vnetName
         $ujson.parameters.imageSku.value = $imageSku
         $ujson.parameters.numberOfRdshInstances.value = $numberOfRdshInstances
         $ujson.parameters.numberOfWebGwInstances.value = $numberOfWebGwInstances
         $ujson.parameters.primaryDbConnectionString.value = $primaryDbConnectionString
         $ujson.parameters.rdshVmSize.value = $rdshVmSize
         $ujson.parameters.sqlServer.value = $sqlServer
-        $ujson.parameters.subnetName.value = $subnetName
+        $ujson.parameters.tenantid = $tenantId
         $ujson.parameters.vaultName.value = $vaultName
-        $ujson.parameters.vnetName.value = $vnetName
+        
         $ujson | ConvertTo-Json | Out-File $parameterFileRdsUber
     }
     $ujson.parameters
@@ -1184,7 +1208,7 @@ function start-rds-update-certificate()
     {
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
         $ujson.parameters.applicationId.value = $applicationId
-        $ujson.parameters.applicationPassword.value = $certificatePass
+        $ujson.parameters.applicationPassword.value = $applicationPassword
         $ujson.parameters.existingAdminPassword.value = $adminPassword
         $ujson.parameters.existingAdminUserName.value = $adminUserName
         $ujson.parameters.existingDomainName.value = $domainName
@@ -1210,7 +1234,8 @@ function start-rds-update-rdsh-collection()
 
     check-parameterFile -parameterFile $parameterFileRdsUpdateRdshCollection -deployment $deployment
     check-deployment -deployment $deployment
-
+    check-forExistingAdDeployment
+    
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUpdateRdshCollection)
     
     if (!$useJson)
