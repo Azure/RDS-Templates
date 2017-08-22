@@ -1072,8 +1072,8 @@ function start-rds-deployment-existing-ad()
         $ujson.parameters.existingAdminPassword.value = $adminPassword
         $ujson.parameters.existingAdminUserName.value = $adminUserName
         $ujson.parameters.existingDomainName.value = $domainName
-        $ujson.parameters.existingSubnet.value = $subnetName
-        $ujson.parameters.existingVnet.value = $vnetName
+        $ujson.parameters.existingSubnetName.value = $subnetName
+        $ujson.parameters.existingVnetName.value = $vnetName
         $ujson.parameters.imageSku.value = $imageSku
         $ujson.parameters.numberOfRdshInstances.value = $numberOfRdshInstances
         $ujson.parameters.rdshVmSize.value = $rdshVmSize
