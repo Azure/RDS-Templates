@@ -815,7 +815,9 @@ function create-sql
                     -databaseName RdsCb `
                     -adminPassword $adminPassword `
                     -generateUniqueName `
-                    -nolog "
+                    -nolog `
+                    -nsgStartIpAllow '10.0.0.4' `
+                    -nsgEndIpAllow '10.0.0.254' "
 
     if (!$whatIf)
     {
@@ -824,7 +826,9 @@ function create-sql
             -databaseName RdsCb `
             -adminPassword $adminPassword `
             -servername "sql-server$($random)" `
-            -nolog
+            -nolog `
+            -nsgStartIpAllow "10.0.0.4" `
+            -nsgEndIpAllow "10.0.0.254"
 
         $match = [regex]::Match($ret, "connection string ODBC Native client:`r`n(DRIVER.+;)", [Text.RegularExpressions.RegexOptions]::Singleline -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase)
         $odbcstring = ($match.Captures[0].Groups[1].Value).Replace("`r`n", "")
