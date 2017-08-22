@@ -64,10 +64,6 @@
     name of certificate to create / use
     default is "$($resourceGroup)Certificate"
 
-.PARAMETER clean
-    to clean temporary parameter json files in $env:TEMP
-    this will force a new download of parameter json file from templateBaseRepoUrl
-
 .PARAMETER clientAccessName
     rds client access name for HA only.
     non-ha will use rdcb-01
@@ -239,14 +235,13 @@ param(
     [string]$adminPassword = "Password$($random)!", 
     [string]$applicationId, 
     [string]$brokerName = "rdcb-01",
-    [switch]$clean,
     [string]$resourceGroup = "resourceGroup$($random)",
     [string]$domainName = "$($resourceGroup).lab",
     [string]$certificateName = "$($resourceGroup)Certificate",
     [string]$applicationPassword = $adminPassword,
     [string]$clientAccessName = "HARDCB",
     [pscredential]$credentials,
-    [string]$dnsLabelPrefix = "$($resourceGroup)",
+    [string]$dnsLabelPrefix = "$($resourceGroup.ToLower())",
     [string]$dnsServer = "addc-01",
     [string]$gatewayLoadBalancer = "loadbalancer",
     [string]$gwAvailabilitySet = "gw-availabilityset",
@@ -281,7 +276,7 @@ param(
     [string]$templateBaseRepoUri = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/",
     [string]$templateVmNamePrefix = "templateVm",
     [string]$tenantId,
-    [switch]$useJson,
+    [switch]$useExistingJson,
     [string]$vaultName = "$($resourceGroup)Cert",
     [string]$vnetName = "vnet",
     [switch]$whatIf
@@ -340,12 +335,7 @@ function main()
 
     if ($postConnect)
     {
-        write-host "$([DateTime]::Now) starting post connect"
-        $connectScript = "$($env:TEMP)\azure-rm-rdp-post-deployment.ps1"
-        get-urlScriptFile -updateUrl "https://aka.ms/azure-rm-rdp-post-deployment.ps1" -destinationFile $connectScript
-        
-        write-host "connecting to $($rdWebSite)"
-        Invoke-Expression -Command "$($connectScript) -rdWebUrl `"$($rdWebSite)`""
+        run-postConnect
     }
 
     write-host "errors: $($error | out-string)"
@@ -518,7 +508,7 @@ function check-parameterFile($parameterFile, $deployment)
     
     if ([IO.File]::Exists($parameterFile))
     {
-        if ($clean)
+        if (!$useExistingJson)
         {
             write-host "removing previous parameter file $($parameterFile)"
             write-host (get-content -Raw -Path $parameterFile) | out-string
@@ -620,6 +610,13 @@ function check-parameters()
         exit 1
     }
 
+    if ($dnsLabelPrefix -ne $dnsLabelPrefix.ToLower())
+    {
+        write-host "dns label prefix '$($dnsLabelPrefix)' should be lower case. example: 'rdsgateway' or '$($resourceGroup.ToLower())'"
+        write-host "exiting"
+        exit 1
+    }
+
     if ($dnsLabelPrefix.Contains("."))
     {
         write-host "dns label prefix '$($dnsLabelPrefix)' should not contain '.'"
@@ -703,18 +700,7 @@ function check-parameters()
 
     if ($monitor)
     {
-        write-host "$([DateTime]::Now) starting monitor"
-        $monitorScript = "$(get-location)\azure-rm-log-reader.ps1"
-        
-        if (![IO.File]::Exists($monitorScript))
-        {
-            get-urlJsonFile -updateUrl "https://aka.ms/azure-rm-log-reader.ps1" -destinationFile $monitorScript
-        }
-    
-        if (!$whatIf)
-        {
-            Start-Process -FilePath "powershell.exe" -ArgumentList "-WindowStyle Minimized -ExecutionPolicy Bypass $($monitorScript)"
-        }
+       run-monitor
     }
     
 }
@@ -940,7 +926,7 @@ function get-urlScriptFile($updateUrl, $destinationFile)
 
     try 
     {
-        $scriptFile = (Invoke-WebRequest -Method Get -Uri $updateUrl).Content
+        $scriptFile = Invoke-RestMethod -Method Get -Uri $updateUrl 
 
         # gallery has bom 
         $scriptFile = $scriptFile.Replace("???", "")
@@ -978,6 +964,40 @@ function get-urlScriptFile($updateUrl, $destinationFile)
 }
 
 # ----------------------------------------------------------------------------------------------------------------
+function run-monitor()
+{
+    write-host "$([DateTime]::Now) starting monitor"
+    $monitorScript = "$($env:TEMP)\azure-rm-log-reader.ps1"
+    
+    if (![IO.File]::Exists($monitorScript))
+    {
+        get-urlScriptFile -updateUrl "https://aka.ms/azure-rm-log-reader.ps1" -destinationFile $monitorScript
+    }
+
+    write-host "Start-Process -FilePath `"powershell.exe`" -ArgumentList `"-WindowStyle Minimized -ExecutionPolicy Bypass $($monitorScript)`""
+
+    if (!$whatIf)
+    {
+        Start-Process -FilePath "powershell.exe" -ArgumentList "-WindowStyle Minimized -ExecutionPolicy Bypass $($monitorScript)"
+    }
+}
+
+# ----------------------------------------------------------------------------------------------------------------
+function run-postConnect()
+{
+    write-host "$([DateTime]::Now) starting post connect"
+    $connectScript = "$($env:TEMP)\azure-rm-rdp-post-deployment.ps1"
+    get-urlScriptFile -updateUrl "https://aka.ms/azure-rm-rdp-post-deployment.ps1" -destinationFile $connectScript
+    
+    write-host "connecting to $($rdWebSite)"
+    
+    if(!$whatIf)
+    {
+        Invoke-Expression -Command "$($connectScript) -rdWebUrl `"$($rdWebSite)`""
+    }
+}
+
+# ----------------------------------------------------------------------------------------------------------------
 function start-ad-domain-only-test()
 {
     $deployment = "ad-domain-only-test"
@@ -999,7 +1019,7 @@ function start-ad-domain-only-test()
     [IO.File]::WriteAllLines($deployFile, $ajson, (new-object Text.UTF8Encoding $false))
     $templateFile = $deployFile
 
-    if (!$useJson)
+    if (!$useExistingJson)
     {
         $ujson = @{'$schema' = "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#";
             "contentVersion" = "1.0.0.0";
@@ -1033,7 +1053,7 @@ function start-rds-deployment()
     $templateFile = "$($templateBaseRepoUri)/$($deployment)/azuredeploy.json"
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsDeployment)
 
-    if (!$useJson)
+    if (!$useExistingJson)
     {
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
         $ujson.parameters.adminPassword.value = $adminPassword
@@ -1065,7 +1085,7 @@ function start-rds-deployment-existing-ad()
 
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsDeploymentExistingAd)
 
-    if (!$useJson)
+    if (!$useExistingJson)
     {
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
         $ujson.parameters.dnsLabelPrefix.value = $dnsLabelPrefix
@@ -1098,7 +1118,7 @@ function start-rds-deployment-ha-broker()
     $odbcstring = create-sql
 
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsHaBroker)
-    if (!$useJson)
+    if (!$useExistingJson)
     {
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
         $ujson.parameters.clientAccessName.value = $clientAccessName
@@ -1126,7 +1146,7 @@ function start-rds-deployment-ha-gateway()
     check-deployment -deployment $deployment
 
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsHaGateway)
-    if (!$useJson)
+    if (!$useExistingJson)
     {
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
         $ujson.parameters.brokerServer.value = "$($brokerName).$($domainName)"
@@ -1163,7 +1183,7 @@ function start-rds-deployment-uber()
     $applicationId = ($match.Captures[0].Groups[1].Value)
     
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUber)
-    if (!$useJson)
+    if (!$useExistingJson)
     {
         $ujson.parameters._artifactsLocation.value = $templateBaseRepoUri
         $ujson.parameters.applicationId.value = $applicationId
@@ -1210,7 +1230,7 @@ function start-rds-update-certificate()
     $applicationId = ($match.Captures[0].Groups[1].Value)
    
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUpdateCertificate)
-    if (!$useJson)
+    if (!$useExistingJson)
     {
         $ujson.parameters._artifactsLocation.value = "$($templateBaseRepoUri)$($deployment)"
         $ujson.parameters.applicationId.value = $applicationId
@@ -1244,7 +1264,7 @@ function start-rds-update-rdsh-collection()
     
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUpdateRdshCollection)
     
-    if (!$useJson)
+    if (!$useExistingJson)
     {
         if ((read-host "Do you want to install a template vm from gallery into $($resourceGroup)?[y|n]") -imatch 'y')
         {
