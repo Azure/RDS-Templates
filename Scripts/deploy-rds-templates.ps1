@@ -214,7 +214,7 @@
 .PARAMETER tenantId
     tenantId to be used in subscription for deployment
 
-.PARAMETER useJson
+.PARAMETER useExistingJson
     will use passed json file for arguments when deploying
 
 .PARAMETER vaultName
@@ -566,6 +566,18 @@ function check-parameters()
     if (!$resourceGroup)
     {
         write-warning "resourcegroup is a mandatory argument. supply -resourceGroup argument and restart script."
+        exit 1
+    }
+
+    if ($resourceGroup -ne $resourceGroup.ToLower())
+    {
+        write-warning "resourcegroup currently needs to be lower case due to issue 43. exiting script."
+        exit 1
+    }
+
+    if ($resourceGroup.Contains("-"))
+    {
+        write-warning "resourcegroup currently needs not have '-' due to issue 43. exiting script."
         exit 1
     }
 
