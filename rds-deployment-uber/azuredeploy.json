@@ -176,8 +176,7 @@
       "name": "[variables('basicRDSDeploymentexistingAD')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2016-02-01",
-      "dependsOn": [
-      ],
+      "dependsOn": [],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -185,6 +184,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "_artifactsLocation": {
+            "value": "[variables('basicRDSDeploymentexistingADLocation')]"
+          },
           "dnsLabelPrefix": {
             "value": "[parameters('dnsLabelPrefix')]"
           },
@@ -229,6 +231,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "_artifactsLocation": {
+            "value": "[variables('rdGatewayWebHAexistingRDSLocation')]"
+          },
           "dnsLabelPrefix": {
             "value": "[variables('gwdnsLabelPrefix')]"
           },
@@ -291,6 +296,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "_artifactsLocation": {
+            "value": "[variables('RdcbHaDeploymentexistingRDSLocation')]"
+          },
           "clientAccessName": {
             "value": "[parameters('clientAccessName')]"
           },
@@ -344,6 +352,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "_artifactsLocation": {
+            "value": "[variables('sslDeploymentexistingRDSLocation')]"
+          },
           "vaultName": {
             "value": "[parameters('vaultName')]"
           },
@@ -375,6 +386,5 @@
       }
     }
   ],
-  "outputs": {
-  }
+  "outputs": {}
 }
