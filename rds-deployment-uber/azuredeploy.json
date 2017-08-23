@@ -159,7 +159,7 @@
     "RdcbHaDeploymentURL": "[concat(variables('RdcbHaDeploymentexistingRDSLocation'),'/',variables('RdcbHaDeploymentexistingRDSTemplate'))]",
     "loadBalancer": "loadBalancer",
     "gwdnsLabelPrefix": "[concat('gwd', resourceGroup().name)]",
-    "gatewaypublicIp": "gatewaypublicIp",
+    "gatewaypublicIp": "gwpip",
     "backEndAddressPool": "LBBAP",
     "rdgwAvailabilitySet": "gw-availabilityset",
     "rdcbAvailabilitySet": "cb-availabilityset",

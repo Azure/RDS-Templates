@@ -35,6 +35,9 @@
     "gatewayloadBalancer": {
       "value": "loadBalancer"
     },
+    "gatewayPublicIp": {
+      "value": "gwpip"
+    },
     "gw-availabilityset": {
       "value": "gw-availabilityset"
     },
