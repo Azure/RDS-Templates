@@ -32,18 +32,19 @@
     the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
 
 .EXAMPLE
-    .\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -admin cloudadmin -instances 5 -rdshVmSize Standard_A4 -imagesku 2012-r2-Datacenter -installOptions rds-deployment
+    .\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -admin cloudadmin -numberOfRdshInstances 5 -rdshVmSize Standard_A4 -imagesku 2012-r2-Datacenter -installOptions rds-deployment -location westus
     Example command to deploy rds-deployment with 5 instances using A4 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab. 
     the admin account is cloudadmin and OS is 2012-r2-datacenter
 
 .EXAMPLE
-    .\deploy-rds-templates.ps1 -useJson -parameterFileRdsDeployment c:\temp\rds-deployment.azuredeploy.parameters.json
+    .\deploy-rds-templates.ps1 -useExistingJson -parameterFileRdsDeployment c:\temp\rds-deployment.azuredeploy.parameters.json -location centralUs
     Example command to deploy rds-deployment with a custom populated parameter json file c:\temp\rds-deployment.azuredeploy.parameters.json.
     all properties from json file will be used. if no password is supplied, you will be prompted.
 
 .EXAMPLE
-    .\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -monitor -postConnect
-    Example command to deploy rds-deployment with 2 instances using A2 machines. the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
+    .\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -monitor -postConnect -location eastus
+    Example command to deploy rds-deployment,rds-ha-broker,rds-ha-gateway,rds-update-certificate with 2 instances using A2 machines. 
+    the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
     before calling New-AzureRmResourceGroupDeployment, the powershell monitor script will be called.
     after successful deployment, the post connect powershell script will be called.
 
@@ -91,6 +92,7 @@
 .PARAMETER installOptions
     array deployment templates to deploy in order specified.
     options are:
+        "ad-domain-only-test", (for testing purposes only)
         "rds-deployment",
         "rds-update-certificate",
         "rds-deployment-ha-broker",
@@ -103,7 +105,7 @@
 
 .PARAMETER location
     is the azure regional datacenter location. 
-    default will use eastus
+    default will display list of locations for use
 
 .PARAMETER monitor
     will run "https://aka.ms/azure-rm-log-reader.ps1" before deployment
@@ -196,7 +198,7 @@
         rdsh-101 (name of vm with rdshUpdateIteration set to 1)
     default is null
 
-    .PARAMETER resourceGroup
+.PARAMETER resourceGroup
     resourceGroup is a mandatory parameter and is the azure arm resourcegroup to use / create for this deployment. 
     default is 'resourceGroup(get-random)'
 
@@ -248,7 +250,7 @@ param(
     [string[]][ValidateSet("ad-domain-only-test", "rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway", "rds-deployment-uber", "rds-deployment-existing-ad", "rds-update-rdsh-collection")]
     $installOptions = @("rds-deployment", "rds-update-certificate", "rds-deployment-ha-broker", "rds-deployment-ha-gateway"),
     [string][ValidateSet('2012-R2-Datacenter', '2016-Datacenter')]$imageSku = "2016-Datacenter",
-    [string]$location = "eastus",
+    [string]$location = "",
     [int]$logoffTimeInminutes = 60,
     [switch]$monitor,
     [int]$numberOfRdshInstances = 2,
