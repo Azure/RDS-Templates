@@ -264,7 +264,7 @@ param(
     [switch]$pause,
     [string]$pfxFilePath,
     [switch]$postConnect,
-    [string]$publicIpAddressName = "gwpip",
+    [string]$gatewayPublicIp = "gwpip",
     [string]$primaryDbConnectionString = "",
     [string]$rdshAvailabilitySet = "rdsh-availabilityset",
     [string]$rdshCollectionName = "Desktop Collection",
@@ -1074,7 +1074,6 @@ function start-rds-deployment()
         $ujson.parameters.domainName.value = $domainName
         $ujson.parameters.imageSku.value = $imageSku
         $ujson.parameters.numberOfRdshInstances.value = $numberOfRdshInstances
-        $ujson.parameters.publicIPAddressName.value = $publicIpAddressName
         $ujson.parameters.rdshVmSize.value = $rdshVmSize
         $ujson | ConvertTo-Json | Out-File $parameterFileRdsDeployment
     }
@@ -1166,6 +1165,7 @@ function start-rds-deployment-ha-gateway()
         $ujson.parameters.existingAdminUserName.value = $adminUserName
         $ujson.parameters.existingAdminPassword.value = $adminPassword
         $ujson.parameters.gatewayLoadbalancer.value = $gatewayLoadBalancer
+        $ujson.parameters.gatewayPublicIp.value = $gatewayPublicIp
         $ujson.parameters.externalFqdn.value = "$($resourceGroup).$($domainName)"
         $ujson.parameters.dnsLabelPrefix.value = $resourceGroup
         $ujson.parameters.'gw-availabilitySet'.value = $gwAvailabilitySet
