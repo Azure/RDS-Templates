@@ -23,9 +23,6 @@
     "numberOfRdshInstances": {
       "value": 2
     },
-    "publicIPAddressName": {
-      "value": "gwpip"
-    },
     "rdshVmSize": {
       "value": "Standard_A2"
     }

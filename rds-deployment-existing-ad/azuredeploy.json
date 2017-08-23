@@ -91,7 +91,7 @@
     "brokerNicName": "[concat(variables('brokerVmName'),variables('networkNameSuffix'))]",
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
     "gatewayNicName": "[concat(variables('gatewayVmName'),variables('networkNameSuffix'))]",
-    "gatewayIpRef": "gatewaypublicIp",
+    "gatewayIpRef": "gwpip",
     "assetLocation": "[parameters('_artifactsLocation')]",
     "networkNameSuffix": "-nic",
     "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
@@ -585,10 +585,6 @@
     "fqdn": {
       "type": "string",
       "value": "[reference(variables('gatewayIpRef')).dnsSettings.fqdn]"
-    },
-    "ipaddress": {
-      "type": "string",
-      "value": "[reference(variables('gatewayIpRef')).ipAddress]"
     },
     "rdWebUrl": {
       "type": "string",
