@@ -27,8 +27,8 @@
    version    : 170817 update parameter names for change 4216303
 
 .EXAMPLE
-    .\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -location eastus
-    Example command to deploy rds-deployment, rds-update-certificate, rds-ha-broker, and rds-ha-gateway with 2 rdsh, rdcb, and rdgw instances using A2 machines. 
+    .\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -location eastus -installOptions rds-deployment-uber
+    Example command to deploy ad-domain-only-test,rds-deployment-existing-ad,rds-update-certificate,rds-ha-broker,rds-ha-gateway with 2 rdsh, 2 rdcb, and 2 rdgw instances using A2 machines. 
     the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
 
 .EXAMPLE
@@ -37,8 +37,9 @@
     the admin account is cloudadmin and OS is 2012-r2-datacenter
 
 .EXAMPLE
-    .\deploy-rds-templates.ps1 -useExistingJson -parameterFileRdsDeployment c:\temp\rds-deployment.azuredeploy.parameters.json -location centralUs
-    Example command to deploy rds-deployment with a custom populated parameter json file c:\temp\rds-deployment.azuredeploy.parameters.json.
+    .\deploy-rds-templates.ps1 -useExistingJson -parameterFileRdsDeployment c:\temp\rds-deployment.azuredeploy.parameters.json -location centralUs -installOptions rds-deployment-existing-ad
+    Example command to deploy rds-deployment-existing-ad with a custom populated parameter json file c:\temp\rds-deployment.azuredeploy.parameters.json.
+    since rds-deployment-existing-ad requires an existing domain, it will prompt to also install ad-domain-only-test.
     all properties from json file will be used. if no password is supplied, you will be prompted.
 
 .EXAMPLE
@@ -815,9 +816,9 @@ function create-sql
                     -databaseName RdsCb `
                     -adminPassword $adminPassword `
                     -generateUniqueName `
-                    -nolog `
-                    -nsgStartIpAllow '10.0.0.4' `
-                    -nsgEndIpAllow '10.0.0.254' "
+                    -nolog "
+                    #-nsgStartIpAllow '10.0.0.4' `
+                    #-nsgEndIpAllow '10.0.0.254' "
 
     if (!$whatIf)
     {
@@ -826,9 +827,9 @@ function create-sql
             -databaseName RdsCb `
             -adminPassword $adminPassword `
             -servername "sql-server$($random)" `
-            -nolog `
-            -nsgStartIpAllow "10.0.0.4" `
-            -nsgEndIpAllow "10.0.0.254"
+            -nolog #`
+            #-nsgStartIpAllow "10.0.0.4" `
+            #-nsgEndIpAllow "10.0.0.254"
 
         $match = [regex]::Match($ret, "connection string ODBC Native client:`r`n(DRIVER.+;)", [Text.RegularExpressions.RegexOptions]::Singleline -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase)
         $odbcstring = ($match.Captures[0].Groups[1].Value).Replace("`r`n", "")
