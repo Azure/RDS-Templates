@@ -76,8 +76,6 @@
     }
   },
   "variables": {
-    "gwdnsLabelPrefix": "gateway",
-    "cbdnsLabelPrefix": "[concat('cbd', resourceGroup().name)]",
     "storageAccountName": "[tolower(concat('rdsa', uniqueString(resourceGroup().id)))]",
     "storageAccountType": "Standard_LRS",
     "uniqueStorageAccountContainerName": "[concat('sac', resourceGroup().name)]",
@@ -85,8 +83,6 @@
     "imageOffer": "WindowsServer",
     "dnsServerPrivateIp": "10.0.0.4",
     "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
-    "publicIpRef": "publicIp",
-    "brokerIpRef": "brokerpublicIp",
     "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",
     "brokerNicName": "[concat(variables('brokerVmName'),variables('networkNameSuffix'))]",
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
@@ -101,36 +97,12 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIpRef')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('dnsLabelPrefix')]"
-        }
-      }
-    },
-    {
-      "apiVersion": "2015-06-15",
-      "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('gatewayIpRef')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
-          "domainNameLabel": "[variables('gwdnsLabelPrefix')]"
-        }
-      }
-    },
-    {
-      "apiVersion": "2015-06-15",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('brokerIpRef')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[variables('cbdnsLabelPrefix')]"
+          "domainNameLabel": "[parameters('dnsLabelPrefix')]"
         }
       }
     },
@@ -167,7 +139,7 @@
       "name": "loadBalancer",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/',variables('publicIpRef'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/',variables('gatewayIpRef'))]"
       ],
       "properties": {
         "frontendIPConfigurations": [
@@ -175,7 +147,7 @@
             "name": "LBFE",
             "properties": {
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIpRef'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('gatewayIpRef'))]"
               }
             }
           }
@@ -293,9 +265,6 @@
             "name": "ipconfig",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('brokerIpRef'))]"
-              },
               "subnet": {
                 "id": "[variables('subnet-id')]"
               }

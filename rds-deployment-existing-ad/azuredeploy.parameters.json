@@ -6,7 +6,7 @@
       "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-existing-ad/"
     },
     "dnsLabelPrefix": {
-      "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
+      "value": "{enter_unique_external_fqdn_prefix_here (example:%resourceGroupName%)}"
     },
     "existingAdminPassword": {
       "value": "{enter_existing_adminUsername_password_here}"
