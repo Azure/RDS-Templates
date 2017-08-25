@@ -76,7 +76,7 @@
     }
   },
   "variables": {
-    "gwdnsLabelPrefix": "[concat('gwd', resourceGroup().name)]",
+    "gwdnsLabelPrefix": "gateway",
     "cbdnsLabelPrefix": "[concat('cbd', resourceGroup().name)]",
     "storageAccountName": "[tolower(concat('rdsa', uniqueString(resourceGroup().id)))]",
     "storageAccountType": "Standard_LRS",
