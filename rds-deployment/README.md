@@ -43,7 +43,7 @@ Click the button below to deploy
         * Contains a numeric digit
         * Contains a special character.
 * adminUsername - Active Directory and local administrator account name. User name conforms to Active Directory user name convention.
-* dnsLabelPrefix -  DNS domain name which is typically the same as the Active Directory name but is not a requirement. See [Naming conventions in Active Directory](https://support.microsoft.com/en-us/help/909264/naming-conventions-in-active-directory-for-computers,-domains,-sites,-and-ous)
+* dnsLabelPrefix -  DNS name which is external name used to connect to environment. example name 'gateway.contoso.com' would be 'gateway'. See [Naming conventions in Active Directory](https://support.microsoft.com/en-us/help/909264/naming-conventions-in-active-directory-for-computers,-domains,-sites,-and-ous)
 * gwpublicIPAddressName - Azure resource name for the public load balanced address for RDS gateway. this is set to 'gwpip' by default.
 * imageSKU - operating system version for all instances. '2016-Datacenter' or '2012-R2-Datacenter'.
     * PowerShell enumeration: ```Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsServer -Offer WindowsServer```
