@@ -235,9 +235,6 @@
             "name": "ipconfig",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('gatewayIpRef'))]"
-              },
               "subnet": {
                 "id": "[variables('subnet-id')]"
               },
