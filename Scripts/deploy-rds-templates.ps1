@@ -639,6 +639,14 @@ function check-parameters()
         exit 1
     }
 
+    $cloudAppDns = "$($dnsLabelPrefix).$($location).cloudapp.azure.com"
+    if (Resolve-DnsName -Name $cloudAppDns -ErrorAction SilentlyContinue)
+    {
+        write-host "dns name already exists! '$($cloudAppDns)'. select new unique name."
+        write-host "exiting"
+        exit 1
+    }
+
     write-host "checking location"
 
     if (!(Get-AzureRmLocation | Where-Object Location -Like $location) -or !$location)
