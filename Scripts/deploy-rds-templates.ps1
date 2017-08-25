@@ -244,7 +244,7 @@ param(
     [string]$applicationPassword = $adminPassword,
     [string]$clientAccessName = "HARDCB",
     [pscredential]$credentials,
-    [string]$dnsLabelPrefix = "$($resourceGroup.ToLower())",
+    [string]$dnsLabelPrefix = "gateway",
     [string]$dnsServer = "addc-01",
     [string]$gatewayLoadBalancer = "loadbalancer",
     [string]$gwAvailabilitySet = "gw-availabilityset",
