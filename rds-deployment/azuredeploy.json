@@ -256,7 +256,7 @@
                         "name": "https",
                         "properties": {
                             "frontendIPConfiguration": {
-                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('loadBalancer').name),'/frontendIPConfigurations/',variables('loadBalancer').frontendIPConfigurations)]"
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('loadBalancer').name),'/frontendIPConfigurations/',variables('loadBalancer').frontendIpConfiguration)]"
                             },
                             "backendAddressPool": {
                                 "id": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('loadBalancer').name),'/backendAddressPools/',variables('loadBalancer').backendAddressPool)]"
