@@ -279,7 +279,7 @@
                                 "id": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('loadBalancer').name),'/frontendIPConfigurations/', variables('loadBalancer').frontendIpConfiguration)]"
                             },
                             "backendAddressPool": {
-                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('loadBalancer').name),'/backendAddressPools/',variables('loadBalancer').backendAddressPools)]"
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('loadBalancer').name),'/backendAddressPools/',variables('loadBalancer').backendAddressPool)]"
                             },
                             "protocol": "Udp",
                             "frontendPort": 3391,
