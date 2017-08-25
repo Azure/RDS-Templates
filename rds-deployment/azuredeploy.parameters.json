@@ -12,7 +12,7 @@
       "value": "cloudadmin"
     },
     "dnsLabelPrefix": {
-      "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
+      "value": "{enter_unique_external_fqdn_prefix_here (example:%resourceGroupName%)}"
     },
     "domainName": {
       "value": "contoso.com"
