@@ -493,14 +493,6 @@
                                 {
                                     "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancer').name, variables('loadbalancer').backendAddressPool)]"
                                 }
-                            ],
-                            "loadBalancerInboundNatRules": [
-                                {
-                                    "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', variables('loadBalancer').name, 'https')]"
-                                },
-                                {
-                                    "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', variables('loadBalancer').name, 'udp')]"
-                                }
                             ]
                         }
                     }
