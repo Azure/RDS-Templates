@@ -187,14 +187,15 @@ function check-storageAccountName($resourceGroupName, $StorageAccountName)
     elseif (!($storageAccountName) -and @(Get-AzureRmStorageAccount -ResourceGroupName $resourceGroupName).Count -gt 1)
     {
         $storageList = @{}
-        $count = 0
+        $count = 1
         foreach ($storageName in Get-AzureRmStorageAccount -resourcegroupname $resourcegroupname)
         {
-            $storageList.Add($count++,$storageName.StorageAccountName)
+            $storageList.Add($count,$storageName.StorageAccountName)
             write-host "$($count). $($storageName.StorageAccountName)"
+            $count++
         }
 
-        $storageAccountNumber = read-host "enter number of storage account to use:"
+        $storageAccountNumber = [int](read-host "enter number of storage account to use:")
         $storageAccountName = $storageList.Item($storageAccountNumber)
 
         if (!($storageAccountName))
