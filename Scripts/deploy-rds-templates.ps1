@@ -642,9 +642,7 @@ function check-parameters()
     $cloudAppDns = "$($dnsLabelPrefix).$($location).cloudapp.azure.com"
     if (Resolve-DnsName -Name $cloudAppDns -ErrorAction SilentlyContinue)
     {
-        write-host "dns name already exists! '$($cloudAppDns)'. select new unique name."
-        write-host "exiting"
-        exit 1
+        Write-Warning "dns name already exists! '$($cloudAppDns)'. if not recreating deployment, you may need to select new unique name."
     }
 
     write-host "checking location"
@@ -869,7 +867,7 @@ function deploy-template($templateFile, $parameterFile, $deployment)
 
     $error.Clear() 
     
-    write-host "$([DateTime]::Now) starting $($deployment). this will take a while..." -ForegroundColor Green
+    write-host "$([DateTime]::Now) starting deployment '$($deployment)'. this will take a while..." -ForegroundColor Green
     write-host "New-AzureRmResourceGroupDeployment -Name $deployment `
                     -ResourceGroupName $resourceGroup `
                     -DeploymentDebugLogLevel All `
@@ -1025,7 +1023,7 @@ function start-ad-domain-only-test()
 {
     $deployment = "ad-domain-only-test"
     write-warning "$($deployment) should only be used for testing and NOT production"
-    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    write-host "$(get-date) starting '$($deployment)' configuration..." -foregroundcolor cyan
     $templateFile = "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/bb24e0c10dd73b818dc492133522ceaf72887cd5/active-directory-new-domain/azuredeploy.json"
 
     $deployFile = "$($env:TEMP)\azuredeploy.json"
@@ -1069,7 +1067,7 @@ function start-ad-domain-only-test()
 function start-rds-deployment()
 {
     $deployment = "rds-deployment"
-    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    write-host "$(get-date) starting '$($deployment)' configuration..." -foregroundcolor cyan
     
     check-parameterFile -parameterFile $parameterFileRdsDeployment -deployment $deployment
     check-deployment -deployment $deployment
@@ -1100,7 +1098,7 @@ function start-rds-deployment()
 function start-rds-deployment-existing-ad()
 {
     $deployment = "rds-deployment-existing-ad"
-    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    write-host "$(get-date) starting '$($deployment)' configuration..." -foregroundcolor cyan
     check-parameterFile -parameterFile $parameterFileRdsDeploymentExistingAd -deployment $deployment
     check-deployment -deployment $deployment
     check-forExistingAdDeployment
@@ -1133,7 +1131,7 @@ function start-rds-deployment-existing-ad()
 function start-rds-deployment-ha-broker()
 {
     $deployment = "rds-deployment-ha-broker"
-    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    write-host "$(get-date) starting '$($deployment)' configuration..." -foregroundcolor cyan
 
     check-parameterFile -parameterFile $parameterFileRdsHaBroker -deployment $deployment
     check-deployment -deployment $deployment
@@ -1162,7 +1160,7 @@ function start-rds-deployment-ha-broker()
 function start-rds-deployment-ha-gateway()
 {
     $deployment = "rds-deployment-ha-gateway"
-    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    write-host "$(get-date) starting '$($deployment)' configuration..." -foregroundcolor cyan
 
     check-parameterFile -parameterFile $parameterFileRdsHaGateway -deployment $deployment
     check-deployment -deployment $deployment
@@ -1194,7 +1192,7 @@ function start-rds-deployment-ha-gateway()
 function start-rds-deployment-uber()
 {
     $deployment = "rds-deployment-uber"
-    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    write-host "$(get-date) starting '$($deployment)' configuration..." -foregroundcolor cyan
     check-parameterFile -parameterFile $parameterFileRdsUber -deployment $deployment
     check-deployment -deployment $deployment
     check-forExistingAdDeployment
@@ -1243,7 +1241,7 @@ function start-rds-deployment-uber()
 function start-rds-update-certificate()
 {
     $deployment = "rds-update-certificate"
-    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    write-host "$(get-date) starting '$($deployment)' configuration..." -foregroundcolor cyan
 
     check-parameterFile -parameterFile $parameterFileRdsUpdateCertificate -deployment $deployment
     check-deployment -deployment $deployment
@@ -1279,7 +1277,7 @@ function start-rds-update-certificate()
 function start-rds-update-rdsh-collection()
 {
     $deployment = "rds-update-rdsh-collection"
-    write-host "$(get-date) starting $($deployment)..." -foregroundcolor cyan
+    write-host "$(get-date) starting '$($deployment)' configuration..." -foregroundcolor cyan
 
     check-parameterFile -parameterFile $parameterFileRdsUpdateRdshCollection -deployment $deployment
     check-deployment -deployment $deployment

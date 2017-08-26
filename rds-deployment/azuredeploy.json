@@ -6,8 +6,7 @@
             "type": "string",
             "metadata": {
                 "description": "Unique gateway public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.<location>.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'. For example johndns1 will result the final RDWEB access url like https://johndns1.westus.cloudapp.azure.com/RDWeb"
-            },
-            "defaultValue": "gateway"
+            }
         },
         "domainName": {
             "type": "string",
@@ -171,7 +170,7 @@
             }
         },
         {
-            "name": "[variables('gatewayPublicIp')]",
+            "name": "[parameters('gatewayPublicIp')]",
             "type": "Microsoft.Network/publicIPAddresses",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
@@ -233,7 +232,7 @@
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIpAddresses', variables('gatewayPublicIp'))]"
+                "[resourceId('Microsoft.Network/publicIpAddresses', parameters('gatewayPublicIp'))]"
             ],
             "properties": {
                 "frontendIPConfigurations": [
@@ -241,7 +240,7 @@
                         "name": "[variables('loadBalancer').frontendIpConfiguration]",
                         "properties": {
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', variables('gatewayPublicIp'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', parameters('gatewayPublicIp'))]"
                             }
                         }
                     }
@@ -310,32 +309,6 @@
                             "port": 3391,
                             "intervalInSeconds": 5,
                             "numberOfProbes": 2
-                        }
-                    }
-                ],
-                "inboundNatRules": [
-                    {
-                        "name": "https",
-                        "properties": {
-                            "frontendIPConfiguration": {
-                                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations',variables('loadBalancer').name, variables('loadBalancer').frontendIpConfiguration)]"
-                            },
-                            "protocol": "tcp",
-                            "frontendPort": 443,
-                            "backendPort": 443,
-                            "enableFloatingIP": false
-                        }
-                    },
-                    {
-                        "name": "udp",
-                        "properties": {
-                            "frontendIPConfiguration": {
-                                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations',variables('loadBalancer').name, variables('loadBalancer').frontendIpConfiguration)]"
-                            },
-                            "protocol": "udp",
-                            "frontendPort": 3391,
-                            "backendPort": 3391,
-                            "enableFloatingIP": false
                         }
                     }
                 ]
@@ -800,7 +773,7 @@
                         },
                         "connectionBroker": "[concat(variables('brokerVmName'), '.', parameters('domainName'))]",
                         "domainName": "[parameters('domainName')]",
-                        "externalfqdn": "[reference(variables('gatewayPublicIp')).dnsSettings.fqdn]",
+                        "externalfqdn": "[reference(parameters('gatewayPublicIp')).dnsSettings.fqdn]",
                         "numberOfRdshInstances": "[parameters('numberOfRdshInstances')]",
                         "sessionHostNamingPrefix": "[variables('rdshVmName')]",
                         "webAccessServer": "[concat(variables('gatewayVmName'), '.', parameters('domainName'))]"
@@ -817,11 +790,11 @@
     "outputs": {
         "fqdn": {
             "type": "string",
-            "value": "[reference(variables('gatewayPublicIp')).dnsSettings.fqdn]"
+            "value": "[reference(parameters('gatewayPublicIp')).dnsSettings.fqdn]"
         },
         "rdWebUrl": {
             "type": "string",
-            "value": "[concat('https://', reference(variables('gatewayPublicIp')).dnsSettings.fqdn, '/rdweb')]"
+            "value": "[concat('https://', reference(parameters('gatewayPublicIp')).dnsSettings.fqdn, '/rdweb')]"
         }
     }
 }
