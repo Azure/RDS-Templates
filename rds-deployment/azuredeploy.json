@@ -170,7 +170,7 @@
             }
         },
         {
-            "name": "[parameters('gatewayPublicIp')]",
+            "name": "[variables('gatewayPublicIp')]",
             "type": "Microsoft.Network/publicIPAddresses",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
@@ -232,7 +232,7 @@
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIpAddresses', parameters('gatewayPublicIp'))]"
+                "[resourceId('Microsoft.Network/publicIpAddresses', variables('gatewayPublicIp'))]"
             ],
             "properties": {
                 "frontendIPConfigurations": [
@@ -240,7 +240,7 @@
                         "name": "[variables('loadBalancer').frontendIpConfiguration]",
                         "properties": {
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', parameters('gatewayPublicIp'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', variables('gatewayPublicIp'))]"
                             }
                         }
                     }
@@ -773,7 +773,7 @@
                         },
                         "connectionBroker": "[concat(variables('brokerVmName'), '.', parameters('domainName'))]",
                         "domainName": "[parameters('domainName')]",
-                        "externalfqdn": "[reference(parameters('gatewayPublicIp')).dnsSettings.fqdn]",
+                        "externalfqdn": "[reference(variables('gatewayPublicIp')).dnsSettings.fqdn]",
                         "numberOfRdshInstances": "[parameters('numberOfRdshInstances')]",
                         "sessionHostNamingPrefix": "[variables('rdshVmName')]",
                         "webAccessServer": "[concat(variables('gatewayVmName'), '.', parameters('domainName'))]"
@@ -790,11 +790,11 @@
     "outputs": {
         "fqdn": {
             "type": "string",
-            "value": "[reference(parameters('gatewayPublicIp')).dnsSettings.fqdn]"
+            "value": "[reference(variables('gatewayPublicIp')).dnsSettings.fqdn]"
         },
         "rdWebUrl": {
             "type": "string",
-            "value": "[concat('https://', reference(parameters('gatewayPublicIp')).dnsSettings.fqdn, '/rdweb')]"
+            "value": "[concat('https://', reference(variables('gatewayPublicIp')).dnsSettings.fqdn, '/rdweb')]"
         }
     }
 }
