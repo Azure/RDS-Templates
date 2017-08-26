@@ -311,32 +311,6 @@
                             "numberOfProbes": 2
                         }
                     }
-                ],
-                "inboundNatRules": [
-                    {
-                        "name": "https",
-                        "properties": {
-                            "frontendIPConfiguration": {
-                                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations',variables('loadBalancer').name, variables('loadBalancer').frontendIpConfiguration)]"
-                            },
-                            "protocol": "tcp",
-                            "frontendPort": 443,
-                            "backendPort": 443,
-                            "enableFloatingIP": false
-                        }
-                    },
-                    {
-                        "name": "udp",
-                        "properties": {
-                            "frontendIPConfiguration": {
-                                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations',variables('loadBalancer').name, variables('loadBalancer').frontendIpConfiguration)]"
-                            },
-                            "protocol": "udp",
-                            "frontendPort": 3391,
-                            "backendPort": 3391,
-                            "enableFloatingIP": false
-                        }
-                    }
                 ]
             }
         },
