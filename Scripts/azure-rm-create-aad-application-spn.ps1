@@ -1,12 +1,29 @@
-# creates new azurermadapplication for use with logging in to azurerm using password or cert
-# can be used with scripts for example
-# cert auth. put in ps script
-# Add-AzureRmAccount -ServicePrincipal -CertificateThumbprint $cert.Thumbprint -ApplicationId $app.ApplicationId -TenantId $tenantId
-# requires free AAD base subscription
-# https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-authenticate-service-principal#provide-credentials-through-automated-powershell-script
+<#
+    creates new azurermadapplication for use with logging in to azurerm using password or cert
+    to enable script execution, you may need to Set-ExecutionPolicy Bypass -Force
 
-# 170609
+        Copyright 2017 Microsoft Corporation
 
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    # can be used with scripts for example
+    # cert auth. put in ps script
+    # Add-AzureRmAccount -ServicePrincipal -CertificateThumbprint $cert.Thumbprint -ApplicationId $app.ApplicationId -TenantId $tenantId
+    # requires free AAD base subscription
+    # https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-authenticate-service-principal#provide-credentials-through-automated-powershell-script
+
+    # 170609
+#>
 param(
     [bool]$usecert = $true,
     [string]$password,

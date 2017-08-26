@@ -1,9 +1,26 @@
-﻿# script to add certificate to azure arm AAD key vault
+﻿<#
+    script to add certificate to azure arm AAD key vault
+    to enable script execution, you may need to Set-ExecutionPolicy Bypass -Force
 
-# Note: Certificates stored in Key Vault as secrets with content type 'application/x-pkcs12', this is why Set-AzureRmKeyVaultAccessPolivy cmdlet grants -PremissionsToSecrets (rather than -PermissionsToCertificates).
-# You will need 1) application id ($app.ApplicationId), and 2) the password from above step supplied as input parameters to the Template.
-# https://www.sslforfree.com/
-# 170726
+    Copyright 2017 Microsoft Corporation
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    # Note: Certificates stored in Key Vault as secrets with content type 'application/x-pkcs12', this is why Set-AzureRmKeyVaultAccessPolivy cmdlet grants -PremissionsToSecrets (rather than -PermissionsToCertificates).
+    # You will need 1) application id ($app.ApplicationId), and 2) the password from above step supplied as input parameters to the Template.
+    # https://www.sslforfree.com/
+    # 170726
+#>
 
 [cmdletbinding()]
 param(

@@ -497,7 +497,7 @@ function check-forExistingAdDeployment()
 {
     if (!($installOptions -imatch "ad-domain-only-test"))
     {
-        if ((read-host "uber deployment requires an 'existing AD'. do you want to deploy 'ad-domain-only-test' first?[y|n]") -imatch "y")
+        if ((read-host "this deployment requires an 'existing AD'. do you want to deploy 'ad-domain-only-test' first?[y|n]") -imatch "y")
         {
             start-ad-domain-only-test
         }
@@ -1287,7 +1287,7 @@ function start-rds-update-rdsh-collection()
     
     if (!$useExistingJson)
     {
-        if ((read-host "Do you want to install a template vm from gallery into $($resourceGroup)?[y|n]") -imatch 'y')
+        if ((read-host "Do you want to create a new template vm from gallery into $($resourceGroup)?[y|n]") -imatch 'y')
         {
             write-host "adding template vm. this will take a while..." -ForegroundColor Green
             write-host ".\azure-rm-vm-create.ps1 -publicIp `
@@ -1362,7 +1362,8 @@ function start-rds-update-rdsh-collection()
         
             if ($vhdUri)
             {
-                $vhdUri
+                write-host $vhdUri -foregroundcolor Magenta
+
                 if ((read-host "Is this the correct path to vhd of template image to be used?[y|n]") -imatch 'n')
                 {
                     $ujson.parameters.rdshTemplateImageUri.value = read-host "Enter new vhd path:"
@@ -1389,18 +1390,18 @@ function start-rds-update-rdsh-collection()
         if ($vms)
         {
             # format is rdsh-$($rdshUpdateIteration)01
-            $count = $rdshUpdateIteration
+            $count = [int]$rdshUpdateIteration
 
             while ($true)
             {
                 if ($vms.Name -ieq "rdsh-$($count)01")
                 {
-                    $count++
+                    $count = $count + 1
                     continue
                 }
                 
                 write-host "updating rdshUpdateIteration to $($count) due to name conflict." -ForegroundColor Yellow
-                $rdshUpdateIteration = $count            
+                $rdshUpdateIteration = $count.ToString()            
                 break
             }
         }
