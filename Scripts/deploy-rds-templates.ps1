@@ -345,7 +345,7 @@ function main()
     write-host "-----------------------------------"
 
     write-host "resource group: $($resourceGroup)" -foregroundcolor yellow
-    write-host "domain name: $($domnainName)" -foregroundcolor yellow
+    write-host "domain name: $($domainName)" -foregroundcolor yellow
     write-host "admin user name: $($adminUsername)" -foregroundcolor yellow
     write-host "admin password: $($adminPassword)" -foregroundcolor yellow
     write-host "rdweb site: $($rdWebSite)"
@@ -1049,7 +1049,7 @@ function start-ad-domain-only-test()
                 "adminUsername"      = @{ "value" = $adminUsername };
                 "adSubnetName"       = @{ "value" = $subnetName };
                 "adVMSize"           = @{ "value" = "Standard_D2_v2"};
-                "dnsPrefix"          = @{ "value" = "dummy-$($dnsLabelPrefix)" };
+                "dnsPrefix"          = @{ "value" = "ad-$($dnsLabelPrefix)" };
                 "domainName"         = @{ "value" = $domainName };
                 "virtualNetworkName" = @{ "value" = $vnetName };
             }
