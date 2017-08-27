@@ -151,7 +151,8 @@ configuration RDSDeployment
     Import-DscResource -ModuleName PSDesiredStateConfiguration -ModuleVersion 1.1
     Import-DscResource -ModuleName xActiveDirectory, xComputerManagement, xRemoteDesktopSessionHost
    
-    $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
+    # possible issue in servermanager and server name case inconsistency when using lower case. forcing to upper for consistency
+    $localhost = ([System.Net.Dns]::GetHostByName((hostname)).HostName).ToUpper()
 
     $username = $adminCreds.UserName -split '\\' | select -last 1
     $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$username", $adminCreds.Password)
@@ -161,7 +162,7 @@ configuration RDSDeployment
 
     if ($sessionHostNamingPrefix)
     { 
-        $sessionHosts = @( 1..($numberOfRdshInstances) | % { $sessionHostNamingPrefix + $_.ToString("D2") + "." + $domainname } )
+        $sessionHosts = @( 1..($numberOfRdshInstances) | % { ("$($sessionHostNamingPrefix)$($_.ToString("D2")).$($domainname)").ToUpper() } )
     }
     else
     {
