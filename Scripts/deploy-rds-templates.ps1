@@ -123,45 +123,45 @@
 
 .PARAMETER parameterFileRdsDeployment
     path to template json parameter file for rds-deployment
-    if -useJson, existing json parameter file will be used without validation or modification
+    if -useExistingJson, existing json parameter file will be used without validation or modification
     default is $env:TEMP\rds-deployment.azuredeploy.parameters.json
-    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment/azuredeploy.parameters.json will be used
+    if not exists and not -useExistingJson base template from $templateBaseRepoUri/rds-deployment/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsDeployment
     path to template json parameter file for rds-deployment-existing-ad
-    if -useJson, existing json parameter file will be used without validation or modification
+    if -useExistingJson, existing json parameter file will be used without validation or modification
     default is $env:TEMP\rds-deployment-existing-ad.azuredeploy.parameters.json
-    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment/azuredeploy.parameters.json will be used
+    if not exists and not -useExistingJson base template from $templateBaseRepoUri/rds-deployment/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsHaBroker
     path to template json parameter file for rds-deployment-ha-broker
-    if -useJson, existing json parameter file will be used without validation or modification
+    if -useExistingJson, existing json parameter file will be used without validation or modification
     default is $env:TEMP\rds-deployment-ha-broker.azuredeploy.parameters.json
-    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-ha-broker/azuredeploy.parameters.json will be used
+    if not exists and not -useExistingJson base template from $templateBaseRepoUri/rds-deployment-ha-broker/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsHaGateway
     path to template json parameter file for rds-deployment-ha-gateway
-    if -useJson, existing json parameter file will be used without validation or modification
+    if -useExistingJson, existing json parameter file will be used without validation or modification
     default is $env:TEMP\rds-deployment-ha-gateway.azuredeploy.parameters.json
-    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-ha-gateway/azuredeploy.parameters.json will be used
+    if not exists and not -useExistingJson base template from $templateBaseRepoUri/rds-deployment-ha-gateway/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsUber
     path to template json parameter file for rds-deployment-uber
-    if -useJson, existing json parameter file will be used without validation or modification
+    if -useExistingJson, existing json parameter file will be used without validation or modification
     default is $env:TEMP\rds-deployment-uber.azuredeploy.parameters.json
-    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-uber/azuredeploy.parameters.json will be used
+    if not exists and not -useExistingJson base template from $templateBaseRepoUri/rds-deployment-uber/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsUpdateCertificate
     path to template json parameter file for rds-update-certificate
-    if -useJson, existing json parameter file will be used without validation or modification
+    if -useExistingJson, existing json parameter file will be used without validation or modification
     default is $env:TEMP\rds-udpate-certificate.azuredeploy.parameters.json
-    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-update-certificate/azuredeploy.parameters.json will be used
+    if not exists and not -useExistingJson base template from $templateBaseRepoUri/rds-deployment-update-certificate/azuredeploy.parameters.json will be used
 
 .PARAMETER parameterFileRdsUpdateRdshCollection
     path to template json parameter file for rds-update-rdsh-collection
-    if -useJson, existing json parameter file will be used without validation or modification
+    if -useExistingJson, existing json parameter file will be used without validation or modification
     default is $env:TEMP\rds-udpate-rdsh-collection.azuredeploy.parameters.json
-    if not exists and not -useJson base template from $templateBaseRepoUri/rds-deployment-update-rdsh-collection/azuredeploy.parameters.json will be used
+    if not exists and not -useExistingJson base template from $templateBaseRepoUri/rds-deployment-update-rdsh-collection/azuredeploy.parameters.json will be used
 
 .PARAMETER pause
     switch to enable pausing between deployments for verification
