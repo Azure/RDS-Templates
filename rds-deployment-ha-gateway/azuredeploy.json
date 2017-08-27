@@ -130,7 +130,6 @@
     "subnetAddressRange": "10.0.0.0/24",
     "dnsServerPrivateIp": "10.0.0.8",
     "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
-    "assetLocation": "[parameters('_artifactsLocation')]",
     "apiVersion": "2015-06-15",
     "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]",
     "storageAccountType": "Standard_LRS"
@@ -256,7 +255,7 @@
             "typeHandlerVersion": "2.19",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "ModulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
+              "ModulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\Gateway",
               "properties": {
                 "DomainName": "[parameters('existingDomainName')]",

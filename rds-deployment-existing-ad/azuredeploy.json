@@ -88,7 +88,6 @@
     "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
     "gatewayNicName": "[concat(variables('gatewayVmName'),variables('networkNameSuffix'))]",
     "gatewayIpRef": "gwpip",
-    "assetLocation": "[parameters('_artifactsLocation')]",
     "networkNameSuffix": "-nic",
     "rdshVmName": "[concat(variables('vmPrefix'), 'rdsh-')]",
     "vmPrefix": ""
@@ -357,7 +356,7 @@
             "typeHandlerVersion": "2.11",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "ModulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
+              "ModulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\Gateway",
               "Properties": {
                 "DomainName": "[parameters('existingDomainName')]",
@@ -441,7 +440,7 @@
             "typeHandlerVersion": "2.11",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "ModulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
+              "ModulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\SessionHost",
               "Properties": {
                 "DomainName": "[parameters('existingDomainName')]",
@@ -524,7 +523,7 @@
         "typeHandlerVersion": "2.11",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "modulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
+          "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip')]",
           "configurationFunction": "Configuration.ps1\\RDSDeployment",
           "Properties": {
             "adminCreds": {
