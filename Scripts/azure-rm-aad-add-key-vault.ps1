@@ -19,7 +19,7 @@
     # Note: Certificates stored in Key Vault as secrets with content type 'application/x-pkcs12', this is why Set-AzureRmKeyVaultAccessPolivy cmdlet grants -PremissionsToSecrets (rather than -PermissionsToCertificates).
     # You will need 1) application id ($app.ApplicationId), and 2) the password from above step supplied as input parameters to the Template.
     # https://www.sslforfree.com/
-    # 170726
+    # 170825
 #>
 
 [cmdletbinding()]
@@ -75,19 +75,18 @@ Import-AzureKeyVaultCertificate -vaultname $vaultName -name $certNameInVault -fi
 if($oldapp = Get-AzureRmADApplication -IdentifierUri $uri -ErrorAction SilentlyContinue)
 {
     Remove-AzureRmADApplication -ObjectId $oldapp.ObjectId -Force
+
+    if($sp = get-AzureRmADServicePrincipal -ServicePrincipalName $oldapp.applicationid)
+    {
+        Remove-AzureRmADServicePrincipal -ObjectId $sp.ObjectId -Force
+    }
 }
 
 $app = New-AzureRmADApplication -DisplayName $adApplicationName -HomePage $uri -IdentifierUris $uri -password $certPassword
-
-if($sp = get-AzureRmADServicePrincipal -ServicePrincipalName $oldapp.applicationid)
-{
-    Remove-AzureRmADServicePrincipal -ObjectId $sp.ObjectId -Force
-}
-
 $sp = New-AzureRmADServicePrincipal -ApplicationId $app.ApplicationId
 
 Set-AzureRmKeyVaultAccessPolicy -vaultname $vaultName -serviceprincipalname $sp.ApplicationId -permissionstosecrets get
-$tenantId = (Get-AzureRmSubscription).TenantId | select -Unique
+$tenantId = (Get-AzureRmSubscription).TenantId | Select-Object -Unique
 
 write-output "application id: $($app.ApplicationId)"
 write-output "tenant id: $($tenantId)"

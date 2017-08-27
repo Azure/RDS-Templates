@@ -1,8 +1,47 @@
 # Validation / Example deployment script
-[deploy-rds-templates.ps1](deploy-rds-templates.ps1) script is used for rds-deployment template testing. It performs basic validation of given parameters and will by default deploy a new HA deployment. It requires WMF 5.0 + and Azure PowerShell SDK.
+This folder contains scripts used to assist with testing / deploying rds-templates.
+[deploy-rds-templates.ps1](deploy-rds-templates.ps1) script is the main script used for rds-deployment template testing. It performs basic validation of given parameters and will by default deploy a new HA deployment. It requires WMF 5.0 + and Azure PowerShell SDK which will be installed if missing.
+
+deploy-rds-templates.ps1 script has many parameters but only a few are needed for basic testing. See below for some examples on how to call script for different scenarios and for detailed information on all parameters.
+
+To test individual templates, supply a comma separated list of template names in order for '-installOptions' switch. 
+| -installOptions      | installs                                   |
+|---------------|---------------------------------------------------|
+| default (null)       | rds-deployment                             |
+|                      | rds-deployment-ha-broker                   |
+|                      | rds-deployment-ha-gateway                  |
+|                      | rds-update-certificate                     |
+
+| -installOptions      | installs                                   |
+|---------------|---------------------------------------------------|
+| rds-deployment       | rds-deployment                             |
+
+| -installOptions      | installs                                   |
+|---------------|---------------------------------------------------|
+| rds-deployment-existing-ad       | ad-domain-only-test (will prompt in case domain does not exist)     |
+|                      | rds-deployment-existing-ad                   |
+
+| -installOptions      | installs                                   |
+|---------------|---------------------------------------------------|
+| rds-deployment-uber  | ad-domain-only-test (will prompt in case domain does not exist)          |
+|                      | rds-deployment-existing-ad                 |
+|                      | rds-deployment-ha-broker                   |
+|                      | rds-deployment-ha-gateway                  |
+|                      | rds-update-certificate                     |
+
+| -installOptions      | installs                                   |
+|---------------|---------------------------------------------------|
+| rds-update-certificate| rds-update-certificate                    |
+
+| -installOptions      | installs                                   |
+|---------------|---------------------------------------------------|
+| rds-update-rdsh-collection| rds-update-rdsh-collection            |
+
+
+To test with a test branch, supply the base repo Uri (not base template directory) to be used for deployment.
 
 ## Minimal deployment non HA with new Active Directory, vnet, subnet. 
-| Total vms:| 4                                                     |
+| Total vms: 4|                                                     |
 |---------------|---------------------------------------------------|
 | addc-01       | domain controller                                 |
 | rdcb-01       | remote desktop connection broker / licensing      |
@@ -54,7 +93,7 @@
     -templateBaseRepoUri "https://raw.githubusercontent.com/jagilber/RDS-Templates/issue61/"
 ```
 ## Full HA deployment with new Active Directory, Azure SQL, vnet, subnet. 
-| Total vms:    | 8                                                 |
+| Total vms: 8  |                                                 |
 |---------------|---------------------------------------------------|
 | addc-01       | domain controller                                 |
 | rdcb-01       | remote desktop connection broker / licensing      |
@@ -102,7 +141,7 @@
 ```
 
 ## Minimal deployment non HA with existing Active Directory, vnet, subnet. 
-| Total vms:| 3                                                     |
+| Total vms: 3  |                                                     |
 |---------------|---------------------------------------------------|
 | rdcb-01       | remote desktop connection broker / licensing      |
 | rdgw-01       | remote desktop gateway / web                      |
@@ -162,7 +201,7 @@
     -templateBaseRepoUri "https://raw.githubusercontent.com/jagilber/RDS-Templates/issue61/"
 ```
 ## Full HA deployment with existing Active Directory, Azure SQL, vnet, subnet. 
-| Total vms:    | 7                                                 |
+| Total vms: 7  |                                                 |
 |---------------|---------------------------------------------------|
 | rdcb-01       | remote desktop connection broker / licensing      |
 | rdcb-02       | remote desktop connection broker                  |
