@@ -241,7 +241,7 @@ param(
     [string]$adminPassword = "Password$($random)!", 
     [string]$applicationId, 
     [string]$brokerName = "rdcb-01",
-    [string]$resourceGroup = "resourceGroup$($random)",
+    [string]$resourceGroup = "resgrp$($random)",
     [string]$domainName = "$($resourceGroup).lab",
     [string]$certificateName = "$($resourceGroup)Certificate",
     [string]$applicationPassword = $adminPassword,
@@ -606,17 +606,9 @@ function check-parameters()
 
     if ($domainName.IndexOf(".") -gt 15)
     {
-        $newName = "$([IO.Path]::GetFileNameWithoutExtension($domainName).Substring(0, 15))$([IO.Path]::GetExtension($domainName))"
-        if ((read-host "base domain name greather than 15 characters. is it ok to shorten domain name to '$($newName)'") -imatch "y")
-        {
-            $domainName = $newName
-        }
-        else
-        {
-            write-host "error: base domain name greater than 15 characters $($domainName). use -domainName with a new shortend name and restart script." -ForegroundColor Yellow
-            write-host "exiting"
-            exit 1
-        }
+        write-host "error: base domain name greater than 15 characters $($domainName). use -domainName with a new shortend name and restart script." -ForegroundColor Yellow
+        write-host "exiting"
+        exit 1
     }
 
     write-host "checking dns label"
@@ -1038,7 +1030,7 @@ function start-ad-domain-only-test()
     check-deployment -deployment $deployment
 
     $ajson = get-content -raw -Path $deployFile
-    $ajson = $ajson.Replace("`"adVMName`": `"adVM`"", "`"adVMName`": `"addc-01`"")
+    $ajson = $ajson.Replace("`"adVMName`": `"adVM`"", "`"adVMName`": `"$($dnsServer)`"")
     # convertfrom-json does not like BOM. so remove            
     [IO.File]::WriteAllLines($deployFile, $ajson, (new-object Text.UTF8Encoding $false))
     $templateFile = $deployFile
@@ -1052,7 +1044,7 @@ function start-ad-domain-only-test()
                 "adminUsername"      = @{ "value" = $adminUsername };
                 "adSubnetName"       = @{ "value" = $subnetName };
                 "adVMSize"           = @{ "value" = "Standard_D2_v2"};
-                "dnsPrefix"          = @{ "value" = "ad-$($dnsLabelPrefix)" };
+                "dnsPrefix"          = @{ "value" = "addc-$($dnsLabelPrefix)" };
                 "domainName"         = @{ "value" = $domainName };
                 "virtualNetworkName" = @{ "value" = $vnetName };
             }
