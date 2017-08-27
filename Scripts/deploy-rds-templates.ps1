@@ -23,8 +23,9 @@
     limitations under the License.
      
 .NOTES
+   file author: jagilber
    file name  : deploy-rds-templates.ps1
-   version    : 170817 update parameter names for change 4216303
+   version    : 170825 v1.0
 
 .EXAMPLE
     .\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -location eastus -installOptions rds-deployment-uber
@@ -40,7 +41,7 @@
     .\deploy-rds-templates.ps1 -useExistingJson -parameterFileRdsDeployment c:\temp\rds-deployment.azuredeploy.parameters.json -location centralUs -installOptions rds-deployment-existing-ad
     Example command to deploy rds-deployment-existing-ad with a custom populated parameter json file c:\temp\rds-deployment.azuredeploy.parameters.json.
     since rds-deployment-existing-ad requires an existing domain, it will prompt to also install ad-domain-only-test.
-    all properties from json file will be used. if no password is supplied, you will be prompted.
+    all properties from json file will be used. if no password is supplied, it will prompt.
 
 .EXAMPLE
     .\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -monitor -postConnect -location eastus
@@ -89,6 +90,7 @@
 
 .PARAMETER imageSKU
     default 2016-datacenter or optional 2012-r2-datacenter for OS selection type
+    NOTE: for HA Broker, 2016 is required
 
 .PARAMETER installOptions
     array deployment templates to deploy in order specified.
@@ -109,7 +111,7 @@
     default will display list of locations for use
 
 .PARAMETER monitor
-    will run "https://aka.ms/azure-rm-log-reader.ps1" before deployment
+    will run "https://aka.ms/azure-rm-log-reader.ps1" before deployment in separate powershell process
 
 .PARAMETER numberofRdshInstances
     number of remote desktop session host instances to create. 
@@ -189,8 +191,8 @@
 
 .PARAMETER rdshTemplateImageUri
     uri to blob storage containing a vhd of image to use for rds-update-rdsh-collection
-    vhd image should have been sysprepped with c:\windows\system32\sysprep.exe -oobe -generalize
-    image should be marked as -sysprepped in azure
+    vhd OS image should have been sysprepped with c:\windows\system32\sysprep.exe -oobe -generalize
+    also, in azure, set-azurermvm -ResourceGroupName $resourceGroup -Name $vm.Name -Generalized 
 
 .PARAMETER rdshUpdateIteration
     used to designate new deployment vm / OS name
@@ -216,9 +218,10 @@
 
 .PARAMETER tenantId
     tenantId to be used in subscription for deployment
+    default will be enumerated
 
 .PARAMETER useExistingJson
-    will use passed json file for arguments when deploying
+    will use existing json file for arguments when deploying instead of overwriting
 
 .PARAMETER vaultName
     name of vault to use / create for certificate use
@@ -229,7 +232,7 @@
     default is 'vnet'
 
 .PARAMETER whatIf
-    to test script with configuration but not deploy
+    to test script actions with configuration but will not deploy
 #>
 [CMDLETBINDING()]
 param(
@@ -721,7 +724,7 @@ function check-parameters()
 
     if ($monitor)
     {
-       run-monitor
+        run-monitor
     }
     
 }
@@ -823,8 +826,8 @@ function create-sql
                     -adminPassword $adminPassword `
                     -generateUniqueName `
                     -nolog "
-                    #-nsgStartIpAllow '10.0.0.4' `
-                    #-nsgEndIpAllow '10.0.0.254' "
+    #-nsgStartIpAllow '10.0.0.4' `
+    #-nsgEndIpAllow '10.0.0.254' "
 
     if (!$whatIf)
     {
@@ -834,8 +837,8 @@ function create-sql
             -adminPassword $adminPassword `
             -servername "sql-server$($random)" `
             -nolog #`
-            #-nsgStartIpAllow "10.0.0.4" `
-            #-nsgEndIpAllow "10.0.0.254"
+        #-nsgStartIpAllow "10.0.0.4" `
+        #-nsgEndIpAllow "10.0.0.254"
 
         $match = [regex]::Match($ret, "connection string ODBC Native client:`r`n(DRIVER.+;)", [Text.RegularExpressions.RegexOptions]::Singleline -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase)
         $odbcstring = ($match.Captures[0].Groups[1].Value).Replace("`r`n", "")
@@ -1012,7 +1015,7 @@ function run-postConnect()
     
     write-host "connecting to $($rdWebSite)"
     
-    if(!$whatIf)
+    if (!$whatIf)
     {
         Invoke-Expression -Command "$($connectScript) -rdWebUrl `"$($rdWebSite)`""
     }

@@ -1,8 +1,231 @@
-## Validation / Example deployment script
-[deploy-rds-templates.ps1](deploy-rds-templates.ps1) script is used for rds-deployment template testing. It performs basic validation of given parameters and will by default deploy a new deployment. It requires WMF 5.0 + and Azure PowerShell SDK.
+# Validation / Example deployment script
+[deploy-rds-templates.ps1](deploy-rds-templates.ps1) script is used for rds-deployment template testing. It performs basic validation of given parameters and will by default deploy a new HA deployment. It requires WMF 5.0 + and Azure PowerShell SDK.
 
+## Minimal deployment non HA with new Active Directory, vnet, subnet. 
+| Total vms:| 4                                                     |
+|---------------|---------------------------------------------------|
+| addc-01       | domain controller                                 |
+| rdcb-01       | remote desktop connection broker / licensing      |
+| rdgw-01       | remote desktop gateway / web                      |
+| rdsh-01       | remote session host                               |
+---
+| Required Parameters:  |                           |
+|-----------------------|---------------------------|
+| location              | %valid azure location%    |
+| numberOfRdshInstances | 1                         |
+| installOptions        |rds-deployment             |
+---
+| Recommended Parameters:   |                       |
+|---------------------------|-----------------------|
+| resourceGroup             |
+| adminPassword             |
+| pfxFilePath               |
+| domainName                |
+---
+### Example Commands:
+### production deployment with real X509 .pfx certificate:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -numberOfRdshInstances 1 `
+    -installOptions rds-deployment `
+    -resourceGroup rdscontosolab `
+    -domainName contoso.com `
+    -pfxFilePath c:\temp\star.contoso.com.pfx
 ```
-[DBG]: PS G:\github\RDS-Templates\Scripts>> help .\deploy-rds-templates.ps1 -Full
+### test deployment with minimal parameters. non defined parameters will be auto-generated:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -numberOfRdshInstances 1 `
+    -installOptions rds-deployment
+```
+### test deployment without real certificate:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -numberOfRdshInstances 1 `
+    -installOptions rds-deployment `
+    -resourceGroup rdscontosolab `
+    -domainName contoso.com
+```
+### development deployment with build branch:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -numberOfRdshInstances 1 `
+    -installOptions rds-deployment `
+    -templateBaseRepoUri "https://raw.githubusercontent.com/jagilber/RDS-Templates/issue61/"
+```
+## Full HA deployment with new Active Directory, Azure SQL, vnet, subnet. 
+| Total vms:    | 8                                                 |
+|---------------|---------------------------------------------------|
+| addc-01       | domain controller                                 |
+| rdcb-01       | remote desktop connection broker / licensing      |
+| rdcb-02       | remote desktop connection broker                  |
+| rdgw-01       | remote desktop gateway / web                      |
+| rdgw-02       | remote desktop gateway / web                      |
+| rdsh-01       | remote session host                               |
+| rdsh-02       | remote session host                               |
+| sql-server    | azure sql server (paas)                           |
+---
+| Required Parameters:  |                           |
+|-----------------------|---------------------------|
+| location              | %valid azure location%    |
+---
+| Recommended Parameters:   |                       |
+|---------------------------|-----------------------|
+| resourceGroup             |
+| adminPassword             |
+| pfxFilePath               |
+| domainName                |
+---
+
+### Example Commands:
+### production HA deployment with real X509 .pfx certificate:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -resourceGroup rdscontosolab `
+    -domainName contoso.com `
+    -pfxFilePath c:\temp\star.contoso.com.pfx
+```
+### test HA deployment with minimal parameters. non defined parameters will be auto-generated:
+```powershell
+.\deploy-rds-templates.ps1 -location westus 
+```
+### test HA deployment without real certificate:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -resourceGroup rdscontosolab `
+    -domainName contoso.com
+```
+### development HA deployment with build branch:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -templateBaseRepoUri "https://raw.githubusercontent.com/jagilber/RDS-Templates/issue61/"
+```
+
+## Minimal deployment non HA with existing Active Directory, vnet, subnet. 
+| Total vms:| 3                                                     |
+|---------------|---------------------------------------------------|
+| rdcb-01       | remote desktop connection broker / licensing      |
+| rdgw-01       | remote desktop gateway / web                      |
+| rdsh-01       | remote session host                               |
+---
+| Required Parameters (Production):  |                  |
+|-----------------------|-------------------------------|
+| location              | %valid azure location%        |
+| numberOfRdshInstances | 1                             |
+| installOptions        | rds-deployment-existing-ad    |
+| domainName            | %existing domain name%        |
+| adminPassword         | %existing admin password%     |
+| adminUsername         | %existing admin user name%    |
+
+| Required Parameters (Test):  |                  |
+|-----------------------|-------------------------------|
+| location              | %valid azure location%        |
+| numberOfRdshInstances | 1                             |
+| installOptions        | rds-deployment-existing-ad    |
+---
+| Recommended Parameters:   |                       |
+|---------------------------|-----------------------|
+| resourceGroup             |
+| pfxFilePath               |
+---
+### Example Commands:
+### production deployment with existing AD, real X509 .pfx certificate:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -numberOfRdshInstances 1 `
+    -installOptions rds-deployment-existing-ad `
+    -resourceGroup rdscontosolab `
+    -domainName contoso.com `
+    -adminPassword Password4341275! `
+    -adminUsername administrator `
+    -pfxFilePath c:\temp\star.contoso.com.pfx
+```
+### test deployment with minimal parameters. non defined parameters will be auto-generated. will be prompted to create test domain:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -numberOfRdshInstances 1 `
+    -installOptions rds-deployment-existing-ad
+```
+### test deployment without real certificate. will be prompted to create test domain:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -numberOfRdshInstances 1 `
+    -installOptions rds-deployment-existing-ad `
+    -resourceGroup rdscontosolab `
+    -domainName contoso.com
+```
+### development deployment with build branch. will be prompted to create test domain:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -numberOfRdshInstances 1 `
+    -installOptions rds-deployment-existing-ad `
+    -templateBaseRepoUri "https://raw.githubusercontent.com/jagilber/RDS-Templates/issue61/"
+```
+## Full HA deployment with existing Active Directory, Azure SQL, vnet, subnet. 
+| Total vms:    | 7                                                 |
+|---------------|---------------------------------------------------|
+| rdcb-01       | remote desktop connection broker / licensing      |
+| rdcb-02       | remote desktop connection broker                  |
+| rdgw-01       | remote desktop gateway / web                      |
+| rdgw-02       | remote desktop gateway / web                      |
+| rdsh-01       | remote session host                               |
+| rdsh-02       | remote session host                               |
+| sql-server    | azure sql server (paas)                           |
+---
+| Required Parameters (Production):  |                  |
+|-----------------------|-------------------------------|
+| location              | %valid azure location%        |
+| installOptions        | rds-deployment-uber    |
+| domainName            | %existing domain name%        |
+| adminPassword         | %existing admin password%     |
+| adminUsername         | %existing admin user name%    |
+
+| Required Parameters (Test):  |                  |
+|-----------------------|-------------------------------|
+| location              | %valid azure location%        |
+| installOptions        | rds-deployment-uber           |
+---
+| Recommended Parameters:   |                       |
+|---------------------------|-----------------------|
+| resourceGroup             |
+| adminPassword             |
+| pfxFilePath               |
+| domainName                |
+---
+
+### Example Commands:
+### production HA deployment with existing AD, real X509 .pfx certificate:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -resourceGroup rdscontosolab `
+    -installOptions rds-deployment-uber `
+    -domainName contoso.com `
+    -adminPassword Password4341275! `
+    -adminUsername administrator `
+    -pfxFilePath c:\temp\star.contoso.com.pfx
+```
+### test HA deployment with minimal parameters. non defined parameters will be auto-generated. will be prompted to create test domain:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -installOptions rds-deployment-uber
+```
+### test HA deployment without real certificate. will be prompted to create test domain:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -resourceGroup rdscontosolab `
+    -installOptions rds-deployment-uber `
+    -domainName contoso.com
+```
+### development HA deployment with build branch. will be prompted to create test domain:
+```powershell
+.\deploy-rds-templates.ps1 -location westus `
+    -installOptions rds-deployment-uber `
+    -templateBaseRepoUri "https://raw.githubusercontent.com/jagilber/RDS-Templates/issue61/"
+```
+
+## Script Help File
+```
+PS G:\github\RDS-Templates\Scripts> help .\deploy-rds-templates.ps1 -Full
 
 NAME
     G:\github\RDS-Templates\Scripts\deploy-rds-templates.ps1
@@ -208,6 +431,7 @@ PARAMETERS
         
     -imageSku <String>
         default 2016-datacenter or optional 2012-r2-datacenter for OS selection type
+        NOTE: for HA Broker, 2016 is required
         
         Required?                    false
         Position?                    17
@@ -234,7 +458,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -monitor [<SwitchParameter>]
-        will run "https://aka.ms/azure-rm-log-reader.ps1" before deployment
+        will run "https://aka.ms/azure-rm-log-reader.ps1" before deployment in separate powershell process
         
         Required?                    false
         Position?                    named
@@ -428,8 +652,8 @@ PARAMETERS
         
     -rdshTemplateImageUri <String>
         uri to blob storage containing a vhd of image to use for rds-update-rdsh-collection
-        vhd image should have been sysprepped with c:\windows\system32\sysprep.exe -oobe -generalize
-        image should be marked as -sysprepped in azure
+        vhd OS image should have been sysprepped with c:\windows\system32\sysprep.exe -oobe -generalize
+        also, in azure, set-azurermvm -ResourceGroupName $resourceGroup -Name $vm.Name -Generalized
         
         Required?                    false
         Position?                    36
@@ -489,6 +713,7 @@ PARAMETERS
         
     -tenantId <String>
         tenantId to be used in subscription for deployment
+        default will be enumerated
         
         Required?                    false
         Position?                    42
@@ -497,7 +722,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -useExistingJson [<SwitchParameter>]
-        will use passed json file for arguments when deploying
+        will use existing json file for arguments when deploying instead of overwriting
         
         Required?                    false
         Position?                    named
@@ -526,7 +751,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -whatIf [<SwitchParameter>]
-        to test script with configuration but not deploy
+        to test script actions with configuration but will not deploy
         
         Required?                    false
         Position?                    named
@@ -547,14 +772,15 @@ OUTPUTS
 NOTES
     
     
+        file author: jagilber
         file name  : deploy-rds-templates.ps1
-        version    : 170817 update parameter names for change 4216303
+        version    : 170825 v1.0
     
     -------------------------- EXAMPLE 1 --------------------------
     
-    PS C:\>.\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -location eastus
+    PS C:\>.\deploy-rds-templates.ps1 -adminPassword changeme3240e2938r92 -resourceGroup rdsdeptest -location eastus -installOptions rds-deployment-uber
     
-    Example command to deploy rds-deployment, rds-update-certificate, rds-ha-broker, and rds-ha-gateway with 2 rdsh, rdcb, and rdgw instances using A2 machines. 
+    Example command to deploy ad-domain-only-test,rds-deployment-existing-ad,rds-update-certificate,rds-ha-broker,rds-ha-gateway with 2 rdsh, 2 rdcb, and 2 rdgw instances using A2 machines. 
     the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
     
     
@@ -573,10 +799,11 @@ NOTES
     
     -------------------------- EXAMPLE 3 --------------------------
     
-    PS C:\>.\deploy-rds-templates.ps1 -useExistingJson -parameterFileRdsDeployment c:\temp\rds-deployment.azuredeploy.parameters.json -location centralUs
+    PS C:\>.\deploy-rds-templates.ps1 -useExistingJson -parameterFileRdsDeployment c:\temp\rds-deployment.azuredeploy.parameters.json -location centralUs -installOptions rds-deployment-existing-ad
     
-    Example command to deploy rds-deployment with a custom populated parameter json file c:\temp\rds-deployment.azuredeploy.parameters.json.
-    all properties from json file will be used. if no password is supplied, you will be prompted.
+    Example command to deploy rds-deployment-existing-ad with a custom populated parameter json file c:\temp\rds-deployment.azuredeploy.parameters.json.
+    since rds-deployment-existing-ad requires an existing domain, it will prompt to also install ad-domain-only-test.
+    all properties from json file will be used. if no password is supplied, it will prompt.
     
     
     
@@ -589,6 +816,6 @@ NOTES
     the resource group is rdsdeptest and domain fqdn is rdsdeptest.lab
     before calling New-AzureRmResourceGroupDeployment, the powershell monitor script will be called.
     after successful deployment, the post connect powershell script will be called.
-
+    
 ```
 `Tags: Remote Desktop Services, RDS`
