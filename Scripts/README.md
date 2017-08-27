@@ -4,14 +4,14 @@ This folder contains scripts used to assist with testing / deploying rds-templat
 
 deploy-rds-templates.ps1 script has many parameters but only a few are needed for basic testing. See below for some examples on how to call script for different scenarios and for detailed information on all parameters.
 
-To test individual templates, supply a single template name or a comma separated list of template names in order for '-installOptions' switch. 
+To test individual templates, supply a single template name or a comma separated list of template names in order for '-installOptions' switch. Most installOptions will install just the template argument. Exceptions to this are below:
+
 | -installOptions      | installs                                   |
 |---------------|---------------------------------------------------|
 | default (null)       | rds-deployment                             |
 |                      | rds-deployment-ha-broker                   |
 |                      | rds-deployment-ha-gateway                  |
 |                      | rds-update-certificate                     |
-| rds-deployment       | rds-deployment                             |
 | rds-deployment-existing-ad       | ad-domain-only-test (will prompt in case domain does not exist)     |
 |                      | rds-deployment-existing-ad                   |
 | rds-deployment-uber  | ad-domain-only-test (will prompt in case domain does not exist)          |
@@ -19,11 +19,9 @@ To test individual templates, supply a single template name or a comma separated
 |                      | rds-deployment-ha-broker                   |
 |                      | rds-deployment-ha-gateway                  |
 |                      | rds-update-certificate                     |
-| rds-update-certificate| rds-update-certificate                    |
-| rds-update-rdsh-collection| rds-update-rdsh-collection            |
 
 
-To test with a test branch, supply the base repo Uri (not base template directory) to be used for deployment.
+To test with a branch other than 'master', supply the base repo Uri (not base template directory) to be used for deployment. See examples below.
 
 ## Minimal deployment non HA with new Active Directory, vnet, subnet. 
 | Total vms: 4|                                                     |

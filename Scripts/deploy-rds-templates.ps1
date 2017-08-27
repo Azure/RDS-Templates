@@ -1284,7 +1284,7 @@ function start-rds-update-rdsh-collection()
 
     check-parameterFile -parameterFile $parameterFileRdsUpdateRdshCollection -deployment $deployment
     check-deployment -deployment $deployment
-    check-forExistingAdDeployment
+    #check-forExistingAdDeployment
     
     $ujson = ConvertFrom-Json (get-content -Raw -Path $parameterFileRdsUpdateRdshCollection)
     
