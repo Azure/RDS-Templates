@@ -17,29 +17,29 @@ to enable script execution, you may need to Set-ExecutionPolicy Bypass -Force
     See the License for the specific language governing permissions and
     limitations under the License.
 
-# From <https://blog.kloud.com.au/2013/07/30/ssl-san-certificate-request-and-import-from-powershell/> 
-#    New-CertificateRequest -subject mail1.showcase.kloud.com.au
-#    New-CertificateRequest -subject *.contoso.com
-#    New-CertificateRequest -subject remote.contoso.com -sans @("broker.contoso.com","broker.contoso.lab")
+ From <https://blog.kloud.com.au/2013/07/30/ssl-san-certificate-request-and-import-from-powershell/> 
+    New-CertificateRequest -subject mail1.showcase.kloud.com.au
+    New-CertificateRequest -subject *.contoso.com
+    New-CertificateRequest -subject remote.contoso.com -sans @("broker.contoso.com","broker.contoso.lab")
 
 #>
 
 param(
+    [string]$pfxPassword = "",
     [string]$subject = "", #"*.contoso.com",
-    [array]$sans = @()
+    [string[]]$sans = @(),
+    [string]$onlineCa = "",
+    [string]$outputDir = (get-location)
 )
 
-function New-CertificateRequest ()
+function New-CertificateRequest
 {
     param (
-        [Parameter(Mandatory = $true, HelpMessage = "Please enter the subject beginning with CN=")]
-        [ValidatePattern("CN=")]
-        [string]$subject,
-        [Parameter(Mandatory = $false, HelpMessage = "Please enter the SAN domains as a comma separated list")]
-        [array]$SANs,
-        [Parameter(Mandatory = $false, HelpMessage = "Please enter the Online Certificate Authority")]
-        [string]$OnlineCA,
-        [Parameter(Mandatory = $false, HelpMessage = "Please enter the Online Certificate Authority")]
+        [ValidatePattern("CN=")][string]$subject,
+        [string[]]$SANs,
+        [string]$outputDir,
+        [string]$pfxPassword,
+        [string]$OnlineCA = "",
         [string]$CATemplate = "WebServer"
     )
 
@@ -50,10 +50,11 @@ function New-CertificateRequest ()
         $subjectDomain = $subjectDomain -replace "\*", "star"
     }
 
-    $CertificateINI = "$($env:TEMP)\$($subjectDomain).ini"
-    $CertificateREQ = "$($env:TEMP)\$($subjectDomain).req"
-    $CertificateRSP = "$($env:TEMP)\$($subjectDomain).rsp"
-    $CertificateCER = "$($env:TEMP)\$($subjectDomain).cer"
+    $CertificateINI = "$($outputDir)\$($subjectDomain).ini"
+    $CertificateREQ = "$($outputDir)\$($subjectDomain).req"
+    $CertificateRSP = "$($outputDir)\$($subjectDomain).rsp"
+    $CertificateCER = "$($outputDir)\$($subjectDomain).cer"
+    $CertificatePFX = "$($outputDir)\$($subjectDomain).pfx"
 
     ### INI file generation
     new-item -type file $CertificateINI -force
@@ -62,7 +63,7 @@ function New-CertificateRequest ()
     add-content $CertificateINI ''
     add-content $CertificateINI '[NewRequest]'
     add-content $CertificateINI ('Subject="' + $subject + '"')
-    add-content $CertificateINI 'Exportable=TRUE'
+    add-content $CertificateINI 'exportable=TRUE'
     add-content $CertificateINI 'KeyLength=2048'
     add-content $CertificateINI 'KeySpec=1'
     add-content $CertificateINI 'KeyUsage=0x30'
@@ -105,7 +106,18 @@ function New-CertificateRequest ()
 
         certreq -accept $CertificateCER
     }
+
+    if($pfxPassword)
+    {
+        $cleanSubject = $subject.Replace("=","\=").Replace("*","\*")
+        $SecurePassword = $pfxPassword | ConvertTo-SecureString -AsPlainText -Force
+       
+        Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -imatch $cleansubject | export-PfxCertificate -Password $securePassword -FilePath $CertificatePFX -Force
+        $CertificatePFX
+    }
+
+    $CertificateINI
+    $CertificateREQ
 }
 
-New-CertificateRequest -subject "CN=$($subject)" -SANs $sans
-
+New-CertificateRequest -subject "CN=$($subject)" -SANs $sans -outputDir $outputDir -pfxpassword $pfxPassword -OnlineCA $onlineCa

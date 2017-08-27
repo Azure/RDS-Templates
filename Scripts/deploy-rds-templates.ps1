@@ -762,7 +762,7 @@ function create-cert
     {
         write-warning "this is a standalone cert that should only be used for test and NOT production"
         write-host "Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force"
-        write-host ".\ps-certreq.ps1  -subject `"*.$($domainName)`""
+        write-host ".\ps-certreq.ps1  -subject `"*.$($domainName)`" -outputDir $($env:TEMP)"
         $pfxFilePath = "$($env:TEMP)\$($domainName).pfx"
         write-host "Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Export-PfxCertificate -Password $mypwd -FilePath $pfxFilePath -Force"
         write-host "Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force"
@@ -772,7 +772,7 @@ function create-cert
         if (!$whatIf)
         {
             Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force
-            .\ps-certreq.ps1  -subject "*.$($domainName)"
+            $ret = .\ps-certreq.ps1  -subject "*.$($domainName)" -outputDir $env:TEMP
             $mypwd = ConvertTo-SecureString -String $adminPassword -Force -AsPlainText
             Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Export-PfxCertificate -Password $mypwd -FilePath $pfxFilePath -Force
             # use post import to trusted root
