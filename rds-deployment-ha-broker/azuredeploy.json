@@ -114,7 +114,6 @@
       "sqlserver": "[concat(' -sqlServer \"', parameters('sqlServer'), '\"')]"
     },
     "scriptParameters": "[concat(variables('p').broker, variables('p').connstr, variables('p').domain, variables('p').user, variables('p').pwd, variables('p').can, variables('p').sqlnclient, variables('p').dnsserver, variables('p').sqlserver)]",
-    "assetLocation": "[parameters('_artifactsLocation')]",
     "scriptLocation": "[concat(parameters('_artifactsLocation'), '/Scripts')]",
     "scriptFileName": "RdcbHaPostConfig.ps1"
   },
@@ -208,7 +207,7 @@
         "typeHandlerVersion": "2.20",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "modulesUrl": "[concat(variables('assetLocation'),'/DSC/Configuration.zip')]",
+          "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip')]",
           "configurationFunction": "Configuration.ps1\\DomainJoin",
           "properties": {
             "domainName": "[parameters('existingDomainName')]",
