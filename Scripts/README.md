@@ -4,37 +4,22 @@ This folder contains scripts used to assist with testing / deploying rds-templat
 
 deploy-rds-templates.ps1 script has many parameters but only a few are needed for basic testing. See below for some examples on how to call script for different scenarios and for detailed information on all parameters.
 
-To test individual templates, supply a comma separated list of template names in order for '-installOptions' switch. 
+To test individual templates, supply a single template name or a comma separated list of template names in order for '-installOptions' switch. 
 | -installOptions      | installs                                   |
 |---------------|---------------------------------------------------|
 | default (null)       | rds-deployment                             |
 |                      | rds-deployment-ha-broker                   |
 |                      | rds-deployment-ha-gateway                  |
 |                      | rds-update-certificate                     |
-
-| -installOptions      | installs                                   |
-|---------------|---------------------------------------------------|
 | rds-deployment       | rds-deployment                             |
-
-| -installOptions      | installs                                   |
-|---------------|---------------------------------------------------|
 | rds-deployment-existing-ad       | ad-domain-only-test (will prompt in case domain does not exist)     |
 |                      | rds-deployment-existing-ad                   |
-
-| -installOptions      | installs                                   |
-|---------------|---------------------------------------------------|
 | rds-deployment-uber  | ad-domain-only-test (will prompt in case domain does not exist)          |
 |                      | rds-deployment-existing-ad                 |
 |                      | rds-deployment-ha-broker                   |
 |                      | rds-deployment-ha-gateway                  |
 |                      | rds-update-certificate                     |
-
-| -installOptions      | installs                                   |
-|---------------|---------------------------------------------------|
 | rds-update-certificate| rds-update-certificate                    |
-
-| -installOptions      | installs                                   |
-|---------------|---------------------------------------------------|
 | rds-update-rdsh-collection| rds-update-rdsh-collection            |
 
 
