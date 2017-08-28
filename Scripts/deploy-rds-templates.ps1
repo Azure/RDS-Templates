@@ -236,7 +236,7 @@
 #>
 [CMDLETBINDING()]
 param(
-    [string]$random = ((get-random).ToString().Substring(0,9)), # positional requirement
+    [string]$random = ((get-random).ToString().Substring(0, 9)), # positional requirement
     [string]$adminUserName = "cloudadmin",
     [string]$adminPassword = "Password$($random)!", 
     [string]$applicationId, 
@@ -555,153 +555,158 @@ function check-parameterFile($parameterFile, $deployment)
 # ----------------------------------------------------------------------------------------------------------------
 function check-parameters()
 {
-    write-host "checking number of instances"
-    if ($numberofRdshInstances -lt 1 -or $numberofRdshInstances -gt $maxRdshTestInstances)
+    try 
     {
-        write-host "numberOfRdshInstances should be greater than 1 and less than 100. exiting"
-        exit 1
-    }
-
-    if (!$deploymentName)
-    {
-        $deploymentName = $resourceGroup
-    }
-
-    write-host "checking resource group"
-
-    if (!$resourceGroup)
-    {
-        write-warning "resourcegroup is a mandatory argument. supply -resourceGroup argument and restart script."
-        exit 1
-    }
-
-    if ($resourceGroup -ne $resourceGroup.ToLower())
-    {
-        write-warning "resourcegroup currently needs to be lower case due to issue 43. exiting script."
-        exit 1
-    }
-
-    if ($resourceGroup.Contains("-"))
-    {
-        write-warning "resourcegroup currently needs not have '-' due to issue 43. exiting script."
-        exit 1
-    }
-
-    write-host "checking ad domain name"
-
-    if (!$domainName)
-    {
-        $domainName = "$($resourceGroup.ToLower()).lab"
-        write-host "domain name '$($domainName)' should populated. example: contoso.com"
-        write-host "exiting"
-        exit 1
-    }
-
-    if (!$domainName.Contains("."))
-    {
-        write-host "domain name '$($domainName)' should be fqdn. example: contoso.com"
-        write-host "exiting"
-        exit 1
-    }
-
-    if ($domainName.IndexOf(".") -gt 15)
-    {
-        write-host "error: base domain name greater than 15 characters $($domainName). use -domainName with a new shortend name and restart script." -ForegroundColor Yellow
-        write-host "exiting"
-        exit 1
-    }
-
-    write-host "checking dns label"
-
-    if (!$dnsLabelPrefix)
-    {
-        write-host "dns label prefix '$($dnsLabelPrefix)' should be populated. example: 'rdsgateway' or '$($resourceGroup)'"
-        write-host "exiting"
-        exit 1
-    }
-
-    if ($dnsLabelPrefix -ne $dnsLabelPrefix.ToLower())
-    {
-        write-host "dns label prefix '$($dnsLabelPrefix)' should be lower case. example: 'rdsgateway' or '$($resourceGroup.ToLower())'"
-        write-host "exiting"
-        exit 1
-    }
-
-    if ($dnsLabelPrefix.Contains("."))
-    {
-        write-host "dns label prefix '$($dnsLabelPrefix)' should not contain '.'"
-        write-host "exiting"
-        exit 1
-    }
-
-    $cloudAppDns = "$($dnsLabelPrefix).$($location).cloudapp.azure.com"
-    if (Resolve-DnsName -Name $cloudAppDns -ErrorAction SilentlyContinue)
-    {
-        Write-Warning "dns name already exists! '$($cloudAppDns)'. if not recreating deployment, you may need to select new unique name."
-    }
-
-    write-host "checking location"
-
-    if (!(Get-AzureRmLocation | Where-Object Location -Like $location) -or !$location)
-    {
-        (Get-AzureRmLocation).Location
-        write-warning "location: $($location) not found. supply -location using one of the above locations and restart script."
-        exit 1
-    }
-
-    write-host "checking vm size"
-
-    if (!(Get-AzureRmVMSize -Location $location | Where-Object Name -Like $rdshVmSize))
-    {
-        Get-AzureRmVMSize -Location $location
-        write-warning "rdshVmSize: $($rdshVmSize) not found in $($location). correct -rdshVmSize using one of the above options and restart script."
-        exit 1
-    }
-
-    write-host "checking sku"
-
-    if (!(Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsServer -Offer WindowsServer | Where-Object Skus -Like $imageSKU))
-    {
-        Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsServer -Offer WindowsServer 
-        write-warning "image sku: $($imageSku) not found in $($location). correct -imageSKU using one of the above options and restart script."
-        exit 1
-    }
-
-    write-host "checking password"
-
-    if (!$credentials)
-    {
-        if (!$adminPassword)
+        
+    
+    
+        write-host "checking number of instances"
+        if ($numberofRdshInstances -lt 1 -or $numberofRdshInstances -gt $maxRdshTestInstances)
         {
-            $global:credential = Get-Credential
+            write-host "numberOfRdshInstances should be greater than 1 and less than 100. exiting"
+            exit 1
+        }
+
+        if (!$deploymentName)
+        {
+            $deploymentName = $resourceGroup
+        }
+
+        write-host "checking resource group"
+
+        if (!$resourceGroup)
+        {
+            write-warning "resourcegroup is a mandatory argument. supply -resourceGroup argument and restart script."
+            exit 1
+        }
+
+        if ($resourceGroup -ne $resourceGroup.ToLower())
+        {
+            write-warning "resourcegroup currently needs to be lower case due to issue 43. exiting script."
+            exit 1
+        }
+
+        if ($resourceGroup.Contains("-"))
+        {
+            write-warning "resourcegroup currently needs not have '-' due to issue 43. exiting script."
+            exit 1
+        }
+
+        write-host "checking ad domain name"
+
+        if (!$domainName)
+        {
+            $domainName = "$($resourceGroup.ToLower()).lab"
+            write-host "domain name '$($domainName)' should populated. example: contoso.com"
+            write-host "exiting"
+            exit 1
+        }
+
+        if (!$domainName.Contains("."))
+        {
+            write-host "domain name '$($domainName)' should be fqdn. example: contoso.com"
+            write-host "exiting"
+            exit 1
+        }
+
+        if ($domainName.IndexOf(".") -gt 15)
+        {
+            write-host "error: base domain name greater than 15 characters $($domainName). use -domainName with a new shortend name and restart script." -ForegroundColor Yellow
+            write-host "exiting"
+            exit 1
+        }
+
+        write-host "checking dns label"
+
+        if (!$dnsLabelPrefix)
+        {
+            write-host "dns label prefix '$($dnsLabelPrefix)' should be populated. example: 'rdsgateway' or '$($resourceGroup)'"
+            write-host "exiting"
+            exit 1
+        }
+
+        if ($dnsLabelPrefix -ne $dnsLabelPrefix.ToLower())
+        {
+            write-host "dns label prefix '$($dnsLabelPrefix)' should be lower case. example: 'rdsgateway' or '$($resourceGroup.ToLower())'"
+            write-host "exiting"
+            exit 1
+        }
+
+        if ($dnsLabelPrefix.Contains("."))
+        {
+            write-host "dns label prefix '$($dnsLabelPrefix)' should not contain '.'"
+            write-host "exiting"
+            exit 1
+        }
+
+        $cloudAppDns = "$($dnsLabelPrefix).$($location).cloudapp.azure.com"
+        if (Resolve-DnsName -Name $cloudAppDns -ErrorAction SilentlyContinue)
+        {
+            Write-Warning "dns name already exists! '$($cloudAppDns)'. if not recreating deployment, you may need to select new unique name."
+        }
+
+        write-host "checking location"
+
+        if (!(Get-AzureRmLocation | Where-Object Location -Like $location) -or !$location)
+        {
+            (Get-AzureRmLocation).Location
+            write-warning "location: $($location) not found. supply -location using one of the above locations and restart script."
+            exit 1
+        }
+
+        write-host "checking vm size"
+
+        if (!(Get-AzureRmVMSize -Location $location | Where-Object Name -Like $rdshVmSize))
+        {
+            Get-AzureRmVMSize -Location $location
+            write-warning "rdshVmSize: $($rdshVmSize) not found in $($location). correct -rdshVmSize using one of the above options and restart script."
+            exit 1
+        }
+
+        write-host "checking sku"
+
+        if (!(Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsServer -Offer WindowsServer | Where-Object Skus -Like $imageSKU))
+        {
+            Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsServer -Offer WindowsServer 
+            write-warning "image sku: $($imageSku) not found in $($location). correct -imageSKU using one of the above options and restart script."
+            exit 1
+        }
+
+        write-host "checking password"
+
+        if (!$credentials)
+        {
+            if (!$adminPassword)
+            {
+                $global:credential = Get-Credential
+            }
+            else
+            {
+                $SecurePassword = $adminPassword | ConvertTo-SecureString -AsPlainText -Force  
+                $global:credential = new-object Management.Automation.PSCredential -ArgumentList $adminUsername, $SecurePassword
+            }
         }
         else
         {
-            $SecurePassword = $adminPassword | ConvertTo-SecureString -AsPlainText -Force  
-            $global:credential = new-object Management.Automation.PSCredential -ArgumentList $adminUsername, $SecurePassword
+            $global:credential = $credentials
         }
-    }
-    else
-    {
-        $global:credential = $credentials
-    }
 
-    $adminUsername = $global:credential.UserName
-    $adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:credential.Password)) 
+        $adminUsername = $global:credential.UserName
+        $adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:credential.Password)) 
 
-    $count = 0
-    # uppercase check
-    if ($adminPassword -match "[A-Z]") { $count++ }
-    # lowercase check
-    if ($adminPassword -match "[a-z]") { $count++ }
-    # numeric check
-    if ($adminPassword -match "\d") { $count++ }
-    # specialKey check
-    if ($adminPassword -match "\W") { $count++ } 
+        $count = 0
+        # uppercase check
+        if ($adminPassword -match "[A-Z]") { $count++ }
+        # lowercase check
+        if ($adminPassword -match "[a-z]") { $count++ }
+        # numeric check
+        if ($adminPassword -match "\d") { $count++ }
+        # specialKey check
+        if ($adminPassword -match "\W") { $count++ } 
 
-    if ($adminPassword.Length -lt 8 -or $adminPassword.Length -gt 123 -or $count -lt 3)
-    {
-        Write-warning @"
+        if ($adminPassword.Length -lt 8 -or $adminPassword.Length -gt 123 -or $count -lt 3)
+        {
+            Write-warning @"
             azure password requirements at time of writing (3/2017):
             The supplied password must be between 8-123 characters long and must satisfy at least 3 of password complexity requirements from the following: 
                 1) Contains an uppercase character
@@ -711,14 +716,20 @@ function check-parameters()
             
             correct password and restart script. 
 "@
-        exit 1
-    }
+            exit 1
+        }
 
-    if ($monitor)
-    {
-        run-monitor
+        if ($monitor)
+        {
+            run-monitor
+        }
     }
-    
+    catch
+    {
+        Write-Warning "exception checking parameters. continuing WITHOUT parameter validation!"
+        write-error "$($error | out-string)"
+        $error.clear()
+    }
 }
 
 # ----------------------------------------------------------------------------------------------------------------
