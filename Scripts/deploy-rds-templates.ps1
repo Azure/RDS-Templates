@@ -300,10 +300,16 @@ function main()
     $timer = (get-date)
     get-variable | out-string
 
+    if(!(runas-admin))
+    {
+        exit 1
+    }
+    
     write-host "using random: $($random)" -foregroundcolor yellow
     write-host "using password: $($adminPassword)" -foregroundcolor yellow
     write-host "using resource group: $($resourceGroup)" -foregroundcolor yellow
     write-host "authenticating to azure"
+
     authenticate-azureRm
 
     write-host "checking tenant id"
@@ -1022,6 +1028,18 @@ function run-postConnect()
     {
         Invoke-Expression -Command "$($connectScript) -rdWebUrl `"$($rdWebSite)`""
     }
+}
+
+# ----------------------------------------------------------------------------------------------------------------
+function runas-admin()
+{
+    if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+    {   
+        Write-Warning "please restart script in administrator powershell session. exiting..."
+        return $false
+    }
+
+    return $true
 }
 
 # ----------------------------------------------------------------------------------------------------------------
