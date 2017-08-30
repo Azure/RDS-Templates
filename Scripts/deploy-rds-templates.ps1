@@ -236,7 +236,7 @@
 #>
 [CMDLETBINDING()]
 param(
-    [string]$random = ((get-random).ToString().Substring(0, 9)), # positional requirement
+    [string]$random = ((get-random).ToString().Substring(0, 5)), # positional requirement
     [string]$adminUserName = "cloudadmin",
     [string]$adminPassword = "Password$($random)!", 
     [string]$applicationId, 
@@ -513,7 +513,7 @@ function check-forExistingAdDeployment()
     }
 }
 # ----------------------------------------------------------------------------------------------------------------
-function check-parameterFile($parameterFile, $deployment)
+function check-parameterFile($parameterFile, $deployment, $updateUrl = "")
 {
     write-host "checking parameter file $($parameterFile) for $($deployment)" -foregroundcolor Green
     $ret = $false
@@ -535,8 +535,14 @@ function check-parameterFile($parameterFile, $deployment)
     if (!$ret)
     {
         # check repo
-        write-host "downloading template from repo"
-        if (get-urlJsonFile -updateUrl "$($templateBaseRepoUri)/$($deployment)/$($templateFileName)" -destinationFile $parameterFile)
+        if(!$updateUrl)
+        {
+            $updateUrl = "$($templateBaseRepoUri)/$($deployment)/$($templateFileName)"
+        }
+
+        write-host "downloading template from repo $($updateUrl)"
+
+        if (get-urlJsonFile -updateUrl $updateUrl -destinationFile $parameterFile)
         {
             $ret = $true
         }
@@ -790,6 +796,7 @@ function create-cert
         {
             Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Remove-Item -Force
             $ret = .\ps-certreq.ps1  -subject "*.$($domainName)" -outputDir $env:TEMP
+            write-host $ret
             $mypwd = ConvertTo-SecureString -String $adminPassword -Force -AsPlainText
             Get-ChildItem -Path cert:\LocalMachine\My -Recurse | where-object Subject -Match $domainName | Export-PfxCertificate -Password $mypwd -FilePath $pfxFilePath -Force
             # use post import to trusted root
@@ -887,13 +894,26 @@ function deploy-template($templateFile, $parameterFile, $deployment)
                     -TemplateParameterFile $parameterFile "
 
     $error.Clear() 
+
     if (!$whatIf)
     {
-        $ret = New-AzureRmResourceGroupDeployment -Name $deployment `
-            -ResourceGroupName $resourceGroup `
-            -DeploymentDebugLogLevel All `
-            -TemplateFile $templateFile `
-            -TemplateParameterFile $parameterFile
+        if($VerbosePreference -ne "SilentlyContinue")
+        {
+            $ret = New-AzureRmResourceGroupDeployment -Name $deployment `
+                -ResourceGroupName $resourceGroup `
+                -DeploymentDebugLogLevel All `
+                -TemplateFile $templateFile `
+                -TemplateParameterFile $parameterFile `
+                -Verbose
+        }
+        else 
+        {
+            $ret = New-AzureRmResourceGroupDeployment -Name $deployment `
+                -ResourceGroupName $resourceGroup `
+                -DeploymentDebugLogLevel All `
+                -TemplateFile $templateFile `
+                -TemplateParameterFile $parameterFile            
+        }
     }
     else
     {
@@ -1049,13 +1069,8 @@ function start-ad-domain-only-test()
     write-warning "$($deployment) should only be used for testing and NOT production"
     write-host "$(get-date) starting '$($deployment)' configuration..." -foregroundcolor cyan
     $templateFile = "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/bb24e0c10dd73b818dc492133522ceaf72887cd5/active-directory-new-domain/azuredeploy.json"
-
     $deployFile = "$($env:TEMP)\azuredeploy.json"
-    if (!(get-urlJsonFile -updateUrl "$($templateFile)" -destinationFile $deployFile))
-    {
-        write-error "unable to get $($templateFile). exiting"
-        exit 1
-    }
+    check-parameterFile -parameterFile $deployFile -deployment $deployment -updateUrl $templateFile
     check-deployment -deployment $deployment
 
     $ajson = get-content -raw -Path $deployFile
