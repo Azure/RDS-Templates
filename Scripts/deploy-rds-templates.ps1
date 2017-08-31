@@ -813,7 +813,7 @@ function create-cert
                         -vaultName $vaultName `
                         -uri 'https://$($resourceGroup)/$($domainName)' `
                         -resourceGroup $resourceGroup `
-                        -adApplicationName 'cert$($resourceGroup)$($domainName)'"
+                        -adApplicationName 'rdscert$($resourceGroup)'"
         if (!$whatIf)
         {
             $ret = .\azure-rm-aad-add-key-vault.ps1 -pfxFilePath $pfxFilePath `
@@ -822,7 +822,7 @@ function create-cert
                 -vaultName $vaultName `
                 -uri "https://$($resourceGroup)/$($domainName)" `
                 -resourceGroup $resourceGroup `
-                -adApplicationName "cert$($resourceGroup)$($domainName)"
+                -adApplicationName "rdscert$($resourceGroup)"
             return $ret
         }
     }
