@@ -236,7 +236,7 @@
 #>
 [CMDLETBINDING()]
 param(
-    [string]$random = ((get-random).ToString().Substring(0, 5)), # positional requirement
+    [string]$random = ((get-random).ToString().Substring(0, 9)), # positional requirement
     [string]$adminUserName = "cloudadmin",
     [string]$adminPassword = "Password$($random)!", 
     [string]$applicationId, 
