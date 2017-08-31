@@ -11,8 +11,9 @@ configuration DomainJoin
     
     Import-DscResource -ModuleName xActiveDirectory, xComputerManagement
 
-    $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$($adminCreds.UserName)", $adminCreds.Password)
-   
+    $username = $adminCreds.UserName -split '\\' | select -last 1
+    $domainCreds = New-Object System.Management.Automation.PSCredential ("$($username)@$($domainName)", $adminCreds.Password)
+       
     Node localhost
     {
         LocalConfigurationManager
@@ -154,7 +155,7 @@ configuration RDSDeployment
     $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
 
     $username = $adminCreds.UserName -split '\\' | select -last 1
-    $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$username", $adminCreds.Password)
+    $domainCreds = New-Object System.Management.Automation.PSCredential ("$($username)@$($domainName)", $adminCreds.Password)
 
     if (-not $connectionBroker)   { $connectionBroker = $localhost }
     if (-not $webAccessServer)    { $webAccessServer  = $localhost }
