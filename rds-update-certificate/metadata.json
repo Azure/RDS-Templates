@@ -2,6 +2,6 @@
   "itemDisplayName": "Update RDS certificates template",
   "description": "This template configures certificates in RDS deployment",
   "summary": "Imports a PFX certificate from Azure Key Vault and configures RDS roles to use the certificate",
-  "githubUsername": "mmarch",
-  "dateUpdated": "2017-06-10"
+  "githubUsername": "jagilber",
+  "dateUpdated": "2017-07-30"
 }

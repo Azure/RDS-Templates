@@ -2,35 +2,17 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "_artifactsLocation": {
-      "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-existing-ad/"
-    },
     "dnsLabelPrefix": {
-      "value": "{enter_unique_external_fqdn_prefix_here (example:%resourceGroupName%)}"
+      "value": "GEN-UNIQUE"
     },
-    "existingAdminPassword": {
-      "value": "{enter_existing_adminUsername_password_here}"
+    "adminPassword": {
+        "value": "GEN-PASSWORD"
     },
-    "existingAdminUsername": {
-      "value": "cloudadmin"
-    },
-    "existingDomainName": {
-      "value": "contoso.com"
-    },
-    "existingSubnetName": {
-      "value": "subnet"
-    },
-    "existingVnetName": {
+    "existingVnet": {
       "value": "vnet"
     },
-    "imageSKU": {
-      "value": "2016-Datacenter"
-    },
-    "numberOfRdshInstances": {
-      "value": 2
-    },
-    "rdshVmSize": {
-      "value": "Standard_A2"
+    "existingSubnet": {
+      "value": "Subnet"
     }
   }
 }
