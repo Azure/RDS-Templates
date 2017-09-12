@@ -242,14 +242,8 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "dnsLabelPrefix": {
-            "value": "[variables('gwdnsLabelPrefix')]"
-          },
           "gatewayLoadBalancer": {
             "value": "[variables('loadBalancer')]"
-          },
-          "gatewayPublicIp": {
-            "value": "[variables('gatewaypublicIp')]"
           },
           "backendAddressPools": {
             "value": "[variables('backEndAddressPool')]"
@@ -266,13 +260,13 @@
           "adminPassword": {
             "value": "[parameters('adminPassword')]"
           },
-          "numberOfWebGwInstances": {
+          "numberOfNewWebGwInstances": {
             "value": "[parameters('numberOfWebGwInstances')]"
           },
           "brokerServer": {
             "value": "[variables('rdBrokerServer')]"
           },
-          "WebURL": {
+          "publicIPAddressDNSName": {
             "value": "[variables('rdGatewayWebURL')]"
           },
           "domainNetbios": {

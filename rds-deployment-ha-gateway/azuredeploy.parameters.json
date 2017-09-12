@@ -17,14 +17,11 @@
     "brokerServer": {
       "value": "Broker.Mydomain.local"
     },
-    "WebURL": {
+    "publicIPAddressDSName": {
       "value": "RDS-WebURL"
     },
     "domainNetbios": {
       "value": "Mydomain"
-    },
-    "dnsLabelPrefix": {
-      "value": "GEN-UNIQUE"
     },
     "storageAccountName": {
       "value": "GEN-UNIQUE"
@@ -32,7 +29,7 @@
     "gw-availabilityset": {
       "value": "gw-availabilityset"
     },
-    "loadBalancer": {
+    "gatewayLoadBalancer": {
       "value": "loadBalancer"
     },
     "backendAddressPools": {
@@ -43,6 +40,12 @@
     },
     "existingSubnet": {
       "value": "Subnet"
+    },
+    "imageSKU": {
+      "value": "2016-Datacenter"
+    },
+    "vmSize": {
+      "value": "Standard_A2"
     }
   }
 }
