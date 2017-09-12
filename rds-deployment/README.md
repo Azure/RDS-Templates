@@ -43,7 +43,7 @@ Click the button below to deploy
         * Contains a numeric digit
         * Contains a special character.
 * adminUsername - Active Directory and local administrator account name. User name conforms to Active Directory user name convention.
-* gwdnsLabelPrefix -  DNS domain name which is typically the same as the Active Directory name but is not a requirement. See [Naming conventions in Active Directory](https://support.microsoft.com/en-us/help/909264/naming-conventions-in-active-directory-for-computers,-domains,-sites,-and-ous)
+* dnsLabelPrefix -  DNS name which is external name used to connect to environment. example name 'gateway.contoso.com' would be 'gateway'. See [Naming conventions in Active Directory](https://support.microsoft.com/en-us/help/909264/naming-conventions-in-active-directory-for-computers,-domains,-sites,-and-ous)
 * gwpublicIPAddressName - Azure resource name for the public load balanced address for RDS gateway. this is set to 'gwpip' by default.
 * imageSKU - operating system version for all instances. '2016-Datacenter' or '2012-R2-Datacenter'.
     * PowerShell enumeration: ```Get-AzureRmVMImageSku -Location $location -PublisherName MicrosoftWindowsServer -Offer WindowsServer```
@@ -77,14 +77,14 @@ After deploying this template, the following will need to be configured:
 * User Profile Disks (optional best practice)
 
 ### Connect to new deployment
-After successful deployment, the URL for the Remote Desktop Gateway (RDGW) and RDWeb site will be https://%gwdnsLabelPrefix%.%location%.cloudapp.azure.com/RDWeb. A self-signed certificate will be used for the deployment. To prevent certificate mismatch issues when connecting using a self-signed certificate, the certificate will need to be installed on the local client machines 'Trusted Root' certificate store. Best practice for a production environment is to configure the deployment to use a trusted certificate.
+After successful deployment, the URL for the Remote Desktop Gateway (RDGW) and RDWeb site will be https://%dnsLabelPrefix%.%location%.cloudapp.azure.com/RDWeb. A self-signed certificate will be used for the deployment. To prevent certificate mismatch issues when connecting using a self-signed certificate, the certificate will need to be installed on the local client machines 'Trusted Root' certificate store. Best practice for a production environment is to configure the deployment to use a trusted certificate.
 
 **To install the self-signed certificate into local machine 'Trusted Root' certificate store:**
 1. From administrative Internet Explorer, browse to URL.
    * Example from above: 'https://contoso.westus.cloudapp.azure.com'
 2. In address bar, click on 'Certificate Error' -> 'View Certificates'
 3. Select 'Install Certificate...'
-    * certificate name should be in the format of 'CN=%gwdnsLabelPrefix%.%location%.cloudapp.azure.com'
+    * certificate name should be in the format of 'CN=%dnsLabelPrefix%.%location%.cloudapp.azure.com'
     * Example from above: 'CN=contoso.westus.cloudapp.azure.com'
 6. Store location is 'Local Machine'
 7. Select 'Browse' for 'Place all certificates in the following store'
@@ -113,6 +113,6 @@ This script can be used review deployment events. This script requires at least 
 [Azure Resource Manager Deployment Log Reader](https://aka.ms/azure-rm-log-reader.ps1)
 
 ## Validation / Example deployment script
-In /scripts, [art-rds-deployment-test.ps1](scripts/art-rds-deployment-test.ps1) script is an example validation / deployment powershell script that can used for rds-deployment template testing. It performs basic validation of given parameters and will by default deploy a new deployment. See [/scripts/README.md](scripts/) for additional information about this script. 
+In github.com/azure/rds-templates/scripts, [deploy-rds-templates.ps1](https://github.com/Azure/rds-templates/Scripts/deploy-rds-templates.ps1) script is an example validation / deployment powershell script that can used for rds-deployment template testing. It performs basic validation of given parameters and will by default deploy a new deployment. See [/scripts/README.md](https://github.com/Azure/rds-templates/scripts) for additional information about this script. 
 
 `Tags: Remote Desktop Services, RDS`

@@ -1,23 +1,20 @@
 ﻿
 param 
     ( 
-        
-     [String]$WebGwServer,
      [String]$BrokerServer,
-     [String]$WebURL,
+     [String]$externalFqdn,
      [String]$Domainname,
-     [String]$DomainNetbios,
      [String]$username,
      [String]$password,
      [string]$ServerName = "gateway",
+     [int]$vmNameStartIndex,
      [int]$numberofwebServers,
      $validationKey64,
      $decryptionKey24
-    
     ) 
 
 $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
-$username = $DomainNetbios + "\" + $Username
+$username = $DomainName + "\" + $Username
 $cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
 
 configuration RDWebAccessdeployment
@@ -89,7 +86,7 @@ $ConfigData = @{
 } # End of Config Data
 
 # calling the configuration
-RDWebAccessdeployment -adminCreds $cred -connectionBroker $BrokerServer -webAccessServer $localhost -externalFqdn $WebURL -domainName $Domainname -ConfigurationData $ConfigData -Verbose
+RDWebAccessdeployment -adminCreds $cred -connectionBroker $BrokerServer -webAccessServer $localhost -externalFqdn $externalFqdn -domainName $Domainname -ConfigurationData $ConfigData -Verbose
 Start-DscConfiguration -Wait -Force -Path .\RDWebAccessdeployment -Verbose
 
 
@@ -115,7 +112,7 @@ configuration RDGatewaydeployment
         
         # RD Session Host count and naming prefix
         [Int]$numberOfRdshInstances = 1,
-        [String]$sessionHostNamingPrefix = "SessionHost-",
+        [String]$sessionHostNamingPrefix = "SessionHost",
 
         # Collection Name
         [String]$collectionName,
@@ -171,29 +168,21 @@ $ConfigData = @{
     )
 } # End of Config Data
 
-RDGatewaydeployment -adminCreds $cred -connectionBroker $BrokerServer -webAccessServer $localhost -externalFqdn $WebURL -domainName $Domainname -ConfigurationData $ConfigData -Verbose
+RDGatewaydeployment -adminCreds $cred -connectionBroker $BrokerServer -webAccessServer $localhost -externalFqdn $externalFqdn -domainName $Domainname -ConfigurationData $ConfigData -Verbose
 Start-DscConfiguration -Wait -Force -Path .\RDGatewaydeployment -Verbose
 
 
 #--Post Configuration for IIS RD web for Machine keys
 
 Write-Host "Username : $($username),   Password: $($password)"
-#$username = $DomainNetbios + "\" + $username
+#$username = $DomainName + "\" + $username
 #$cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
 $webServernameArray = New-Object System.Collections.ArrayList
 
-for ($i = 0; $i -le $numberofwebServers; $i++)
+for ($i = $vmNameStartIndex; $i -le ($numberofwebServers + $vmNameStartIndex); $i++)
 { 
-    if ($i -eq 0)
-    {
-        $webServername = "Gateway"
-        #Write-Host "For i = 0, srvername = $($webServername)"
-    }
-    else{
-    $servercount = $i - 1
-    $webServername = "gateway" + $servercount.ToString()
+    $webServername = $ServerName + $i.ToString("D2")
     #Write-Host "For $($i), servername = $($webServername)"
-        }
     $webServernameArray.Add($webServername) | Out-Null
 }
 
