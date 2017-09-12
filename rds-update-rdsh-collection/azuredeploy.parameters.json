@@ -1,48 +1,33 @@
-{
+﻿{
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "_artifactsLocation": {
-            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-update-rdsh-collection"
-        },
-        "_artifactsLocationSasToken": {
-            "value": ""
-        },
-        "availabilitySet": {
-            "value": "rdsh-availabilityset"
-        },
-        "existingAdminPassword": {
-            "value": ""
+        "existingDomainName": {
+            "value": "mydomain.local"
         },
         "existingAdminUsername": {
-            "value": "cloudadmin"
+            "value": "GEN-USER"
         },
-        "existingDomainName": {
-            "value": "contoso.com"
+        "existingAdminPassword": {
+            "value": "GEN-PASSWORD"
         },
-        "existingRdshCollectionName": {
-            "value": "Desktop Collection"
+        "rdshTemplateImageUri": {
+            "value": "https://rdsstorage.blob.core.windows.net/vhds/MyWindowServerOSImage.vhd"
         },
-        "existingSubnetName": {
-            "value": "subnet"
+        "rdshUpdateIteration": {
+            "value": "a"
+        },
+        "userLogoffTimeoutInMinutes": {
+            "value": 60
         },
         "existingVnetName": {
             "value": "vnet"
         },
-        "numberOfRdshInstances": {
-            "value": 2
+        "existingSubnetName": {
+            "value": "subnet"
         },
-        "rdshTemplateImageUri": {
-            "value": "https://{enter_storage_account_name_here}.core.windows.net/vhds/{enter_template_image_name_here}.vhd"
-        },
-        "rdshUpdateIteration": {
-            "value": "1"
-        },
-        "rdshVmSize": {
-            "value": "Standard_A2"
-        },
-        "userLogoffTimeoutInMinutes": {
-            "value": 60
+        "availabilitySet": {
+            "value": "rdsh-availabilityset"
         }
     }
 }

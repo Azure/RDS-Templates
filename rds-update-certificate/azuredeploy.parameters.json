@@ -2,38 +2,32 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "_artifactsLocation": {
-            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-update-certificate/"
-        },
-        "_artifactsLocationSasToken": {
-            "value": ""
-        },
-        "applicationId": {
-            "value": "{enter_existing_vault_certificate_application_id_here}"
-        },
-        "applicationPassword": {
-            "value": "{enter_existing_vault_certificate_password_here}"
-        },
-        "brokerVmName": {
-            "value": "rdcb-01"
+        "vaultName": {
+            "value": "myVault"
         },
         "certificateName": {
-            "value": "{enter_existing_vault_certificate_name_here}"
+            "value": "certificate"
         },
-        "existingAdminPassword": {
-            "value": "{enter_existing_adminUsername_password_here}"
+        "applicationId": {
+            "value": "GEN-UNIQUE"
         },
-        "existingAdminUsername": {
-            "value": "cloudadmin"
-        },
-        "existingDomainName": {
-            "value": "contoso.com"
+        "applicationPassword": {
+            "value": "GEN-PASSWORD"
         },
         "tenantId": {
-            "value": "{enter_existing_subscription_tenant_id_here}"
+            "value": "GEN-UNIQUE"
         },
-        "vaultName": {
-            "value": "{enter_existing_vault_name_here}"
+        "brokerVmName": {
+            "value": "cb-vm"
+        },
+        "existingDomainName": {
+            "value": "mydomain.local"
+        },
+        "existingAdminUsername": {
+            "value": "GEN-USER"
+        },
+        "existingAdminPassword": {
+            "value": "GEN-PASSWORD"
         }
     }
 }

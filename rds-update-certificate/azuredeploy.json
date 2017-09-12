@@ -37,7 +37,7 @@
             "metadata": {
                 "description": "Name of the RD Connection Broker VM resource in the deployment (the configure certificates script is executed on this VM)."
             },
-            "defaultValue": "rdcb-01"
+            "defaultValue": "cb-vm"
         },
         "existingDomainName": {
             "type": "string",
@@ -93,7 +93,7 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('brokerVmName'),'/customscript')]",
+      "name": "[concat(parameters('brokerVmName'),'/rds-update-certificate')]",
       "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "script"

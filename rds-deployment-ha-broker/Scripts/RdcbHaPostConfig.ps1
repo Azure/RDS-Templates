@@ -25,7 +25,8 @@ param
 
 $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
 $domainNetbios = (Get-ADDomain -Current LocalComputer).NetBIOSName
-$cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($domainNetbios + "\" + $username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
+$username = $domainNetbios + "\" + $Username
+$cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
 
 $ConfigData = @{
     AllNodes = @(
@@ -37,7 +38,7 @@ $ConfigData = @{
 } # End of Config Data
 
 $Logfile = ".\CB_PostConfig1.1_{0}.log" -f (get-date -Format "yyyyMMddhhmmss")
-
+ 
 function GetServersByRole($roleName)
 {
     $RemoteSqlOdbcconn = new-object System.Data.Odbc.OdbcConnection	
@@ -222,10 +223,10 @@ function SetupCB($compName, $clientURL)
 
 Function WriteLog
 {
- Param ([string]$logstring)
-
- Add-content $Logfile -value $logstring
- Write-Host $logstring
+   Param ([string]$logstring)
+ 
+   Add-content $Logfile -value $logstring
+   Write-Host $logstring
 }
 
 WriteLog("Starting PostConfig on machine $($localhost)")
@@ -240,33 +241,8 @@ if ($clientAccessName.ToLower().EndsWith($domainName) -eq $false)
 }
 
 #Impersonate user
-$ImpersonatedUser = @{}
-WriteLog "impersonating as '$username'..."
-Add-Type -Namespace Import -Name Win32 -MemberDefinition @'
-        [DllImport("advapi32.dll", SetLastError = true)]
-        public static extern bool LogonUser(string user, string domain, string password, int logonType, int logonProvider, out IntPtr token);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool CloseHandle(IntPtr handle);
-'@
-
-$tokenHandle = 0
-$returnValue = [Import.Win32]::LogonUser($userName, $domainName, $password, 2, 0, [ref]$tokenHandle)
-
-if (!$returnValue)
-{
-    $errCode = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error();
-    WriteLog "failed a call to LogonUser with error code: $errCode"
-    throw [System.ComponentModel.Win32Exception]$errCode
-}
-else
-{
-    $ImpersonatedUser.ImpersonationContext = [System.Security.Principal.WindowsIdentity]::Impersonate($tokenHandle)
-    [void][Import.Win32]::CloseHandle($tokenHandle)
-    WriteLog "impersonating user $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name) returnValue: '$returnValue'"
-}
-
-whoami
+WriteLog("Impersonate User: $($username)")
+.\New-ImpersonateUser.ps1 -Credential $cred
 
 SetupCB $localhost $sqlClientUrl
 SetupCB $existingBroker $sqlClientUrl
@@ -367,8 +343,6 @@ foreach ($rdwa in $rdwaMachines)
     #SetupRDWA $rdwa
 }
 
-Writelog "remove impersonation..."
-$ImpersonatedUser.ImpersonationContext.Undo()
-
+Remove-ImpersonateUser
 WriteLog("Completed setup")
 

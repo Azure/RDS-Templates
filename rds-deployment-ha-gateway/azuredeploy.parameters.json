@@ -2,50 +2,50 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "_artifactsLocation": {
-      "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/"
+    "adminPassword": {
+      "value": "GEN-PASSWORD"
     },
-    "backendAddressPools": {
-      "value": "backendAddressPool"
+    "adminUsername": {
+      "value": "GEN-USER"
     },
-    "brokerServer": {
-      "value": "rdcb-01.contoso.com"
-    },
-    "dnsLabelPrefix": {
-      "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
-    },
-    "existingAdminPassword": {
-      "value": "{enter_existing_adminUsername_password_here}"
-    },
-    "existingAdminUsername": {
-      "value": "cloudadmin"
-    },
-    "existingDomainName": {
-      "value": "contoso.com"
-    },
-    "existingSubnetName": {
-      "value": "subnet"
-    },
-    "existingVnetName": {
-      "value": "vnet"
-    },
-    "externalFqdn": {
-      "value": "{enter_external_fqdn_here(example: gateway.contoso.com)}"
-    },
-    "gatewayloadBalancer": {
-      "value": "loadBalancer"
-    },
-    "gatewayPublicIp": {
-      "value": "gwpip"
-    },
-    "gw-availabilityset": {
-      "value": "gw-availabilityset"
+    "adDomainName": {
+      "value": "mydomain.local"
     },
     "numberOfWebGwInstances": {
       "value": 1
     },
+    "brokerServer": {
+      "value": "Broker.Mydomain.local"
+    },
+    "publicIPAddressDSName": {
+      "value": "RDS-WebURL"
+    },
+    "domainNetbios": {
+      "value": "Mydomain"
+    },
     "storageAccountName": {
-      "value": "{enter_existing_storage_account_here}"
+      "value": "GEN-UNIQUE"
+    },
+    "gw-availabilityset": {
+      "value": "gw-availabilityset"
+    },
+    "gatewayLoadBalancer": {
+      "value": "loadBalancer"
+    },
+    "backendAddressPools": {
+      "value": "LBBAP"
+    },
+    "existingVnet": {
+      "value": "vnet"
+    },
+    "existingSubnet": {
+      "value": "Subnet"
+    },
+    "imageSKU": {
+      "value": "2016-Datacenter"
+    },
+    "vmSize": {
+      "value": "Standard_A2"
     }
   }
 }

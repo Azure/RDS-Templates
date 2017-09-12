@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
@@ -6,41 +6,40 @@
       "type": "string",
       "metadata": {
         "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'. For example johndns1 will result the final RDWEB access url like https://johndns1.westus.cloudapp.azure.com/RDWeb"
-      },
-      "defaultValue": "gateway"
+      }
     },
-    "existingDomainName": {
+    "adDomainName": {
       "type": "string",
       "metadata": {
-        "description": "The name of the existing AD domain. For example contoso.com"
+        "description": "The name of the AD domain. For example contoso.com"
       },
       "defaultValue": "contoso.com"
     },
-    "existingVnetName": {
+    "adVnetName": {
       "type": "string",
       "metadata": {
-        "description": "The existing vnet name of AD domain. For example 'vnet' or 'contosovnet'"
+        "description": "The vnet name of AD domain. For example johnvnet1"
       },
-      "defaultValue": "vnet"
+      "defaultValue": "[concat('ADVNET',resourceGroup().name)]"
     },
-    "existingSubnetName": {
+    "adSubnetName": {
       "type": "string",
       "metadata": {
-        "description": "The existing subnet name of AD domain. For example 'subnet' or 'contososubnet'"
+        "description": "The subnet name of AD domain. For example johnsubnet1"
       },
-      "defaultValue": "subnet"
+      "defaultValue": "[concat('ADStaticSubnet',resourceGroup().name)]"
     },
-    "existingAdminUserName": {
+    "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "The existing name of the administrator account in the domain. Exclusion list: 'administrator'. For example johnadmin"
+        "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'. For example johnadmin"
       },
-      "defaultValue": "cloudadmin"
+      "defaultValue": "vmadmin"
     },
-    "existingAdminPassword": {
+    "adminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The password for the administrator account in the domain"
+        "description": "The password for the administrator account of the new VM and the domain"
       },
       "defaultValue": "[concat('Subscription#',subscription().subscriptionId)]"
     },
@@ -57,24 +56,46 @@
     },
     "numberOfRdshInstances": {
       "type": "int",
-      "defaultValue": 2,
+      "defaultValue": 1,
       "metadata": {
-        "description": "Number of total Remote Desktop Session Hosts to create."
+        "description": "Number of RemoteDesktopSessionHosts"
       }
     },
     "rdshVmSize": {
       "type": "string",
+      "allowedValues": [
+        "Standard_A0",
+        "Standard_A1",
+        "Standard_A2",
+        "Standard_A3",
+        "Standard_A4",
+        "Standard_A5",
+        "Standard_A6",
+        "Standard_A7",
+        "Standard_D1",
+        "Standard_D2",
+        "Standard_D3",
+        "Standard_D4",
+        "Standard_D5"
+      ],
       "metadata": {
         "description": "The size of the RDSH VMs"
       },
-      "defaultValue": "Standard_A2"
+      "defaultValue": "Standard_A4"
     },
     "numberOfWebGwInstances": {
       "type": "int",
-      "defaultValue": 1,
+      "defaultValue": 2,
       "metadata": {
-        "description": "Number of additional RD Gateway / RD Web Access servers. value of 1 will give a total of 2 for HA."
+        "description": "Number of RD Gateway / RD Web Access servers"
       }
+    },
+    "domainNetbios": {
+      "type": "string",
+      "metadata": {
+        "description": "Netbios Name for the Domain"
+      },
+      "defaultValue": "contoso"
     },
     "vaultName": {
       "type": "string",
@@ -91,13 +112,13 @@
     "applicationId": {
       "type": "string",
       "metadata": {
-        "description": "Azure AD application Id used to access the certificate."
+        "description": "AD application Id used to access the certificate."
       }
     },
     "applicationPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "Azure AD application password to access certificate."
+        "description": "AD application password."
       }
     },
     "tenantId": {
@@ -115,7 +136,7 @@
     },
     "dnsServer": {
       "type": "string",
-      "defaultValue": "addc-01",
+      "defaultValue": "dc",
       "metadata": {
         "description": "The name of the DNS Server to add the DNS entry to for the Connection Broker Names"
       }
@@ -123,60 +144,53 @@
     "primaryDbConnectionString": {
       "type": "string",
       "metadata": {
-        "description": "Specifies the existing database primary connection string. Example odbc connection string: DRIVER=SQL Server Native Client 11.0;Server={enter_sql_server_here},1433;Database={enter_sql_database_here};Uid={enter_sql_admin_here}@{enter_sql_server_here};Pwd={enter_sql_password_here};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+        "description": "Specifies the database primary connection string. The database connection string supports both high availability configurations: -- Dedicated database server. Uses Windows Authentication to connect to the databse. -- Shared database server. Uses database authentication (such as SQL authentication) with a user name and password to connect to the database."
       }
     },
     "sqlServer": {
       "type": "string",
       "defaultValue": "sql01.contoso.com",
       "metadata": {
-        "description": "The name of the existing SQL server that the database is located on (only required for the Dedicated database server case w/Windows Auth)"
+        "description": "The name of the SQL server that the database is located on (only required for the Dedicated database server case w/Windows Auth)"
       }
-    },
-    "_artifactsLocation": {
-      "type": "string",
-      "metadata": {
-        "description": "The base URI repository where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
-      },
-      "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/"
     }
   },
   "variables": {
-    "basicRDSDeploymentexistingADLocation": "[concat(parameters('_artifactsLocation'),'rds-deployment-existing-ad')]",
+    "basicRDSDeploymentexistingADLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-existing-ad",
     "basicRDSDeploymentexistingADTemplate": "azuredeploy.json",
     "basicRDSDeploymentexistingAD": "CreateBasicRDSDeploymentExistingAD",
     "basicRDSDeploymentURL": "[concat(variables('basicRDSDeploymentexistingADLocation'),'/',variables('basicRDSDeploymentexistingADTemplate'))]",
-    "rdGatewayWebHAexistingRDSLocation": "[concat(parameters('_artifactsLocation'),'rds-deployment-ha-gateway')]",
+    "rdGatewayWebHAexistingRDSLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway",
     "rdGatewayWebHAexistingRDSTemplate": "azuredeploy.json",
     "rdGatewayWebHAexistingRDS": "CreateRDGatewayWebAccessHA",
     "rdGatewayWebHAURL": "[concat(variables('rdGatewayWebHAexistingRDSLocation'),'/',variables('rdGatewayWebHAexistingRDSTemplate'))]",
-    "sslDeploymentexistingRDSLocation": "[concat(parameters('_artifactsLocation'),'rds-update-certificate')]",
+    "sslDeploymentexistingRDSLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-update-certificate",
     "sslDeploymentexistingRDSTemplate": "azuredeploy.json",
     "sslDeploymentexistingRDS": "configureSSLonRDSDeployment",
     "sslDeploymentURL": "[concat(variables('sslDeploymentexistingRDSLocation'),'/',variables('sslDeploymentexistingRDSTemplate'))]",
-    "RdcbHaDeploymentexistingRDSLocation": "[concat(parameters('_artifactsLocation'),'rds-deployment-ha-broker')]",
+    "RdcbHaDeploymentexistingRDSLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-broker",
     "RdcbHaDeploymentexistingRDSTemplate": "azuredeploy.json",
     "RdcbHaDeploymentexistingRDS": "configureRdcbHaonRDSDeployment",
     "RdcbHaDeploymentURL": "[concat(variables('RdcbHaDeploymentexistingRDSLocation'),'/',variables('RdcbHaDeploymentexistingRDSTemplate'))]",
     "loadBalancer": "loadBalancer",
-    "gatewaypublicIp": "gwpip",
+    "gwdnsLabelPrefix": "[concat('gwd', resourceGroup().name)]",
+    "gatewaypublicIp": "gatewaypublicIp",
     "backEndAddressPool": "LBBAP",
     "rdgwAvailabilitySet": "gw-availabilityset",
     "rdcbAvailabilitySet": "cb-availabilityset",
-    "rdBrokerServer": "[concat(variables('brokerVmName'), '.', parameters('existingDomainName'))]",
-    "rdGatewayexternalFqdn": "[concat(variables('gatewayVmName'), '.', parameters('existingDomainName'))]",
+    "rdBrokerServer": "[concat('broker.',parameters('adDomainName'))]",
+    "rdGatewayWebURL": "[concat('gateway.',parameters('adDomainName'))]",
     "storageAccountName": "[tolower(concat('rdsa', uniqueString(resourceGroup().id)))]",
-    "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-01')]",
-    "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-01')]",
-    "brokerHostName": "[variables('brokerVmName')]",
-    "vmPrefix": ""
+    "brokerVmName": "cb-vm",
+    "brokerHostName": "broker"
   },
   "resources": [
     {
       "name": "[variables('basicRDSDeploymentexistingAD')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2016-02-01",
-      "dependsOn": [],
+      "dependsOn": [
+      ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -184,26 +198,23 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "_artifactsLocation": {
-            "value": "[variables('basicRDSDeploymentexistingADLocation')]"
-          },
           "dnsLabelPrefix": {
             "value": "[parameters('dnsLabelPrefix')]"
           },
-          "existingDomainName": {
-            "value": "[parameters('existingDomainName')]"
+          "adDomainName": {
+            "value": "[parameters('adDomainName')]"
           },
-          "existingVnetName": {
-            "value": "[parameters('existingVnetName')]"
+          "adVnetName": {
+            "value": "[parameters('adVnetName')]"
           },
-          "existingSubnetName": {
-            "value": "[parameters('existingSubnetName')]"
+          "adSubnetName": {
+            "value": "[parameters('adSubnetName')]"
           },
-          "existingAdminUserName": {
-            "value": "[parameters('existingAdminUserName')]"
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
           },
-          "existingAdminPassword": {
-            "value": "[parameters('existingAdminPassword')]"
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
           },
           "imageSKU": {
             "value": "[parameters('imageSKU')]"
@@ -231,12 +242,6 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "_artifactsLocation": {
-            "value": "[variables('rdGatewayWebHAexistingRDSLocation')]"
-          },
-          "dnsLabelPrefix": {
-            "value": "[parameters('dnsLabelPrefix')]"
-          },
           "gatewayLoadBalancer": {
             "value": "[variables('loadBalancer')]"
           },
@@ -246,14 +251,14 @@
           "gw-AvailabilitySet": {
             "value": "[variables('rdgwAvailabilitySet')]"
           },
-          "existingDomainName": {
-            "value": "[parameters('existingDomainName')]"
+          "adDomainName": {
+            "value": "[parameters('adDomainName')]"
           },
-          "existingAdminUserName": {
-            "value": "[parameters('existingAdminUserName')]"
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
           },
-          "existingAdminPassword": {
-            "value": "[parameters('existingAdminPassword')]"
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
           },
           "numberOfNewWebGwInstances": {
             "value": "[parameters('numberOfWebGwInstances')]"
@@ -261,8 +266,11 @@
           "brokerServer": {
             "value": "[variables('rdBrokerServer')]"
           },
-          "externalFqdn": {
-            "value": "[variables('rdGatewayexternalFqdn')]"
+          "publicIPAddressDNSName": {
+            "value": "[variables('rdGatewayWebURL')]"
+          },
+          "domainNetbios": {
+            "value": "[parameters('domainNetbios')]"
           },
           "storageAccountName": {
             "value": "[variables('storageAccountName')]"
@@ -270,11 +278,11 @@
           "imageSKU": {
             "value": "[parameters('imageSKU')]"
           },
-          "existingVnetName": {
-            "value": "[parameters('existingVnetName')]"
+          "existingVnet": {
+            "value": "[parameters('adVnetName')]"
           },
-          "existingSubnetName": {
-            "value": "[parameters('existingSubnetName')]"
+          "existingSubnet": {
+            "value": "[parameters('adSubnetName')]"
           }
         }
       }
@@ -293,9 +301,6 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "_artifactsLocation": {
-            "value": "[variables('RdcbHaDeploymentexistingRDSLocation')]"
-          },
           "clientAccessName": {
             "value": "[parameters('clientAccessName')]"
           },
@@ -303,10 +308,10 @@
             "value": "[parameters('dnsServer')]"
           },
           "existingAdminPassword": {
-            "value": "[parameters('existingAdminPassword')]"
+            "value": "[parameters('adminPassword')]"
           },
           "existingAdminUsername": {
-            "value": "[parameters('existingAdminUserName')]"
+            "value": "[parameters('adminUsername')]"
           },
           "existingBrokerAvailabilitySet": {
             "value": "[variables('rdcbAvailabilitySet')]"
@@ -315,13 +320,13 @@
             "value": "[variables('brokerHostName')]"
           },
           "existingDomainName": {
-            "value": "[parameters('existingDomainName')]"
+            "value": "[parameters('adDomainName')]"
           },
           "existingSubnetName": {
-            "value": "[parameters('existingSubnetName')]"
+            "value": "[parameters('adSubnetName')]"
           },
           "existingVnetName": {
-            "value": "[parameters('existingVnetName')]"
+            "value": "[parameters('adVnetName')]"
           },
           "primaryDbConnectionString": {
             "value": "[parameters('primaryDbConnectionString')]"
@@ -349,9 +354,6 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "_artifactsLocation": {
-            "value": "[variables('sslDeploymentexistingRDSLocation')]"
-          },
           "vaultName": {
             "value": "[parameters('vaultName')]"
           },
@@ -371,17 +373,18 @@
             "value": "[variables('brokerVmName')]"
           },
           "existingAdminUsername": {
-            "value": "[parameters('existingAdminUserName')]"
+            "value": "[parameters('adminUsername')]"
           },
           "existingAdminPassword": {
-            "value": "[parameters('existingAdminPassword')]"
+            "value": "[parameters('adminPassword')]"
           },
           "existingDomainName": {
-            "value": "[parameters('existingDomainName')]"
+            "value": "[parameters('adDomainName')]"
           }
         }
       }
     }
   ],
-  "outputs": {}
+  "outputs": {
+  }
 }
