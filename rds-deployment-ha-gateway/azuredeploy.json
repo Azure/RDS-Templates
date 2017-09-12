@@ -43,9 +43,9 @@
     },
     "numberOfNewWebGwInstances": {
       "type": "int",
-      "defaultValue": 2,
+      "defaultValue": 1,
       "metadata": {
-        "description": "Number of RD Gateway instances"
+        "description": "Number of RD Gateway instances to create"
       }
     },
     "brokerServer": {

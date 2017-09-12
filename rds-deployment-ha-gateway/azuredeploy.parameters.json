@@ -11,8 +11,8 @@
     "adDomainName": {
       "value": "mydomain.local"
     },
-    "numberOfNewWebGwInstances": {
-      "value": 2
+    "numberOfWebGwInstances": {
+      "value": 1
     },
     "brokerServer": {
       "value": "Broker.Mydomain.local"
