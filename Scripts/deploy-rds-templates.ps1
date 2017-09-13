@@ -305,6 +305,13 @@ function main()
         exit 1
     }
     
+    if((get-location).Path.Contains(" "))
+    {
+        write-error "working directory contains space. move scripts to path containing no spaces and restart."
+        exit 1
+    }
+    
+
     write-host "using random: $($random)" -foregroundcolor yellow
     write-host "using password: $($adminPassword)" -foregroundcolor yellow
     write-host "using resource group: $($resourceGroup)" -foregroundcolor yellow
