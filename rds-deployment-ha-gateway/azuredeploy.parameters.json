@@ -2,50 +2,50 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "adminPassword": {
-      "value": "GEN-PASSWORD"
+    "_artifactsLocation": {
+      "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/"
     },
-    "adminUsername": {
-      "value": "GEN-USER"
-    },
-    "adDomainName": {
-      "value": "mydomain.local"
-    },
-    "numberOfWebGwInstances": {
-      "value": 1
+    "backendAddressPools": {
+      "value": "backendAddressPool"
     },
     "brokerServer": {
-      "value": "Broker.Mydomain.local"
+      "value": "rdcb-01.contoso.com"
     },
-    "publicIPAddressDSName": {
-      "value": "RDS-WebURL"
+    "dnsLabelPrefix": {
+      "value": "{enter_external_fqdn_prefix_here (example:gateway)}"
     },
-    "domainNetbios": {
-      "value": "Mydomain"
+    "existingAdminPassword": {
+      "value": "{enter_existing_adminUsername_password_here}"
     },
-    "storageAccountName": {
-      "value": "GEN-UNIQUE"
+    "existingAdminUsername": {
+      "value": "cloudadmin"
+    },
+    "existingDomainName": {
+      "value": "contoso.com"
+    },
+    "existingSubnetName": {
+      "value": "subnet"
+    },
+    "existingVnetName": {
+      "value": "vnet"
+    },
+    "externalFqdn": {
+      "value": "{enter_external_fqdn_here(example: gateway.contoso.com)}"
+    },
+    "gatewayloadBalancer": {
+      "value": "loadBalancer"
+    },
+    "gatewayPublicIp": {
+      "value": "gwpip"
     },
     "gw-availabilityset": {
       "value": "gw-availabilityset"
     },
-    "gatewayLoadBalancer": {
-      "value": "loadBalancer"
+    "numberOfWebGwInstances": {
+      "value": 1
     },
-    "backendAddressPools": {
-      "value": "LBBAP"
-    },
-    "existingVnet": {
-      "value": "vnet"
-    },
-    "existingSubnet": {
-      "value": "Subnet"
-    },
-    "imageSKU": {
-      "value": "2016-Datacenter"
-    },
-    "vmSize": {
-      "value": "Standard_A2"
+    "storageAccountName": {
+      "value": "{enter_existing_storage_account_here}"
     }
   }
 }

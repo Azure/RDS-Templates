@@ -1,6 +1,6 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
   "parameters": {
     "clientAccessName": {
       "type": "string",
@@ -11,7 +11,7 @@
     },
     "dnsServer": {
       "type": "string",
-      "defaultValue": "dc",
+      "defaultValue": "addc-01",
       "metadata": {
         "description": "The name of the DNS Server to add the DNS entry to for the Connection Broker Names"
       }
@@ -24,6 +24,7 @@
     },
     "existingAdminUsername": {
       "type": "string",
+      "defaultValue": "cloudAdmin",
       "metadata": {
         "description": "Name of domain user account with administrative priveledges to manage RDS deployment"
       }
@@ -37,7 +38,7 @@
     },
     "existingBrokerHostname": {
       "type": "string",
-      "defaultValue": "broker",
+      "defaultValue": "rdcb-01",
       "metadata": {
         "description": "The host name of the existing Connection Broker vm"
       }
@@ -85,14 +86,22 @@
         "description": "Windows server version for the second Broker; should be same version as the first broker in the deployment"
       },
       "defaultValue": "2016-Datacenter"
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+      },
+      "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-broker/"
     }
   },
-
   "variables": {
-    "brokerVmName": "cb-vm-2",
-    "brokerNicName": "cb-2-nic",
+    "brokerVmName": "[concat(variables('vmPrefix'), 'rdcb-02')]",
+    "brokerNicName": "[concat(variables('brokerVmName'), '-nic')]",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'rdsstorage2')]",
+    "storageAccountType": "Standard_LRS",
     "sqlClientUrl": "http://go.microsoft.com/fwlink/?LinkID=239648&clcid=0x409",
+    "vmPrefix": "",
     "p": {
       "broker": "[concat(' -existingBroker ', parameters('existingBrokerHostname'))]",
       "connstr": "[concat(' -primaryDbConnectionString \"', parameters('primaryDbConnectionString'), '\"')]",
@@ -105,143 +114,138 @@
       "sqlserver": "[concat(' -sqlServer \"', parameters('sqlServer'), '\"')]"
     },
     "scriptParameters": "[concat(variables('p').broker, variables('p').connstr, variables('p').domain, variables('p').user, variables('p').pwd, variables('p').can, variables('p').sqlnclient, variables('p').dnsserver, variables('p').sqlserver)]",
-    "assetLocation": "https://raw.githubusercontent.com/Azure/azure-QuickStart-Templates/master/rds-deployment",
-    "scriptLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-broker/Scripts",
-    "scriptFileName": "RdcbHaPostConfig.ps1",
-    "impersonateScript": "https://gallery.technet.microsoft.com/scriptcenter/Impersonate-a-User-9bfeff82/file/127189/1/New-ImpersonateUser.ps1"
+    "scriptLocation": "[concat(parameters('_artifactsLocation'), '/Scripts')]",
+    "scriptFileName": "RdcbHaPostConfig.ps1"
   },
-
-    "resources": [
-        {
-            "apiVersion": "2015-06-15",
-            "type": "Microsoft.Storage/storageAccounts",
-            "name": "[variables('storageAccountName')]",
-            "location": "[resourceGroup().location]",
+  "resources": [
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "accountType": "[variables('storageAccountType')]"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('brokerNicName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
             "properties": {
-                "accountType": "Standard_LRS"
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]"
+              }
             }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2016-04-30-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('brokerVmName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('brokerNicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_A2"
         },
-        {
-            "apiVersion": "2015-06-15",
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "[variables('brokerNicName')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-            ],
-            "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]"
-                            }
-                        }
-                    }
-                ]
-            }
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('existingBrokerAvailabilitySet'))]"
         },
-        {
-            "apiVersion": "2015-06-15",
-            "type": "Microsoft.Compute/virtualMachines",
-            "name": "[variables('brokerVmName')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
-                "[concat('Microsoft.Network/networkInterfaces/', variables('brokerNicName'))]"
-            ],
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "Standard_A2"
-                },
-                "availabilitySet": {
-                    "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('existingBrokerAvailabilitySet'))]"
-                },
-                "osProfile": {
-                    "computerName": "cb-vm-2",
-                    "adminUsername": "[parameters('existingAdminUsername')]",
-                    "adminPassword": "[parameters('existingAdminPassword')]"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "[parameters('windowsServerVersion')]",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "name": "osdisk",
-                        "vhd": {
-                            "uri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/vhds/',variables('brokerVmName'),'-osdisk.vhd')]"
-                        },
-                        "caching": "ReadWrite",
-                        "createOption": "FromImage"
-                    }
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('brokerNicName'))]"
-                        }
-                    ]
-                }
-            }
+        "osProfile": {
+          "computerName": "[variables('brokerVmName')]",
+          "adminUsername": "[parameters('existingAdminUsername')]",
+          "adminPassword": "[parameters('existingAdminPassword')]"
         },
-        {
-            "apiVersion": "2015-06-15",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('brokerVmName'),'/configuration')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachines',variables('brokerVmName'))]"
-            ],
-            "properties": {
-                "publisher": "Microsoft.Powershell",
-                "type": "DSC",
-                "typeHandlerVersion": "2.20",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "modulesUrl": "[concat(variables('assetLocation'),'/Configuration.zip')]",
-                    "configurationFunction": "Configuration.ps1\\DomainJoin",
-                    "properties": {
-                        "domainName": "[parameters('existingDomainName')]",
-                        "adminCreds": {
-                            "UserName": "[parameters('existingAdminUsername')]",
-                            "Password": "PrivateSettingsRef:adminPassword"
-                        }
-                    }
-                },
-                "protectedSettings": {
-                    "Items": {
-                        "adminPassword": "[parameters('existingAdminPassword')]"
-                    }
-                }
-            }
-        },
-      {
-        "apiVersion": "2015-06-15",
-        "name": "[concat(variables('brokerVmName'),'/ha-broker-configuraiton')]",
-        "type": "Microsoft.Compute/virtualMachines/extensions",
-        "location": "[resourceGroup().location]",
-        "dependsOn": [
-          "[concat('Microsoft.Compute/virtualMachines/', variables('brokerVmName'),'/extensions/','configuration')]"
-        ],
-        "properties": {
-          "publisher": "Microsoft.Compute",
-          "type": "CustomScriptExtension",
-          "typeHandlerVersion": "1.8",
-          "autoUpgradeMinorVersion": true,
-          "settings": {
-            "fileUris": [
-              "[variables('impersonateScript')]",
-              "[concat(variables('scriptLocation'), '/', variables('scriptFileName'))]"
-            ]
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "[parameters('windowsServerVersion')]",
+            "version": "latest"
           },
-          "protectedSettings": {
-            "commandToExecute": "[concat( 'powershell -noninteractive -executionpolicy bypass -file ', variables('scriptFileName'), variables('scriptParameters'), ' >> script.log 2>&1' )]"
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/vhds/',variables('brokerVmName'),'-osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('brokerNicName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('brokerVmName'),'/configuration')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines',variables('brokerVmName'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.20",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip')]",
+          "configurationFunction": "Configuration.ps1\\DomainJoin",
+          "properties": {
+            "domainName": "[parameters('existingDomainName')]",
+            "adminCreds": {
+              "UserName": "[parameters('existingAdminUsername')]",
+              "Password": "PrivateSettingsRef:adminPassword"
+            }
+          }
+        },
+        "protectedSettings": {
+          "Items": {
+            "adminPassword": "[parameters('existingAdminPassword')]"
           }
         }
       }
-    ]
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "name": "[concat(variables('brokerVmName'),'/ha-broker-configuration')]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('brokerVmName'),'/extensions/','configuration')]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.8",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "[concat(variables('scriptLocation'), '/', variables('scriptFileName'))]"
+          ]
+        },
+        "protectedSettings": {
+          "commandToExecute": "[concat( 'powershell -noninteractive -executionpolicy bypass -file ', variables('scriptFileName'), variables('scriptParameters'), ' >> script.log 2>&1' )]"
+        }
+      }
+    }
+  ]
 }

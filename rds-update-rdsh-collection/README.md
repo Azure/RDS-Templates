@@ -3,7 +3,7 @@
 This template updates RDSH servers in existing session host collection with new updated template image. The URI for the image is provided as a template parameter.
 
 This template deploys the following resources:
-+ `<rdshNumberOfInstances`> new virtual machines as RDSH servers
++ `<numberOfRdshInstances`> new virtual machines as RDSH servers
 
 Template does the following:
 + creates new RDSH instances from given template image  and  adds them to collection;
