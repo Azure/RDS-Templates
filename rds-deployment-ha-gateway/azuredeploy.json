@@ -2,6 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "dnsLabelPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
+      },
+      "defaultValue": "gateway"
+    },
     "gatewayLoadBalancer": {
       "type": "string",
       "metadata": {
@@ -23,19 +30,19 @@
         "description": "The gw-availabilityset name must match from the RDS deployment. And default value taken by template is gw-availabilityset."
       }
     },
-    "adDomainName": {
+    "existingDomainName": {
       "type": "string",
       "metadata": {
         "description": "The FQDN of the AD domain"
       }
     },
-    "adminUsername": {
+    "existingAdminUserName": {
       "type": "string",
       "metadata": {
         "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'administrator'"
       }
     },
-    "adminPassword": {
+    "existingAdminPassword": {
       "type": "securestring",
       "metadata": {
         "description": "The password for the administrator account of the new VM and the domain"
@@ -45,7 +52,7 @@
       "type": "int",
       "defaultValue": 1,
       "metadata": {
-        "description": "Number of RD Gateway instances to create"
+        "description": "Number of additional RD Gateway instances"
       }
     },
     "brokerServer": {
@@ -54,16 +61,10 @@
         "description": "FQDN for Broker Server"
       }
     },
-    "publicIPAddressDNSName": {
+    "externalFqdn": {
       "type": "string",
       "metadata": {
-        "description": "This is RD Gateway external FQDN. This shall be picked from existing basic RDS deploment."
-      }
-    },
-    "domainNetbios": {
-      "type": "string",
-      "metadata": {
-        "description": "Netbios Name for Domain"
+        "description": "This is RD Gateway external FQDN. This shall be picked from existing basic RDS deployment."
       }
     },
     "storageAccountName": {
@@ -90,27 +91,42 @@
         "description": "Size for the new RD Gateway VMs"
       }
     },
-    "existingVnet": {
+    "existingVnetName": {
       "type": "string",
       "metadata": {
         "description": "The vnet name of AD domain. For example johnvnet1"
       },
       "defaultValue": "vnet"
     },
-    "existingSubnet": {
+    "existingSubnetName": {
       "type": "string",
       "metadata": {
         "description": "The subnet name of AD domain. For example johnsubnet1"
       },
       "defaultValue": "Subnet"
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+      },
+      "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment-ha-gateway/"
     }
   },
   "variables": {
+    "vmPrefix": "",
+    "vmNameStartIndex": 2,
+    "gatewayVmName": "[concat(variables('vmPrefix'), 'rdgw-')]",
+    "networkNameSuffix": "-nic",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
-    "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnet')),'/subnets/',parameters('existingSubnet'))]",
-    "assetLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/rds-deployment",
+    "vnetAddressRange": "10.0.0.0/16",
+    "subnetAddressRange": "10.0.0.0/24",
+    "dnsServerPrivateIp": "10.0.0.8",
+    "subnet-id": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
     "apiVersion": "2015-06-15",
+    "PublicIPLocation": "[concat(parameters('dnsLabelPrefix'),'.','[resourceGroup().location]','.cloudapp.azure.com')]",
+    "storageAccountType": "Standard_LRS"
   },
   "resources": [
     {
@@ -119,7 +135,7 @@
       "name": "[parameters('storageAccountName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "accountType": "Standard_LRS"
+        "accountType": "[variables('storageAccountType')]"
       }
     },
     {
@@ -129,7 +145,19 @@
       "location": "[resourceGroup().location]"
     },
     {
-      "name": "[concat('gw-',copyindex(),'-nic')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('gatewayPublicIp')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('dnsLabelPrefix')]"
+        }
+      }
+    },
+    {
+      "name": "[concat(variables('gatewayVmName'), padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0'), variables('networkNameSuffix'))]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
       "apiVersion": "[variables('apiversion')]",
@@ -157,10 +185,10 @@
       }
     },
     {
-      "name": "[concat('gw-vm-',copyindex())]",
+      "name": "[concat(variables('gatewayVmName'),padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0'))]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
-      "apiVersion": "[variables('apiversion')]",
+      "apiVersion": "2016-04-30-preview",
       "copy": {
         "name": "gw-vm-loop",
         "count": "[parameters('numberOfNewWebGwInstances')]"
@@ -168,7 +196,7 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
         "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]",
-        "[concat('Microsoft.Network/networkInterfaces/gw-',copyindex(),'-nic')]"
+        "[concat('Microsoft.Network/networkInterfaces/' , variables('gatewayVmName'), padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0'), variables('networkNameSuffix'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -178,9 +206,9 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('gw-availabilityset'))]"
         },
         "osProfile": {
-          "computerName": "[concat('gateway',copyindex())]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "computerName": "[concat(variables('gatewayVmName'),padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0'))]",
+          "adminUsername": "[parameters('existingAdminUserName')]",
+          "adminPassword": "[parameters('existingAdminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -192,7 +220,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/gateway',copyindex(),'-osdisk.vhd')]"
+              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/',concat(variables('gatewayVmName'),padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0')),'-osdisk.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -201,19 +229,19 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('gw-',copyindex(),'-nic'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('gatewayVmName'),padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0'),variables('networkNameSuffix')))]"
             }
           ]
         }
       },
       "resources": [
         {
-          "name": "[concat('gw-vm-',copyindex(),'/Gateway')]",
+          "name": "[concat(variables('gatewayVmName'),padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0'),'/Gateway')]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "location": "[resourceGroup().location]",
           "apiVersion": "[variables('apiversion')]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', Concat('gw-vm-',copyindex()))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', Concat(variables('gatewayVmName'),padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0')))]"
           ],
           "properties": {
             "publisher": "Microsoft.Powershell",
@@ -221,31 +249,31 @@
             "typeHandlerVersion": "2.19",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "ModulesUrl": "[concat(variables('assetLocation'),'/Configuration.zip')]",
+              "ModulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip')]",
               "ConfigurationFunction": "Configuration.ps1\\Gateway",
               "properties": {
-                "DomainName": "[parameters('adDomainName')]",
+                "DomainName": "[parameters('existingDomainName')]",
                 "AdminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
+                  "UserName": "[parameters('existingAdminUserName')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
                 }
               }
             },
             "protectedSettings": {
               "Items": {
-                "AdminPassword": "[parameters('adminPassword')]"
+                "AdminPassword": "[parameters('existingAdminPassword')]"
               }
             }
           }
         },
         {
-          "name": "[concat('gw-vm-',copyindex(),'/WebAndGwFarmAdd_PostConfig1.1')]",
+          "name": "[concat(variables('gatewayVmName'),padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0'),'/WebAndGwFarmAdd_PostConfig1.1')]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "location": "[resourceGroup().location]",
           "apiVersion": "[variables('apiversion')]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', Concat('gw-vm-',copyindex()))]",
-            "[concat('Microsoft.Compute/virtualMachines/gw-vm-',copyindex(),'/extensions/','Gateway')]"
+            "[resourceId('Microsoft.Compute/virtualMachines', Concat(variables('gatewayVmName'),padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0')))]",
+            "[concat('Microsoft.Compute/virtualMachines/',variables('gatewayVmName'),padLeft(add(copyIndex(), variables('vmNameStartIndex')), 2, '0'),'/extensions/','Gateway')]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
@@ -253,12 +281,16 @@
             "typeHandlerVersion": "1.8",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "fileUris": [ "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rds-deployment-ha-gateway/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1" ]
+              "fileUris": [
+                "[concat(parameters('_artifactsLocation'),'/Scripts/WebAndGwFarmAdd_PostConfig1.1.ps1')]"
+              ]
             },
             "protectedSettings": {
-              "Items": { "AdminPassword": "[parameters('adminPassword')]" },
+              "Items": {
+                "AdminPassword": "[parameters('existingAdminPassword')]"
+              },
               "storageAccountName": "[parameters('storageaccountname')]",
-              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('adminusername'),'\" ', '-password \"',parameters('adminpassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-WebURL \"',parameters('publicIPAddressDNSName'),'\" ','-Domainname \"',parameters('adDomainName'),'\" ','-DomainNetbios \"',parameters('DomainNetbios'),'\" ','-numberofwebServers ',parameters('numberOfNewWebGwInstances'))]"
+              "commandToExecute": "[Concat('powershell.exe -ExecutionPolicy Unrestricted -File', ' ', 'WebAndGwFarmAdd_PostConfig1.1.ps1',' ','-username \"',parameters('existingAdminUserName'),'\" ', '-password \"',parameters('existingAdminPassword'),'\" ','-BrokerServer \"',parameters('BrokerServer'),'\" ','-externalFqdn \"',parameters('externalFqdn'),'\" ','-Domainname \"',parameters('existingDomainName'),'\" ','-numberofwebServers ',parameters('numberOfWebGwInstances'),' -ServerName ', variables('gatewayVmName'), ' -vmNameStartIndex ', variables('vmNameStartIndex'))]"
             }
           }
         }

@@ -96,7 +96,6 @@ function Set-TargetResource
     if ($WebAccessServer)
     {
         write-verbose ">> RD Web Access server:     $($WebAccessServer.ToLower())"
-        
     }
     else
     {
