@@ -956,7 +956,7 @@ function get-urlJsonFile($updateUrl, $destinationFile)
             [IO.File]::Delete($destinationFile)
         }
 
-        $jsonFile = (Invoke-WebRequest -Method Get -Uri $updateUrl).Content
+        $jsonFile = (Invoke-WebRequest -UseBasicParsing -Method Get -Uri $updateUrl).Content
 
         # git may not have carriage return
         # reset by setting all to just lf
@@ -986,7 +986,7 @@ function get-urlScriptFile($updateUrl, $destinationFile)
 
     try 
     {
-        $scriptFile = Invoke-RestMethod -Method Get -Uri $updateUrl 
+        $scriptFile = Invoke-RestMethod -UseBasicParsing -Method Get -Uri $updateUrl 
 
         # gallery has bom 
         $scriptFile = $scriptFile.Replace("???", "")
