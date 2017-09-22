@@ -240,6 +240,9 @@
           "gatewayLoadBalancer": {
             "value": "[variables('loadBalancer')]"
           },
+          "gatewayPublicIp": {
+            "value": "[variables('gatewaypublicIp')]"
+          },
           "backendAddressPools": {
             "value": "[variables('backEndAddressPool')]"
           },
@@ -255,7 +258,7 @@
           "existingAdminPassword": {
             "value": "[parameters('existingAdminPassword')]"
           },
-          "numberOfNewWebGwInstances": {
+          "numberOfWebGwInstances": {
             "value": "[parameters('numberOfWebGwInstances')]"
           },
           "brokerServer": {
