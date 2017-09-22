@@ -16,13 +16,6 @@
       },
       "defaultValue": "loadBalancer"
     },
-    "gatewayPublicIp": {
-      "type": "string",
-      "metadata": {
-        "description": "The gateway public ip name must match from the RDS deployment. And default value taken by template is gwpip."
-      },
-      "defaultValue": "gwpip"
-    },
     "backendAddressPools": {
       "type": "string",
       "defaultValue": "LBBAP",
@@ -55,7 +48,7 @@
         "description": "The password for the administrator account of the new VM and the domain"
       }
     },
-    "numberOfWebGwInstances": {
+    "numberOfNewWebGwInstances": {
       "type": "int",
       "defaultValue": 1,
       "metadata": {
@@ -170,7 +163,7 @@
       "apiVersion": "[variables('apiversion')]",
       "copy": {
         "name": "gw-nic-loop",
-        "count": "[parameters('numberOfWebGwInstances')]"
+        "count": "[parameters('numberOfNewWebGwInstances')]"
       },
       "properties": {
         "ipConfigurations": [
@@ -198,7 +191,7 @@
       "apiVersion": "2016-04-30-preview",
       "copy": {
         "name": "gw-vm-loop",
-        "count": "[parameters('numberOfWebGwInstances')]"
+        "count": "[parameters('numberOfNewWebGwInstances')]"
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
