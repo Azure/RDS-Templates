@@ -305,6 +305,13 @@ function main()
         exit 1
     }
     
+    if((get-location).Path.Contains(" "))
+    {
+        write-error "working directory contains space. move scripts to path containing no spaces and restart."
+        exit 1
+    }
+    
+
     write-host "using random: $($random)" -foregroundcolor yellow
     write-host "using password: $($adminPassword)" -foregroundcolor yellow
     write-host "using resource group: $($resourceGroup)" -foregroundcolor yellow
@@ -949,7 +956,7 @@ function get-urlJsonFile($updateUrl, $destinationFile)
             [IO.File]::Delete($destinationFile)
         }
 
-        $jsonFile = (Invoke-WebRequest -Method Get -Uri $updateUrl).Content
+        $jsonFile = (Invoke-WebRequest -UseBasicParsing -Method Get -Uri $updateUrl).Content
 
         # git may not have carriage return
         # reset by setting all to just lf
@@ -979,7 +986,7 @@ function get-urlScriptFile($updateUrl, $destinationFile)
 
     try 
     {
-        $scriptFile = Invoke-RestMethod -Method Get -Uri $updateUrl 
+        $scriptFile = Invoke-RestMethod -UseBasicParsing -Method Get -Uri $updateUrl 
 
         # gallery has bom 
         $scriptFile = $scriptFile.Replace("???", "")
