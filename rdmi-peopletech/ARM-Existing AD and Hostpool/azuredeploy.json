@@ -11,7 +11,6 @@
 
         "rdshNumberOfInstances": {
             "type": "int",
-            "defaultValue": 2,
             "metadata": {
                 "description": "Number of RD Session Hosts"
             }
@@ -41,16 +40,16 @@
         "existingDomainName": {
             "type": "string",
             "metadata": {
-                "description": "Domain name of the exisiting RDS deployment"
+                "description": "Domain name of the exisiting AD"
             }
         },
-        "existingAdminUsername": {
+        "existingDomainAdminUsername": {
             "type": "string",
             "metadata": {
-                "description": "The name of administrator in the existing RDS deployment"
+                "description": "The name of administrator in the existing AD"
             }
         },
-        "existingAdminPassword": {
+        "existingDomainAdminPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "Domain administrator password"
@@ -58,52 +57,76 @@
         },
         "existingVnetName": {
             "type": "string",
-            "defaultValue": "vnet",
             "metadata": {
                 "description": "VNET name"
             }
         },
         "existingSubnetName": {
             "type": "string",
-            "defaultValue": "Subnet",
             "metadata": {
                 "description": "Subnet name"
             }
         },
-        "availabilitySet": {
+        "RDBrokerDeploymentURL":{
             "type": "string",
-            "defaultValue": "rdsh-availabilityset",
             "metadata": {
-                "description": "Availability set for new RDSH instances"
+                "description": "The URL of RD Broker"
             }
         },
-        "imageSKU": {
-            "type": "string",
-            "allowedValues": [
-              "2012-R2-Datacenter",
-              "2016-Datacenter"
-            ],
-            "metadata": {
-              "description": "Windows server SKU"
-            },
-            "defaultValue": "2016-Datacenter"
-          },
-        "_artifactsLocation": {
+        "HostPoolName":{
             "type": "string",
             "metadata": {
-                "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
-            },
-            
-            "defaultValue": "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/"
-            
-            
+                "description": "New or Existing HostPool Name"
+            }
         },
-        "_artifactsLocationSasToken": {
-            "type": "securestring",
+
+        "HostPoolFriendlyName":{
+            "type": "string",
             "metadata": {
-                "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated."
-            },
-            "defaultValue": ""
+                "description": "New HostPool Friendly Name"
+            }
+        },
+        "HostPoolDescription":{
+            "type": "string",
+            "metadata": {
+                "description": "New HostPool Description"
+            }
+        },
+        "InitializeDBSecret":{
+            "type": "string",
+            "metadata": {
+                "description": "New or Existing HostPool Name"
+            }
+        },
+        "RegistrationExpairationHours":{
+            "type": "int",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Expairation Hours are required for New Hostpool not for existing Hostpool"
+            }
+        },
+
+        "SessionHostMaximumSessionLimit":{
+            "type": "int",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Maximum session allowed for each SessionHost server"
+            }
+        },
+
+        "DelegatedAdminUsername":{
+            "type": "string",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Delegated admin username"
+            }
+        },
+        "DelegatedAdminPassword":{
+            "type": "securestring",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Delegated admin Password"
+            }
         }
 
     },
@@ -111,18 +134,31 @@
     "variables": {
         "iteration": "[toLower(parameters('rdshUpdateIteration'))]",
         "storageAccountName": "[tolower(concat('rdsa', uniqueString(resourceGroup().id)))]",
+        "storageAccountType": "Standard_LRS",
         "uniqueStorageAccountContainerName": "[toLower(concat('sac', resourceGroup().name))]",
         "imagePublisher": "MicrosoftWindowsServer",
         "imageOffer": "WindowsServer",
+        "imageSKU": "2016-Datacenter",
+        "_artifactsLocation": "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/",
+        "scriptFolder": "Scripts",
+        "scriptFileName":  "Script.ps1",
         "p": {
-            "domain": "[concat(' -domain ', parameters('existingDomainName'))]",
-            "user": "[concat(' -username ', parameters('existingAdminUsername'))]",
-            "pwd": "[concat(' -password ', parameters('existingAdminPassword'))]",
-            "iteration": "[concat(' -iteration ', toLower(parameters('rdshUpdateIteration')))]",
-            "servers": "[concat(' -nServers ', parameters('rdshNumberOfInstances'))]"
+            "RDBrokerURL": "[concat(' -RDBrokerURL ', parameters('RDBrokerDeploymentURL'))]",
+            "HostPoolName": "[concat(' -HostPoolName ', parameters('HostPoolName'))]",
+            "FriendlyName": "[concat(' -FriendlyName ', parameters('HostPoolFriendlyName'))]",
+            "Description": "[concat(' -Description ', parameters('HostPoolDescription'))]",
+            "MaxSessionLimit": "[concat(' -MaxSessionLimit ', parameters('SessionHostMaximumSessionLimit'))]",
+            "Hours": "[concat(' -Hours ', parameters('RegistrationExpairationHours'))]",
+            "DelegateAdminUsername": "[concat(' -DelegateAdminUsername ', parameters('DelegatedAdminUsername'))]",
+            "DelegateAdminpassword": "[concat(' -DelegateAdminpassword ', parameters('DelegatedAdminpassword'))]",
+            "DomainAdminUsername": "[concat(' -DomainAdminUsername ', parameters('existingDomainAdminUsername'))]",
+            "DomainAdminpassword": "[concat(' -DomainAdminpassword ', parameters('existingDomainAdminpassword'))]",
+            "InitializeDBSecret": "[concat(' -InitializeDBSecret ', parameters('InitializeDBSecret'))]",
+            "SxSStackInstaller": "[concat(' -SxSStackInstaller ', parameters('HostPoolDescription'))]",
+            "AgentInstaller": "[concat(' -AgentInstaller ', parameters('SessionHostMaximumSessionLimit'))]"
             
         },
-        "scriptParameters": "[concat(variables('p').domain, variables('p').user, variables('p').pwd, variables('p').iteration, variables('p').servers)]"        
+        "scriptParameters": "[concat(variables('p').RDBrokerURL, variables('p').HostPoolName, variables('p').FriendlyName, variables('p').Description, variables('p').MaxSessionLimit, variables('p').Hours, variables('p').DelegateAdminUsername, variables('p').DelegateAdminpassword, variables('p').DomainAdminUsername, variables('p').DomainAdminpassword, variables('p').InitializeDBSecret)]"
     },
 
     "resources": [
@@ -152,9 +188,27 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/availabilitySets",
-            "name": "[parameters('availabilitySet')]",
-            "location": "[resourceGroup().location]"
+            "name": "[concat('rdsh-', copyindex(),variables('iteration'),'availabilitySet')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "rdsh-vm-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            }
         },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "apiVersion": "2016-01-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[variables('storageAccountType')]"
+            },
+            "kind": "Storage", 
+            "properties": {
+            }
+          },
+
+
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines",
@@ -171,19 +225,16 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
-                "availabilitySet": {
-                    "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySet'))]"
-                },
-                "osProfile": {
+               "osProfile": {
                     "computerName": "[concat('rdsh-', copyindex(),variables('iteration'))]",
-                    "adminUsername": "[parameters('existingAdminUsername')]",
-                    "adminPassword": "[parameters('existingAdminPassword')]"
+                    "adminUsername": "[parameters('existingDomainAdminUsername')]",
+                    "adminPassword": "[parameters('existingDomainAdminPassword')]"
                 },
                 "storageProfile": {
                     "imageReference": {
                       "publisher": "[variables('imagePublisher')]",
                       "offer": "[variables('imageOffer')]",
-                      "sku": "[parameters('imageSKU')]",
+                      "sku": "[variables('imageSKU')]",
                       "version": "latest"
                     },
                       
@@ -226,23 +277,51 @@
                         "typeHandlerVersion": "2.11",
                         "autoUpgradeMinorVersion": true,
                         "settings": {
-                            "ModulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip', parameters('_artifactsLocationSasToken'))]",
+                            "ModulesUrl": "[concat(variables('_artifactsLocation'),'/DSC/Configuration.zip')]",
                             "ConfigurationFunction": "Configuration.ps1\\SessionHost",
                             "Properties": {
                                 "DomainName": "[parameters('existingDomainName')]",
                                 "AdminCreds": {
-                                    "UserName": "[parameters('existingAdminUsername')]",
+                                    "UserName": "[parameters('existingDomainAdminUsername')]",
                                     "Password": "PrivateSettingsRef:AdminPassword"
                                 }
                             }
                         },
                         "protectedSettings": {
                             "Items": {
-                                "AdminPassword": "[parameters('existingAdminPassword')]"
+                                "AdminPassword": "[parameters('existingDomainAdminPassword')]"
                             }
                         }
                     }
+                },
+                {
+                    "apiVersion": "2015-06-15",
+                    "type": "extensions",
+                    "name": "[concat('rdsh-',copyindex(),variables('iteration'),'deployagent')]",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex(),variables('iteration')))]"
+                    ],
+                    "tags": {
+                        "displayName": "script"
+                    },
+                    "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion":  "2.11",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/Scripts/DeployAgent.zip",
+                                "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/Scripts/Script.ps1"
+                            ]
+                        },
+                        "protectedSettings": {
+                            "commandToExecute": "[concat( 'powershell -noninteractive -executionpolicy bypass -file script.ps1', variables('scriptParameters'))]"
+                        }
+                    }
                 }
+
             ]
         }
     ]
