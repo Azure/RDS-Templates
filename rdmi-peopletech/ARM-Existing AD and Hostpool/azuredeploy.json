@@ -128,7 +128,7 @@
     "resources": [
         {
             "apiVersion": "2015-06-15",
-            "type": "Microsoft.Network/networkInterface",
+            "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat('rdsh-', copyindex(),variables('iteration'), '-nic')]",
             "location": "[resourceGroup().location]",
             "copy": {
