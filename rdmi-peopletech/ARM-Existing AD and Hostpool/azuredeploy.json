@@ -1,0 +1,328 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "rdshUpdateIteration": {
+            "type": "string",
+            "metadata": {
+                "description": "A unique designator representing update iteration; newly created RDSH instances will have their names in the form: 'rdsh-&lt;index&gt;&lt;iteration&gt;"
+                 }
+        },
+
+        "rdshNumberOfInstances": {
+            "type": "int",
+            "metadata": {
+                "description": "Number of RD Session Hosts"
+            }
+        },
+        "rdshVmSize": {
+            "type": "string",
+            "allowedValues": [
+              "Standard_A0",
+              "Standard_A1",
+              "Standard_A2",
+              "Standard_A3",
+              "Standard_A4",
+              "Standard_A5",
+              "Standard_A6",
+              "Standard_A7",
+              "Standard_D1",
+              "Standard_D2",
+              "Standard_D3",
+              "Standard_D4",
+              "Standard_D5"
+            ],
+            "metadata": {
+              "description": "The size of the RDSH VMs"
+            },
+            "defaultValue": "Standard_A2"
+        },
+        "existingDomainName": {
+            "type": "string",
+            "metadata": {
+                "description": "Domain name of the exisiting AD"
+            }
+        },
+        "existingDomainAdminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of administrator in the existing AD"
+            }
+        },
+        "existingDomainAdminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Domain administrator password"
+            }
+        },
+        "existingVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "VNET name"
+            }
+        },
+        "existingSubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Subnet name"
+            }
+        },
+        "RDBrokerDeploymentURL":{
+            "type": "string",
+            "metadata": {
+                "description": "The URL of RD Broker"
+            }
+        },
+        "HostPoolName":{
+            "type": "string",
+            "metadata": {
+                "description": "New or Existing HostPool Name"
+            }
+        },
+
+        "HostPoolFriendlyName":{
+            "type": "string",
+            "metadata": {
+                "description": "New HostPool Friendly Name"
+            }
+        },
+        "HostPoolDescription":{
+            "type": "string",
+            "metadata": {
+                "description": "New HostPool Description"
+            }
+        },
+        "InitializeDBSecret":{
+            "type": "string",
+            "metadata": {
+                "description": "New or Existing HostPool Name"
+            }
+        },
+        "RegistrationExpairationHours":{
+            "type": "int",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Expairation Hours are required for New Hostpool not for existing Hostpool"
+            }
+        },
+
+        "SessionHostMaximumSessionLimit":{
+            "type": "int",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Maximum session allowed for each SessionHost server"
+            }
+        },
+
+        "DelegatedAdminUsername":{
+            "type": "string",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Delegated admin username"
+            }
+        },
+        "DelegatedAdminPassword":{
+            "type": "securestring",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Delegated admin Password"
+            }
+        }
+
+    },
+
+    "variables": {
+        "iteration": "[toLower(parameters('rdshUpdateIteration'))]",
+        "storageAccountName": "[tolower(concat('rdsa', uniqueString(resourceGroup().id)))]",
+        "storageAccountType": "Standard_LRS",
+        "uniqueStorageAccountContainerName": "[toLower(concat('sac', resourceGroup().name))]",
+        "imagePublisher": "MicrosoftWindowsServer",
+        "imageOffer": "WindowsServer",
+        "imageSKU": "2016-Datacenter",
+        "_artifactsLocation": "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/",
+        "scriptFolder": "Scripts",
+        "scriptFileName":  "Script.ps1",
+        "p": {
+            "RDBrokerURL": "[concat(' -RDBrokerURL ', parameters('RDBrokerDeploymentURL'))]",
+            "HostPoolName": "[concat(' -HostPoolName ', parameters('HostPoolName'))]",
+            "FriendlyName": "[concat(' -FriendlyName ', parameters('HostPoolFriendlyName'))]",
+            "Description": "[concat(' -Description ', parameters('HostPoolDescription'))]",
+            "MaxSessionLimit": "[concat(' -MaxSessionLimit ', parameters('SessionHostMaximumSessionLimit'))]",
+            "Hours": "[concat(' -Hours ', parameters('RegistrationExpairationHours'))]",
+            "DelegateAdminUsername": "[concat(' -DelegateAdminUsername ', parameters('DelegatedAdminUsername'))]",
+            "DelegateAdminpassword": "[concat(' -DelegateAdminpassword ', parameters('DelegatedAdminpassword'))]",
+            "DomainAdminUsername": "[concat(' -DomainAdminUsername ', parameters('existingDomainAdminUsername'))]",
+            "DomainAdminpassword": "[concat(' -DomainAdminpassword ', parameters('existingDomainAdminpassword'))]",
+            "InitializeDBSecret": "[concat(' -InitializeDBSecret ', parameters('InitializeDBSecret'))]",
+            "SxSStackInstaller": "[concat(' -SxSStackInstaller ', parameters('HostPoolDescription'))]",
+            "AgentInstaller": "[concat(' -AgentInstaller ', parameters('SessionHostMaximumSessionLimit'))]"
+            
+        },
+        "scriptParameters": "[concat(variables('p').RDBrokerURL, variables('p').HostPoolName, variables('p').FriendlyName, variables('p').Description, variables('p').MaxSessionLimit, variables('p').Hours, variables('p').DelegateAdminUsername, variables('p').DelegateAdminpassword, variables('p').DomainAdminUsername, variables('p').DomainAdminpassword, variables('p').InitializeDBSecret)]"
+    },
+
+    "resources": [
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat('rdsh-', copyindex(),variables('iteration'), '-nic')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "rdsh-nic-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[concat('rdsh-', copyindex(),variables('iteration'),'availabilitySet')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "rdsh-vm-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "apiVersion": "2016-01-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[variables('storageAccountType')]"
+            },
+            "kind": "Storage", 
+            "properties": {
+            }
+          },
+
+
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat('rdsh-', copyindex(),variables('iteration'))]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "rdsh-vm-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(),variables('iteration'), '-nic')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('rdshVmSize')]"
+                },
+               "osProfile": {
+                    "computerName": "[concat('rdsh-', copyindex(),variables('iteration'))]",
+                    "adminUsername": "[parameters('existingDomainAdminUsername')]",
+                    "adminPassword": "[parameters('existingDomainAdminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                      "publisher": "[variables('imagePublisher')]",
+                      "offer": "[variables('imageOffer')]",
+                      "sku": "[variables('imageSKU')]",
+                      "version": "latest"
+                    },
+                      
+                    "osDisk": {
+                        "name": "osdisk",
+                        "vhd": {
+                          "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')),'2016-01-01').primaryEndpoints.blob,variables('uniqueStorageAccountContainerName'),'/','rdsh-',copyindex(),'-os-disk.vhd')]"
+            
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                      }
+                    },    
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('rdsh-', copyindex(),variables('iteration'), '-nic'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": "true",
+                        "storageUri": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob]"
+                    }
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2015-06-15",
+                    "type": "extensions",
+                    "name": "[concat('rdsh-',copyindex(),variables('iteration'))]",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex(),variables('iteration')))]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
+                        "typeHandlerVersion": "2.11",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "ModulesUrl": "[concat(variables('_artifactsLocation'),'/DSC/Configuration.zip')]",
+                            "ConfigurationFunction": "Configuration.ps1\\SessionHost",
+                            "Properties": {
+                                "DomainName": "[parameters('existingDomainName')]",
+                                "AdminCreds": {
+                                    "UserName": "[parameters('existingDomainAdminUsername')]",
+                                    "Password": "PrivateSettingsRef:AdminPassword"
+                                }
+                            }
+                        },
+                        "protectedSettings": {
+                            "Items": {
+                                "AdminPassword": "[parameters('existingDomainAdminPassword')]"
+                            }
+                        }
+                    }
+                },
+                {
+                    "apiVersion": "2015-06-15",
+                    "type": "extensions",
+                    "name": "[concat('rdsh-',copyindex(),variables('iteration'),'deployagent')]",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex(),variables('iteration')))]"
+                    ],
+                    "tags": {
+                        "displayName": "script"
+                    },
+                    "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion":  "2.11",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/Scripts/DeployAgent.zip",
+                                "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/Scripts/Script.ps1"
+                            ]
+                        },
+                        "protectedSettings": {
+                            "commandToExecute": "[concat( 'powershell -noninteractive -executionpolicy bypass -file script.ps1', variables('scriptParameters'))]"
+                        }
+                    }
+                }
+
+            ]
+        }
+    ]
+}
