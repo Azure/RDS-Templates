@@ -79,6 +79,7 @@
                 "description": "New or Existing HostPool Name"
             }
         },
+<<<<<<< HEAD
         "InitializeDBSecret":{
             "type": "string",
             "metadata": {
@@ -86,6 +87,43 @@
             }
         },
         
+=======
+
+        "HostPoolFriendlyName":{
+            "type": "string",
+            "metadata": {
+                "description": "New HostPool Friendly Name"
+            }
+        },
+        "HostPoolDescription":{
+            "type": "string",
+            "metadata": {
+                "description": "New HostPool Description"
+            }
+        },
+        "InitializeDBSecret":{
+            "type": "string",
+            "metadata": {
+                "description": "New or Existing HostPool Name"
+            }
+        },
+        "RegistrationExpairationHours":{
+            "type": "int",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Expairation Hours are required for New Hostpool not for existing Hostpool"
+            }
+        },
+
+        "SessionHostMaximumSessionLimit":{
+            "type": "int",
+            "defaultvalue":"",
+            "metadata": {
+                "description": "Maximum session allowed for each SessionHost server"
+            }
+        },
+
+>>>>>>> e2db16b464dfb3a0c9ef22460d8dd54f40f61004
         "DelegatedAdminUsername":{
             "type": "string",
             "defaultvalue":"",
@@ -104,6 +142,7 @@
     },
 
     "variables": {
+<<<<<<< HEAD
         "storageAccountName": "[split( split( parameters('rdshTemplateImageUri'), '/')[2], '.' )[0]]",
         "impersonateScript": "https://gallery.technet.microsoft.com/scriptcenter/Impersonate-a-User-9bfeff82/file/127189/1/New-ImpersonateUser.ps1",
         "vmname": "advm",
@@ -122,12 +161,36 @@
             "Description": "[concat(' -Description ', variables('HostPoolDescription'))]",
             "MaxSessionLimit": "[concat(' -MaxSessionLimit ', variables('SessionHostMaximumSessionLimit'))]",
             "Hours": "[concat(' -Hours ', variables('RegistrationExpairationHours'))]",
+=======
+        "iteration": "[toLower(parameters('rdshUpdateIteration'))]",
+        "storageAccountName": "[tolower(concat('rdsa', uniqueString(resourceGroup().id)))]",
+        "storageAccountType": "Standard_LRS",
+        "uniqueStorageAccountContainerName": "[toLower(concat('sac', resourceGroup().name))]",
+        "imagePublisher": "MicrosoftWindowsServer",
+        "imageOffer": "WindowsServer",
+        "imageSKU": "2016-Datacenter",
+        "_artifactsLocation": "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/",
+        "scriptFolder": "Scripts",
+        "scriptFileName":  "Script.ps1",
+        "p": {
+            "RDBrokerURL": "[concat(' -RDBrokerURL ', parameters('RDBrokerDeploymentURL'))]",
+            "HostPoolName": "[concat(' -HostPoolName ', parameters('HostPoolName'))]",
+            "FriendlyName": "[concat(' -FriendlyName ', parameters('HostPoolFriendlyName'))]",
+            "Description": "[concat(' -Description ', parameters('HostPoolDescription'))]",
+            "MaxSessionLimit": "[concat(' -MaxSessionLimit ', parameters('SessionHostMaximumSessionLimit'))]",
+            "Hours": "[concat(' -Hours ', parameters('RegistrationExpairationHours'))]",
+>>>>>>> e2db16b464dfb3a0c9ef22460d8dd54f40f61004
             "DelegateAdminUsername": "[concat(' -DelegateAdminUsername ', parameters('DelegatedAdminUsername'))]",
             "DelegateAdminpassword": "[concat(' -DelegateAdminpassword ', parameters('DelegatedAdminpassword'))]",
             "DomainAdminUsername": "[concat(' -DomainAdminUsername ', parameters('existingDomainAdminUsername'))]",
             "DomainAdminpassword": "[concat(' -DomainAdminpassword ', parameters('existingDomainAdminpassword'))]",
             "InitializeDBSecret": "[concat(' -InitializeDBSecret ', parameters('InitializeDBSecret'))]",
+<<<<<<< HEAD
             "fileURI": "[concat(' -fileURI ', variables('fileURI'))]"
+=======
+            "SxSStackInstaller": "[concat(' -SxSStackInstaller ', parameters('HostPoolDescription'))]",
+            "AgentInstaller": "[concat(' -AgentInstaller ', parameters('SessionHostMaximumSessionLimit'))]"
+>>>>>>> e2db16b464dfb3a0c9ef22460d8dd54f40f61004
             
         },
         "scriptParameters": "[concat(variables('p').RDBrokerURL, variables('p').HostPoolName, variables('p').FriendlyName, variables('p').Description, variables('p').MaxSessionLimit, variables('p').Hours, variables('p').DelegateAdminUsername, variables('p').DelegateAdminpassword, variables('p').DomainAdminUsername, variables('p').DomainAdminpassword, variables('p').InitializeDBSecret)]"
@@ -160,13 +223,31 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/availabilitySets",
+<<<<<<< HEAD
             "name": "[concat('rdsh-', copyindex(),'availabilitySet')]",
+=======
+            "name": "[concat('rdsh-', copyindex(),variables('iteration'),'availabilitySet')]",
+>>>>>>> e2db16b464dfb3a0c9ef22460d8dd54f40f61004
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
             }
         },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "apiVersion": "2016-01-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[variables('storageAccountType')]"
+            },
+            "kind": "Storage", 
+            "properties": {
+            }
+          },
+
+
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines",
@@ -183,13 +264,28 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
+<<<<<<< HEAD
                 
                 "osProfile": {
                     "computerName": "[concat('rdsh-', copyindex())]",
+=======
+               "osProfile": {
+                    "computerName": "[concat('rdsh-', copyindex(),variables('iteration'))]",
+>>>>>>> e2db16b464dfb3a0c9ef22460d8dd54f40f61004
                     "adminUsername": "[parameters('existingDomainAdminUsername')]",
                     "adminPassword": "[parameters('existingDomainAdminPassword')]"
                 },
                 "storageProfile": {
+<<<<<<< HEAD
+=======
+                    "imageReference": {
+                      "publisher": "[variables('imagePublisher')]",
+                      "offer": "[variables('imageOffer')]",
+                      "sku": "[variables('imageSKU')]",
+                      "version": "latest"
+                    },
+                      
+>>>>>>> e2db16b464dfb3a0c9ef22460d8dd54f40f61004
                     "osDisk": {
                         "name": "[concat('rdsh-', copyindex(),'-osDisk')]",
                         "osType": "Windows",
@@ -249,9 +345,37 @@
                             }
                         }
                     }
+                },
+                {
+                    "apiVersion": "2015-06-15",
+                    "type": "extensions",
+                    "name": "[concat('rdsh-',copyindex(),variables('iteration'),'deployagent')]",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex(),variables('iteration')))]"
+                    ],
+                    "tags": {
+                        "displayName": "script"
+                    },
+                    "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion":  "2.11",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/Scripts/DeployAgent.zip",
+                                "https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/Scripts/Script.ps1"
+                            ]
+                        },
+                        "protectedSettings": {
+                            "commandToExecute": "[concat( 'powershell -noninteractive -executionpolicy bypass -file script.ps1', variables('scriptParameters'))]"
+                        }
+                    }
                 }
 
             ]
+<<<<<<< HEAD
         },
             {
               "type": "Microsoft.Compute/virtualMachines/extensions",
@@ -270,4 +394,8 @@
               }
             }
           ]
+=======
+        }
+    ]
+>>>>>>> e2db16b464dfb3a0c9ef22460d8dd54f40f61004
 }
