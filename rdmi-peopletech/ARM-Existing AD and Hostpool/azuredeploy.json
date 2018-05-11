@@ -251,7 +251,7 @@
                       "typeHandlerVersion": "1.8",
                       "autoUpgradeMinorVersion": true,
                       "settings": {
-                         "fileUris": ["https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/Scripts/Script.ps1"],
+                         "fileUris": ["https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/ARM-Existing%20AD%20and%20Hostpool/Scripts/Script.ps1"],
                          "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerDeploymentURL'), '\"',' ',' -TenantName \"', parameters('ExistedTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -MaxSessionLimit \"', variables('SessionHostMaximumSessionLimit'), '\"',' ', ' -Hours \"', variables('RegistrationExpairationHours'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ',' -DomainAdminUsername \"', parameters('ExistingDomainAdminUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('ExistingDomainAdminpassword'), '\"',' ', ' -InitializeDBSecret \"', parameters('InitializeDBSecret'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"')]"
                       }
                     }
