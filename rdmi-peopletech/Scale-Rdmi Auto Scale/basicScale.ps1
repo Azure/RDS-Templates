@@ -134,15 +134,15 @@ Write-Verbose "loading values from Config.xml"
 $Variable=[XML] (Get-Content "$XMLPath")
 $Variable.RDMIScale.Azure | ForEach-Object {$_.Variable} | Where-Object {$_.Name -ne $null} | ForEach-Object {Set-ScriptVariable -Name $_.Name -Value $_.Value}
 $Variable.RDMIScale.RdmiTScaleSettings | ForEach-Object {$_.Variable} | Where-Object {$_.Name -ne $null} | ForEach-Object {Set-ScriptVariable -Name $_.Name -Value $_.Value}
-$Variable.RDMIScale.Deployment | ForEach-Object {$_.Variable} | Where-Object {$_.Name -ne $null} | ForEach-Object {Set-ScriptVariable -Name $_.Name -Value $_.Value}
+$Variable.RDMIScale.Ptrinfo | ForEach-Object {$_.Variable} | Where-Object {$_.Name -ne $null} | ForEach-Object {Set-ScriptVariable -Name $_.Name -Value $_.Value}
 
 
 cd "$CurrentPath\PowershellModules"
 Import-Module .\Microsoft.RdInfra.RdPowershell.dll
 
             #Create pspassword for AAD user of partner
-            $Securepass = ConvertTo-SecureString -String $Password -asPlainText -Force
-            $credential = New-Object System.Management.Automation.PSCredential($Username,$Securepass)
+            #<#---->#>$password = ConvertTo-SecureString -String $PartAPassword -asPlainText -Force
+            #<#---->#>$credential = New-Object System.Management.Automation.PSCredential($PartAUsername,$password)
 
 #The the following three lines is to use password/secret based authentication for service principal, to use certificate based authentication, please comment those lines, and uncomment the above line
 $secpasswd = ConvertTo-SecureString $AADServicePrincipalSecret -AsPlainText -Force
@@ -171,8 +171,8 @@ if($EndPeakDateTime -lt $BeginPeakDateTime)
 #get the available HostPoolnames in the RDMITenant
 try
 {
-    Set-RdsContext -DeploymentUrl $Rdbroker -Credential $credential
-    $hostPoolNames=Get-RdsHostPool -TenantName $tenantName -ErrorAction Stop 
+    #<#---->#>Set-RdsContext -DeploymentUrl $Rdbroker -Credential $credential
+    $hostPoolNames=Get-RdsHostPool -TenantName "MSFT-Tenant" -ErrorAction Stop 
 }
 catch
 {
@@ -194,7 +194,7 @@ catch
         foreach($hostPoolName in $hostPoolNames){
         try
 		{
-			$RDSessionHost=Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName.Name -ErrorAction SilentlyContinue
+			$RDSessionHost=Get-RdsSessionHost -TenantName "MSFT-Tenant" -HostPoolName "tempHostpool" -ErrorAction SilentlyContinue
             
             #$RDSessionHost="shs-01.rdmi.com","shs-02.rdmi.com"
 

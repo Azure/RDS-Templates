@@ -1,43 +1,37 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<!-- Version 1.1.0 -->
-
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Version 1.1.0  -->
 <RDMIScale>
-<Azure>
-<!--Settings required to authenticate to Azure subscription -->
-<Variable Value="My AAD tenant ID GUID" Name="AADTenantId"/>
-<Variable Value="My AAD application ID GUID" Name="AADApplicationId"/>
-<!--<Variable Value="My thumbprint of the cert added to the AAD Service Principal" Name="AADAppCertThumbprint"/>-->
-<Variable Value="My AAD Application Secret" Name="AADServicePrincipalSecret"/>
-<!--Azure subscription name -->
-<Variable Value="My Subscription Name" Name="CurrentAzureSubscriptionName"/>
-<!--Resource Group Name -->
-<Variable Value="My name for the Azure Resource Group which contains the RDSH VMs" Name="ResourceGroupName"/>
-<Variable Value="MS-RDS" Name="TenantName"/>
-</Azure>
-<Deploymnet>
-  <Variable Name="Rdbroker" Value="Deploymnet URL of RDMI Environment"/>
-  <Variable Name="Username" Value="Provide Delegated Admin UserName"/>
-  <Variable Name="Password" Value="Provide Delegated Admin Password"/>
-</Deploymnet>
-
-<RdmiTScaleSettings>
-<!-- Begin of the peak usage time -->
-<Variable Value="08:00:00" Name="BeginPeakTime"/>
-<!-- End of the peak usage time -->
-<Variable Value="18:00:00" Name="EndPeakTime"/>
-<!-- Time difference between local time and UTC, in hours -->
-<Variable Value="-7" Name="TimeDifferenceInHours"/>
-<!-- Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started -->
-<Variable Value="3" Name="SessionThresholdPerCPU"/>
-<!-- Minimum number of RDSH servers to keep running during off-peak usage time -->
-<Variable Value="1" Name="MinimumNumberOfRDSH"/>
-<!--Number of seconds to wait before forcing users to logoff. If 0, don't force users to logoff -->
-<Variable Value="120" Name="LimitSecondsToForceLogOffUser"/>
-<!--Message title sent to a user before forcing logoff -->
-<Variable Value="System Under Maintenance" Name="LogOffMessageTitle"/>
-<!--Message body to sent to a user before forcing logoff -->
-<Variable Value="Please save your work and logoff!" Name="LogOffMessageBody"/>
-</RdmiTScaleSettings>
-
+  <Azure>
+    <!--Settings required to authenticate to Azure subscription -->
+    <Variable Name="AADTenantId" Value="358d0f13-4eda-45ea-886e-a6dcc6a70ae2"/>
+    <Variable Name="AADApplicationId" Value="ce4a19ce-1d57-4b28-b99b-38155873f443"/>
+    <Variable Name="AADAppCertThumbprint" Value="My thumbprint of the cert added to the AAD Service Principal"/>
+    <Variable Name="AADServicePrincipalSecret" Value="puNWzQGZqAnCnJ8Rc5g/qMcSCUv/6HSGDYaMVBNnQy4="/>
+    <!--Azure subscription name -->
+    <Variable Name="CurrentAzureSubscriptionName" Value="RDMI Partner"/>
+    <!--Resource Group Name -->
+    <Variable Name="ResourceGroupName" Value="April-RdmicodeBit"/>
+	<Variable Name="tenantName" Value="MSFT-Tenant"/>
+  </Azure>
+  <Ptrinfo>
+  <Variable Name="Rdbroker" Value="https://rdbroker-ridronb5y3yeo.azurewebsites.net"/>
+  </Ptrinfo>
+  <RdmiTScaleSettings>
+    <!-- Begin of the peak usage time -->
+    <Variable Name="BeginPeakTime" Value="08:00:00"/>
+    <!-- End of the peak usage time -->
+    <Variable Name="EndPeakTime" Value="18:00:00"/>
+    <!-- Time difference between local time and UTC, in hours -->
+    <Variable Name="TimeDifferenceInHours" Value="-7" />
+    <!-- Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started -->
+    <Variable Name="SessionThresholdPerCPU" Value="3"/>
+    <!-- Minimum number of RDSH servers to keep running during off-peak usage time -->
+    <Variable Name="MinimumNumberOfRDSH" Value="0"/>
+    <!--Number of seconds to wait before forcing users to logoff. If 0, don't force users to logoff -->
+    <Variable Name="LimitSecondsToForceLogOffUser" Value="120"/>
+    <!--Message title sent to a user before forcing logoff -->
+    <Variable Name="LogOffMessageTitle" Value="System Under Maintenance"/>
+    <!--Message body to sent to a user before forcing logoff -->
+    <Variable Name="LogOffMessageBody" Value="Please save your work and logoff!"/>
+  </RdmiTScaleSettings>
 </RDMIScale>
