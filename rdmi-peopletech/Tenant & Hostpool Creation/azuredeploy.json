@@ -1,0 +1,208 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "RDBrokerURL": {
+            "type": "string",
+            "metadata": {
+                "description": "provide RdbrokerURI"
+            }
+        },
+        "HosterAdminName": {
+            "type": "string",
+            "metadata": {
+                "description": "HosterAdminName for the Azure Partner Account."
+            }
+        },
+        "HosterAdminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "HosterAdminPassword for the Azure Partner Account."
+            }
+        },
+        "AadTenantId": {
+            "type": "string",
+            "metadata": {
+                "description": "AadTenantId for the Azure Tenant Account."
+            }
+        },
+        "TenantName": {
+            "type": "string",
+            "metadata": {
+                "description": "Provide Tenant Name"
+            }
+        },
+        "TenantFriendlyName": {
+            "type": "string",
+            "defaultValue": " ",
+            "metadata": {
+                "description": "Provide Tenant FriendlyName"
+            }
+        },
+        "TenantDescription": {
+            "type": "string",
+            "defaultValue": " ",
+            "metadata": {
+                "description": "Provide Tenant Description"
+            }
+        },
+        "HostpoolName": {
+            "type": "string",
+            "metadata": {
+                "description": "Provide Hostpool Name"
+            }
+        },
+        "HostpoolFriendlyName": {
+            "type": "string",
+            "defaultValue": " ",
+            "metadata": {
+                "description": "Provide Hostpool FriendlyName"
+            }
+        },
+        "HostpoolDescription": {
+            "type": "string",
+            "defaultValue": " ",
+            "metadata": {
+                "description": "Provide Hostpool Description"
+            }
+        }
+    },
+    "variables": {
+        "nicName": "myVMNic",
+        "addressPrefix": "10.0.0.0/16",
+        "subnetName": "Subnet",
+        "subnetPrefix": "10.0.0.0/24",
+        "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
+        "vmName": "MyVM",
+        "virtualNetworkName": "MyVNET",
+        "publicIPAddressName": "myPublicIP",
+        "dnsNameForPublicIP": "[uniqueString(resourceGroup().id)]",
+        "_artifactsLocation": "https://raw.githubusercontent.com/sreenathakk/testrepository/master/",
+        "PSModules": "PowershellModules.zip",
+        "adminUsername": "vmadmin",
+        "adminPassword": "Welcome@12345",
+        "resourcegroupname": "[resourceGroup().name]",
+        "FileURI": "[concat(variables('_artifactsLocation'), variables('PSModules'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2016-09-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('dnsNameForPublicIP')]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2016-09-01",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('virtualNetworkName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('addressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetPrefix')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2016-09-01",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('nicName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[variables('publicIPAddressName')]",
+                "[variables('virtualNetworkName')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2016-04-30-preview",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('vmName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[variables('nicName')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_D1_v2"
+                },
+                "osProfile": {
+                    "computerName": "[variables('vmName')]",
+                    "adminUsername": "[variables('adminUsername')]",
+                    "adminPassword": "[variables('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "type": "extensions",
+                    "name": "CustomScriptExtension",
+                    "apiVersion": "2015-06-15",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[variables('vmName')]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion": "1.8",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "https://raw.githubusercontent.com/sreenathakk/testrepository/master/Script.ps1"
+                            ],
+                            "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1', ' -RDBrokerURI \"', parameters('RDBrokerURL'), '\"',' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"',' ', ' -TenantName \"', parameters('TenantName'), '\"',' ', ' -FriendlyName \"', parameters('TenantFriendlyName'), '\"',' ', ' -Description \"', parameters('TenantDescription'), '\"',' ',' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -HostPoolFriendlyName \"', parameters('HostPoolFriendlyName'), '\"',' ', ' -HostPoolDescription \"', parameters('HostPoolDescription'), '\"',' ', ' -Username \"', parameters('HosterAdminName'), '\"',' ', ' -password \"', parameters('HosterAdminPassword'), '\"',' ', '-resourcegroupname \"', variables('resourcegroupname'), '\"',' ', ' -Fileuri \"', variables('FileUri'), '\"')]"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
