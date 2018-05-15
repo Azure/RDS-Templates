@@ -5,7 +5,7 @@
         "VmImageVhdUri": {
             "type": "string",
             "metadata": {
-                "description": "URI for the template VHD to use for RDSH instances. For example, https://rdsstorage.blob.core.windows.net/vhds/MyWindowServerOSImage.vhd"
+                "description": "URI for the VM Image VHD to use for RDSH instances. For example, https://rdsstorage.blob.core.windows.net/vhds/MyWindowServerOSImage.vhd"
             }
         },
 
