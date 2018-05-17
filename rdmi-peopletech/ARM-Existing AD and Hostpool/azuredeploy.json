@@ -122,6 +122,49 @@
 
     "resources": [
         {
+            "apiVersion": "2017-08-01",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "sku": {
+                "name": "Basic"
+            },
+            "name": "[concat('rdsh-', copyindex(),'publicIp')]",
+            "location": "[resourcegroup().location]",
+            "copy": {
+                "name": "rdsh-vm-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "properties": {
+                "publicIpAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[concat('rdsh-', copyindex(),'nsg')]",
+            "apiVersion": "2017-06-01",
+            "location": "[resourcegroup().location]",
+            "copy": {
+                "name": "rdsh-vm-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "default-allow-rdp",
+                        "properties": {
+                            "priority": 1000,
+                            "protocol": "TCP",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "3389"
+                        }
+                    }
+                ]
+            }
+        },
+		{
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat('rdsh-', copyindex(), '-nic')]",
@@ -138,12 +181,25 @@
                             "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
                                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]"
+                            },
+							"publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', concat('rdsh-', copyindex(), 'publicIp'))]"
                             }
                         }
                     }
-                ]
-            }
+
+
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat('rdsh-', copyindex(), 'nsg'))]"
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIpAddresses/', 'rdsh-', copyindex(), 'publicIp')]",
+                "[concat('Microsoft.Network/networkSecurityGroups/', 'rdsh-', copyindex(), 'nsg')]"
+            ]
         },
+
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/availabilitySets",
@@ -260,4 +316,4 @@
             ]
         }
      ]
-}
+	 }
