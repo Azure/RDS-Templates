@@ -43,13 +43,13 @@
                 "description": "Domain name of the exisiting AD"
             }
         },
-        "existingDomainAdminUsername": {
+        "existingDomainUsername": {
             "type": "string",
             "metadata": {
                 "description": "The name of administrator in the existing AD"
             }
         },
-        "existingDomainAdminPassword": {
+        "existingDomainPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "Domain administrator password"
@@ -173,8 +173,8 @@
                 
                 "osProfile": {
                     "computerName": "[concat('rdsh-', copyindex())]",
-                    "adminUsername": "[parameters('existingDomainAdminUsername')]",
-                    "adminPassword": "[parameters('existingDomainAdminPassword')]"
+                    "adminUsername": "[parameters('existingDomainUsername')]",
+                    "adminPassword": "[parameters('existingDomainPassword')]"
                 },
                 "storageProfile": {
                     "osDisk": {
@@ -225,14 +225,14 @@
                             "Properties": {
                                 "DomainName": "[parameters('existingDomainName')]",
                                 "AdminCreds": {
-                                    "UserName": "[parameters('existingDomainAdminUsername')]",
+                                    "UserName": "[parameters('existingDomainUsername')]",
                                     "Password": "PrivateSettingsRef:AdminPassword"
                                 }
                             }
                         },
                         "protectedSettings": {
                             "Items": {
-                                "AdminPassword": "[parameters('existingDomainAdminPassword')]"
+                                "AdminPassword": "[parameters('existingDomainPassword')]"
                             }
                         }
                     }
@@ -252,7 +252,7 @@
                       "autoUpgradeMinorVersion": true,
                       "settings": {
                          "fileUris": ["https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/ARM-Existing%20AD%20and%20Hostpool/Scripts/Script.ps1"],
-                         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -MaxSessionLimit \"', variables('SessionHostMaximumSessionLimit'), '\"',' ', ' -Hours \"', variables('RegistrationExpairationHours'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ',' -DomainAdminUsername \"', parameters('ExistingDomainAdminUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('ExistingDomainAdminpassword'), '\"',' ', ' -InitializeDBSecret \"', parameters('InitializeDBSecret'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"')]"
+                         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -MaxSessionLimit \"', variables('SessionHostMaximumSessionLimit'), '\"',' ', ' -Hours \"', variables('RegistrationExpairationHours'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ',' -DomainAdminUsername \"', parameters('existingDomainUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -InitializeDBSecret \"', parameters('InitializeDBSecret'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"')]"
                       }
                     }
                   }
