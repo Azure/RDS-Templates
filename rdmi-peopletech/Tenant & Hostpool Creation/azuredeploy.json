@@ -3,65 +3,65 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "RDBrokerURL": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "provide RdbrokerURI"
             }
         },
         "HosterAdminName": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "HosterAdminName for the Azure Partner Account."
             }
         },
         "HosterAdminPassword": {
-            "type": "securestring",
+            "type": "SecureString",
             "metadata": {
                 "description": "HosterAdminPassword for the Azure Partner Account."
             }
         },
         "AadTenantId": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "AadTenantId for the Azure Tenant Account."
             }
         },
         "TenantName": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "Provide Tenant Name"
             }
         },
         "TenantFriendlyName": {
-            "type": "string",
             "defaultValue": "",
+            "type": "string",
             "metadata": {
                 "description": "Provide Tenant FriendlyName"
             }
         },
         "TenantDescription": {
-            "type": "string",
             "defaultValue": "",
+            "type": "string",
             "metadata": {
                 "description": "Provide Tenant Description"
             }
         },
         "HostpoolName": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "Provide Hostpool Name"
             }
         },
         "HostpoolFriendlyName": {
-            "type": "string",
             "defaultValue": "",
+            "type": "string",
             "metadata": {
                 "description": "Provide Hostpool FriendlyName"
             }
         },
         "HostpoolDescription": {
-            "type": "string",
             "defaultValue": "",
+            "type": "string",
             "metadata": {
                 "description": "Provide Hostpool Description"
             }
@@ -74,21 +74,24 @@
         "subnetPrefix": "10.0.0.0/24",
         "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
         "vmName": "MyVM",
+        "TFriendlyName":"[if(equals(parameters('TenantFriendlyName'),'empty'), json('null'), parameters('TenantFriendlyName'))]",
+        "TDescription":"[if(equals(parameters('TenantDescription'),'empty'), json('null'), parameters('TenantDescription'))]",
+        "HFriendlyName":"[if(equals(parameters('HostpoolFriendlyName'),'empty'), json('null'), parameters('HostpoolFriendlyName'))]",
+        "HDescription":"[if(equals(parameters('HostpoolDescription'),'empty'), json('null'), parameters('HostpoolDescription'))]",
         "virtualNetworkName": "MyVNET",
         "publicIPAddressName": "myPublicIP",
         "dnsNameForPublicIP": "[uniqueString(resourceGroup().name)]",
         "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Tenant%20%26%20Hostpool%20Creation/Scripts/",
-        "PSModules": "PowershellModules.zip",
         "adminUsername": "vmadmin",
         "adminPassword": "Welcome@12345",
         "resourcegroupname": "[resourceGroup().name]",
-        "FileURI": "[concat(variables('_artifactsLocation'), variables('PSModules'))]"
+        "FileURI": "[concat(variables('_artifactsLocation'),'/PSModules.zip')]"
     },
     "resources": [
         {
-            "apiVersion": "2016-09-01",
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('publicIPAddressName')]",
+            "apiVersion": "2016-09-01",
             "location": "[resourceGroup().location]",
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
@@ -98,9 +101,9 @@
             }
         },
         {
-            "apiVersion": "2016-09-01",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[variables('virtualNetworkName')]",
+            "apiVersion": "2016-09-01",
             "location": "[resourceGroup().location]",
             "properties": {
                 "addressSpace": {
@@ -119,14 +122,10 @@
             }
         },
         {
-            "apiVersion": "2016-09-01",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[variables('nicName')]",
+            "apiVersion": "2016-09-01",
             "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[variables('publicIPAddressName')]",
-                "[variables('virtualNetworkName')]"
-            ],
             "properties": {
                 "ipConfigurations": [
                     {
@@ -142,16 +141,17 @@
                         }
                     }
                 ]
-            }
+            },
+            "dependsOn": [
+                "[variables('publicIPAddressName')]",
+                "[variables('virtualNetworkName')]"
+            ]
         },
         {
-            "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[variables('vmName')]",
+            "apiVersion": "2016-04-30-preview",
             "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[variables('nicName')]"
-            ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "Standard_D1_v2"
@@ -184,11 +184,8 @@
                 {
                     "type": "extensions",
                     "name": "CustomScriptExtension",
-                    "apiVersion": "2015-06-15",
+                    "apiVersion": "2016-04-30-preview",
                     "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[variables('vmName')]"
-                    ],
                     "properties": {
                         "publisher": "Microsoft.Compute",
                         "type": "CustomScriptExtension",
@@ -198,10 +195,16 @@
                             "fileUris": [
                                 "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Tenant%20%26%20Hostpool%20Creation/Scripts/Script.ps1"
                             ],
-                            "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1', ' -RDBrokerURI \"', parameters('RDBrokerURL'), '\"',' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"',' ', ' -TenantName \"', parameters('TenantName'), '\"',' ', ' -FriendlyName \"', parameters('TenantFriendlyName'), '\"',' ', ' -Description \"', parameters('TenantDescription'), '\"',' ',' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -HostPoolFriendlyName \"', parameters('HostPoolFriendlyName'), '\"',' ', ' -HostPoolDescription \"', parameters('HostPoolDescription'), '\"',' ', ' -Username \"', parameters('HosterAdminName'), '\"',' ', ' -password \"', parameters('HosterAdminPassword'), '\"',' ', '-resourcegroupname \"', variables('resourcegroupname'), '\"',' ', ' -Fileuri \"', variables('FileUri'), '\"')]"
+                            "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1', ' -RDBrokerURI \"', parameters('RDBrokerURL'), '\"',' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"',' ', ' -TenantName \"', parameters('TenantName'), '\"',' ', ' -FriendlyName \"', variables('TFriendlyName'), '\"',' ', ' -Description \"', variables('TDescription'), '\"',' ',' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -HostPoolFriendlyName \"', variables('HFriendlyName'), '\"',' ', ' -HostPoolDescription \"', variables('HDescription'), '\"',' ', ' -Username \"', parameters('HosterAdminName'), '\"',' ', ' -password \"', parameters('HosterAdminPassword'), '\"',' ', '-ResourceGroupName \"', variables('resourcegroupname'), '\"',' ', ' -fileURI \"', variables('FileUri'), '\"')]"
                         }
-                    }
+                    },
+                    "dependsOn": [
+                        "[variables('vmName')]"
+                    ]
                 }
+            ],
+            "dependsOn": [
+                "[variables('nicName')]"
             ]
         }
     ]
