@@ -34,14 +34,14 @@
         },
         "TenantFriendlyName": {
             "type": "string",
-            "defaultValue": " ",
+            "defaultValue": "",
             "metadata": {
                 "description": "Provide Tenant FriendlyName"
             }
         },
         "TenantDescription": {
             "type": "string",
-            "defaultValue": " ",
+            "defaultValue": "",
             "metadata": {
                 "description": "Provide Tenant Description"
             }
@@ -54,14 +54,14 @@
         },
         "HostpoolFriendlyName": {
             "type": "string",
-            "defaultValue": " ",
+            "defaultValue": "",
             "metadata": {
                 "description": "Provide Hostpool FriendlyName"
             }
         },
         "HostpoolDescription": {
             "type": "string",
-            "defaultValue": " ",
+            "defaultValue": "",
             "metadata": {
                 "description": "Provide Hostpool Description"
             }
@@ -76,8 +76,8 @@
         "vmName": "MyVM",
         "virtualNetworkName": "MyVNET",
         "publicIPAddressName": "myPublicIP",
-        "dnsNameForPublicIP": "[uniqueString(resourceGroup().id)]",
-        "_artifactsLocation": "https://raw.githubusercontent.com/sreenathakk/testrepository/master/",
+        "dnsNameForPublicIP": "[uniqueString(resourceGroup().name)]",
+        "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Tenant%20%26%20Hostpool%20Creation/Scripts/",
         "PSModules": "PowershellModules.zip",
         "adminUsername": "vmadmin",
         "adminPassword": "Welcome@12345",
@@ -196,7 +196,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": {
                             "fileUris": [
-                                "https://raw.githubusercontent.com/sreenathakk/testrepository/master/Script.ps1"
+                                "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Tenant%20%26%20Hostpool%20Creation/Scripts/Script.ps1"
                             ],
                             "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1', ' -RDBrokerURI \"', parameters('RDBrokerURL'), '\"',' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"',' ', ' -TenantName \"', parameters('TenantName'), '\"',' ', ' -FriendlyName \"', parameters('TenantFriendlyName'), '\"',' ', ' -Description \"', parameters('TenantDescription'), '\"',' ',' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -HostPoolFriendlyName \"', parameters('HostPoolFriendlyName'), '\"',' ', ' -HostPoolDescription \"', parameters('HostPoolDescription'), '\"',' ', ' -Username \"', parameters('HosterAdminName'), '\"',' ', ' -password \"', parameters('HosterAdminPassword'), '\"',' ', '-resourcegroupname \"', variables('resourcegroupname'), '\"',' ', ' -Fileuri \"', variables('FileUri'), '\"')]"
                         }

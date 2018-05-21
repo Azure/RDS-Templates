@@ -42,35 +42,23 @@ Param(
     [string] $Password,
     [Parameter(Mandatory=$True)]
     [string] $ResourceGroupName
-
-
-  
+ 
 )
 
 
-Invoke-WebRequest -Uri $fileURI -OutFile "C:\PowershellModules.zip"
-Expand-Archive "C:\PowershellModules.zip" -DestinationPath "C:\"
-Import-Module "C:\PowershellModules\Microsoft.RDInfra.RDPowershell.dll"
+Invoke-WebRequest -Uri $fileURI -OutFile "C:\PSModules.zip"
+Start-Sleep -Seconds 30
+New-Item -Path "C:\PSModules" -ItemType directory -Force -ErrorAction SilentlyContinue
+Expand-Archive "C:\PSModules.zip" -DestinationPath "C:\PSModules" -ErrorAction SilentlyContinue
+Set-Location "C:\PSModules"
+Import-Module ".\PSModules\Microsoft.RDInfra.RDPowershell.dll"
 $SecurePass = $Password | ConvertTo-SecureString -asPlainText -Force
 $Credential = New-Object System.Management.Automation.PSCredential($Username,$SecurePass)
 Set-RdsContext -DeploymentUrl $RdbrokerURI -Credential $Credential
 $newRdsTenant=New-RdsTenant -Name $TenantName -AadTenantId $AadTenantId -FriendlyName $FriendlyName -Description $Description
 $newRDSHostPool=New-RdsHostPool -TenantName $TenantName  -Name $HostPoolName -Description $HostPoolDescription -FriendlyName $HostPoolFriendlyName
-
+<#
 Remove-Item -Path "C:\PowershellModules.zip" -Recurse -force
 Remove-Item -Path "C:\PowershellModules" -Recurse -Force
-
-
-$Securepass=ConvertTo-SecureString -String $Password -AsPlainText -Force
-$Azurecred=New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList($Username, $Securepass)
-Install-Module -Name AzureRM.Profile -AllowClobber -Force
-Install-Module -Name AzureRM.Compute -AllowClobber -Force
-Import-Module -Name AzureRM.Profile
-Import-Module -Name AzureRM.Compute
-
-$login=Login-AzureRmAccount -Credential $Azurecred -TenantId $AadTenantId
-
-$ResourceGroup=Get-AzureRmResourceGroup -Name $ResourceGroupName
-if($ResourceGroup){
-Remove-AzureRmResourceGroup -Name $ResourceGroupName -Force
-}
+#>
+.\RemoveRG.ps1 -AadTenantId $AadTenantId -Username $Username -Password $Password -ResourceGroupName $ResourceGroupName
