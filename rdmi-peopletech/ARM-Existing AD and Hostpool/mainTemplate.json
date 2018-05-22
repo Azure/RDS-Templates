@@ -1,0 +1,263 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "VmImageVhdUri": {
+          "type": "string",
+          "metadata": {
+              "description": "URI for the VM Image VHD to use for RDSH instances. For example, https://rdsstorage.blob.core.windows.net/vhds/MyWindowServerOSImage.vhd"
+          }
+      },
+
+      "rdshNumberOfInstances": {
+          "type": "int",
+          "metadata": {
+              "description": "Number of RD Session Hosts"
+          }
+      },
+      "rdshVmSize": {
+          "type": "string",
+          "allowedValues": [
+            "Standard_A0",
+            "Standard_A1",
+            "Standard_A2",
+            "Standard_A3",
+            "Standard_A4",
+            "Standard_A5",
+            "Standard_A6",
+            "Standard_A7",
+            "Standard_D1",
+            "Standard_D2",
+            "Standard_D3",
+            "Standard_D4",
+            "Standard_D5"
+          ],
+          "metadata": {
+            "description": "The size of the RDSH VMs"
+          },
+          "defaultValue": "Standard_A2"
+      },
+      "existingDomainName": {
+          "type": "string",
+          "metadata": {
+              "description": "Domain name of the exisiting AD"
+          }
+      },
+      "existingDomainUsername": {
+          "type": "string",
+          "metadata": {
+              "description": "The name of administrator in the existing AD"
+          }
+      },
+      "existingDomainPassword": {
+          "type": "securestring",
+          "metadata": {
+              "description": "Domain administrator password"
+          }
+      },
+      "existingVnetName": {
+          "type": "string",
+          "metadata": {
+              "description": "VNET name"
+          }
+      },
+      "existingSubnetName": {
+          "type": "string",
+          "metadata": {
+              "description": "Subnet name"
+          }
+      },
+      "RDBrokerURL":{
+          "type": "string",
+          "metadata": {
+              "description": "The URL of RD Broker"
+          }
+      },
+      
+      "ExistingTenantName":{
+          "type": "string",
+          "metadata": {
+              "description": "Existed Tenant Name"
+          }
+      },
+      "HostPoolName":{
+          "type": "string",
+          "metadata": {
+              "description": "New or Existing HostPool Name"
+          }
+      },
+      "InitializeDBSecret":{
+          "type": "string",
+          "metadata": {
+              "description": "New or Existing HostPool Name"
+          }
+      },
+      
+      "DelegatedAdminUsername":{
+          "type": "string",
+          "defaultvalue":"",
+          "metadata": {
+              "description": "Delegated admin username"
+          }
+      },
+      "DelegatedAdminPassword":{
+          "type": "securestring",
+          "defaultvalue":"",
+          "metadata": {
+              "description": "Delegated admin Password"
+          }
+      }
+
+  },
+
+  "variables": {
+      "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
+      "HostPoolFriendlyName": "Hostpool",
+      "HostPoolDescription": "template through create hostpool",
+      "RegistrationExpairationHours": "8760",
+      "SessionHostMaximumSessionLimit": "998",
+      "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/ARM-Existing%20AD%20and%20Hostpool/",
+      "fileURI": "[concat(variables('_artifactsLocation'),'/Scripts/DeployAgent.zip')]"        
+  },
+
+  "resources": [
+      {
+          "apiVersion": "2015-06-15",
+          "type": "Microsoft.Network/networkInterfaces",
+          "name": "[concat('rdsh-', copyindex(), '-nic')]",
+          "location": "[resourceGroup().location]",
+          "copy": {
+              "name": "rdsh-nic-loop",
+              "count": "[parameters('rdshNumberOfInstances')]"
+          },
+          "properties": {
+              "ipConfigurations": [
+                  {
+                      "name": "ipconfig",
+                      "properties": {
+                          "privateIPAllocationMethod": "Dynamic",
+                          "subnet": {
+                              "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]"
+                          }
+                      }
+                  }
+              ]
+          }
+      },
+      {
+          "apiVersion": "2015-06-15",
+          "type": "Microsoft.Compute/availabilitySets",
+          "name": "[concat('rdsh-', copyindex(),'availabilitySet')]",
+          "location": "[resourceGroup().location]",
+          "copy": {
+              "name": "rdsh-vm-loop",
+              "count": "[parameters('rdshNumberOfInstances')]"
+          }
+      },
+      {
+          "apiVersion": "2015-06-15",
+          "type": "Microsoft.Compute/virtualMachines",
+          "name": "[concat('rdsh-', copyindex())]",
+          "location": "[resourceGroup().location]",
+          "copy": {
+              "name": "rdsh-vm-loop",
+              "count": "[parameters('rdshNumberOfInstances')]"
+          },
+          "dependsOn": [
+              "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(), '-nic')]"
+          ],
+          "properties": {
+              "hardwareProfile": {
+                  "vmSize": "[parameters('rdshVmSize')]"
+              },
+              
+              "osProfile": {
+                  "computerName": "[concat('rdsh-', copyindex())]",
+                  "adminUsername": "[parameters('existingDomainUsername')]",
+                  "adminPassword": "[parameters('existingDomainPassword')]"
+              },
+              "storageProfile": {
+                  "osDisk": {
+                      "name": "[concat('rdsh-', copyindex(),'-osDisk')]",
+                      "osType": "Windows",
+                      "caching": "ReadWrite",
+                      "createOption": "FromImage",
+                      "image": {
+                          "uri": "[parameters('VmImageVhdUri')]"
+                      },
+                      "vhd": {
+                          "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob, 'vhds/rdsh-', copyindex(), '-osdisk.vhd')]"
+                      }
+
+                  }
+              },
+              "networkProfile": {
+                  "networkInterfaces": [
+                      {
+                          "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('rdsh-', copyindex(), '-nic'))]"
+                      }
+                  ]
+              },
+              "diagnosticsProfile": {
+                  "bootDiagnostics": {
+                      "enabled": "true",
+                      "storageUri": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob]"
+                  }
+              }
+          },
+           "resources": [
+              {
+                  "apiVersion": "2015-06-15",
+                  "type": "extensions",
+                  "name": "dscextension",
+                  "location": "[resourceGroup().location]",
+                  "dependsOn": [
+                      "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex()))]"
+                  ],
+                  "properties": {
+                      "publisher": "Microsoft.Powershell",
+                      "type": "DSC",
+                      "typeHandlerVersion": "2.11",
+                      "autoUpgradeMinorVersion": true,
+                      "settings": {
+                          "ModulesUrl": "[concat(variables('_artifactsLocation'),'/DSC/Configuration.zip')]",
+                          "ConfigurationFunction": "Configuration.ps1\\SessionHost",
+                          "Properties": {
+                              "DomainName": "[parameters('existingDomainName')]",
+                              "AdminCreds": {
+                                  "UserName": "[parameters('existingDomainUsername')]",
+                                  "Password": "PrivateSettingsRef:AdminPassword"
+                              }
+                          }
+                      },
+                      "protectedSettings": {
+                          "Items": {
+                              "AdminPassword": "[parameters('existingDomainPassword')]"
+                          }
+                      }
+                  }
+              },
+              {
+                  "type": "extensions",
+                  "apiVersion": "2015-06-15", 
+                  "name": "[concat('dagent', copyindex())]",
+                  "location": "[resourceGroup().location]",
+                  "dependsOn": [
+                      "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex()))]"
+                  ],
+                  "properties": {
+                    "publisher": "Microsoft.Compute",
+                    "type": "CustomScriptExtension",
+                    "typeHandlerVersion": "1.8",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {
+                       "fileUris": ["https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/ARM-Existing%20AD%20and%20Hostpool/Scripts/Script.ps1"],
+                       "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -MaxSessionLimit \"', variables('SessionHostMaximumSessionLimit'), '\"',' ', ' -Hours \"', variables('RegistrationExpairationHours'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ',' -DomainAdminUsername \"', parameters('existingDomainUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -InitializeDBSecret \"', parameters('InitializeDBSecret'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"')]"
+                    }
+                  }
+                }
+
+          ]
+      }
+   ]
+}

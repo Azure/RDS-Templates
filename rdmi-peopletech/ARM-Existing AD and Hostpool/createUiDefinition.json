@@ -1,0 +1,249 @@
+{
+  "handler": "Microsoft.Compute.MultiVm",
+  "version": "0.0.1-preview",
+  "parameters": {
+    "basics": [
+      {
+        "name": "tenantName",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Existing Tenant Id",
+        "toolTip": "Id of the tenant in which Sessions Hosts are to be created",
+        "osPlatform": "Windows",
+        "visible": true,
+        "constraints": {
+          "required": true
+        }
+      }
+    ],
+    "steps": [
+      {
+        "name": "domainAndNetworkSettings",
+        "label": "Domain and network settings",
+        "subLabel": {
+          "preValidation": "Configure the domain and network",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "Domain and network settings",
+        "elements": [
+           {
+            "name": "existingDomainName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Existing Domain Name",
+            "defaultValue": "contoso.com",
+            "toolTip":  "Name of the existing domain in which Session Hosts are to be created.",
+            "constraints": {
+              "required": true,
+              "regex": "^(?=.{3,15}$)([a-z0-9]+\\.)?([a-z0-9][a-z0-9-]*\\.)+[a-z]{2,6}$",
+              "validationMessage": "The domain name must satisfy NETBIOS requirements, so the recommendation is for a short test domain name (under 15 characters) such as contoso.com . Otherwise, the domain name can be up to 63 characters, contain lowercase alphanumeric characters and hypens, and end with a top level domain (such as .com, .net). "
+            },
+            "visible": true
+          },
+          {
+            "name": "existingDomainUsername",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Existing Domain Username",
+            "defaultValue": "",
+            "toolTip":  "This account must have privileges to join computers to the domain.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "existingDomainPassword",
+            "type": "Microsoft.Common.PasswordBox",
+            "label": "Existing Domain Password",
+            "defaultValue": "",
+            "toolTip":  "Admin Password of the existing domain in which Session Hosts are to be created.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true,
+            "osPlatform": "Windows"
+          },
+          {
+            "name": "adVnetName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Existing Virtual Network Name",
+            "defaultValue": "",
+            "toolTip":  "Name of the existing virtual network in which Session Hosts are to be created.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "adSubnetName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Existing Subnet Name",
+            "defaultValue": "",
+            "toolTip":  "Name of the existing sub network in which Session Hosts are to be created.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          }
+        ]
+      },
+      {
+        "name": "rdshandVMSettings",
+        "label": "RDSH and VM settings",
+        "subLabel": {
+          "preValidation": "Configure the RDSH and other VMs",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "RDSH and VM settings",
+        "elements": [
+          {
+            "name": "vmImageVhdUri",
+            "type": "Microsoft.Common.TextBox",
+            "label": "VM Image URI",
+            "defaultValue": "",
+            "toolTip": "URI for the VM image to use for RDSH instances. For example, https://rdsstorage.blob.core.windows.net/vhds/MyWindowServerOSImage.vhd",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "numberOfRDSHInstances",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Number of RDSH instances",
+            "defaultValue": "2",
+            "toolTip": "The number of RDSH instances for the deployment",
+            "constraints": {
+              "regex": "^[1-9][0-9]*$",
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "rdshVMSize",
+            "type": "Microsoft.Compute.SizeSelector",
+            "label": "RDSH VM Size",
+            "toolTip": "The size for the RDSH virtual machines",
+            "recommendedSizes": [
+              "Standard_A4_v2",
+              "Standard_D3_v2",
+              "Standard_NV6"
+            ],
+            "constraints": {
+              "allowedSizes": [
+                "Standard_A1",
+                "Standard_A2",
+                "Standard_A3",
+                "Standard_A4",
+                "Standard_A5",
+                "Standard_A6",
+                "Standard_A7",
+                "Standard_A1_v2",
+                "Standard_A2_v2",
+                "Standard_A4_v2",
+                "Standard_A8_v2",
+                "Standard_D1",
+                "Standard_D2",
+                "Standard_D3",
+                "Standard_D4",
+                "Standard_D5",
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_D5_v2",
+                "Standard_NV6",
+                "Standard_NV12",
+                "Standard_NV24"
+              ]
+            },
+            "osPlatform" :"Windows",
+            "count": "[steps('rdshandVMSettings').numberOfRDSHInstances]",
+            "visible": true
+          }
+        ]
+      },
+      {
+        "name": "rdmiHosterSettings",
+        "label": "Rdmi Hoster settings",
+        "subLabel": {
+          "preValidation": "Configure RDmi Hoster settings",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "RDmi Hoster Settings",
+        "elements": [
+          {
+            "name": "rdBrokerUrl",
+            "type": "Microsoft.Common.TextBox",
+            "label": "RD Broker URL",
+            "defaultValue": "",
+            "toolTip": "The URL of RD Broker with which RDSH has to be registered.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "delegatedAdminUsername",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Delegated Admin Tenant Username",
+            "defaultValue": "",
+            "toolTip": "Azure username who has delegated admin permissions to RDmi infra.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "delegatedAdminpassword",
+            "type": "Microsoft.Common.PasswordBox",
+            "label": "Delegated Admin Password",
+            "defaultValue": "",
+            "toolTip": "Password of the delegated admin.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true,
+            "osPlatform": "Windows"
+          },
+          {
+            "name": "hostPoolName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Session Host Pool Name",
+            "defaultValue": "",
+            "toolTip": "Name of the new or existing host pool into which RDSHs are to be created.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "initializeDBSecret",
+            "type": "Microsoft.Common.TextBox",
+            "label": "DB Secret",
+            "defaultValue": "",
+            "toolTip": "DB secret from RDmi.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "VmImageVhdUri": "[steps('rdshandVMSettings').vmImageVhdUri]",
+      "rdshNumberOfInstances": "[int(steps('rdshandVMSettings').numberOfRDSHInstances)]",
+      "rdshVmSize": "[steps('rdshandVMSettings').rdshVMSize]",
+      "existingDomainName": "[steps('domainAndNetworkSettings').existingDomainName]",
+      "existingDomainUsername": "[steps('domainAndNetworkSettings').existingDomainUsername]",
+      "existingDomainPassword": "[steps('domainAndNetworkSettings').existingDomainPassword]",
+      "existingVnetName": "[steps('domainAndNetworkSettings').adVnetName]",
+      "existingSubnetName": "[steps('domainAndNetworkSettings').adSubnetName]",
+      "RDBrokerURL": "[steps('rdmiHosterSettings').rdBrokerUrl]",
+      "ExistingTenantName": "[steps('domainAndNetworkSettings').tenantName]",
+      "HostPoolName": "[steps('rdmiHosterSettings').hostPoolName]",
+      "InitializeDBSecret": "[steps('rdmiHosterSettings').initializeDBSecret]",
+      "DelegatedAdminUsername": "[steps('rdmiHosterSettings').delegatedAdminUsername]",
+      "DelegatedAdminPassword": "[steps('rdmiHosterSettings').delegatedAdminpassword]"
+    }
+  }
+}
