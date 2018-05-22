@@ -56,16 +56,16 @@ Set-Location "C:\DeployAgent"
 $CheckRegistery = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
 
 #Getting fqdn of rdsh vm
-$SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
+
 if (!$CheckRegistery) {
-	
+	Start-Sleep 240
     #Importing RDMI PowerShell module
     Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
 	$Securepass = ConvertTo-SecureString -String $DelegateAdminpassword -AsPlainText -Force
 	$Credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($DelegateAdminUsername,$Securepass)
 	$DAdminSecurepass = ConvertTo-SecureString -String $DomainAdminPassword -AsPlainText -Force
 	$domaincredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($DomainAdminUsername,$DAdminSecurepass)
-
+    $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
 	#Setting RDS Context
 	Set-RdsContext -DeploymentUrl $RDBrokerURL -Credential $Credentials
 	Write-Host "executed success"
