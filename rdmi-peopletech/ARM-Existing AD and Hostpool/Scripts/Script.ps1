@@ -8,13 +8,13 @@
 	[Parameter(mandatory = $false)]
 	[string]$TenantName,
 
-    [Parameter(mandatory = $true)]
+	[Parameter(mandatory = $true)]
 	[string]$HostPoolName,
 
 	[Parameter(mandatory = $false)]
 	[string]$Description,
 
-   
+
 	[Parameter(mandatory = $false)]
 	[string]$FriendlyName,
 
@@ -58,42 +58,41 @@ $CheckRegistery = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\
 #Getting fqdn of rdsh vm
 
 if (!$CheckRegistery) {
-    #Importing RDMI PowerShell module
-    Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
+	#Importing RDMI PowerShell module
+	Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
 	$Securepass = ConvertTo-SecureString -String $DelegateAdminpassword -AsPlainText -Force
 	$Credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($DelegateAdminUsername,$Securepass)
 	$DAdminSecurepass = ConvertTo-SecureString -String $DomainAdminPassword -AsPlainText -Force
 	$domaincredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($DomainAdminUsername,$DAdminSecurepass)
-    $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
+	$SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
 	#Setting RDS Context
 	Set-RdsContext -DeploymentUrl $RDBrokerURL -Credential $Credentials
 	Write-Host "executed success"
 	$HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
 	if ($HPName) {
-        #Exporting existed rdsregisterationinfo of hostpool
+		#Exporting existed rdsregisterationinfo of hostpool
 		$Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName
-		
-        #Executing DeployAgent psl file in rdsh vm and add to hostpool
-        .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -InitializeDBSecret $InitializeDBSecret -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
-		
+
+		#Executing DeployAgent psl file in rdsh vm and add to hostpool
+		.\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -InitializeDBSecret $InitializeDBSecret -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
+
 	}
 
 	else
-	
-    {
+
+	{
 		# creating new hostpool
-        $Hostpool = New-RdsHostPool -TenantName $TenantName -Name $HostPoolName -Description $Description -FriendlyName $FriendlyName
-		
-        #Registering hostpool with 365 days
-        $ToRegister = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
-		
-        #Executing DeployAgent psl file in rdsh vm and add to hostpool
-        .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -InitializeDBSecret $InitializeDBSecret -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $ToRegister.Token -StartAgent $true
-		
+		$Hostpool = New-RdsHostPool -TenantName $TenantName -Name $HostPoolName -Description $Description -FriendlyName $FriendlyName
+
+		#Registering hostpool with 365 days
+		$ToRegister = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
+
+		#Executing DeployAgent psl file in rdsh vm and add to hostpool
+		.\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -InitializeDBSecret $InitializeDBSecret -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $ToRegister.Token -StartAgent $true
+
 	}
-        #add rdsh vm to hostpool
-        Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true -MaxSessionLimit $MaxSessionLimit
+	#add rdsh vm to hostpool
+	Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true -MaxSessionLimit $MaxSessionLimit
 }
-#Remove-Item -Path "C:\DeployAgent.zip" -Recurse -force
-#Remove-Item -Path "C:\DeployAgent" -Recurse -Force
+
 
