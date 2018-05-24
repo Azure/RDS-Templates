@@ -58,7 +58,6 @@ $CheckRegistery = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\
 #Getting fqdn of rdsh vm
 
 if (!$CheckRegistery) {
-	Start-Sleep 240
     #Importing RDMI PowerShell module
     Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
 	$Securepass = ConvertTo-SecureString -String $DelegateAdminpassword -AsPlainText -Force
