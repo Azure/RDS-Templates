@@ -88,13 +88,18 @@ if (!$CheckRegistery) {
         #Exporting existed rdsregisterationinfo of hostpool
         $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName
 
+        $systemdate = (GET-DATE)
+        $Tokenexpiredate = $Registered.ExpirationUtc
+        $difference = $Tokenexpiredate - $systemdate
+        if ($difference -lt 0 -or $Registered -eq 'null') {
+            $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
+        }
         #Executing DeployAgent psl file in rdsh vm and add to hostpool
         .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -InitializeDBSecret $InitializeDBSecret -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
 
     }
 
-    else
-    {
+    else {
         # creating new hostpool
         $Hostpool = New-RdsHostPool -TenantName $TenantName -Name $HostPoolName -Description $Description -FriendlyName $FriendlyName
 

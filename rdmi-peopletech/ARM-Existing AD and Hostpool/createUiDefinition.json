@@ -6,7 +6,7 @@
       {
         "name": "tenantName",
         "type": "Microsoft.Common.TextBox",
-        "label": "Existing Tenant Id",
+        "label": "RDS Tenant Name",
         "toolTip": "Id of the tenant in which Sessions Hosts are to be created",
         "osPlatform": "Windows",
         "visible": true,
@@ -214,17 +214,6 @@
               "required": true
             },
             "visible": true
-          },
-          {
-            "name": "initializeDBSecret",
-            "type": "Microsoft.Common.TextBox",
-            "label": "DB Secret",
-            "defaultValue": "",
-            "toolTip": "DB secret from RDmi.",
-            "constraints": {
-              "required": true
-            },
-            "visible": true
           }
         ]
       }
@@ -241,7 +230,6 @@
       "RDBrokerURL": "[steps('rdmiHosterSettings').rdBrokerUrl]",
       "ExistingTenantName": "[steps('domainAndNetworkSettings').tenantName]",
       "HostPoolName": "[steps('rdmiHosterSettings').hostPoolName]",
-      "InitializeDBSecret": "[steps('rdmiHosterSettings').initializeDBSecret]",
       "DelegatedAdminUsername": "[steps('rdmiHosterSettings').delegatedAdminUsername]",
       "DelegatedAdminPassword": "[steps('rdmiHosterSettings').delegatedAdminpassword]"
     }
