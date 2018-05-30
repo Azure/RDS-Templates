@@ -159,13 +159,16 @@
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(), '-nic')]"
+                "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(), '-nic')]",
+                "[concat('Microsoft.Compute/availabilitySets/', 'rdsh-', copyindex(), 'availabilitySet')]"
             ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
-                
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets/', concat('rdsh-', copyindex(), 'availabilitySet'))]"
+                },
                 "osProfile": {
                     "computerName": "[concat('rdsh-', copyindex())]",
                     "adminUsername": "[parameters('existingDomainUsername')]",

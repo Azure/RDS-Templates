@@ -81,8 +81,14 @@ if (!$CheckRegistery) {
     Set-RdsContext -DeploymentUrl $RDBrokerURL -Credential $Credentials
     Write-Host "executed success"
     $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
+    
     if ($HPName) {
-        #Exporting existed rdsregisterationinfo of hostpool
+        # Cheking UseReverseConnect is true
+        if($HPName.UseReverseConnect -eq 'false')
+        {
+            Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
+        }
+        # Exporting existed rdsregisterationinfo of hostpool
         $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName
 
         $systemdate = (GET-DATE)
@@ -91,7 +97,7 @@ if (!$CheckRegistery) {
         if ($difference -lt 0 -or $Registered -eq 'null') {
             $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
         }
-        #Executing DeployAgent psl file in rdsh vm and add to hostpool
+        # Executing DeployAgent psl file in rdsh vm and add to hostpool
         .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
 
     }
@@ -99,7 +105,10 @@ if (!$CheckRegistery) {
     else {
         # creating new hostpool
         $Hostpool = New-RdsHostPool -TenantName $TenantName -Name $HostPoolName -Description $Description -FriendlyName $FriendlyName
-
+        
+        # setting up usereverseconnect as true
+        Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
+        
         #Registering hostpool with 365 days
         $ToRegister = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
 
