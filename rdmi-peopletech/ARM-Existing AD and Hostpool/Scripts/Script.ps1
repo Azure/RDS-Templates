@@ -84,7 +84,7 @@ if (!$CheckRegistery) {
     
     if ($HPName) {
         # Cheking UseReverseConnect is true
-        if($HPName.UseReverseConnect -eq 'false')
+        if($HPName.UseReverseConnect -eq $False)
         {
             Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
         }
