@@ -106,6 +106,17 @@
             "visible": true
           },
           {
+            "name": "rdshNamePrefix",
+            "type": "Microsoft.Common.TextBox",
+            "label": "RD SessionHost Prefix",
+            "defaultValue": "rdsh",
+            "toolTip": "The prefix used for the naming convention of the new Azure VMs. On successful deployment VM names will have the convention of prefix appended with instance number.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
             "name": "numberOfRDSHInstances",
             "type": "Microsoft.Common.TextBox",
             "label": "Number of RDSH instances",
@@ -220,6 +231,7 @@
     ],
     "outputs": {
       "VmImageVhdUri": "[steps('rdshandVMSettings').vmImageVhdUri]",
+      "rdshNamePrefix":"[steps('rdshandVMSettings').rdshNamePrefix]",
       "rdshNumberOfInstances": "[int(steps('rdshandVMSettings').numberOfRDSHInstances)]",
       "rdshVmSize": "[steps('rdshandVMSettings').rdshVMSize]",
       "existingDomainName": "[steps('domainAndNetworkSettings').existingDomainName]",

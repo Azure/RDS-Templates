@@ -8,7 +8,12 @@
                 "description": "URI for the VM Image VHD to use for RDSH instances. For example, https://rdsstorage.blob.core.windows.net/vhds/MyWindowServerOSImage.vhd"
             }
         },
-
+        "rdshNamePrefix":{
+            "type": "string",
+            "metadata": {
+                "description": "The prefix used for the naming convention of the new Azure VMs. On successful deployment VM names will have the convention of prefix appended with instance number."
+            }
+        },
         "rdshNumberOfInstances": {
             "type": "int",
             "metadata": {
@@ -105,10 +110,12 @@
     },
 
     "variables": {
+        "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
+        "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
         "HostPoolFriendlyName": "Hostpool",
         "HostPoolDescription": "template through create hostpool",
-        "RegistrationExpairationHours": "8760",
+        "RegistrationExpirationHours": "8760",
         "SessionHostMaximumSessionLimit": "998",
         "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/ARM-Existing%20AD%20and%20Hostpool/",
         "fileURI": "[concat(variables('_artifactsLocation'),'/Scripts/DeployAgent.zip')]"        
@@ -118,7 +125,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat('rdsh-', copyindex(), '-nic')]",
+            "name": "[concat(variables('rdshPrefix'), copyindex(), '-nic')]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-nic-loop",
@@ -141,42 +148,38 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/availabilitySets",
-            "name": "[concat('rdsh-', copyindex(),'availabilitySet')]",
-            "location": "[resourceGroup().location]",
-            "copy": {
-                "name": "rdsh-vm-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            }
+            "name": "[concat(parameters('rdshNamePrefix'), '-availabilitySet')]",
+            "location": "[resourceGroup().location]"
         },
         
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat('rdsh-', copyindex())]",
+            "name": "[concat(variables('rdshPrefix'), copyindex())]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', 'rdsh-', copyindex(), '-nic')]",
-                "[concat('Microsoft.Compute/availabilitySets/', 'rdsh-', copyindex(), 'availabilitySet')]"
+                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]",
+                "[concat('Microsoft.Compute/availabilitySets/', parameters('rdshNamePrefix'), 'availabilitySet')]"
             ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
                 "availabilitySet": {
-                    "id": "[resourceId('Microsoft.Compute/availabilitySets/', concat('rdsh-', copyindex(), 'availabilitySet'))]"
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets/', concat(variables('rdshPrefix'), 'availabilitySet'))]"
                 },
                 "osProfile": {
-                    "computerName": "[concat('rdsh-', copyindex())]",
+                    "computerName": "[concat(variables('rdshPrefix'), copyindex())]",
                     "adminUsername": "[parameters('existingDomainUsername')]",
                     "adminPassword": "[parameters('existingDomainPassword')]"
                 },
                 "storageProfile": {
                     "osDisk": {
-                        "name": "[concat('rdsh-', copyindex(),'-osDisk')]",
+                        "name": "[concat(variables('rdshPrefix'), copyindex(),'-osDisk')]",
                         "osType": "Windows",
                         "caching": "ReadWrite",
                         "createOption": "FromImage",
@@ -184,7 +187,7 @@
                             "uri": "[parameters('VmImageVhdUri')]"
                         },
                         "vhd": {
-                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob, 'vhds/rdsh-', copyindex(), '-osdisk.vhd')]"
+                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob, variables('vhds'), copyindex(), '-osdisk.vhd')]"
                         }
 
                     }
@@ -192,7 +195,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('rdsh-', copyindex(), '-nic'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('rdshPrefix'), copyindex(), '-nic'))]"
                         }
                     ]
                 },
@@ -210,7 +213,7 @@
                     "name": "dscextension",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', concat('rdsh-', copyindex()))]"
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('rdshPrefix'), copyindex()))]"
                     ],
                     "properties": {
                         "publisher": "Microsoft.Powershell",
@@ -240,10 +243,10 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat('rdsh-', copyindex(),'/','dagent')]",
+            "name": "[concat(variables('rdshPrefix'), copyindex(),'/','rdAgent')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-              "[concat('Microsoft.Compute/virtualMachines/', concat('rdsh-', copyindex(),'/extensions/dscextension'))]"
+              "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/dscextension'))]"
                ],
             "copy": {
                 "name": "rdsh-vm-loop",
@@ -259,7 +262,7 @@
               "autoUpgradeMinorVersion": true,
               "settings": {
                  "fileUris": ["https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/ARM-Existing%20AD%20and%20Hostpool/Scripts/Script.ps1"],
-                 "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -MaxSessionLimit \"', variables('SessionHostMaximumSessionLimit'), '\"',' ', ' -Hours \"', variables('RegistrationExpairationHours'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ',' -DomainAdminUsername \"', parameters('existingDomainUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"')]"
+                 "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -MaxSessionLimit \"', variables('SessionHostMaximumSessionLimit'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ',' -DomainAdminUsername \"', parameters('existingDomainUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"')]"
               }
             }
         }
