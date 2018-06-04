@@ -148,7 +148,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/availabilitySets",
-            "name": "[concat(parameters('rdshNamePrefix'), '-availabilitySet')]",
+            "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
             "location": "[resourceGroup().location]"
         },
         
@@ -163,7 +163,7 @@
             },
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]",
-                "[concat('Microsoft.Compute/availabilitySets/', parameters('rdshNamePrefix'), 'availabilitySet')]"
+                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
             ],
             "properties": {
                 "hardwareProfile": {

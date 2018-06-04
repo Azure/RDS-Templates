@@ -1,10 +1,10 @@
 ﻿<#
 
 .SYNOPSIS
-Creating Session Hosts and add to existing domain and existing/new Hostpool.
+Creating Hostpool and add sessionhost servers to existing/new Hostpool.
 
 .DESCRIPTION
-This script creates new session host servers, add to existing domain and existing/new Hostpool
+This script add sessionhost servers to existing/new Hostpool
 The supported Operating Systems Windows Server 2016.
 
 .ROLE
@@ -88,7 +88,7 @@ try {
     #Downloading the DeployAgent zip file to rdsh vm
     Invoke-WebRequest -Uri $fileURI -OutFile "C:\DeployAgent.zip"
     Start-Sleep -Seconds 25
-    Write-Log -Message "Downloaded DeployAgent.zip into this location c:\"
+    Write-Log -Message "Downloaded DeployAgent.zip into this location C:\"
 
     #Creating a folder inside rdsh vm for extracting deployagent zip file
     New-Item -Path "C:\DeployAgent" -ItemType directory -Force -ErrorAction SilentlyContinue
@@ -117,7 +117,7 @@ try {
         #Importing RDMI PowerShell module
     
         Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
-        Write-Log -Message "Imported RDMI powershell modules successfully"
+        Write-Log -Message "Imported RDMI PowerShell modules successfully"
         $Securepass = ConvertTo-SecureString -String $DelegateAdminpassword -AsPlainText -Force
         $Credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($DelegateAdminUsername, $Securepass)
         $DAdminSecurepass = ConvertTo-SecureString -String $DomainAdminPassword -AsPlainText -Force
@@ -173,7 +173,7 @@ try {
             }
             #Executing DeployAgent psl file in rdsh vm and add to hostpool
             $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
-            Write-Log -Message "DeployAgent Script file was successfully installed inside VM for existing hostpool $HostPoolName `
+            Write-Log -Message "DeployAgent Script was successfully executed and installed RDAgent, sidebyside inside VM for existing hostpool: $HostPoolName `
         $DAgentInstall"
         }
 
@@ -181,22 +181,23 @@ try {
             # creating new hostpool
             $Hostpool = New-RdsHostPool -TenantName $TenantName -Name $HostPoolName -Description $Description -FriendlyName $FriendlyName
             $HName = $hostpool.name | Out-String
-            Write-Log -Message "Successfully created new Hostpool $HName"
+            Write-Log -Message "Successfully created new Hostpool: $HName"
         
             # setting up usereverseconnect as true
-            Write-Log -Message "set the UserReverseconnect value as true"
+            Write-Log -Message "setting up the UserReverseconnect value as true for hostpool: $HName"
             Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
         
         
             #Registering hostpool with 365 days
             Write-log "Creating new registeration info for hostpool with expired hours $Hours"
             $ToRegister = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
-            Write-Log "Successfully registered $HostPoolName, expiration date: $ToRegister.ExpirationUtc"
+            $newRegInfo=$ToRegister.ExpirationUtc | Out-String
+            Write-Log "Successfully registered $HostPoolName, expiration date: $newRegInfo"
         
             #Executing DeployAgent psl file in rdsh vm and add to hostpool
             .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $ToRegister.Token -StartAgent $true
         
-            Write-Log -Message "DeployAgent Script file was successfully installed inside VM for new $HName `
+            Write-Log -Message "DeployAgent Script was successfully executed and installed RDAgent, sidebyside inside VM for new $HName `
         $DAgentInstall"
         }
         #add rdsh vm to hostpool
