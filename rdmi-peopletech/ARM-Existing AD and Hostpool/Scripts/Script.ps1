@@ -152,7 +152,7 @@ try {
 
             #Exporting existed rdsregisterationinfo of hostpool
             $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName
-            $reglog = $registered | Out-String -Stream
+            $reglog = $registered | Out-String
             Write-Log -Message "Exported Rds RegisterationInfo into variable 'Registered' $reglog"
             $systemdate = (GET-DATE)
             $Tokenexpiredate = $Registered.ExpirationUtc
@@ -190,15 +190,15 @@ try {
             Write-Log -Message "Successfully registered $HName, expiration date: $newRegInfo"
         
             #Executing DeployAgent psl file in rdsh vm and add to hostpool
-            .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $ToRegister.Token -StartAgent $true
+            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $ToRegister.Token -StartAgent $true
         
             Write-Log -Message "DeployAgent Script was successfully executed and installed RDAgent, sidebyside inside VM for new $HName `
         $DAgentInstall"
         }
         #add rdsh vm to hostpool
         $addRdsh = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true -MaxSessionLimit $MaxSessionLimit
-        $rdshName = $addRdsh.name | Out-String
-        $poolName = $addRdsh.hostpoolname | Out-String
+        $rdshName = $addRdsh.name | Out-String -Stream
+        $poolName = $addRdsh.hostpoolname | Out-String -Stream
         Write-Log -Message "Successfully added $rdshName VM to $poolName"
     }
 
