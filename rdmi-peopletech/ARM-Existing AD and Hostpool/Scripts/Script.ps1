@@ -141,19 +141,22 @@ try {
         Write-Log -Message "Checking Hostpool is existing or not inside the Tenant"
 
         if ($HPName) {
-            Write-log -Message "Hostpool is existed inside the tenant"
+        $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
+            Write-log -Message "Hostpool is existed inside tenant: $TenantName"
 
             Write-Log -Message "Checking Hostpool UseResversconnect is true or false"
             # Cheking UseReverseConnect is true or false
             if ($HPName.UseReverseConnect -eq $False) {
                 Write-Log -Message "Usereverseconnect is false, it will be changed to true"
                 Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
+            }else{
+                Write-Log -Message "Hostpool Usereverseconnect already enabled as true"
             }
 
             #Exporting existed rdsregisterationinfo of hostpool
             $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName
             $reglog = $registered | Out-String
-            Write-Log -Message "Exported Rds RegisterationInfo into variable 'Registered' $reglog"
+            Write-Log -Message "Exported Rds RegisterationInfo into variable 'Registered': $reglog"
             $systemdate = (GET-DATE)
             $Tokenexpiredate = $Registered.ExpirationUtc
             $difference = $Tokenexpiredate - $systemdate
@@ -173,6 +176,7 @@ try {
         }
 
         else {
+            Write-Log -Message "Hostpool is not existed inside tenant: $TenantName"
             # creating new hostpool
             $Hostpool = New-RdsHostPool -TenantName $TenantName -Name $HostPoolName -Description $Description -FriendlyName $FriendlyName
             $HName = $hostpool.name | Out-String -Stream
