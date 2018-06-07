@@ -26,13 +26,8 @@ param(
     [Parameter(mandatory = $false)]
     [string]$Description,
 
-
     [Parameter(mandatory = $false)]
     [string]$FriendlyName,
-
-
-    [Parameter(mandatory = $true)]
-    [int]$MaxSessionLimit,
 
     [Parameter(mandatory = $true)]
     [string]$Hours,
@@ -45,7 +40,6 @@ param(
 
     [Parameter(mandatory = $true)]
     [string]$DelegateAdminpassword,
-
 
     [Parameter(mandatory = $true)]
     [string]$DomainAdminUsername,
@@ -200,7 +194,7 @@ try {
         $DAgentInstall"
         }
         #add rdsh vm to hostpool
-        $addRdsh = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true -MaxSessionLimit $MaxSessionLimit
+        $addRdsh = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true
         $rdshName = $addRdsh.name | Out-String -Stream
         $poolName = $addRdsh.hostpoolname | Out-String -Stream
         Write-Log -Message "Successfully added $rdshName VM to $poolName"
