@@ -1,5 +1,4 @@
-﻿﻿
-Param(
+﻿Param(
     [Parameter(Mandatory=$True)]
     [ValidateNotNullOrEmpty()]
     [string] $RdbrokerURI,
