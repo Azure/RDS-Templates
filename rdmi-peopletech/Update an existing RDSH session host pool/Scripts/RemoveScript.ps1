@@ -21,6 +21,9 @@
     [string]$FileURI,
     
     [Parameter(mandatory = $false)]
+    [double]$Hours,
+
+    [Parameter(mandatory = $false)]
     [int]$userLogoffTimeoutInMinutes,
 
     [Parameter(mandatory = $false)]
