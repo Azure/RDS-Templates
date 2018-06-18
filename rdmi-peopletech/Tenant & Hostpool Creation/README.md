@@ -1,4 +1,4 @@
-# Update or New hostpool
+# Tenant and Hostpool Creation in Host Environment
 
 This template creates tenants and hostpools in HosterAdmin Environment.
 

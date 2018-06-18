@@ -1,4 +1,4 @@
-# Update or New hostpool
+# Update an Existing RDSH Session Host Pool
 
 This template updates sessionhost servers in existing hostpool and remove the old sessionhost servers.
 
