@@ -21,7 +21,7 @@
             }
         },
         "rdshVmSize": {
-            "type": "string",
+            "defaultValue": "Standard_A2",
             "allowedValues": [
                 "Standard_A0",
                 "Standard_A1",
@@ -37,10 +37,10 @@
                 "Standard_D4",
                 "Standard_D5"
             ],
+            "type": "string",
             "metadata": {
                 "description": "The size of the RDSH VMs"
-            },
-            "defaultValue": "Standard_A2"
+            }
         },
         "existingDomainName": {
             "type": "string",
@@ -90,35 +90,60 @@
                 "description": "Existing HostPool Name"
             }
         },
-        "DelegatedAdminUsername": {
+        "deallocateVirtualMachines": {
+            "defaultValue": "Deallocated",
+            "allowedValues": [
+                "Shutdown",
+                "Deallocated"
+            ],
             "type": "string",
-            "defaultvalue": "",
+            "metadata": {
+                "description": "Old VMs will be deallocated or just shut down. Please select the flag"
+            }
+        },
+        "DelegatedAdminUsername": {
+            "defaultValue": "",
+            "type": "string",
             "metadata": {
                 "description": "Delegated admin username"
             }
         },
         "DelegatedAdminPassword": {
+            "defaultValue": "",
             "type": "securestring",
-            "defaultvalue": "",
             "metadata": {
                 "description": "Delegated admin Password"
+            }
+        },
+        "userLogoffTimeoutInMinutes": {
+            "defaultValue": "",
+            "type": "int",
+            "metadata": {
+                "description": "Timeout before forced user logoff from old RDSH instances"
+            }
+        },
+        "userNotificationMessege": {
+            "defaultValue": "Scheduled maintenance, please save your work and logoff as soon as possible",
+            "type": "string",
+            "metadata": {
+                "description": "Message that will be displayed to the users"
             }
         }
     },
     "variables": {
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
-        "subscriptionId": "f657519e-2b49-48fe-85ec-3acff0ac67a6",
+        "subscriptionId": "[subscription().subscriptionId]",
         "RegistrationExpirationHours": "48",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
-        "_artifactsLocation": "https://raw.githubusercontent.com/sreenathakk/testrepository/master/Update%20an%20existing%20RDSH%20session%20host%20pool/",
+        "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Update%20an%20existing%20RDSH%20session%20host%20pool/",
         "fileURI": "[concat(variables('_artifactsLocation'),'/Scripts/DeployAgent.zip')]"
     },
     "resources": [
         {
-            "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat(variables('rdshPrefix'), copyindex(), '-nic')]",
+            "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-nic-loop",
@@ -139,24 +164,20 @@
             }
         },
         {
-            "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
+            "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]"
         },
         {
-            "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat(variables('rdshPrefix'), copyindex())]",
+            "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
-            "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]",
-                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
-            ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
@@ -199,13 +220,10 @@
             },
             "resources": [
                 {
-                    "apiVersion": "2015-06-15",
                     "type": "extensions",
                     "name": "dscextension",
+                    "apiVersion": "2015-06-15",
                     "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('rdshPrefix'), copyindex()))]"
-                    ],
                     "properties": {
                         "publisher": "Microsoft.Powershell",
                         "type": "DSC",
@@ -227,48 +245,51 @@
                                 "AdminPassword": "[parameters('existingDomainPassword')]"
                             }
                         }
-                    }
+                    },
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('rdshPrefix'), copyindex()))]"
+                    ]
                 }
+            ],
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]",
+                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
             ]
         },
         {
-                    "apiVersion": "2015-06-15",
-                    "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat(variables('rdshPrefix'), '0', '/', 'removevms')]",
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), '0','/extensions/dscextension'))]",
-                        "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), '0'))]"
-                    ],
-                    "tags": {
-                        "displayName": "script"
-                    },
-                    "properties": {
-                        "publisher": "Microsoft.Compute",
-                        "type": "CustomScriptExtension",
-                        "typeHandlerVersion": "1.8",
-                        "autoUpgradeMinorVersion": true,
-                        "settings": {
-                            "fileUris": [
-                                "https://raw.githubusercontent.com/sreenathakk/testrepository/master/Update%20an%20existing%20RDSH%20session%20host%20pool/Scripts/RemoveScript.ps1"
-                            ],
-                            "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File RemoveScript.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('ExistingHostPoolName'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ', '-SubscriptionId \"', variables('subscriptionId'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"')]"
-                        }
-                    }
-                },
-
-        {
-            "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), copyindex(),'/','rdAgent')]",
+            "name": "[concat(variables('rdshPrefix'), '0', '/', 'removevms')]",
+            "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "script"
+            },
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.8",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Update%20an%20existing%20RDSH%20session%20host%20pool/Scripts/RemoveScript.ps1"
+                    ],
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File RemoveScript.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('ExistingHostPoolName'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ', '-SubscriptionId \"', variables('subscriptionId'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"',' ',' ',' -deallocateVMs \"', parameters('deallocateVirtualMachines'), '\"',' ',' -userNotificationMessege \"', parameters('userNotificationMessege'), '\"',' ',' -userLogoffTimeoutInMinutes \"', parameters('userLogoffTimeoutInMinutes'), '\"',' ',' -DomainAdminUsername \"', parameters('existingDomainUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('existingDomainPassword'), '\"',' ',' -DomainName \"', parameters('existingDomainName'), '\"')]"
+                }
+            },
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/dscextension'))]",
-                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), '0','/extensions/removevms'))]"
-            ],
+                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), '0','/extensions/dscextension'))]",
+                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), '0'))]"
+            ]
+        },
+        {
+            
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('rdshPrefix'), copyindex(1), '/', 'rdAgent')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-vm-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
+                "count": "[sub(parameters('rdshNumberOfInstances'),1)]"
             },
             "tags": {
                 "displayName": "script"
@@ -280,11 +301,15 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "fileUris": [
-                        "https://raw.githubusercontent.com/sreenathakk/testrepository/master/Update%20an%20existing%20RDSH%20session%20host%20pool/Scripts/Script.ps1"
+                        "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Update%20an%20existing%20RDSH%20session%20host%20pool/Scripts/Script.ps1"
                     ],
                     "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('ExistingHostPoolName'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ',' -DomainAdminUsername \"', parameters('existingDomainUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"')]"
                 }
-            }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/dscextension'))]",
+                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), '0','/extensions/removevms'))]"
+            ]
         }
     ]
 }
