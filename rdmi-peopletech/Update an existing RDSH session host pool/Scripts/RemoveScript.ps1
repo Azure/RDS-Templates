@@ -21,7 +21,7 @@
     [string]$FileURI,
     
     [Parameter(mandatory = $false)]
-    [string]$userLogoffTimeoutInMinutes,
+    [int]$userLogoffTimeoutInMinutes,
 
     [Parameter(mandatory = $false)]
     [string]$userNotificationMessege,
