@@ -26,8 +26,10 @@ param(
     [Parameter(mandatory = $false)]
     [string]$Description,
 
+
     [Parameter(mandatory = $false)]
     [string]$FriendlyName,
+
 
     [Parameter(mandatory = $true)]
     [string]$Hours,
@@ -41,6 +43,7 @@ param(
     [Parameter(mandatory = $true)]
     [string]$DelegateAdminpassword,
 
+
     [Parameter(mandatory = $true)]
     [string]$DomainAdminUsername,
 
@@ -51,6 +54,8 @@ param(
 
 
 function Write-Log { 
+
+
     [CmdletBinding()] 
     param ( 
         [Parameter(Mandatory = $false)] 
@@ -60,6 +65,8 @@ function Write-Log {
     ) 
      
     try { 
+
+
         $DateTime = Get-Date -Format ‘MM-dd-yy HH:mm:ss’ 
         $Invocation = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber)" 
         if ($Message) {
@@ -70,6 +77,8 @@ function Write-Log {
         }
     } 
     catch { 
+
+
         Write-Error $_.Exception.Message 
     } 
 }
@@ -98,7 +107,7 @@ try {
 
     }
     else {
-
+    
         Write-Log -Message "VM was not registered with RDInfraAgent, script is executing"
     }
 
@@ -130,6 +139,7 @@ try {
        $obj"
         
         }
+
     
         $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
         Write-Log -Message "Checking Hostpool is existing or not inside the Tenant"
@@ -138,14 +148,18 @@ try {
         $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
             Write-log -Message "Hostpool is existed inside tenant: $TenantName"
 
+
             Write-Log -Message "Checking Hostpool UseResversconnect is true or false"
             # Cheking UseReverseConnect is true or false
             if ($HPName.UseReverseConnect -eq $False) {
+
                 Write-Log -Message "Usereverseconnect is false, it will be changed to true"
                 Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
             }else{
                 Write-Log -Message "Hostpool Usereverseconnect already enabled as true"
             }
+
+
 
             #Exporting existed rdsregisterationinfo of hostpool
             $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName
@@ -160,17 +174,19 @@ try {
                 $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
             }
             else {
+
                 $reglogexpired = $Tokenexpiredate | Out-String -Stream
                 Write-Log -Message "Registerationinfo is not expired, expired in $reglogexpired"
             }
             #Executing DeployAgent psl file in rdsh vm and add to hostpool
-            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
+            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
             Write-Log -Message "DeployAgent Script was successfully executed and installed RDAgent, sidebyside inside VM for existing hostpool: $HostPoolName `
         $DAgentInstall"
         }
 
         else {
             Write-Log -Message "Hostpool is not existed inside tenant: $TenantName"
+
             # creating new hostpool
             $Hostpool = New-RdsHostPool -TenantName $TenantName -Name $HostPoolName -Description $Description -FriendlyName $FriendlyName
             $HName = $hostpool.name | Out-String -Stream
@@ -179,6 +195,7 @@ try {
             # setting up usereverseconnect as true
             Write-Log -Message "setting up the UserReverseconnect value as true for Hostpool: $HName"
             Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
+
         
         
             #Registering hostpool with 365 days
@@ -188,7 +205,7 @@ try {
             Write-Log -Message "Successfully registered $HName, expiration date: $newRegInfo"
         
             #Executing DeployAgent psl file in rdsh vm and add to hostpool
-            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $ToRegister.Token -StartAgent $true
+            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\DAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
         
             Write-Log -Message "DeployAgent Script was successfully executed and installed RDAgent, sidebyside inside VM for new $HName `
         $DAgentInstall"
@@ -200,9 +217,9 @@ try {
         Write-Log -Message "Successfully added $rdshName VM to $poolName"
     }
 
-}
-catch {
-    Write-log -Error $_.Exception.Message
+    }
+    catch {
+        Write-log -Error $_.Exception.Message
 
-}
+    }
 
