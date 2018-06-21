@@ -129,7 +129,7 @@
     },
     "variables": {
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
-		"messageTitle": "Request for Logoff"
+		"messageTitle": "Request for Logoff",
         "subscriptionId": "[subscription().subscriptionId]",
         "RegistrationExpirationHours": "48",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
