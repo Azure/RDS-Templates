@@ -16,7 +16,7 @@
 
     [Parameter(mandatory = $true)]
     [string]$SubscriptionId,
-
+    
     [Parameter(mandatory = $false)]
     [string]$FileURI,
     
@@ -28,6 +28,9 @@
 
     [Parameter(mandatory = $false)]
     [string]$userNotificationMessege,
+
+    [Parameter(mandatory = $false)]
+    [string]$messageTitle,
 
     [Parameter(mandatory = $true)]
     [string]$deallocateVMs,
@@ -144,7 +147,7 @@
              
              $shsNames+=$shName
              
-             #Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $shName -SessionId $sessionId -MessageTitle $MessageTitle -MessageBody $userNotificationMessage -NoConfirm $false
+             #Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $shName -SessionId $sessionId -MessageTitle $messageTitle -MessageBody $userNotificationMessage -NoConfirm:$false
              
              Write-log -message "Sent a rdsusersesionmessage to $username and sessionid was $sessionId"
              

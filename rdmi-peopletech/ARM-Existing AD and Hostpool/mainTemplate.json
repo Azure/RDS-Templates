@@ -118,7 +118,6 @@
       "HostPoolFriendlyName": "Hostpool",
       "HostPoolDescription": "template through create hostpool",
       "RegistrationExpirationHours": "48",
-      "SessionHostMaximumSessionLimit": "998",
       "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/ARM-Existing%20AD%20and%20Hostpool/",
       "fileURI": "[concat(variables('_artifactsLocation'),'/Scripts/DeployAgent.zip')]"        
   },

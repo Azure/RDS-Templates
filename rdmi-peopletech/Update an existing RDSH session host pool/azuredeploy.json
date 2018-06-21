@@ -102,21 +102,18 @@
             }
         },
         "DelegatedAdminUsername": {
-            "defaultValue": "",
             "type": "string",
             "metadata": {
                 "description": "Delegated admin username"
             }
         },
         "DelegatedAdminPassword": {
-            "defaultValue": "",
             "type": "securestring",
             "metadata": {
                 "description": "Delegated admin Password"
             }
         },
         "userLogoffTimeoutInMinutes": {
-            "defaultValue": "",
             "type": "int",
             "metadata": {
                 "description": "Timeout before forced user logoff from old RDSH instances"
@@ -132,6 +129,7 @@
     },
     "variables": {
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
+		"messageTitle": "Request for Logoff"
         "subscriptionId": "[subscription().subscriptionId]",
         "RegistrationExpirationHours": "48",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
@@ -273,7 +271,7 @@
                     "fileUris": [
                         "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Update%20an%20existing%20RDSH%20session%20host%20pool/Scripts/RemoveScript.ps1"
                     ],
-                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File RemoveScript.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('ExistingHostPoolName'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ', '-SubscriptionId \"', variables('subscriptionId'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"',' ',' -deallocateVMs \"', parameters('deallocateVirtualMachines'), '\"',' ',' -userNotificationMessege \"', parameters('userNotificationMessege'), '\"',' ',' -userLogoffTimeoutInMinutes \"', parameters('userLogoffTimeoutInMinutes'), '\"',' ',' -DomainAdminUsername \"', parameters('existingDomainUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('existingDomainPassword'), '\"',' ',' -DomainName \"', parameters('existingDomainName'), '\"')]"
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File RemoveScript.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('ExistingHostPoolName'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -DelegateAdminUsername \"', parameters('DelegatedAdminUsername'), '\"',' ', ' -DelegateAdminpassword \"', parameters('DelegatedAdminpassword'), '\"',' ', '-SubscriptionId \"', variables('subscriptionId'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"',' ',' -deallocateVMs \"', parameters('deallocateVirtualMachines'), '\"',' ',' -messageTitle \"', variables('messageTitle'), '\"',' ',' -userNotificationMessege \"', parameters('userNotificationMessege'), '\"',' ',' -userLogoffTimeoutInMinutes \"', parameters('userLogoffTimeoutInMinutes'), '\"',' ',' -DomainAdminUsername \"', parameters('existingDomainUsername'), '\"',' ', ' -DomainAdminpassword \"', parameters('existingDomainPassword'), '\"',' ',' -DomainName \"', parameters('existingDomainName'), '\"')]"
                 }
             },
             "dependsOn": [
