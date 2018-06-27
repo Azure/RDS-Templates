@@ -16,11 +16,9 @@
     [string] $AadTenantId,
 
     [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
     [string] $FriendlyName,
 
     [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
     [string] $Description,
 
     [Parameter(Mandatory=$True)]
@@ -28,11 +26,9 @@
     [string] $HostPoolName,
 
     [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
     [string] $HostPoolFriendlyName,
 
     [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
     [string] $HostPoolDescription,
          
     [Parameter(Mandatory=$True)]
