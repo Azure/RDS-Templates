@@ -85,7 +85,7 @@
         "adminUsername": "vmadmin",
         "adminPassword": "Welcome@12345",
         "resourcegroupname": "[resourceGroup().name]",
-        "FileURI": "[concat(variables('_artifactsLocation'),'/PowershellModules.zip')]"
+        "FileURI": "[concat(variables('_artifactsLocation'),'/PSModules.zip')]"
     },
     "resources": [
         {
