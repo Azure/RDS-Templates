@@ -11,6 +11,11 @@ This script will automatically start/stop Tenant RDMI host VMs based on the numb
 During the peak hours, the script will start necessary session hosts in the Hostpool to meet the demands of users.
 During the off-peak hours, the script will shutdown the session hosts and only keep the minimum number of session hosts.
 
+This script depends on 2 powershell modules: Azure RM and RDMI Module to get azurerm module execute following command.
+Use "-AllowClobber" parameter if you have more than one version of PS modules installed.
+
+PS C:\>Install-Module AzureRM  -AllowClobber
+RDMI PowerShell Modules included inside this folder "AutoScale-RDmi" with name PowerShellModules.
 
 #>
 

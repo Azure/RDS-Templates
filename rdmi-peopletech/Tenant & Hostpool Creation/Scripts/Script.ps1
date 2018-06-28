@@ -15,6 +15,10 @@
     [ValidateNotNullOrEmpty()]
     [string] $AadTenantId,
 
+    [Parameter(Mandatory=$True)]
+    [ValidateNotNullOrEmpty()]
+    [string] $SubscriptionId,
+
     [Parameter(Mandatory=$false)]
     [string] $FriendlyName,
 
@@ -33,8 +37,16 @@
          
     [Parameter(Mandatory=$True)]
     [String] $Username,
+
     [Parameter(Mandatory=$True)]
     [string] $Password,
+
+    [Parameter(Mandatory=$True)]
+    [String] $vmUsername,
+
+    [Parameter(Mandatory=$True)]
+    [string] $vmPassword,
+
     [Parameter(Mandatory=$True)]
     [string] $ResourceGroupName
  
@@ -62,8 +74,10 @@ $Credential = New-Object System.Management.Automation.PSCredential($Username,$Se
 Set-RdsContext -DeploymentUrl $RdbrokerURI -Credential $Credential
 $newRdsTenant=New-RdsTenant -Name $TenantName -AadTenantId $AadTenantId -FriendlyName $FriendlyName -Description $Description
 $newRDSHostPool=New-RdsHostPool -TenantName $newRdsTenant.TenantName  -Name $HostPoolName -Description $HostPoolDescription -FriendlyName $HostPoolFriendlyName
-<#
-Remove-Item -Path "C:\PowershellModules.zip" -Recurse -force
-Remove-Item -Path "C:\PowershellModules" -Recurse -Force
-#>
-.\RemoveRG.ps1 -AadTenantId $AadTenantId -Username $Username -Password $Password -ResourceGroupName $ResourceGroupName
+$SecurePass=ConvertTo-SecureString -String $vmPassword -AsPlainText -Force
+$localcred=New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($vmUsername, $Securepass)
+Invoke-Command -ComputerName localhost -Credential $localcred -ScriptBlock{
+param($SubscriptionId,$Username,$Password,$ResourceGroupName)
+Set-Location "C:\PSModules"
+.\RemoveRG.ps1 -SubscriptionId $SubscriptionId -Username $Username -Password $Password -ResourceGroupName $ResourceGroupName
+} -ArgumentList($SubscriptionId,$Username,$Password,$ResourceGroupName) -AsJob
