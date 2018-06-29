@@ -74,15 +74,15 @@
 
     #Creating a folder inside rdsh vm for extracting deployagent zip file
     New-Item -Path "C:\DeployAgent" -ItemType directory -Force -ErrorAction SilentlyContinue
-    #Write-Log -Message "Created a new folder which is 'DeployAgent' inside VM"
+    Write-Log -Message "Created a new folder 'DeployAgent' inside VM"
     Expand-Archive "C:\DeployAgent.zip" -DestinationPath "C:\DeployAgent" -ErrorAction SilentlyContinue
-    #Write-Log -Message "Extracted the 'Deployagent.zip' file into 'C:\Deployagent' folder inside VM"
+    Write-Log -Message "Extracted the 'Deployagent.zip' file into 'C:\Deployagent' folder inside VM"
     Set-Location "C:\DeployAgent"
-    #Write-Log -Message "Setting up the location of Deployagent folder"
+    Write-Log -Message "Setting up the location of Deployagent folder"
 
 
                 do{
-                        Write-Output "checking nuget package existed or not"
+                        Write-Output "checking nuget package exists or not"
                         if (!(Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue -ListAvailable)) 
                         {
                         Write-Output "installing nuget package inside vm: $env:COMPUTERNAME"
@@ -115,8 +115,8 @@
         $obj = $authentication | Out-String
     
         if ($authentication) {
-            Write-Log -Message "Imported RDMI PowerShell modules successfully"
-            Write-Log -Message "RDMI Authentication successfully Done. Result: `
+            Write-Log -Message "Imported RDMI PowerShell modules successfully done"
+            Write-Log -Message "RDMI Authentication successfully done. Result: `
        $obj"  
         }
         else {
@@ -127,9 +127,8 @@
              
 
              $allshs=Get-RdsSessionHost -TenantName $tenantname -HostPoolName $HostPoolName
-             
              $allshslog=$allshs.name | Out-String
-             Write-Log -Message "All Session Host servers of $HostPoolName :`
+             Write-Log -Message "All Session Host servers in $HostPoolName :`
              $allshslog"
              
              $shsNames=0
@@ -149,20 +148,21 @@
              
              #Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $shName -SessionId $sessionId -MessageTitle $messageTitle -MessageBody $userNotificationMessage -NoConfirm:$false
              
-             Write-log -message "Sent a rdsusersesionmessage to $username and sessionid was $sessionId"
+             #Write-log -message "Sent a rdsusersesionmessage to $username and sessionid was $sessionId"
              
              }
              }
               else
              {
              $shName=$allshs.SessionHostName
-             Write-Log -Message "Sessions not there in $shName session host vm"
+             Write-Log -Message "Sessions not present in $shName session host vm"
              $shsNames+=$shName
                 }
     
             $allShsNames=$shsNames | select -Unique
             Write-Log -Message "Collected old sessionhosts of Hostpool $HostPoolName : `
             $allShsNames"
+                        
                         #Get Domaincontroller VMname
                         $DName=Get-ADDomainController -Discover -DomainName $DomainName
                         $DControllerVM=$DName.Name
@@ -184,6 +184,8 @@
                  Write-Log -Error "Subscription Id $SubscriptionId not in context"
             }
             
+            $convertSeconds=$userLogoffTimeoutInMinutes * 60
+            Start-Sleep -Seconds $convertSeconds
             
             
             foreach($sh in $allShsNames){
@@ -191,25 +193,22 @@
                 # setting rdsh vm in drain mode
                 $shsDrain=Set-RdsSessionHost -TenantName $tenantname -HostPoolName $HostPoolName -Name $sh -AllowNewSession $false
                 $shsDrainlog=$shsDrain | Out-String
-                Write-Log -Message "Sesssion host server keep in drain mode : `
+                Write-Log -Message "Sesssion host server in drain mode : `
                 $shsDrainlog"
                 
-                $convertSeconds=$userLogoffTimeoutInMinutes * 60
-                Start-Sleep -Seconds $convertSeconds
-
                 Remove-RdsSessionHost -TenantName $tenantname -HostPoolName $HostPoolName -Name $sh -Force $true
                 Write-Log -Message "Successfully $sh removed from hostpool"
                 
                 $VMName=$sh.Split(".")[0]
                 
-                if($deallocateVMs -eq "Deallocated"){
+                if($deallocateVMs -eq "DeleteVMs"){
                 
                 # Remove the VM's and then remove the datadisks, osdisk, NICs
                 Get-AzureRmVM | Where-Object {$_.name -eq $VMName}  | foreach {
                     $a=$_
                     $DataDisks = @($_.StorageProfile.DataDisks.Name)
                     $OSDisk = @($_.StorageProfile.OSDisk.Name)
-                    Write-Log -Message "Removing $VMName VM from Azure with all resources"
+                    Write-Log -Message "Removing $VMName VM and associated resources from Azure"
                    
                         #Write-Warning -Message "Removing VM: $($_.Name)"
                         $_ | Remove-AzureRmVM -Force -Confirm:$false
@@ -242,14 +241,18 @@
                                 $disk = $_.Vhd.Uri | Split-Path -Leaf
                                 Get-AzureStorageContainer -Name vhds -Context $Sa.Context |
                                 Get-AzureStorageBlob -Blob  $disk |
-                                Remove-AzureStorageBlob  
+                                Remove-AzureStorageBlob
+                                Write-Log -Message "Removed DataDisk $disk successfully"  
                             }
+                            
         
                             # Remove OSDisk disk
                             $disk = $a.StorageProfile.OsDisk.Vhd.Uri | Split-Path -Leaf
                             Get-AzureStorageContainer -Name vhds -Context $Sa.Context |
                             Get-AzureStorageBlob -Blob  $disk |
                             Remove-AzureStorageBlob
+
+                            Write-Log -Message "Removed OSDisk $disk successfully"
                 
                             # Remove Boot Diagnostic
                             $diagVMName=0
@@ -263,11 +266,11 @@
                             $diagContainerName = ('bootdiagnostics-{0}-{1}' -f $diagVMName, $_.VmId)
                             Set-AzureRmCurrentStorageAccount -Context $sa.Context
                             Remove-AzureStorageContainer -Name $diagContainerName -Force
-                            Write-Log -Message "Successfully removed storage vhd and boot diagnostic"
+                            Write-Log -Message "Successfully removed boot diagnostic"
 
                         }
 
-                        $avSet=Get-AzureRmVM | Where-Object {$_.Name -eq $VMName} | Remove-AzureRmAvailabilitySet -Force
+                        $avSet=Get-AzureRmVM | Where-Object {$_.Name -eq $VMName} | Remove-AzureRmAvailabilitySet -Force -Confirm:$false
                         
                 }
                 
@@ -290,30 +293,46 @@
                             }
                             else
                             {
-                            write-log -Error "$VMName VM has not been stopped"
+                            write-log -Error "$VMName VM cannot be stopped"
                             }
                 }
                 }
                 
                 $allHosts=Get-RdsSessionHost -TenantName $tenantname -HostPoolName $HostPoolName
                 
-                if(!$allHosts)
-                {
+                if(!$allHosts -or $deallocateVMs -eq "DeallocateVMs"){
                     
                     $CheckRegistery = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
+
+                    Write-Log -Message "Checking whether VM is Registered with RDInfraAgent"
+
+                    if ($CheckRegistery){
+
+                        Write-Log -Message "VM was already registered with RDInfraAgent, script execution was stopped"
+
+                    }
+                    else {
+    
+                        Write-Log -Message "VM was not registered with RDInfraAgent, script is executing now"
+                    }
+
                 
-                if (!$CheckRegistery) {
+                if (!$CheckRegistery){
                 
-                $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
-                               
+                                $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
+                                Write-Log -Message "Checking Hostpool exists inside the Tenant"
                                 if ($HPName) {
-                                
+                                Write-log -Message "Hostpool exists inside tenant: $TenantName" 
+                                Write-Log -Message "Checking Hostpool UseResversconnect is true or false"
                                 if ($HPName.UseReverseConnect -eq $False) {
-                
+                                    Write-Log -Message "Usereverseconnect is false, it will be changed to true"
                                                 Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
                                             }
+                                            else{
+                                        Write-Log -Message "Hostpool Usereverseconnect already enabled as true"
+                                        }
 
-                                }
+                                
                                 
                                 $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
                                 
@@ -321,20 +340,33 @@
                                 $reglog = $registered | Out-String
                                 Write-Log -Message "Exported Rds RegisterationInfo into variable 'Registered': $reglog"
                                 
-                                $systemdate = (GET-DATE)
-                                            $Tokenexpiredate = $Registered.ExpirationUtc
-                                            $difference = $Tokenexpiredate - $systemdate
-            
-                                            if ($difference -lt 0 -or $Registered -eq 'null') {
-                
-                                                $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
-                                            }
+                                 $systemdate = (GET-DATE)
+                                 $Tokenexpiredate = $Registered.ExpirationUtc
+                                    $difference = $Tokenexpiredate - $systemdate
+                                    write-log -Message "Calculating date and time of expiration with system date and time"
+                                    if ($difference -lt 0 -or $Registered -eq 'null') {
+                                        write-log -Message "Registerationinfo has expired, Creating new registeration info with hours $Hours"
+                                        $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
+                                    }
+                                    else {
+
+                                        $reglogexpired = $Tokenexpiredate | Out-String -Stream
+                                        Write-Log -Message "Registerationinfo is not expired, expiring in $reglogexpired"
+                                    }
 
                                             $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
+                                            Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootloader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName `
+                                            $DAgentInstall"
                                             $addRdsh = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true
+                                            $rdshName = $addRdsh.name | Out-String -Stream
+                                            $poolName = $addRdsh.hostpoolname | Out-String -Stream
+                                            Write-Log -Message "Successfully added $rdshName VM to $poolName"
                                 }
-                                }
-                                else
-                                {
-                                Write-log -Message "RDSH vms not removed from hostpool: $HostpoolName"
-                                }
+                           
+                            }
+                
+                        }
+                          else
+                          {
+                          Write-log -Message "RDSH vms not removed from hostpool: $HostpoolName"
+                          }

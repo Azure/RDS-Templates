@@ -66,6 +66,18 @@
                 "description": "VNET name"
             }
         },
+        "virtualNetworkResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The Resource Group containing the existing Virtual Network resource"
+            }
+        },
+        "storageAccountResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The Resource Group containing the existing  GRS Image resource"
+            }
+        },
         "existingSubnetName": {
             "type": "string",
             "metadata": {
@@ -91,10 +103,10 @@
             }
         },
         "deallocateVirtualMachines": {
-            "defaultValue": "Deallocated",
+            "defaultValue": "DeleteVMs",
             "allowedValues": [
-                "Shutdown",
-                "Deallocated"
+                "DeallocateVMs",
+                "DeleteVMs"
             ],
             "type": "string",
             "metadata": {
@@ -129,11 +141,13 @@
     },
     "variables": {
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
-		"messageTitle": "Request for Logoff",
+        "messageTitle": "Request for Logoff",
         "subscriptionId": "[subscription().subscriptionId]",
+        "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
         "RegistrationExpirationHours": "48",
-        "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
+        "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
+        "storageac": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
         "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Update%20an%20existing%20RDSH%20session%20host%20pool/",
         "fileURI": "[concat(variables('_artifactsLocation'),'/Scripts/DeployAgent.zip')]"
     },
@@ -154,7 +168,7 @@
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]"
+                                "id": "[variables('subnet-id')]"
                             }
                         }
                     }
@@ -198,7 +212,7 @@
                             "uri": "[parameters('VmImageVhdUri')]"
                         },
                         "vhd": {
-                            "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob, variables('vhds'), copyindex(), '-osdisk.vhd')]"
+                            "uri": "[concat(reference(variables('storageac'), '2016-01-01').primaryEndpoints.blob, variables('vhds'), copyindex(), '-osdisk.vhd')]"
                         }
                     }
                 },
@@ -212,7 +226,7 @@
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
                         "enabled": "true",
-                        "storageUri": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob]"
+                        "storageUri": "[reference(variables('storageac'), '2016-01-01').primaryEndpoints.blob]"
                     }
                 }
             },
@@ -280,14 +294,13 @@
             ]
         },
         {
-            
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(1), '/', 'rdAgent')]",
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "rdsh-vm-loop",
-                "count": "[sub(parameters('rdshNumberOfInstances'),1)]"
+                "count": "[if(equals(parameters('rdshNumberOfInstances'),1),1,sub(parameters('rdshNumberOfInstances'),1))]"
             },
             "tags": {
                 "displayName": "script"
@@ -307,7 +320,8 @@
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/dscextension'))]",
                 "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), '0','/extensions/removevms'))]"
-            ]
+            ],
+            "condition": "[greater(parameters('rdshNumberOfInstances'),1)]"
         }
     ]
 }
