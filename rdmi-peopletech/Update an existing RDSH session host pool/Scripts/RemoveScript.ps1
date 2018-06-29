@@ -39,10 +39,10 @@
     [string]$DomainName,
 
     [Parameter(mandatory = $true)]
-    [string]$DomainAdminUsername,
+    [string]$localAdminUsername,
     
     [Parameter(mandatory = $true)]
-    [string]$DomainAdminPassword
+    [string]$localAdminPassword
 )
 
     Function Write-Log { 
@@ -106,8 +106,8 @@
         $Credentials=New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList($DelegateAdminUsername, $Securepass)
 
         #Domain Credentials
-        $DAdminSecurepass = ConvertTo-SecureString -String $DomainAdminPassword -AsPlainText -Force
-        $domaincredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($DomainAdminUsername, $DAdminSecurepass)
+        $AdminSecurepass = ConvertTo-SecureString -String $localAdminPassword -AsPlainText -Force
+        $AdminCredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($localAdminUsername, $AdminSecurepass)
 
         #Setting RDS Context
         $authentication=Set-RdsContext -DeploymentUrl $RDBrokerURL -Credential $Credentials
@@ -275,7 +275,7 @@
                 }
                 
                 #Removing VM from domain controller and DNS Record
-                Invoke-Command -ComputerName $DControllerVM -Credential $domaincredentials -ScriptBlock{
+                Invoke-Command -ComputerName $DControllerVM -Credential $AdminCredentials -ScriptBlock{
                 Param($ZoneName,$VMName)
                 Get-ADComputer -Identity $VMName | Remove-ADObject -Recursive -confirm:$false
                 Remove-DnsServerResourceRecord -ZoneName $ZoneName -RRType "A" -Name $VMName -Force -Confirm:$false
@@ -354,7 +354,7 @@
                                         Write-Log -Message "Registerationinfo is not expired, expiring in $reglogexpired"
                                     }
 
-                                            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $domaincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
+                                            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $AdminCredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
                                             Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootloader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName `
                                             $DAgentInstall"
                                             $addRdsh = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true
