@@ -1,10 +1,6 @@
-# Tenant and Hostpool Creation in Host Environment
+# Create new RDmi tenant
 
 This template creates tenants and hostpools in HosterAdmin Environment.
-
-This template deploys the following resources:
-+ `<rdshNumberOfInstances`> new virtual machines as RDSH servers
-
 
 
 Click the button below to deploy:
