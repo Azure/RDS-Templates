@@ -9,8 +9,6 @@ This template deploys the following resources:
 Note: Template does **not** delete or deallocate old RDSH instances, so you may still incur compute charges. These virtual machine instances may need to be deleted manually.
 
 Click the button below to deploy:
-
-
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2Frdmi-peopletech%2FCreate%20and%20provision%20new%20RDmi%20hostpool%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
