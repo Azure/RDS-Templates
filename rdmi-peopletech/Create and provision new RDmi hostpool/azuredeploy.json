@@ -126,7 +126,7 @@
         "HostPoolDescription": "template through create hostpool",
         "RegistrationExpirationHours": "48",
         "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
-        "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/ARM-Existing%20AD%20and%20Hostpool/",
+        "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Create%20and%20provision%20new%20RDmi%20hostpool/",
         "fileURI": "[concat(variables('_artifactsLocation'),'/Scripts/DeployAgent.zip')]"
     },
     "resources": [
@@ -268,7 +268,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "fileUris": [
-                        "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/ARM-Existing%20AD%20and%20Hostpool/Scripts/Script.ps1"
+                        "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Create%20and%20provision%20new%20RDmi%20hostpool/Scripts/Script.ps1"
                     ],
                     "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUPN'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUserName \"', parameters('existingDomainUsername'), '\"',' ', ' -localAdminPassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('Fileuri'), '\"')]"
                 }

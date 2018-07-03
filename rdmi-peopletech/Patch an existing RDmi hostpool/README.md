@@ -9,11 +9,11 @@ This template deploys the following resources:
 
 Click the button below to deploy:
 
+https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Patch%20an%20existing%20RDmi%20hostpool
 
-
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2Frdmi-peopletech%2FUpdate%20an%20existing%20RDSH%20session%20host%20pool%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2Frdmi-peopletech%2FPatch%20an%20existing%20RDmi%20hostpool%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
-<a href="http://armviz.io/#/?load=https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/ARM-Existing%20AD%20and%20Hostpool/azuredeploy.json" target="_blank">
+<a href="http://armviz.io/#/?load=https://raw.githubusercontent.com/PeopleTechRDS/msft-rdmi-templates/master/Patch%20an%20existing%20RDmi%20hostpool/azuredeploy.json" target="_blank">
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>

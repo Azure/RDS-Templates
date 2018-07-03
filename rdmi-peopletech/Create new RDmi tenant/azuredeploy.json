@@ -82,7 +82,7 @@
         "virtualNetworkName": "MyVNET",
         "publicIPAddressName": "myPublicIP",
         "dnsNameForPublicIP": "[uniqueString(resourceGroup().name)]",
-        "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Tenant%20%26%20Hostpool%20Creation/Scripts/",
+        "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Create%20new%20RDmi%20tenant/Scripts/",
         "adminUsername": "vmadmin",
         "adminPassword": "Welcome@12345",
         "resourcegroupname": "[resourceGroup().name]",
@@ -194,7 +194,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": {
                             "fileUris": [
-                                "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Tenant%20%26%20Hostpool%20Creation/Scripts/Script.ps1"
+                                "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Create%20new%20RDmi%20tenant/Scripts/Script.ps1"
                             ],
                             "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1', ' -RDBrokerURI \"', parameters('RDBrokerURL'), '\"',' ',  ' -SubscriptionId \"', variables('vmsubscriptionId'), '\"',' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"',' ', ' -TenantName \"', parameters('TenantName'), '\"',' ', ' -FriendlyName \"', variables('TFriendlyName'), '\"',' ', ' -Description \"', variables('TDescription'), '\"',' ',' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -HostPoolFriendlyName \"', variables('HFriendlyName'), '\"',' ', ' -HostPoolDescription \"', variables('HDescription'), '\"',' ', ' -Username \"', parameters('HosterAdminName'), '\"',' ', ' -password \"', parameters('HosterAdminPassword'), '\"',' ',' -vmUserName \"', variables('adminUsername'), '\"',' ', ' -vmPassword \"', variables('adminPassword'), '\"',' ', '-ResourceGroupName \"', variables('resourcegroupname'), '\"',' ', ' -fileURI \"', variables('FileUri'), '\"')]"
                         }
