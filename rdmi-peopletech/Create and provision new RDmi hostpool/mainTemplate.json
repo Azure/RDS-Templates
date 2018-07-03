@@ -57,7 +57,7 @@
         "existingDomainUsername": {
             "type": "string",
             "metadata": {
-                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, If the user was “Contoso\"user1” or “user1@contoso.com” in the domain, enter ”user1”."
+                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, If the user was “Contoso\\user1” or “user1@contoso.com” in the domain, enter ”user1”."
             }
         },
         "existingDomainPassword": {
