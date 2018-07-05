@@ -33,7 +33,7 @@
     [string]$messageTitle,
 
     [Parameter(mandatory = $true)]
-    [string]$deallocateVMs,
+    [string]$deleteordeallocateVMs,
 
     [Parameter(mandatory = $true)]
     [string]$DomainName,
@@ -201,7 +201,7 @@
                 
                 $VMName=$sh.Split(".")[0]
                 
-                if($deallocateVMs -eq "DeleteVMs"){
+                if($deleteordeallocateVMs -eq "Delete"){
                 
                 # Remove the VM's and then remove the datadisks, osdisk, NICs
                 Get-AzureRmVM | Where-Object {$_.name -eq $VMName}  | foreach {
@@ -297,10 +297,10 @@
                             }
                 }
                 }
-                
+                #Checking existing instances removed from hostpool
                 $allHosts=Get-RdsSessionHost -TenantName $tenantname -HostPoolName $HostPoolName
                 
-                if(!$allHosts -or $deallocateVMs -eq "DeallocateVMs"){
+                if(!$allHosts){
                     
                     $CheckRegistery = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
 
