@@ -66,16 +66,16 @@
                 "description": "The password that corresponds to the existing domain username."
             }
         },
-        "existingVnetName": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the virtual network the VMs will be connected to."
-            }
-        },
         "virtualNetworkResourceGroupName": {
             "type": "string",
             "metadata": {
                 "description": "The resource group containing the existing virtual network."
+            }
+        },
+        "existingVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the virtual network the VMs will be connected to."
             }
         },
         "existingSubnetName": {
@@ -115,7 +115,7 @@
             }
         },
 		"Actiononpreviousvirtualmachines": {
-            "defaultValue": "DeleteVMs",
+            "defaultValue": "Delete",
             "allowedValues": [
                 "Deallocate",
                 "Delete"
