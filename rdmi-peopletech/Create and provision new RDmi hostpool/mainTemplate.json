@@ -8,12 +8,6 @@
                 "description": "The resource group containing the storage account of the image vhd file."
             }
         },
-        "storageAccountName": {
-            "type": "string",
-            "metadata": {
-                "description": "The storage account name to store the vhds for the VMs."
-            }
-        },
 		"VmImageVhdUri": {
             "type": "string",
             "metadata": {
@@ -121,7 +115,8 @@
         "HostPoolFriendlyName": "Hostpool",
         "HostPoolDescription": "template through create hostpool",
         "RegistrationExpirationHours": "48",
-        "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',parameters('storageAccountName')))]",
+        "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
+        "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
         "scriptURI": "[concat(parameters('baseUrl'),'/Scripts/Script.ps1')]",
         "deployAgentURI": "[concat(parameters('baseUrl'),'/Scripts/DeployAgent.zip')]"
     },
