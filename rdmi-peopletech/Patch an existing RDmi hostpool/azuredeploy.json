@@ -136,9 +136,9 @@
             "type": "string",
             "metadata": {
               "description": "The base URL for RDmi info",
-              "artifactsBaseUrl": ""
+              "artifactsBaseUrl": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Patch%20an%20existing%20RDmi%20hostpool/"
             },
-            "defaultValue": "https://raw.githubusercontent.com/sreenathakk/testrepository/master/Patch%20an%20existing%20RDmi%20hostpool/"
+            "defaultValue": ""
         }
     },
     "variables": {
