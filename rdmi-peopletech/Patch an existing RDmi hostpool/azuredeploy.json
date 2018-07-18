@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-		"storageAccountResourceGroupName": {
+        "storageAccountResourceGroupName": {
             "type": "string",
             "metadata": {
                 "description": "The resource group containing the storage account of the image vhd file."
@@ -108,7 +108,7 @@
                 "description": "The password that corresponds to the tenant admin UPN."
             }
         },
-		"ActionOnPreviousVirtualMachines": {
+        "ActionOnPreviousVirtualMachines": {
             "defaultValue": "Delete",
             "allowedValues": [
                 "Deallocate",
@@ -135,8 +135,8 @@
         "baseUrl": {
             "type": "string",
             "metadata": {
-              "description": "The base URL for RDmi info",
-              "artifactsBaseUrl": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Patch%20an%20existing%20RDmi%20hostpool/"
+                "description": "The base URL for RDmi info",
+                "artifactsBaseUrl": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Patch%20an%20existing%20RDmi%20hostpool/"
             },
             "defaultValue": ""
         }

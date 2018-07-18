@@ -1,14 +1,14 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-   "parameters": {
+    "parameters": {
         "storageAccountResourceGroupName": {
             "type": "string",
             "metadata": {
                 "description": "The resource group containing the storage account of the image vhd file."
             }
         },
-		"VmImageVhdUri": {
+        "VmImageVhdUri": {
             "type": "string",
             "metadata": {
                 "description": "URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
@@ -46,7 +46,7 @@
                 "description": "The password that corresponds to the existing domain username."
             }
         },
-		"virtualNetworkResourceGroupName": {
+        "virtualNetworkResourceGroupName": {
             "type": "string",
             "metadata": {
                 "description": "The resource group containing the existing virtual network."
@@ -68,8 +68,7 @@
             "type": "string",
             "metadata": {
                 "description": "The RD Broker URL of the RDmi deployment the session hosts will be connected to."
-            },
-            "defaultValue": ""
+            }
         },
         "ExistingTenantName": {
             "type": "string",
@@ -100,8 +99,8 @@
         "baseUrl": {
             "type": "string",
             "metadata": {
-              "description": "The base URL for RDmi info",
-              "artifactsBaseUrl": ""
+                "description": "The base URL for RDmi info",
+                "artifactsBaseUrl": ""
             },
             "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Create%20and%20provision%20new%20RDmi%20hostpool/"
         }

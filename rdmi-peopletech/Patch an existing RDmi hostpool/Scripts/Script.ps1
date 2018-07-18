@@ -83,69 +83,70 @@ try {
     Set-Location "C:\DeployAgent"
     Write-Log -Message "Setting up the location of Deployagent folder"
 
-        #Importing RDMI PowerShell module
+    #Importing RDMI PowerShell module
     
-        Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
+    Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
         
-        $Securepass = ConvertTo-SecureString -String $TenantAdminPassword -AsPlainText -Force
-        $Credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($TenantAdminUPN, $Securepass)
-        $AdminSecurepass = ConvertTo-SecureString -String $localAdminPassword -AsPlainText -Force
-        $Admincredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($localAdminUserName, $AdminSecurepass)
+    $Securepass = ConvertTo-SecureString -String $TenantAdminPassword -AsPlainText -Force
+    $Credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($TenantAdminUPN, $Securepass)
+    $AdminSecurepass = ConvertTo-SecureString -String $localAdminPassword -AsPlainText -Force
+    $Admincredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($localAdminUserName, $AdminSecurepass)
 
-        #Getting fqdn of rdsh vm
-        $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
-        Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
+    #Getting fqdn of rdsh vm
+    $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
+    Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
     
-        #Setting RDS Context
-        $authentication = Set-RdsContext -DeploymentUrl $RDBrokerURL -Credential $Credentials
-        $obj = $authentication | Out-String
+    #Setting RDS Context
+    $authentication = Set-RdsContext -DeploymentUrl $RDBrokerURL -Credential $Credentials
+    $obj = $authentication | Out-String
     
-        if ($authentication) {
-            Write-Log -Message "Imported RDMI PowerShell modules successfully"
-            Write-Log -Message "RDMI Authentication successfully Done. Result: `
+    if ($authentication) {
+        Write-Log -Message "Imported RDMI PowerShell modules successfully"
+        Write-Log -Message "RDMI Authentication successfully Done. Result: `
        $obj"  
-        }
-        else {
-            Write-Log -Error "RDMI Authentication Failed, Error: `
+    }
+    else {
+        Write-Log -Error "RDMI Authentication Failed, Error: `
        $obj"
         
-        }
+    }
     
+    $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
+    Write-Log -Message "Checking Hostpool exists inside the Tenant"
+
+    if ($HPName) {
         $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
-        Write-Log -Message "Checking Hostpool exists inside the Tenant"
+        Write-log -Message "Hostpool exists inside tenant: $TenantName"
 
-        if ($HPName) {
-        $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
-            Write-log -Message "Hostpool exists inside tenant: $TenantName"
+        Write-Log -Message "Checking Hostpool UseResversconnect is true or false"
+        # Cheking UseReverseConnect is true or false
+        if ($HPName.UseReverseConnect -eq $False) {
+            Write-Log -Message "Usereverseconnect is false, it will be changed to true"
+            Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
+        }
+        else {
+            Write-Log -Message "Hostpool Usereverseconnect already enabled as true"
+        }
 
-            Write-Log -Message "Checking Hostpool UseResversconnect is true or false"
-            # Cheking UseReverseConnect is true or false
-            if ($HPName.UseReverseConnect -eq $False) {
-                Write-Log -Message "Usereverseconnect is false, it will be changed to true"
-                Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
-            }else{
-                Write-Log -Message "Hostpool Usereverseconnect already enabled as true"
-            }
-
-            #Exporting existed rdsregisterationinfo of hostpool
-            $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName
-            $reglog = $registered | Out-String
-            Write-Log -Message "Exported Rds RegisterationInfo into variable 'Registered': $reglog"
-            $systemdate = (GET-DATE)
-            $Tokenexpiredate = $Registered.ExpirationUtc
-            $difference = $Tokenexpiredate - $systemdate
-            write-log -Message "Calculating date and time expiration with system date and time"
-            if ($difference -lt 0 -or $Registered -eq 'null') {
-                write-log -Message "Registerationinfo expired, creating new registeration info with hours $Hours"
-                $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
-            }
-            else {
-                $reglogexpired = $Tokenexpiredate | Out-String -Stream
-                Write-Log -Message "Registerationinfo not expired and expiring on $reglogexpired"
-            }
-            #Executing DeployAgent psl file in rdsh vm and add to hostpool
-            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $Admincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
-            Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName `
+        #Exporting existed rdsregisterationinfo of hostpool
+        $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName
+        $reglog = $registered | Out-String
+        Write-Log -Message "Exported Rds RegisterationInfo into variable 'Registered': $reglog"
+        $systemdate = (GET-DATE)
+        $Tokenexpiredate = $Registered.ExpirationUtc
+        $difference = $Tokenexpiredate - $systemdate
+        write-log -Message "Calculating date and time expiration with system date and time"
+        if ($difference -lt 0 -or $Registered -eq 'null') {
+            write-log -Message "Registerationinfo expired, creating new registeration info with hours $Hours"
+            $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
+        }
+        else {
+            $reglogexpired = $Tokenexpiredate | Out-String -Stream
+            Write-Log -Message "Registerationinfo not expired and expiring on $reglogexpired"
+        }
+        #Executing DeployAgent psl file in rdsh vm and add to hostpool
+        $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $Admincredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
+        Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName `
         $DAgentInstall"
         
         #add rdsh vm to hostpool
@@ -153,11 +154,11 @@ try {
         $rdshName = $addRdsh.name | Out-String -Stream
         $poolName = $addRdsh.hostpoolname | Out-String -Stream
         Write-Log -Message "Successfully added $rdshName VM to $poolName"
-        }
-        else{
+    }
+    else {
         
         Write-Log -Message "$HostPoolName doesn't exist inside Tenant: $TenantName"
-        }
+    }
 
 }
 catch {

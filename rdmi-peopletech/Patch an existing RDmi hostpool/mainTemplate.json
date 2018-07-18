@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-		"storageAccountResourceGroupName": {
+        "storageAccountResourceGroupName": {
             "type": "string",
             "metadata": {
                 "description": "The resource group containing the storage account of the image vhd file."
@@ -18,7 +18,8 @@
             "type": "string",
             "metadata": {
                 "description": "This prefix will be used in combination with the VM number to create the VM name. If using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
-            }
+            },
+            "defaultValue": "[take(toLower(resourceGroup().name),10)]"
         },
         "rdshNumberOfInstances": {
             "type": "int",
@@ -108,7 +109,7 @@
                 "description": "The password that corresponds to the tenant admin UPN."
             }
         },
-		"ActionOnPreviousVirtualMachines": {
+        "ActionOnPreviousVirtualMachines": {
             "defaultValue": "Delete",
             "allowedValues": [
                 "Deallocate",
@@ -135,8 +136,8 @@
         "baseUrl": {
             "type": "string",
             "metadata": {
-              "description": "The base URL for RDmi info",
-              "artifactsBaseUrl": ""
+                "description": "The base URL for RDmi info",
+                "artifactsBaseUrl": ""
             },
             "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Patch%20an%20existing%20RDmi%20hostpool/"
         }

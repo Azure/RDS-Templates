@@ -85,7 +85,7 @@
 						"type": "Microsoft.Compute.SizeSelector",
 						"label": "Virtual machine size",
 						"osPlatform": "Windows",
-						"constraints" : {
+						"constraints": {
 							"excludedSizes": [
 								"Basic_A0",
 								"Basic_A1",
@@ -211,7 +211,7 @@
 								{
 									"label": "Windows Server 2012 R2 Datacenter",
 									"value": "2012-R2-Datacenter"
-							  	}
+								}
 							]
 						},
 						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'Gallery')]"
@@ -222,8 +222,8 @@
 						"label": "imageURI",
 						"toolTip": "Enter the URL for the .vhd image from your storage account, such as https://mystorageaccount.blob.core.windows.net/vhds/mycustomimage.vhd",
 						"constraints": {
-						  "required": true,
-						  "validationMessage": "Please enter a valid URL for .vhd file from your storage account."
+							"required": true,
+							"validationMessage": "Please enter a valid URL for .vhd file from your storage account."
 						},
 						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'Custom')]"
 					},
@@ -234,15 +234,15 @@
 						"toolTip": "Active Directory admin UPN that will be used to join the virtual machines to your domain. For example, vmjoiner@contoso.com",
 						"visible": true,
 						"constraints": {
-						  "required": true
+							"required": true
 						}
 					},
 					{
 						"name": "password",
 						"type": "Microsoft.Compute.CredentialsCombo",
 						"label": {
-						  "password": "Admin Password",
-						  "confirmPassword": "Confirm password"
+							"password": "Admin Password",
+							"confirmPassword": "Confirm password"
 						},
 						"osPlatform": "Windows",
 						"toolTip": {
@@ -262,11 +262,11 @@
 						"label": "Image storage account",
 						"toolTip": "This is the storage account that will be used to store the session host vhds. A container named 'vhds' will be created in blob storage in this storage account, if it does not already exist.",
 						"defaultValue": {
-						  "name": "storageaccount01",
-						  "type": "Standard_LRS"
+							"name": "storageaccount01",
+							"type": "Standard_LRS"
 						},
 						"options": {
-						  "hideExisting": false
+							"hideExisting": false
 						},
 						"visible": "true"
 					},
@@ -274,39 +274,39 @@
 						"name": "hostpoolVnet",
 						"type": "Microsoft.Network.VirtualNetworkCombo",
 						"label": {
-						  "virtualNetwork": "Virtual network",
-						  "subnets": "Subnets"
+							"virtualNetwork": "Virtual network",
+							"subnets": "Subnets"
 						},
 						"toolTip": {
-						  "virtualNetwork": "",
-						  "subnets": ""
+							"virtualNetwork": "",
+							"subnets": ""
 						},
 						"defaultValue": {
-						  "name": "vnet-01",
-						  "addressPrefixSize": "/24"
+							"name": "vnet-01",
+							"addressPrefixSize": "/24"
 						},
 						"constraints": {
-						  "minAddressPrefixSize": "/24"
+							"minAddressPrefixSize": "/24"
 						},
 						"options": {
-						  "hideExisting": false
+							"hideExisting": false
 						},
 						"subnets": {
-						  "subnet1": {
-							"label": "vmSubnet",
-							"defaultValue": {
-							  "name": "vmSubnet",
-							  "addressPrefixSize": "/24"
-							},
-							"constraints": {
-							  "minAddressPrefixSize": "/24",
-							  "minAddressCount": "[ div (sub (add( mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize,10,2),'s',' ')), steps('configureVirtualMachines').usageProfile), int(steps('configureVirtualMachines').totalUsers)),1),   mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize, 10, 2), 's', ' ')), steps('configureVirtualMachines').usageProfile) )]",
-							  "requireContiguousAddresses": false
+							"subnet1": {
+								"label": "vmSubnet",
+								"defaultValue": {
+									"name": "vmSubnet",
+									"addressPrefixSize": "/24"
+								},
+								"constraints": {
+									"minAddressPrefixSize": "/24",
+									"minAddressCount": "[ div (sub (add( mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize,10,2),'s',' ')), steps('configureVirtualMachines').usageProfile), int(steps('configureVirtualMachines').totalUsers)),1),   mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize, 10, 2), 's', ' ')), steps('configureVirtualMachines').usageProfile) )]",
+									"requireContiguousAddresses": false
+								}
 							}
-						  }
 						},
 						"visible": true
-					  }
+					}
 				]
 			},
 			{
@@ -341,8 +341,8 @@
 						"name": "tenantAdminPassword",
 						"type": "Microsoft.Common.PasswordBox",
 						"label": {
-						  "password": "Tenant Admin Password",
-						  "confirmPassword": "Confirm password"
+							"password": "Tenant Admin Password",
+							"confirmPassword": "Confirm password"
 						},
 						"constraints": {
 							"required": true
