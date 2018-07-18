@@ -275,15 +275,15 @@
                 }
                 
                 #Removing VM from domain controller and DNS Record
-                Invoke-Command -ComputerName $DControllerVM -Credential $AdminCredentials -ScriptBlock{
+                $result=Invoke-Command -ComputerName $DControllerVM -Credential $AdminCredentials -ScriptBlock{
                 Param($ZoneName,$VMName)
                 Get-ADComputer -Identity $VMName | Remove-ADObject -Recursive -confirm:$false
                 Remove-DnsServerResourceRecord -ZoneName $ZoneName -RRType "A" -Name $VMName -Force -Confirm:$false
-                } -ArgumentList($ZoneName,$VMName)
-                
+                } -ArgumentList($ZoneName,$VMName) -ErrorAction SilentlyContinue
+                if($result){
                 Write-Log -Message "Successfully removed $VMName from domaincontroller"
                 Write-Log -Message "successfully removed dns record of $VMName"
-                
+                }
                 }
                 else{
                 $vmProvisioning=Get-AzureRmVM | Where-Object {$_.Name -eq $VMName} | Stop-AzureRmVM -Force
@@ -297,12 +297,8 @@
                             }
                 }
                 }
-                #Checking existing instances removed from hostpool
-                $allHosts=Get-RdsSessionHost -TenantName $tenantname -HostPoolName $HostPoolName
-                
-                if(!$allHosts){
-                    
-                    $CheckRegistery = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
+                #Adding new vm instance to existing hostpool                 
+                 $CheckRegistery = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
 
                     Write-Log -Message "Checking whether VM is Registered with RDInfraAgent"
 
@@ -364,9 +360,3 @@
                                 }
                            
                             }
-                
-                        }
-                          else
-                          {
-                          Write-log -Message "RDSH vms not removed from hostpool: $HostpoolName"
-                          }
