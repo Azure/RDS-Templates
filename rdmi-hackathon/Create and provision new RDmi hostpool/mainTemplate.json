@@ -34,6 +34,24 @@
             },
             "defaultValue": "Standard_A2"
         },
+        "rdshVMDiskType": {
+            "type": "string",
+            "allowedValues": [
+                "SSD",
+                "HDD"
+            ],
+            "metadata": {
+                "description": "The VM disk type for the VM: HDD or SSD."
+            },
+            "defaultValue": "SSD"
+        },
+        "rdshUseManagedDisks" : {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
+            }
+        },
         "existingDomainUPN": {
             "type": "string",
             "metadata": {
@@ -117,7 +135,8 @@
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
         "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
         "scriptURI": "[concat(parameters('baseUrl'),'/Scripts/Script.ps1')]",
-        "deployAgentURI": "[concat(parameters('baseUrl'),'/Scripts/DeployAgent.zip')]"
+        "deployAgentURI": "[concat(parameters('baseUrl'),'/Scripts/DeployAgent.zip')]",
+        "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'SSD'), 'Premium_LRS', 'Standard_LRS')]"
     },
     "resources": [
         {
@@ -144,10 +163,13 @@
             }
         },
         {
-            "apiVersion": "2015-06-15",
+            "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
-            "location": "[resourceGroup().location]"
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "managed": "[parameters('rdshUseManagedDisks')]"
+            }
         },
         {
             "apiVersion": "2015-06-15",
@@ -197,7 +219,7 @@
                 },
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
-                        "enabled": "true",
+                        "enabled": "[equals(parameters('rdshVMDiskType'), 'HDD')]",
                         "storageUri": "[reference(variables('storageaccount'), '2016-01-01').primaryEndpoints.blob]"
                     }
                 }
