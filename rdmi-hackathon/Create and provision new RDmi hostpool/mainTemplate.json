@@ -52,6 +52,20 @@
                 "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
             }
         },
+        "managedDiskResourceGroupName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Resource group name for the managed disk, if you choose to provide one."
+            }
+        },
+        "managedDiskName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the managed disk."
+            }
+        },
         "rdshUseGalleryImage" : {
             "type": "bool",
             "defaultValue": false,
@@ -177,7 +191,9 @@
                     "VmImageVhdUri": { "value": "[parameters('VmImageVhdUri')]" },
                     "storageaccount": { "value": "[variables('storageaccount')]" },
                     "subnet-id": { "value": "[variables('subnet-id')]" },
-                    "vhds": { "value": "[variables('vhds')]" }
+                    "vhds": { "value": "[variables('vhds')]" },
+                    "managedDiskResourceGroupName": { "value": "[parameters('managedDiskResourceGroupName')]" }
+                    "managedDiskName": { "value": "[parameters('managedDiskName')]" }
                 }
             },
             "dependsOn": [

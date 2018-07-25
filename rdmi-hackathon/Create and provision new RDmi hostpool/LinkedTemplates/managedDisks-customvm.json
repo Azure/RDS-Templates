@@ -84,7 +84,9 @@
             }
         }
     },
-    "variables": {},
+    "variables": {
+        "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'HDD'), 'Standard_LRS', 'Premium_LRS')]"
+    },
     "resources": [
         {
             "apiVersion": "2015-06-15",
@@ -135,16 +137,13 @@
                 },
                 "storageProfile": {
                     "osDisk": {
-                        "name": "[concat(parameters('rdshPrefix'), copyindex(),'-osDisk')]",
-                        "osType": "Windows",
-                        "caching": "ReadWrite",
                         "createOption": "FromImage",
-                        "image": {
-                            "uri": "[parameters('VmImageVhdUri')]"
-                        },
-                        "vhd": {
-                            "uri": "[concat(reference(parameters('storageaccount'), '2016-01-01').primaryEndpoints.blob, parameters('vhds'), copyindex(), '-osdisk.vhd')]"
+                        "managedDisk": {
+                            "storageAccountType": "[variables('storageAccountType')]"
                         }
+                    },
+                    "imageReference": {
+                        "id": "[resourceId( parameters('managedDiskResourceGroupName'), 'Microsoft.Compute/images', parameters('managedDiskName'))]"
                     }
                 },
                 "networkProfile": {
@@ -156,8 +155,7 @@
                 },
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
-                        "enabled": "[equals(parameters('rdshVMDiskType'), 'HDD')]",
-                        "storageUri": "[reference(parameters('storageaccount'), '2016-01-01').primaryEndpoints.blob]"
+                        "enabled": false
                     }
                 }
             }
