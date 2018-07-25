@@ -174,7 +174,7 @@
                     "rdshVMDiskType": { "value": "[parameters('rdshVMDiskType')]" },
                     "existingDomainusername": { "value": "[variables('existingDomainUsername')]" },
                     "existingDomainPassword": { "value": "[parameters('existingDomainPassword')]" },
-                    "VmImageVhdUri": { "value": "[parameters('existingDomainPassword')]" },
+                    "VmImageVhdUri": { "value": "[parameters('VmImageVhdUri')]" },
                     "storageaccount": { "value": "[variables('storageaccount')]" },
                     "subnet-id": { "value": "[variables('subnet-id')]" },
                     "vhds": { "value": "[variables('vhds')]" }
