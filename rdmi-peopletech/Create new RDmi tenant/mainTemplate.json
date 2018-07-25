@@ -65,6 +65,26 @@
             "metadata": {
                 "description": "Provide Hostpool Description"
             }
+        },
+        "virtualMachineSize": {
+            "defaultValue": "Standard_DS1_v2",
+            "allowedValues": [
+                "Standard_D1",
+                "Standard_D1_v2",
+                "Standard_DS1",
+                "Standard_DS1_v2"
+            ],
+            "type": "string",
+            "metadata": {
+                "description": "The size of the VM."
+            }
+        },
+        "galleryImageSelection": {
+            "defaultValue": "2016-Datacenter",
+            "type": "string",
+            "metadata": {
+                "description": "The size of the VM."
+            }
         }
     },
     "variables": {
@@ -155,7 +175,7 @@
             "location": "[resourceGroup().location]",
             "properties": {
                 "hardwareProfile": {
-                    "vmSize": "Standard_D1_v2"
+                    "vmSize": "[parameters('virtualMachineSize')]"
                 },
                 "osProfile": {
                     "computerName": "[variables('vmName')]",
@@ -166,7 +186,7 @@
                     "imageReference": {
                         "publisher": "MicrosoftWindowsServer",
                         "offer": "WindowsServer",
-                        "sku": "2016-Datacenter",
+                        "sku": "[parameters('galleryImageSelection')]",
                         "version": "latest"
                     },
                     "osDisk": {
@@ -194,7 +214,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": {
                             "fileUris": [
-                                "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Create%20new%20RDmi%20tenant/Scripts/Script.ps1"
+                                "https://raw.githubusercontent.com/sreenathakk/testrepository/master/Create%20new%20RDmi%20tenant/Scripts/Script.ps1"
                             ],
                             "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1', ' -RDBrokerURI \"', parameters('RDBrokerURL'), '\"',' ',  ' -SubscriptionId \"', variables('vmsubscriptionId'), '\"',' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"',' ', ' -TenantName \"', parameters('TenantName'), '\"',' ', ' -FriendlyName \"', variables('TFriendlyName'), '\"',' ', ' -Description \"', variables('TDescription'), '\"',' ',' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -HostPoolFriendlyName \"', variables('HFriendlyName'), '\"',' ', ' -HostPoolDescription \"', variables('HDescription'), '\"',' ', ' -Username \"', parameters('HosterAdminName'), '\"',' ', ' -password \"', parameters('HosterAdminPassword'), '\"',' ',' -vmUserName \"', variables('adminUsername'), '\"',' ', ' -vmPassword \"', variables('adminPassword'), '\"',' ', '-ResourceGroupName \"', variables('resourcegroupname'), '\"',' ', ' -fileURI \"', variables('FileUri'), '\"')]"
                         }

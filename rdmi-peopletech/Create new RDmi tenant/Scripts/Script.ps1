@@ -1,54 +1,48 @@
 ﻿Param(
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory = $True)]
     [ValidateNotNullOrEmpty()]
     [string] $RdbrokerURI,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
     [string] $fileURI,
 
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory = $True)]
     [ValidateNotNullOrEmpty()]
     [string] $TenantName,
 
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory = $True)]
     [ValidateNotNullOrEmpty()]
     [string] $AadTenantId,
 
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory = $True)]
     [ValidateNotNullOrEmpty()]
     [string] $SubscriptionId,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string] $FriendlyName,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string] $Description,
 
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory = $True)]
     [ValidateNotNullOrEmpty()]
     [string] $HostPoolName,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string] $HostPoolFriendlyName,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string] $HostPoolDescription,
          
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory = $True)]
     [String] $Username,
 
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory = $True)]
     [string] $Password,
 
-    [Parameter(Mandatory=$True)]
-    [String] $vmUsername,
-
-    [Parameter(Mandatory=$True)]
-    [string] $vmPassword,
-
-    [Parameter(Mandatory=$True)]
-    [string] $ResourceGroupName
+    [Parameter(Mandatory = $True)]
+    [string] $resourceGroupName
  
 )
 
@@ -70,14 +64,14 @@ Expand-Archive "C:\PSModules.zip" -DestinationPath "C:\PSModules" -ErrorAction S
 Set-Location "C:\PSModules"
 Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
 $SecurePass = $Password | ConvertTo-SecureString -asPlainText -Force
-$Credential = New-Object System.Management.Automation.PSCredential($Username,$SecurePass)
+$Credential = New-Object System.Management.Automation.PSCredential($Username, $SecurePass)
 Set-RdsContext -DeploymentUrl $RdbrokerURI -Credential $Credential
-$newRdsTenant=New-RdsTenant -Name $TenantName -AadTenantId $AadTenantId -FriendlyName $FriendlyName -Description $Description
-$newRDSHostPool=New-RdsHostPool -TenantName $newRdsTenant.TenantName  -Name $HostPoolName -Description $HostPoolDescription -FriendlyName $HostPoolFriendlyName
-$SecurePass=ConvertTo-SecureString -String $vmPassword -AsPlainText -Force
-$localcred=New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($vmUsername, $Securepass)
-Invoke-Command -ComputerName localhost -Credential $localcred -ScriptBlock{
-param($SubscriptionId,$Username,$Password,$ResourceGroupName)
-Set-Location "C:\PSModules"
-.\RemoveRG.ps1 -SubscriptionId $SubscriptionId -Username $Username -Password $Password -ResourceGroupName $ResourceGroupName
-} -ArgumentList($SubscriptionId,$Username,$Password,$ResourceGroupName) -AsJob
+$newRdsTenant = New-RdsTenant -Name $TenantName -AadTenantId $AadTenantId -FriendlyName $FriendlyName -Description $Description
+$newRDSHostPool = New-RdsHostPool -TenantName $newRdsTenant.TenantName  -Name $HostPoolName -Description $HostPoolDescription -FriendlyName $HostPoolFriendlyName
+
+start-job -ScriptBlock{
+param($SubscriptionId,$Username,$Password,$resourceGroupName)
+
+PowerShell -NoProfile -ExecutionPolicy Bypass -Command "& 'C:\PSModules\RemoveRG.ps1' -SubscriptionId $SubscriptionId -Username $Username -Password $Password -resourceGroupName $resourceGroupName"
+
+} -ArgumentList($SubscriptionId,$Username,$Password,$resourceGroupName)
