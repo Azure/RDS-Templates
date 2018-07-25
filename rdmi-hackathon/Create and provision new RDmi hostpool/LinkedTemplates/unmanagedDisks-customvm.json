@@ -56,10 +56,45 @@
             "metadata": {
                 "description": "The storage account containing the custom VHD."
             }
+        },
+        "vhds": {
+            "type": "string",
+            "metadata": {
+                "description": "The URL to store unmanaged disks."
+            }
+        },
+        "subnet-id": {
+            "type": "string",
+            "metadata": {
+                "description": "The unique id of the subnet for the nics."
+            }
         }
     },
     "variables": {},
     "resources": [
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('rdshPrefix'), copyindex(), '-nic')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "rdsh-nic-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[parameters('subnet-id')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
         {
             "apiVersion": "2018-06-01",
             "type": "Microsoft.Compute/virtualMachines",
@@ -69,6 +104,9 @@
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('rdshPrefix'), copyindex(), '-nic')]"
+            ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
@@ -91,7 +129,7 @@
                             "uri": "[parameters('VmImageVhdUri')]"
                         },
                         "vhd": {
-                            "uri": "[concat(reference(parameters('storageaccount'), '2016-01-01').primaryEndpoints.blob, variables('vhds'), copyindex(), '-osdisk.vhd')]"
+                            "uri": "[concat(reference(parameters('storageaccount'), '2016-01-01').primaryEndpoints.blob, parameters('vhds'), copyindex(), '-osdisk.vhd')]"
                         }
                     }
                 },

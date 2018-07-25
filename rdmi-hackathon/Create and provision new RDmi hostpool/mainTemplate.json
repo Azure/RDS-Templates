@@ -149,29 +149,6 @@
     },
     "resources": [
         {
-            "apiVersion": "2015-06-15",
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat(variables('rdshPrefix'), copyindex(), '-nic')]",
-            "location": "[resourceGroup().location]",
-            "copy": {
-                "name": "rdsh-nic-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
-            "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "subnet": {
-                                "id": "[variables('subnet-id')]"
-                            }
-                        }
-                    }
-                ]
-            }
-        },
-        {
             "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
@@ -184,10 +161,6 @@
             "apiVersion": "2017-05-10",
             "name": "vmCreation-linkedTemplate",
             "type": "Microsoft.Resources/deployments",
-            "copy": {
-                "name": "rdsh-vm-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -202,7 +175,9 @@
                     "existingDomainusername": { "value": "[variables('existingDomainUsername')]" },
                     "existingDomainPassword": { "value": "[parameters('existingDomainPassword')]" },
                     "VmImageVhdUri": { "value": "[parameters('existingDomainPassword')]" },
-                    "storageaccount": { "value": "[variables('storageaccount')]" }
+                    "storageaccount": { "value": "[variables('storageaccount')]" },
+                    "subnet-id": { "value": "[variables('subnet-id')]" },
+                    "vhds": { "value": "[variables('vhds')]" }
                 }
             },
             "dependsOn": [
