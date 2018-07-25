@@ -181,7 +181,6 @@
                 }
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]",
                 "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
             ]
         },
