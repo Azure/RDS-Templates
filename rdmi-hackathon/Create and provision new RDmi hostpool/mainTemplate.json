@@ -192,7 +192,7 @@
                     "storageaccount": { "value": "[variables('storageaccount')]" },
                     "subnet-id": { "value": "[variables('subnet-id')]" },
                     "vhds": { "value": "[variables('vhds')]" },
-                    "managedDiskResourceGroupName": { "value": "[parameters('managedDiskResourceGroupName')]" }
+                    "managedDiskResourceGroupName": { "value": "[parameters('managedDiskResourceGroupName')]" },
                     "managedDiskName": { "value": "[parameters('managedDiskName')]" }
                 }
             },
