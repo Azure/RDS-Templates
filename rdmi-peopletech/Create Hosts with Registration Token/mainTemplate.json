@@ -77,7 +77,7 @@
                 "description": "The base URL for RDmi info",
                 "artifactsBaseUrl": ""
             },
-            "defaultValue": "https://raw.githubusercontent.com/sreenathakk/testrepository/master/createHosts/"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/Create%20Hosts%20with%20Registration%20Token/"
         }
     },
     "variables": {
