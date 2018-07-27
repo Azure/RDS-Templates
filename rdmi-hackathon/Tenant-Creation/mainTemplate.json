@@ -26,12 +26,12 @@
                 "description": "The location of all files.",
 				"artifactsBaseUrl": ""
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-hackathon/Tenant%20Creation"
+            "defaultValue": "https://raw.githubusercontent.com/ChristianMontoya/RDS-Templates/master/rdmi-hackathon/Tenant-Creation"
         }
     },
     "variables": {
         "AadTenantId": "[subscription().tenantId]",
-        "accountName": "[concat(parameters('TenantName'), uniqueString(resourceGroup().id))]",
+        "accountName": "[concat( resourceGroup().name, uniqueString(resourceGroup().id))]",
         "runbookName": "RDmi-New-Tenant-Request",
         "sku": "Free",
         "runbookDescription": "Makes a request to the RDmi service to create a tenant.",
