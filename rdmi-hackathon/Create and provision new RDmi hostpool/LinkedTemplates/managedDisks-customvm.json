@@ -9,6 +9,12 @@
             },
             "defaultValue": "[take(toLower(resourceGroup().name),10)]"
         },
+        "rdshGalleryImageSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "Gallery image SKU."
+            }
+        },
         "rdshNumberOfInstances": {
             "type": "int",
             "metadata": {
@@ -160,5 +166,6 @@
                 }
             }
         }
-    ]
+    ],
+    "outputs": { }
 }

@@ -140,17 +140,18 @@
                     "adminPassword": "[parameters('existingDomainPassword')]"
                 },
                 "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[parameters('rdshGalleryImageSKU')]",
+                        "version": "latest"
+                    },
                     "osDisk": {
-                        "name": "[concat(parameters('rdshPrefix'), copyindex(),'-osDisk')]",
-                        "osType": "Windows",
-                        "caching": "ReadWrite",
                         "createOption": "FromImage",
-                        "image": {
-                            "uri": "[parameters('VmImageVhdUri')]"
-                        },
                         "vhd": {
                             "uri": "[concat(reference(parameters('storageaccount'), '2016-01-01').primaryEndpoints.blob, parameters('vhds'), copyindex(), '-osdisk.vhd')]"
-                        }
+                        },
+                        "name": "[concat(parameters('rdshPrefix'), copyindex(),'-osDisk')]"
                     }
                 },
                 "networkProfile": {
