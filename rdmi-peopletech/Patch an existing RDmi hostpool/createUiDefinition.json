@@ -14,15 +14,6 @@
 				"visible": true
 			},
 			{
-				"name": "adminUPN",
-				"type": "Microsoft.Common.TextBox",
-				"label": "Admin UPN",
-				"toolTip": "Enter the UPN (admin1@contoso.com) of an admin who will manage the sytem on behalf of the customer.",
-				"constraints": {
-					"required": true
-				}
-			},
-			{
 				"name": "mrsRegion",
 				"type": "Microsoft.Common.TextBox",
 				"label": "Broker URL",
@@ -178,16 +169,12 @@
 						"name": "vmImageType",
 						"type": "Microsoft.Common.OptionsGroup",
 						"label": "Image",
-						"defaultValue": "Gallery",
+						"defaultValue": "Custom",
 						"constraints": {
 							"allowedValues": [
 								{
 									"label": "Custom",
 									"value": "Custom"
-								},
-								{
-									"label": "Gallery",
-									"value": "Gallery"
 								}
 							]
 						},
@@ -286,7 +273,7 @@
 							"addressPrefixSize": "/24"
 						},
 						"constraints": {
-							"minAddressPrefixSize": "/24"
+							"minAddressPrefixSize": "/30"
 						},
 						"options": {
 							"hideExisting": false
@@ -299,7 +286,7 @@
 									"addressPrefixSize": "/24"
 								},
 								"constraints": {
-									"minAddressPrefixSize": "/24",
+									"minAddressPrefixSize": "/30",
 									"minAddressCount": "[ div (sub (add( mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize,10,2),'s',' ')), steps('configureVirtualMachines').usageProfile), int(steps('configureVirtualMachines').totalUsers)),1),   mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize, 10, 2), 's', ' ')), steps('configureVirtualMachines').usageProfile) )]",
 									"requireContiguousAddresses": false
 								}
@@ -351,14 +338,14 @@
 				]
 			},
 			{
-				"name": "temporaryTenantInfo",
-				"label": "Temporary tenant info",
+				"name": "rdmiTenantInfo",
+				"label": "RDmi tenant information",
 				"subLabel": {
 					"preValidation": "Shouldn't need this much longer...",
 					"postValidation": "Done"
 				},
-				"bladeTitle": "Enter this info for now",
-				"bladeSubtitle": "Tenant",
+				"bladeTitle": "RDmi tenant information",
+				"bladeSubtitle": "",
 				"elements": [
 					{
 						"name": "tenantName",
@@ -412,10 +399,10 @@
 			"userLogoffDelayInMinutes": "[steps('virtualMachineSettings').userLogoffDelayInMinutes]",
 			"userNotificationMessege": "[steps('virtualMachineSettings').userNotificationMessege]",
 			"RDBrokerURL": "[basics('mrsRegion')]",
-			"ExistingTenantName": "[steps('temporaryTenantInfo').tenantName]",
+			"ExistingTenantName": "[steps('rdmiTenantInfo').tenantName]",
 			"ExistinghostpoolName": "[basics('ExistinghostpoolName')]",
-			"TenantAdminUPN": "[steps('temporaryTenantInfo').tenantAdminUPN]",
-			"TenantAdminPassword": "[steps('temporaryTenantInfo').tenantAdminPassword]"
+			"TenantAdminUPN": "[steps('rdmiTenantInfo').tenantAdminUPN]",
+			"TenantAdminPassword": "[steps('rdmiTenantInfo').tenantAdminPassword]"
 		}
 	}
 }
