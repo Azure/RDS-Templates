@@ -1,7 +1,7 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-   "parameters": {
+    "parameters": {
         "TenantName": {
             "type": "string",
             "metadata": {
@@ -21,17 +21,17 @@
             }
         },
         "baseUrl": {
+            "defaultValue": "https://raw.githubusercontent.com/ChristianMontoya/RDS-Templates/master/rdmi-hackathon/Tenant-Creation",
             "type": "string",
             "metadata": {
                 "description": "The location of all files.",
-				"artifactsBaseUrl": ""
-            },
-            "defaultValue": "https://raw.githubusercontent.com/ChristianMontoya/RDS-Templates/master/rdmi-hackathon/Tenant-Creation"
+                "artifactsBaseUrl": ""
+            }
         }
     },
     "variables": {
         "AadTenantId": "[subscription().tenantId]",
-        "accountName": "[concat( resourceGroup().name, uniqueString(resourceGroup().id))]",
+        "accountName": "[concat( resourceGroup().name, '-', uniqueString(resourceGroup().id, deployment().name),'-account')]",
         "runbookName": "RDmi-New-Tenant-Request",
         "sku": "Free",
         "runbookDescription": "Makes a request to the RDmi service to create a tenant.",
@@ -39,11 +39,10 @@
     },
     "resources": [
         {
-            "name": "[variables('accountName')]",
             "type": "Microsoft.Automation/automationAccounts",
+            "name": "[variables('accountName')]",
             "apiVersion": "2015-10-31",
             "location": "[resourceGroup().location]",
-            "dependsOn": [],
             "tags": {},
             "properties": {
                 "sku": {
@@ -52,8 +51,8 @@
             },
             "resources": [
                 {
-                    "name": "[variables('runbookName')]",
                     "type": "runbooks",
+                    "name": "[variables('runbookName')]",
                     "apiVersion": "2015-10-31",
                     "location": "[resourceGroup().location]",
                     "properties": {
@@ -61,7 +60,7 @@
                         "logProgress": false,
                         "logVerbose": true,
                         "description": "[variables('runbookDescription')]",
-                        "publishContentLink" : {
+                        "publishContentLink": {
                             "uri": "[variables('scriptUri')]",
                             "version": "1.0.0.0"
                         }
@@ -71,39 +70,40 @@
                     ]
                 },
                 {
-                    "apiVersion": "2015-10-31",
                     "type": "jobs",
-                    "name": "[concat(parameters('TenantName'), uniqueString(resourceGroup().id),'-job')]",
+                    "name": "[concat('create-tenant-', uniqueString(resourceGroup().id, deployment().name),'-job')]",
+                    "apiVersion": "2017-05-15-preview",
                     "location": "[resourceGroup().location]",
                     "properties": {
-                        "runbook" : {
-                            "name": "[variables('RunbookName')]",
-                            "parameters": {
-                                "RdsTenantName": "[parameters('TenantName')]",
-                                "AadTenantId": "[variables('AadTenantId')]",
-                                "BrokerUrl": "[parameters('BrokerUrl')]",
-                                "TenantAdminUPN": "[parameters('TenantAdminUPN')]"
-                            }
+                        "runbook": {
+                            "name": "[variables('runbookName')]"
+                        },
+                        "parameters": {
+                            "RdsTenantName": "[parameters('TenantName')]",
+                            "AadTenantId": "[variables('AadTenantId')]",
+                            "BrokerUrl": "[parameters('BrokerUrl')]",
+                            "TenantAdminUPN": "[parameters('TenantAdminUPN')]"
                         }
                     },
                     "dependsOn": [
-                      "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
-                      "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'), '/runbooks/', variables('runbookName'))]"
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'), '/runbooks/', variables('runbookName'))]"
                     ]
                 }
-            ]
+            ],
+            "dependsOn": []
         }
     ],
     "outputs": {
-        "Broker URL" : {
+        "Broker URL": {
             "type": "string",
             "value": "[parameters('BrokerURL')]"
         },
-        "Tenant Group Name" : {
+        "Tenant Group Name": {
             "type": "string",
             "value": "Default Tenant Group"
         },
-        "Tenant Name" : {
+        "Tenant Name": {
             "type": "string",
             "value": "[parameters('TenantName')]"
         },
