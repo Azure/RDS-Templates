@@ -1,0 +1,119 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+   "parameters": {
+        "TenantName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of your RDS Tenant"
+            }
+        },
+        "TenantAdminUPN": {
+            "type": "string",
+            "metadata": {
+                "description": "The admin UPN who will be managing the tenant."
+            }
+        },
+        "BrokerURL": {
+            "type": "string",
+            "metadata": {
+                "description": "The Broker URL for the deployment."
+            }
+        },
+        "baseUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of all files.",
+				"artifactsBaseUrl": ""
+            },
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-hackathon/Tenant%20Creation"
+        }
+    },
+    "variables": {
+        "AadTenantId": "[subscription().tenantId]",
+        "accountName": "[concat(parameters('TenantName'), uniqueString(resourceGroup().id))]",
+        "runbookName": "RDmi-New-Tenant-Request",
+        "sku": "Free",
+        "runbookDescription": "Makes a request to the RDmi service to create a tenant.",
+        "scriptUri": "[concat( parameters('baseUrl'), '/Scripts/CreateTenantRequest.ps1' )]"
+    },
+    "resources": [
+        {
+            "name": "[variables('accountName')]",
+            "type": "Microsoft.Automation/automationAccounts",
+            "apiVersion": "2015-10-31",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [],
+            "tags": {},
+            "properties": {
+                "sku": {
+                    "name": "[variables('sku')]"
+                }
+            },
+            "resources": [
+                {
+                    "name": "[variables('runbookName')]",
+                    "type": "runbooks",
+                    "apiVersion": "2015-10-31",
+                    "location": "[resourceGroup().location]",
+                    "properties": {
+                        "runbookType": "Script",
+                        "logProgress": false,
+                        "logVerbose": true,
+                        "description": "[variables('runbookDescription')]",
+                        "publishContentLink" : {
+                            "uri": "[variables('scriptUri')]",
+                            "version": "1.0.0.0"
+                        }
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]"
+                    ]
+                },
+                {
+                    "apiVersion": "2015-10-31",
+                    "type": "jobs",
+                    "name": "[concat(parameters('TenantName'), uniqueString(resourceGroup().id),'-job')]",
+                    "location": "[resourceGroup().location]",
+                    "properties": {
+                        "runbook" : {
+                            "name": "[variables('RunbookName')]",
+                            "parameters": {
+                                "RdsTenantName": "[parameters('TenantName')]",
+                                "AadTenantId": "[variables('AadTenantId')]",
+                                "BrokerUrl": "[parameters('BrokerUrl')]",
+                                "TenantAdminUPN": "[parameters('TenantAdminUPN')]"
+                            }
+                        }
+                    },
+                    "dependsOn": [
+                      "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
+                      "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'), '/runbooks/', variables('runbookName'))]"
+                    ]
+                }
+            ]
+        }
+    ],
+    "outputs": {
+        "Broker URL" : {
+            "type": "string",
+            "value": "[parameters('BrokerURL')]"
+        },
+        "Tenant Group Name" : {
+            "type": "string",
+            "value": "Default Tenant Group"
+        },
+        "Tenant Name" : {
+            "type": "string",
+            "value": "[parameters('TenantName')]"
+        },
+        "Tenant Admin UPN": {
+            "type": "string",
+            "value": "[parameters('TenantAdminUPN')]"
+        },
+        "RD PowerShell URL": {
+            "type": "string",
+            "value": "https://aka.ms/RDmiPowerShell"
+        }
+    }
+}

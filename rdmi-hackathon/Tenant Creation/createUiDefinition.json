@@ -1,0 +1,45 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+	"handler": "Microsoft.Compute.MultiVm",
+	"version": "0.1.2-preview",
+	"parameters": {
+		"basics": [
+			{
+				"name": "tenantName",
+				"type": "Microsoft.Common.TextBox",
+				"label": "Tenant name",
+				"constraints": {
+					"required": true
+				},
+				"toolTip": "Enter a unique name you would like to use for your tenant.",
+				"visible": true
+			},
+			{
+				"name": "tenantAdminUPN",
+				"type": "Microsoft.Common.TextBox",
+				"label": "Admin UPN",
+				"constraints": {
+					"required": true
+				},
+				"toolTip": "Enter the UPN (admin1@contoso.com) of an admin user who will manage the sytem on behalf of the customer.",
+				"visible": true
+			},
+			{
+				"name": "brokerURL",
+				"type": "Microsoft.Common.TextBox",
+				"label": "BrokerUrl",
+				"toolTip": "Select your home region for MRS. This is the Azure region where user connection data, session host data, and diagnostic data will reside.",
+				"constraints": {
+					"required": true
+				},
+				"visible": true
+			}
+		],
+		"steps": [ ],
+		"outputs": {
+			"TenantName": "[basics('tenantName')]",
+			"TenantAdminUPN": "[basics('tenantAdminUPN')]",
+			"BrokerURL": "[basics('brokerURL')]"
+		}
+	}
+}
