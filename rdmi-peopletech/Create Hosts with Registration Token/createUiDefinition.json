@@ -14,6 +14,16 @@
 				"visible": true
 			},
 			{
+				"name": "RegistrationToken",
+				"type": "Microsoft.Common.TextBox",
+				"label": "Registration Token",
+				"toolTip": "Enter the valid registration token",
+				"constraints": {
+					"required": true
+				},
+				"visible": true
+			},
+			{
 				"name": "mrsRegion",
 				"type": "Microsoft.Common.TextBox",
 				"label": "Broker URL",
@@ -312,7 +322,8 @@
 			"userLogoffDelayInMinutes": "[steps('virtualMachineSettings').userLogoffDelayInMinutes]",
 			"userNotificationMessege": "[steps('virtualMachineSettings').userNotificationMessege]",
 			"RDBrokerURL": "[basics('mrsRegion')]",
-			"ExistinghostpoolName": "[basics('ExistinghostpoolName')]"
+			"ExistinghostpoolName": "[basics('ExistinghostpoolName')]",
+			"RegistrationToken": "[basics('RegistrationToken')]"
 		}
 	}
 }
