@@ -2,6 +2,16 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "rdshVMImageType": {
+            "type": "string",
+            "metadata": {
+                "description": "Either gallery or custom."
+            },
+            "allowedValues": [
+                "Custom",
+                "Gallery"
+            ]
+        },
         "rdshPrefix": {
             "type": "string",
             "metadata": {
@@ -90,7 +100,10 @@
             }
         }
     },
-    "variables": {},
+    "variables": {
+        "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
+        "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]"
+    },
     "resources": [
         {
             "apiVersion": "2015-06-15",

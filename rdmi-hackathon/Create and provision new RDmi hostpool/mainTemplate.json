@@ -21,6 +21,22 @@
             },
             "defaultValue": "[take(toLower(resourceGroup().name),10)]"
         },
+        "rdshVMImageType": {
+            "type": "string",
+            "metadata": {
+                "description": "Either gallery or custom."
+            },
+            "allowedValues": [
+                "Custom",
+                "Gallery"
+            ]
+        },
+        "rdshGalleryImageSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "Gallery image SKU."
+            }
+        },
         "rdshNumberOfInstances": {
             "type": "int",
             "metadata": {
@@ -182,13 +198,15 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "rdshVMImageType": { "value": "[parameters('rdshVMImageType')]"},
+                    "rdshGalleryImageSKU": { "value": "[parameters('rdshGalleryImageSKU')]"},
+                    "VmImageVhdUri": { "value": "[parameters('VmImageVhdUri')]" },
                     "rdshPrefix": { "value": "[variables('rdshPrefix')]" },
                     "rdshNumberOfInstances": { "value": "[parameters('rdshNumberOfInstances')]" },
                     "rdshVmSize": { "value": "[parameters('rdshVmSize')]" },
                     "rdshVMDiskType": { "value": "[parameters('rdshVMDiskType')]" },
                     "existingDomainusername": { "value": "[variables('existingDomainUsername')]" },
                     "existingDomainPassword": { "value": "[parameters('existingDomainPassword')]" },
-                    "VmImageVhdUri": { "value": "[parameters('VmImageVhdUri')]" },
                     "storageaccount": { "value": "[variables('storageaccount')]" },
                     "subnet-id": { "value": "[variables('subnet-id')]" },
                     "vhds": { "value": "[variables('vhds')]" },
