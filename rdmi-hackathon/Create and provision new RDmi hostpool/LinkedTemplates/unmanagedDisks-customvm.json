@@ -152,7 +152,7 @@
                             "uri": "[parameters('VmImageVhdUri')]"
                         },
                         "vhd": {
-                            "uri": "[concat(reference(parameters('storageaccount'), '2016-01-01').primaryEndpoints.blob, parameters('vhds'), copyindex(), '-osdisk.vhd')]"
+                            "uri": "[concat(reference(variables('storageaccount'), '2016-01-01').primaryEndpoints.blob, parameters('vhds'), copyindex(), '-osdisk.vhd')]"
                         }
                     }
                 },
@@ -166,7 +166,7 @@
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
                         "enabled": "[equals(parameters('rdshVMDiskType'), 'HDD')]",
-                        "storageUri": "[reference(parameters('storageaccount'), '2016-01-01').primaryEndpoints.blob]"
+                        "storageUri": "[reference(variables('storageaccount'), '2016-01-01').primaryEndpoints.blob]"
                     }
                 }
             }
