@@ -12,12 +12,17 @@
                 "Gallery"
             ]
         },
-        "rdshPrefix": {
+        "VmImageVhdUri": {
             "type": "string",
             "metadata": {
-                "description": "This prefix will be used in combination with the VM number to create the VM name. This value includes the dash, so if using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
-            },
-            "defaultValue": "[take(toLower(resourceGroup().name),10)]"
+                "description": "URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
+            }
+        },
+        "storageAccountResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The storage account containing the custom VHD."
+            }
         },
         "rdshGalleryImageSKU": {
             "type": "string",
@@ -25,18 +30,18 @@
                 "description": "Gallery image SKU."
             }
         },
+        "rdshPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "This prefix will be used in combination with the VM number to create the VM name. This value includes the dash, so if using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
+            },
+            "defaultValue": "[take(toLower(resourceGroup().name),10)]"
+        },
         "rdshNumberOfInstances": {
             "type": "int",
             "metadata": {
                 "description": "Number of session hosts that will be created and added to the hostpool."
             }
-        },
-        "rdshVmSize": {
-            "type": "string",
-            "metadata": {
-                "description": "The size of the session host VMs."
-            },
-            "defaultValue": "Standard_A2"
         },
         "rdshVMDiskType": {
             "type": "string",
@@ -49,6 +54,13 @@
             },
             "defaultValue": "SSD"
         },
+        "rdshVmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "The size of the session host VMs."
+            },
+            "defaultValue": "Standard_A2"
+        },
         "existingDomainusername": {
             "type": "string",
             "metadata": {
@@ -59,18 +71,6 @@
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
-            }
-        },
-        "VmImageVhdUri": {
-            "type": "string",
-            "metadata": {
-                "description": "URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
-            }
-        },
-        "storageaccount": {
-            "type": "string",
-            "metadata": {
-                "description": "The storage account containing the custom VHD."
             }
         },
         "vhds": {

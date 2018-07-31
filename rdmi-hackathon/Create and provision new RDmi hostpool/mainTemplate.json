@@ -2,25 +2,6 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "storageAccountResourceGroupName": {
-            "type": "string",
-            "metadata": {
-                "description": "The resource group containing the storage account of the image vhd file."
-            }
-        },
-        "VmImageVhdUri": {
-            "type": "string",
-            "metadata": {
-                "description": "URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
-            }
-        },
-        "rdshNamePrefix": {
-            "type": "string",
-            "metadata": {
-                "description": "This prefix will be used in combination with the VM number to create the VM name. If using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
-            },
-            "defaultValue": "[take(toLower(resourceGroup().name),10)]"
-        },
         "rdshVMImageType": {
             "type": "string",
             "metadata": {
@@ -31,24 +12,38 @@
                 "Gallery"
             ]
         },
+        "VmImageVhdUri": {
+            "type": "string",
+            "metadata": {
+                "description": "URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
+            },
+            "defaultValue": ""
+        },
+        "storageAccountResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The resource group containing the storage account of the image vhd file."
+            },
+            "defaultValue": ""
+        },
         "rdshGalleryImageSKU": {
             "type": "string",
             "metadata": {
                 "description": "Gallery image SKU."
             }
         },
+        "rdshNamePrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "This prefix will be used in combination with the VM number to create the VM name. If using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
+            },
+            "defaultValue": "[take(toLower(resourceGroup().name),10)]"
+        },
         "rdshNumberOfInstances": {
             "type": "int",
             "metadata": {
                 "description": "Number of session hosts that will be created and added to the hostpool."
             }
-        },
-        "rdshVmSize": {
-            "type": "string",
-            "metadata": {
-                "description": "The size of the session host VMs."
-            },
-            "defaultValue": "Standard_A2"
         },
         "rdshVMDiskType": {
             "type": "string",
@@ -60,6 +55,13 @@
                 "description": "The VM disk type for the VM: HDD or SSD."
             },
             "defaultValue": "SSD"
+        },
+        "rdshVmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "The size of the session host VMs."
+            },
+            "defaultValue": "Standard_A2"
         },
         "rdshUseManagedDisks" : {
             "type": "bool",
@@ -82,13 +84,6 @@
                 "description": "Name of the managed disk."
             }
         },
-        "rdshUseGalleryImage" : {
-            "type": "bool",
-            "defaultValue": false,
-            "metadata": {
-                "description": "True indicating you would like to use a gallery image or false indicating you would like to use a custom image."
-            }
-        },
         "existingDomainUPN": {
             "type": "string",
             "metadata": {
@@ -101,12 +96,6 @@
                 "description": "The password that corresponds to the existing domain username."
             }
         },
-        "virtualNetworkResourceGroupName": {
-            "type": "string",
-            "metadata": {
-                "description": "The resource group containing the existing virtual network."
-            }
-        },
         "existingVnetName": {
             "type": "string",
             "metadata": {
@@ -117,6 +106,12 @@
             "type": "string",
             "metadata": {
                 "description": "The subnet the VMs will be placed in."
+            }
+        },
+        "virtualNetworkResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The resource group containing the existing virtual network."
             }
         },
         "RDBrokerURL": {
@@ -169,8 +164,6 @@
         "HostPoolFriendlyName": "Hostpool",
         "HostPoolDescription": "template through create hostpool",
         "RegistrationExpirationHours": "48",
-        "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
-        "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
         "scriptURI": "[concat(parameters('baseUrl'),'/Scripts/Script.ps1')]",
         "deployAgentURI": "[concat(parameters('baseUrl'),'/Scripts/DeployAgent.zip')]",
         "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'SSD'), 'Premium_LRS', 'Standard_LRS')]",
@@ -199,15 +192,15 @@
                 },
                 "parameters": {
                     "rdshVMImageType": { "value": "[parameters('rdshVMImageType')]"},
-                    "rdshGalleryImageSKU": { "value": "[parameters('rdshGalleryImageSKU')]"},
                     "VmImageVhdUri": { "value": "[parameters('VmImageVhdUri')]" },
+                    "storageAccountResourceGroupName": { "value": "[parameters('storageAccountResourceGroupName')]" },
+                    "rdshGalleryImageSKU": { "value": "[parameters('rdshGalleryImageSKU')]"},
                     "rdshPrefix": { "value": "[variables('rdshPrefix')]" },
                     "rdshNumberOfInstances": { "value": "[parameters('rdshNumberOfInstances')]" },
-                    "rdshVmSize": { "value": "[parameters('rdshVmSize')]" },
                     "rdshVMDiskType": { "value": "[parameters('rdshVMDiskType')]" },
+                    "rdshVmSize": { "value": "[parameters('rdshVmSize')]" },
                     "existingDomainusername": { "value": "[variables('existingDomainUsername')]" },
                     "existingDomainPassword": { "value": "[parameters('existingDomainPassword')]" },
-                    "storageaccount": { "value": "[variables('storageaccount')]" },
                     "subnet-id": { "value": "[variables('subnet-id')]" },
                     "vhds": { "value": "[variables('vhds')]" },
                     "managedDiskResourceGroupName": { "value": "[parameters('managedDiskResourceGroupName')]" },
