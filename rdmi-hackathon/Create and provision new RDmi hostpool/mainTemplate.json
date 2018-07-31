@@ -2,15 +2,11 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "rdshVMImageType": {
-            "type": "string",
+        "rdshUseGalleryImage": {
+            "type": "bool",
             "metadata": {
                 "description": "Either gallery or custom."
-            },
-            "allowedValues": [
-                "Custom",
-                "Gallery"
-            ]
+            }
         },
         "VmImageVhdUri": {
             "type": "string",
@@ -167,7 +163,7 @@
         "scriptURI": "[concat(parameters('baseUrl'),'/Scripts/Script.ps1')]",
         "deployAgentURI": "[concat(parameters('baseUrl'),'/Scripts/DeployAgent.zip')]",
         "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'SSD'), 'Premium_LRS', 'Standard_LRS')]",
-        "vmTemplateName": "[concat( if(parameters('rdshUseManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', if(parameters('rdshUseManagedDisks'), 'gallery', 'custom'), 'vm')]",
+        "vmTemplateName": "[concat( if(parameters('rdshUseManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', if(parameters('rdshUseGalleryImage'), 'gallery', 'custom'), 'vm')]",
         "vmTemplateUri": "[concat(parameters('baseUrl'),'/LinkedTemplates/',variables('vmTemplateName'),'.json')]"
     },
     "resources": [
@@ -191,7 +187,6 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "rdshVMImageType": { "value": "[parameters('rdshVMImageType')]"},
                     "VmImageVhdUri": { "value": "[parameters('VmImageVhdUri')]" },
                     "storageAccountResourceGroupName": { "value": "[parameters('storageAccountResourceGroupName')]" },
                     "rdshGalleryImageSKU": { "value": "[parameters('rdshGalleryImageSKU')]"},
