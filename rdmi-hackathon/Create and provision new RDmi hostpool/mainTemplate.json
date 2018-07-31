@@ -26,7 +26,11 @@
             "type": "string",
             "metadata": {
                 "description": "Gallery image SKU."
-            }
+            },
+            "allowedValues": [
+                "Project Eindhoven"
+            ],
+            "defaultValue": "Project Eindhoven"
         },
         "rdshNamePrefix": {
             "type": "string",
