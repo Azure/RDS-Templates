@@ -86,17 +86,19 @@ function Write-Log {
 # Setting to Tls12 due to Azure web app security requirements
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+$DeployAgentLocation = "C:\DeployAgent"
+
 try {
     #Downloading the DeployAgent zip file to rdsh vm
     Invoke-WebRequest -Uri $fileURI -OutFile "C:\DeployAgent.zip"
     Write-Log -Message "Downloaded DeployAgent.zip into this location C:\"
 
     #Creating a folder inside rdsh vm for extracting deployagent zip file
-    New-Item -Path "C:\DeployAgent" -ItemType directory -Force -ErrorAction SilentlyContinue
+    New-Item -Path "$DeployAgentLocation" -ItemType directory -Force -ErrorAction SilentlyContinue
     Write-Log -Message "Created a new folder 'DeployAgent' inside VM"
-    Expand-Archive "C:\DeployAgent.zip" -DestinationPath "C:\DeployAgent" -ErrorAction SilentlyContinue
-    Write-Log -Message "Extracted the 'Deployagent.zip' file into 'C:\Deployagent' folder inside VM"
-    Set-Location "C:\DeployAgent"
+    Expand-Archive "C:\DeployAgent.zip" -DestinationPath "$DeployAgentLocation" -ErrorAction SilentlyContinue
+    Write-Log -Message "Extracted the 'Deployagent.zip' file into '$DeployAgentLocation' folder inside VM"
+    Set-Location "$DeployAgentLocation"
     Write-Log -Message "Setting up the location of Deployagent folder"
 
     #Checking if RDInfragent is registered or not in rdsh vm
@@ -182,7 +184,7 @@ try {
                 Write-Log -Message "Registerationinfo not expired and expiring on $reglogexpired"
             }
             #Executing DeployAgent psl file in rdsh vm and add to hostpool
-            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstallerFolder ".\RDAgentBootLoaderInstall\" -AgentInstallerFolder ".\RDInfraAgentInstall\" -SxSStackInstallerFolder ".\RDInfraSxSStackInstall\" -AdminCredentials $adminCredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
+            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" -AdminCredentials $adminCredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
             Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName `
         $DAgentInstall"
         }
