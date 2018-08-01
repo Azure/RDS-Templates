@@ -370,7 +370,7 @@
 			"rdshVmSize": "[steps('configureVirtualMachines').virtualMachineSize]",
 			"rdshNumberOfInstances": "[ div (sub (add( mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize,10,2),'s',' ')), steps('configureVirtualMachines').usageProfile), int(steps('configureVirtualMachines').totalUsers)),1),   mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize, 10, 2), 's', ' ')), steps('configureVirtualMachines').usageProfile) )]",
 			"rdshVMDiskType": "[steps('configureVirtualMachines').rdshVMDiskType]",
-			"rdshUseManagedDisks": "",
+			"rdshUseManagedDisks": false,
 			"managedDiskResourceGroupName": "",
 			"managedDiskName": "",
 			"existingDomainUPN": "[steps('virtualMachineSettings').domainUser]",
