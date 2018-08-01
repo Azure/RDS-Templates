@@ -215,6 +215,25 @@
 						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'Custom')]"
 					},
 					{
+						"name": "rdshVMDiskType",
+						"type": "Microsoft.Common.OptionsGroup",
+						"label": "Disk Type",
+						"defaultValue": "HDD",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "HDD",
+									"value": "HDD"
+								},
+								{
+									"label": "SSD",
+									"value": "SSD"
+								}
+							]
+						},
+						"visible": true
+					},
+					{
 						"name": "domainUser",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Domain UPN",
@@ -350,7 +369,7 @@
 			"rdshGalleryImageSKU": "[steps('virtualMachineSettings').galleryImageSelection]",
 			"rdshVmSize": "[steps('configureVirtualMachines').virtualMachineSize]",
 			"rdshNumberOfInstances": "[ div (sub (add( mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize,10,2),'s',' ')), steps('configureVirtualMachines').usageProfile), int(steps('configureVirtualMachines').totalUsers)),1),   mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize, 10, 2), 's', ' ')), steps('configureVirtualMachines').usageProfile) )]",
-			"rdshVMDiskType": "",
+			"rdshVMDiskType": "[steps('configureVirtualMachines').rdshVMDiskType]",
 			"rdshUseManagedDisks": "",
 			"managedDiskResourceGroupName": "",
 			"managedDiskName": "",
