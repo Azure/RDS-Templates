@@ -211,7 +211,7 @@ try {
             Write-Log -Message "Successfully registered $HName, expiration date: $newRegInfo"
         
             #Executing DeployAgent psl file in rdsh vm and add to hostpool
-            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $adminCredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $ToRegister.Token -StartAgent $true
+            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" -AdminCredentials $adminCredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
         
             Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader, RDAgent, StackSxS installed inside VM for new $HName `
         $DAgentInstall"
