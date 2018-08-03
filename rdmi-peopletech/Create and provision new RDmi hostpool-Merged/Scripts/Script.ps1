@@ -235,11 +235,11 @@ try {
         $DAgentInstall"
             }
             #add rdsh vm to hostpool
-           <# $addRdsh = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true
+            $addRdsh = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true
             $rdshName = $addRdsh.name | Out-String -Stream
             $poolName = $addRdsh.hostpoolname | Out-String -Stream
             Write-Log -Message "Successfully added $rdshName VM to $poolName"
-        #>
+        
         }
 
     }
