@@ -86,7 +86,7 @@
 				"constraints": {
 					"required": true
 				},
-				"visible":  "[equals(basics('hostsRegistration'), 'PreRegistered')]"
+				"visible":  "[equals(basics('hostsRegistration'), 'ExistingToken')]"
 			}
 		],
 	
