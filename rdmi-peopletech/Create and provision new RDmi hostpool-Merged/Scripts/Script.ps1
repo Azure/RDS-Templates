@@ -85,7 +85,7 @@ function Write-Log {
     } 
 }
 
-
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 try {
     
     #Downloading the DeployAgent zip file to rdsh vm
@@ -117,7 +117,7 @@ try {
    
     if (!$CheckRegistery) 
     {
-        if ($registrationToken) {
+        if ($registrationToken  -ne "empty") {
         #Converting Local Admin Credentials
         $AdminSecurepass = ConvertTo-SecureString -String $localAdminPassword -AsPlainText -Force
         $adminCredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($localAdminUserName, $AdminSecurepass)
@@ -190,7 +190,8 @@ try {
                 $reglog = $registered | Out-String
                 Write-Log -Message "Exported Rds RegisterationInfo into variable 'Registered': $reglog"
                 $systemdate = (GET-DATE)
-                $Tokenexpiredate = $Registered.ExpirationUtc
+                #$Tokenexpiredate = $Registered.ExpirationUtc #June Codebit
+                $Tokenexpiredate = $Registered.ExpirationUtc #July Codebit
                 $difference = $Tokenexpiredate - $systemdate
                 write-log -Message "Calculating date and time of expiration with system date and time"
                 if ($difference -lt 0 -or $Registered -eq 'null') {
