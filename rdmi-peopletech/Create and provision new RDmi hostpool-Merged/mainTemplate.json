@@ -121,19 +121,18 @@
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
-        "HostPoolFriendlyName": "Hostpool",
-        "HostPoolDescription": "template through create hostpool",
-        "RegistrationExpirationHours": "48",
+        "HostPoolFriendlyName": "[if(equals(parameters('registrationToken'),'empty'), json('null'), 'template through create hostpool')]",
+        "HostPoolDescription": "[if(equals(parameters('registrationToken'),'empty'), json('null'), 'template through create hostpool')]",
+        "RegistrationExpirationHours": "[if(equals(parameters('registrationToken'),'empty'), json('null'), '48')]",
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
         "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
         "scriptURI": "[concat(parameters('baseUrl'),'/Scripts/Script.ps1')]",
         "deployAgentURI": "[concat(parameters('baseUrl'),'/Scripts/DeployAgent.zip')]",
-        "emptyVar": "empty",
-        "registrationToken": "[if(equals(parameters('registrationToken'),'empty'), variables('emptyVar'), parameters('registrationToken'))]",
-        "ExistingTenantName": "[if(equals(parameters('ExistingTenantName'),'empty'), variables('emptyVar'), parameters('ExistingTenantName'))]",
-        "HostPoolName": "[if(equals(parameters('HostPoolName'),'empty'), variables('emptyVar'), parameters('HostPoolName'))]",
-        "TenantAdminUPN": "[if(equals(parameters('TenantAdminUPN'),'empty'), variables('emptyVar'), parameters('TenantAdminUPN'))]",
-        "TenantAdminPassword": "[if(equals(parameters('TenantAdminPassword'),'empty'), variables('emptyVar'), parameters('TenantAdminPassword'))]"
+        "registrationToken": "[if(equals(parameters('registrationToken'),'empty'), json('null'), parameters('registrationToken'))]",
+        "ExistingTenantName": "[if(equals(parameters('ExistingTenantName'),'empty'), json('null'), parameters('ExistingTenantName'))]",
+        "HostPoolName": "[if(equals(parameters('HostPoolName'),'empty'), json('null'), parameters('HostPoolName'))]",
+        "TenantAdminUPN": "[if(equals(parameters('TenantAdminUPN'),'empty'), json('null'), parameters('TenantAdminUPN'))]",
+        "TenantAdminPassword": "[if(equals(parameters('TenantAdminPassword'),'empty'), json('null'), parameters('TenantAdminPassword'))]"
     },
     "resources": [
         {

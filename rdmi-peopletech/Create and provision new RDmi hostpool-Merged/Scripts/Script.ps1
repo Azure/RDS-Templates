@@ -115,26 +115,8 @@ try {
     }
 
    
-    if (!$CheckRegistery) 
-    {
-        if ($registrationToken  -ne "empty") {
-        #Converting Local Admin Credentials
-        $AdminSecurepass = ConvertTo-SecureString -String $localAdminPassword -AsPlainText -Force
-        $adminCredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($localAdminUserName, $AdminSecurepass)
-
-        #Getting fqdn of rdsh vm
-        $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
-        Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
-           
-        #Executing DeployAgent psl file in rdsh vm and add to hostpool
-        $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $adminCredentials -RegistrationToken $registrationToken -StartAgent $true
-        Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName `
-        $DAgentInstall"
-
-        Write-Log -Message "Successfully added $SessionHostName VM to HostPool"
-
-        }
-        else 
+    if (!$CheckRegistery) {
+        if($registrationToken -eq " ") 
         {
             #Importing RDMI PowerShell module
             Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
@@ -191,7 +173,7 @@ try {
                 Write-Log -Message "Exported Rds RegisterationInfo into variable 'Registered': $reglog"
                 $systemdate = (GET-DATE)
                 #$Tokenexpiredate = $Registered.ExpirationUtc #June Codebit
-                $Tokenexpiredate = $Registered.ExpirationUtc #July Codebit
+                $Tokenexpiredate = $Registered.expirationtime #July Codebit
                 $difference = $Tokenexpiredate - $systemdate
                 write-log -Message "Calculating date and time of expiration with system date and time"
                 if ($difference -lt 0 -or $Registered -eq 'null') {
@@ -242,7 +224,24 @@ try {
             Write-Log -Message "Successfully added $rdshName VM to $poolName"
         
         }
-
+        else {
+            #Converting Local Admin Credentials
+            $AdminSecurepass = ConvertTo-SecureString -String $localAdminPassword -AsPlainText -Force
+            $adminCredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($localAdminUserName, $AdminSecurepass)
+        
+            #Getting fqdn of rdsh vm
+            $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
+            Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
+                   
+            #Executing DeployAgent psl file in rdsh vm and add to hostpool
+            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $adminCredentials -RegistrationToken $registrationToken -StartAgent $true
+            Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName `
+                $DAgentInstall"
+        
+            Write-Log -Message "Successfully added $SessionHostName VM to HostPool"
+        
+        }
+        
     }
 
 }
