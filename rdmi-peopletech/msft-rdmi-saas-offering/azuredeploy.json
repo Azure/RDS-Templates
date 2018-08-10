@@ -58,7 +58,7 @@
         "virtualNetworkName": "ContosoVNET",
         "publicIPAddressName": "ContosoPublicIP",
         "dnsNameForPublicIP": "[concat(variables('dnsLabelPrefix'),uniqueString(resourceGroup().name))]",
-        "_artifactsLocation": "https://raw.githubusercontent.com/phanikumarsharma/rdmisaasofferingtemplate/master/scripts/",
+        "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/",
         "adminUsername": "vmadmin",
         "adminPassword": "password123@",
         "RGName": "[resourceGroup().name]",
@@ -170,7 +170,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": {
                            "fileUris": [
-                            "https://raw.githubusercontent.com/phanikumarsharma/rdmisaasofferingtemplate/master/scripts/New-RdmiMgmtSetup.ps1"
+                            "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/New-RdmiMgmtSetup.ps1"
                         ],
                         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File New-RdmiMgmtSetup.ps1', ' -SubscriptionId \"', variables('subscriptionId'), '\"',' ', ' -ResourceGroupName \"', parameters('ResourceGroup'), '\"',' ', ' -Location \"', variables('Location'), '\"',' ', ' -ApplicationID \"', parameters('ApplicationID'), '\"',' ', ' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ', ' -ResourceURL \"', parameters('ResourceURL'), '\"',' ',' -UserName \"', parameters('AzureLoginID'), '\"',' ',' -Password \"', parameters('AzureLoginPassword'), '\"',' ',' -fileURI \"', variables('FileURI'), '\"',' ',' -RGName \"', variables('RGName'), '\"')]"
                         }
