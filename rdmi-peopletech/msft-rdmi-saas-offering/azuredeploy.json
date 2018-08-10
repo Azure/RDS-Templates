@@ -58,7 +58,7 @@
         "virtualNetworkName": "ContosoVNET",
         "publicIPAddressName": "ContosoPublicIP",
         "dnsNameForPublicIP": "[concat(variables('dnsLabelPrefix'),uniqueString(resourceGroup().name))]",
-        "_artifactsLocation": "https://raw.githubusercontent.com/phanikumarsharma/rdmisaasofferingtemplate/master/scripts/",
+        "_artifactsLocation": "https://raw.githubusercontent.com/phanikumarsharma/rdmisaasofferingtemplate/master/scripts/"],
         "adminUsername": "vmadmin",
         "adminPassword": "password123@",
         "RGName": "[resourceGroup().name]",
