@@ -32,6 +32,18 @@
             ],
             "defaultValue": "Project Eindhoven"
         },
+        "rdshIsWindowsServer": {
+            "type": "bool",
+            "metadata": {
+                "description": "If the VM is a Windows Server SKU (2016, 2012R2, etc.), enter true. If the VM is a Windows client SKU (Windows 10, Windows 7, etc.)."
+            }
+        },
+        "rdshIs1809OrLater": {
+            "type": "bool",
+            "metadata": {
+                "description": "If the VM is Windows Server 2019+ or Windows 10 1809+, enter true. Else, enter false."
+            }
+        },
         "rdshNamePrefix": {
             "type": "string",
             "metadata": {
@@ -215,6 +227,7 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'dscextension')]",
             "location": "[resourceGroup().location]",
+            "condition": "[parameters('rdshIsWindowsServer')]",
             "dependsOn": [
                 "vmCreation-linkedTemplate"
             ],
@@ -230,6 +243,42 @@
                 "settings": {
                     "ModulesUrl": "[concat(parameters('baseUrl'),'/DSC/Configuration.zip')]",
                     "ConfigurationFunction": "Configuration.ps1\\SessionHost",
+                    "Properties": {
+                        "DomainName": "[variables('existingDomainName')]",
+                        "AdminCreds": {
+                            "UserName": "[variables('existingDomainUsername')]",
+                            "Password": "PrivateSettingsRef:AdminPassword"
+                           }
+                    }
+                },
+                "protectedSettings": {
+                    "Items": {
+                        "AdminPassword": "[parameters('existingDomainPassword')]"
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'domainjoin')]",
+            "location": "[resourceGroup().location]",
+            "condition": "[not(parameters('rdshIsWindowsServer'))]",
+            "dependsOn": [
+                "vmCreation-linkedTemplate"
+            ],
+            "copy": {
+                "name": "rdsh-dsc-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.11",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "ModulesUrl": "[concat(parameters('baseUrl'),'/DSC/Configuration.zip')]",
+                    "ConfigurationFunction": "Configuration.ps1\\DomainJoin",
                     "Properties": {
                         "DomainName": "[variables('existingDomainName')]",
                         "AdminCreds": {
@@ -269,7 +318,7 @@
                     "fileUris": [
                         "[variables('scriptURI')]"
                     ],
-                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUPN'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"')]"
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUPN'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'))]"
                 }
             }
         }
