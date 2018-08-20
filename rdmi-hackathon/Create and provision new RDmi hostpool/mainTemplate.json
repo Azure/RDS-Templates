@@ -28,7 +28,9 @@
                 "description": "Gallery image SKU."
             },
             "allowedValues": [
-                "Project Eindhoven"
+                "Project Eindhoven",
+                "2016-Datacenter",
+                "2012-R2-Datacenter"
             ],
             "defaultValue": "Project Eindhoven"
         },

@@ -207,7 +207,7 @@
 								{
 									"label": "Project Eindhoven Windows 10 SKU",
 									"value": {
-										"OS": "Eindhoven-Windows10",
+										"OS": "Project Eindhoven",
 										"IsWindowsServer": false,
 										"IsWindows1809OrLater": true
 									}
