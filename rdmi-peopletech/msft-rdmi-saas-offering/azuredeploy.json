@@ -2,14 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-    "ResourceGroup":
-      {
-        "type": "string",
-        "metadata": {
-          "description":"Provide Unique Resource Group Name"
-        }
-      },
-      "ApplicationID":
+    "ApplicationID":
       {
         "type": "string",
         "metadata": {
@@ -27,7 +20,7 @@
       {
         "type": "string",
         "metadata": {
-          "description":"Resource URL of the infrastructure.  Ex: https://contoso.onmicrosoft.com/RDInframsftrdmisaasf658465e2b4948fe85e"
+          "description":"Resource URL of the infrastructure.  Ex: https://ContosoVM.onmicrosoft.com/RDInframsftrdmisaasf658465e2b4948fe85e"
         }
       },
 
@@ -49,19 +42,19 @@
         "nicName": "contosovmnic",
         "addressPrefix": "10.0.0.0/16",
         "subscriptionId":"[subscription().subscriptionId]",
-        "subnetName": "contososubnet",
+        "subnetName": "ContosoVMsubnet",
         "subnetPrefix": "10.0.0.0/24",
         "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
         "vmName": "ContosoVM",
         "Location":"[resourceGroup().location]",
         "dnsLabelPrefix":"contoso",
-        "virtualNetworkName": "ContosoVNET",
-        "publicIPAddressName": "ContosoPublicIP",
+        "virtualNetworkName": "ContosoVMVNET",
+        "publicIPAddressName": "ContosoVMPublicIP",
         "dnsNameForPublicIP": "[concat(variables('dnsLabelPrefix'),uniqueString(resourceGroup().name))]",
         "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/",
         "adminUsername": "vmadmin",
         "adminPassword": "password123@",
-        "RGName": "[resourceGroup().name]",
+        "ResourceGroupName": "[resourceGroup().name]",
         "FileURI": "[concat(variables('_artifactsLocation'),'/msft-rdmi-saas-offering.zip')]"
     },
     "resources": [
@@ -172,7 +165,7 @@
                            "fileUris": [
                             "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/New-RdmiMgmtSetup.ps1"
                         ],
-                        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File New-RdmiMgmtSetup.ps1', ' -SubscriptionId \"', variables('subscriptionId'), '\"',' ', ' -ResourceGroupName \"', parameters('ResourceGroup'), '\"',' ', ' -Location \"', variables('Location'), '\"',' ', ' -ApplicationID \"', parameters('ApplicationID'), '\"',' ', ' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ', ' -ResourceURL \"', parameters('ResourceURL'), '\"',' ',' -UserName \"', parameters('AzureLoginID'), '\"',' ',' -Password \"', parameters('AzureLoginPassword'), '\"',' ',' -fileURI \"', variables('FileURI'), '\"',' ',' -RGName \"', variables('RGName'), '\"')]"
+                        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File New-RdmiMgmtSetup.ps1', ' -SubscriptionId \"', variables('subscriptionId'), '\"',' ', ' -ResourceGroupName \"', variables('ResourceGroupName'), '\"',' ', ' -VMName \"', variables('VMName'), '\"',' ', ' -Location \"', variables('Location'), '\"',' ', ' -ApplicationID \"', parameters('ApplicationID'), '\"',' ', ' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ', ' -ResourceURL \"', parameters('ResourceURL'), '\"',' ',' -UserName \"', parameters('AzureLoginID'), '\"',' ',' -Password \"', parameters('AzureLoginPassword'), '\"',' ',' -fileURI \"', variables('FileURI'), '\"')]"
                         }
                     },
                     "dependsOn": [

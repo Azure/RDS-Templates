@@ -27,9 +27,10 @@ Param(
     [ValidateNotNullOrEmpty()]
     [string] $Location,
 
-    [Parameter(Mandatory = $False)]
+    [Parameter(Mandatory = $True)]
     [ValidateNotNullOrEmpty()]
-    [string] $RGName,
+    [string] $VMName,
+
 
     [Parameter(Mandatory = $False)]
     [ValidateNotNullOrEmpty()]
@@ -151,16 +152,6 @@ try
 
     ## RESOURCE GROUP ##
 
-    # Create a resource group.
-
-    Write-Output "Checking if the resource group $ResourceGroupName exists";
-    $ResourceGroups = Get-AzureRmResourceGroup
-    if ($ResourceGroupName -notin $ResourceGroups.ResourceGroupName)
-    {
-        Write-Output "Creating the resource group $ResourceGroupName ...";
-        New-AzureRmResourceGroup -Name $ResourceGroupName -Location "$Location" -ErrorAction Stop 
-        Write-Output "Resource group with name $ResourceGroupName has been created"
-    }
         try
         {
             ## APPSERVICE PLAN ##
@@ -280,13 +271,14 @@ try
                                     "ResourceUrl" = "$ResourceURL";
                                     "RedirectURI" = "https://"+"$WebUrl"+"/";
                                     }
-                $Redirecturl1="https://"+"$WebUrl"+"/"
+                <#$Redirecturl1="https://"+"$WebUrl"+"/"
                 $Redirecturl2="https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri="
                 $ADapplication=Get-AzureRmADApplication -ApplicationId $ApplicationID
                 $add=$ADapplication.ReplyUrls.Add($Redirecturl1)
                 $add=$ADapplication.ReplyUrls.Add("$Redirecturl2"+"$Redirecturl1")
                 $ReplyUrls=$ADapplication.ReplyUrls
-                Set-AzureRmADApplication -ApplicationId $ApplicationID -ReplyUrl $ReplyUrls
+                Set-AzureRmADApplication -ApplicationId $ApplicationID -ReplyUrl $ReplyUrls #>
+
                 Set-AzureRmWebApp -AppSettings $ApiAppSettings -Name $ApiApp -ResourceGroupName $ResourceGroupName
             }
             catch [Exception]
@@ -384,7 +376,8 @@ New-PSDrive -Name RemoveRG -PSProvider FileSystem -Root "C:\msft-rdmi-saas-offer
 <SubscriptionId>$SubscriptionId</SubscriptionId>
 <UserName>$UserName</UserName>
 <Password>$Password</Password>
-<RGName>$RGName</RGName>
+<RGName>$ResourceGroupName</RGName>
+<VMName>$VMName</VMName>
 </RemoveRG>
 "@| Out-File -FilePath RemoveRG:\RemoveRG.xml -Force
 
