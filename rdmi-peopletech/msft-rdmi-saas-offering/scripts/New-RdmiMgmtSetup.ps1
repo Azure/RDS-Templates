@@ -1,158 +1,66 @@
-﻿<#
-
-.Synposys
-Deploy a new RDmi Management Console in Azure
-
-.Description
-This script is used to provision a new RDmi Management Web Portal in Azure. It creates
-two App services- Api and App. At End of this script, it will generate public URL of Web Portal.
-
-.Permission
-Administrator
-
-#>
+﻿$subsriptionid = Get-AutomationVariable -Name 'subsriptionid'
+$ResourceGroupName = Get-AutomationVariable -Name 'ResourceGroupName'
+$Location = Get-AutomationVariable -Name 'Location'
+$ApplicationID = Get-AutomationVariable -Name 'ApplicationID'
+$RDBrokerURL = Get-AutomationVariable -Name 'RDBrokerURL'
+$ResourceURL = Get-AutomationVariable -Name 'ResourceURL'
+$fileURI = Get-AutomationVariable -Name 'fileURI'
+$Username = Get-AutomationVariable -Name 'Username'
+$Password = Get-AutomationVariable -Name 'Password'
 
 
-Param(
+Invoke-WebRequest -Uri $fileURI -OutFile "C:\msft-rdmi-saas-offering.zip"
+New-Item -Path "C:\msft-rdmi-saas-offering" -ItemType directory -Force -ErrorAction SilentlyContinue
+Expand-Archive "C:\msft-rdmi-saas-offering.zip" -DestinationPath "C:\msft-rdmi-saas-offering" -ErrorAction SilentlyContinue
+$AzureModulesPath = Get-ChildItem -Path "C:\msft-rdmi-saas-offering\msft-rdmi-saas-offering"| Where-Object {$_.FullName -match 'AzureModules.zip'}
+Expand-Archive $AzureModulesPath.fullname -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
 
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [string] $SubscriptionId,
-    
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [string] $ResourceGroupName,
+Import-Module AzureRM.Resources
+Import-Module AzureRM.Profile
+Import-Module AzureRM.Websites
+Import-Module Azure
+Import-Module AzureRM.Automation
 
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [string] $Location,
+    Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+    Get-ExecutionPolicy -List
+    #The name of the Automation Credential Asset this runbook will use to authenticate to Azure.
+    $CredentialAssetName = 'DefaultAzureCredential'
 
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [string] $VMName,
+    #Get the credential with the above name from the Automation Asset store
+    $Cred = Get-AutomationPSCredential -Name $CredentialAssetName
+    Add-AzureRmAccount -Environment 'AzureCloud' -Credential $Cred
+    Select-AzureRmSubscription -SubscriptionId $subsriptionid
+    <#$ServicePrincipalConnectionName = "AzureRunAsConnection"
+    $SPConnection = Get-AutomationConnection -Name $ServicePrincipalConnectionName   
+        Add-AzureRmAccount -ServicePrincipal `
+        -TenantId $SPConnection.TenantId `
+        -ApplicationId $SPConnection.ApplicationId `
+        -CertificateThumbprint $SPConnection.CertificateThumbprint | Write-Verbose
+       #> 
 
+    $EnvironmentName = "AzureCloud"
+    $CodeBitPath= "C:\msft-rdmi-saas-offering\msft-rdmi-saas-offering"
+    $WebAppDirectory = ".\msft-rdmi-saas-web"
+    $WebAppExtractionPath = ".\msft-rdmi-saas-web\msft-rdmi-saas-web.zip"
+    $ApiAppDirectory = ".\msft-rdmi-saas-api"
+    $ApiAppExtractionPath = ".\msft-rdmi-saas-api\msft-rdmi-saas-api.zip"
+    $AppServicePlan = "msft-rdmi-saas-$((get-date).ToString("ddMMyyyyhhmm"))"
+    $WebApp = "RDmiMgmtWeb-$((get-date).ToString("ddMMyyyyhhmm"))"
+    $ApiApp = "RDmiMgmtApi-$((get-date).ToString("ddMMyyyyhhmm"))"
 
-    [Parameter(Mandatory = $False)]
-    [ValidateNotNullOrEmpty()]
-    [string] $AppServicePlan = "msft-rdmi-saas-$((get-date).ToString("ddMMyyyyhhmm"))",
-
-    [Parameter(Mandatory = $False)]
-    [ValidateNotNullOrEmpty()]
-    [string] $WebApp = "RDmiMgmtWeb-$((get-date).ToString("ddMMyyyyhhmm"))",
-
-    [Parameter(Mandatory = $False)]
-    [ValidateNotNullOrEmpty()]
-    [string] $ApiApp = "RDmiMgmtApi-$((get-date).ToString("ddMMyyyyhhmm"))",
-
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [string] $ApplicationID,
-
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [string] $RDBrokerURL,
-
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [string] $ResourceURL,
-
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [string] $UserName,
-
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [string] $Password,
-
-    [Parameter(Mandatory=$False)]
-    [ValidateNotNullOrEmpty()]
-    [string] $fileURI,
-
-    [Parameter(Mandatory = $False)]
-    [ValidateNotNullOrEmpty()]
-    [string] $CodeBitPath= "C:\msft-rdmi-saas-offering\msft-rdmi-saas-offering",
-   
-    [Parameter(Mandatory = $False)]
-    [ValidateNotNullOrEmpty()]
-    [string] $WebAppDirectory = ".\msft-rdmi-saas-web",
-    
-    [Parameter(Mandatory = $False)]
-    [ValidateNotNullOrEmpty()]
-    [string] $WebAppExtractionPath = ".\msft-rdmi-saas-web\msft-rdmi-saas-web.zip",
-
-    [Parameter(Mandatory = $False)]
-    [ValidateNotNullOrEmpty()]
-    [string]$ApiAppDirectory = ".\msft-rdmi-saas-api",
-      
-    [Parameter(Mandatory = $False)]
-    [ValidateNotNullOrEmpty()]
-    [string]$ApiAppExtractionPath = ".\msft-rdmi-saas-api\msft-rdmi-saas-api.zip"
-
-
-)
-
-function Disable-ieESC {
-    $AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
-    $UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
-    Set-ItemProperty -Path $AdminKey -Name "IsInstalled" -Value 0
-    Set-ItemProperty -Path $UserKey -Name "IsInstalled" -Value 0
-    Stop-Process -Name Explorer
-    Write-Host "IE Enhanced Security Configuration (ESC) has been disabled." -ForegroundColor Green
-}
-
-Disable-ieESC
 
 try
 {
     # Copy the files from github to VM
-
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Invoke-WebRequest -Uri $fileURI -OutFile "C:\msft-rdmi-saas-offering.zip"
-    New-Item -Path "C:\msft-rdmi-saas-offering" -ItemType directory -Force -ErrorAction SilentlyContinue
-    Expand-Archive "C:\msft-rdmi-saas-offering.zip" -DestinationPath "C:\msft-rdmi-saas-offering" -ErrorAction SilentlyContinue
-    
-    # Install AzureRM Module   
-        
-    Write-Output "Checking if AzureRm module is installed.."
-    $azureRmModule = Get-Module AzureRM -ListAvailable | Select-Object -Property Name -ErrorAction SilentlyContinue
-    if (!$azureRmModule.Name) 
-    {
-        Write-Output "AzureRM module Not Available. Installing AzureRM Module"
-        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-        Install-Module Azure -Force
-        Install-Module AzureRm -Force 
-        Write-Output "Installed AzureRM Module successfully"
-    } 
-    else
-    {
-        Write-Output "AzureRM Module Available"
-    }
-
-    # Import AzureRM Module
-
-    Write-Output "Importing AzureRm Module.."
-    Import-Module AzureRm -ErrorAction SilentlyContinue -Force
-    Import-Module AzureRM.profile
-    Import-Module AzureRM.resources
-    Import-Module AzureRM.Compute
-
-    # Login to AzureRM Account
-
-    Write-Output "Login Into Azure RM.."
-    
-    $Psswd = $Password | ConvertTo-SecureString -asPlainText -Force
-    $Credential = New-Object System.Management.Automation.PSCredential($UserName,$Psswd)
-    Login-AzureRmAccount -Credential $Credential
-
-    # Select the AzureRM Subscription
-
-    Write-Output "Selecting Azure Subscription.."
-    Select-AzureRmSubscription -SubscriptionId $SubscriptionId
-
+    Import-Module AzureRM.Profile
+    Import-Module AzureRM.Resources
 
     ## RESOURCE GROUP ##
-
-        try
+        Add-AzureRmAccount -Environment "AzureCloud" -Credential $Cred
+        Select-AzureRmSubscription -SubscriptionId $subsriptionid
+        
+        try 
         {
             ## APPSERVICE PLAN ##
                
@@ -224,38 +132,20 @@ try
                 # Extract connection information from publishing profile
 
                 Write-Output "Gathering the username, password and publishurl from the Web-App Publishing Profile"
-                $ApiAppUserName = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value
-                $ApiAppPassword = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
-                $ApiAppURL = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
-                  
+                $ApiAppUserName = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userName").value
+                $ApiAppPassword = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userPWD").value
+                $ApiAppURL = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@publishUrl").value
+                
                 # Publish Api-App Package files recursively
 
                 Write-Output "Uploading the Extracted files to Api-App"
-                Set-Location $ApiAppExtractedPath
-                $ApiAppClient = New-Object -TypeName System.Net.WebClient
-                $ApiAppClient.Credentials = New-Object System.Net.NetworkCredential($ApiAppUserName,$ApiAppPassword)
-                $ApiAppFiles = Get-ChildItem -Path $ApiAppExtractedPath -Recurse
-                foreach ($ApiAppFile in $ApiAppFiles)
-                {
-                    $ApiAppRelativePath = (Resolve-Path -Path $ApiAppFile.FullName -Relative).Replace(".\", "").Replace('\', '/')
-                    $ApiAppURI = New-Object System.Uri("$ApiAppURL/$ApiAppRelativePath")
-                    if($ApiAppFile.PSIsContainer)
-                    {
-                        $ApiAppURI.AbsolutePath + "is Directory"
-                        $ApiAppFTP = [System.Net.FtpWebRequest]::Create($ApiAppURI);
-                        $ApiAppFTP.Method = [System.Net.WebRequestMethods+Ftp]::MakeDirectory
-                        $ApiAppFTP.UseBinary = $true
-
-                        $ApiAppFTP.Credentials = New-Object System.Net.NetworkCredential($ApiAppUserName,$ApiAppPassword)
-
-                        $ApiAppResponse = $ApiAppFTP.GetResponse();
-                        $ApiAppResponse.StatusDescription
-                        continue
-                    }
-                    "Uploading to..." + $ApiAppURI.AbsoluteUri
-                    $ApiAppClient.UploadFile($ApiAppURI, $ApiAppFile.FullName)
-                } 
-                $ApiAppClient.Dispose() 
+                Get-ChildItem $ApiAppExtractedPath  | Compress-Archive -update -DestinationPath 'c:\msft-rdmi-saas-Api.zip' -Verbose 
+                test-path -path 'c:\msft-rdmi-saas-Api.zip'
+                $filePath = 'C:\msft-rdmi-saas-Api.zip'
+                $apiUrl = "https://$ApiAppURL/api/zipdeploy"
+                $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $ApiAppUserName, $ApiAppPassword)))
+                $userAgent = "powershell/1.0"
+                Invoke-RestMethod -Uri $apiUrl -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)} -UserAgent $userAgent -Method POST -InFile $filePath -ContentType "multipart/form-data"
                 Write-Output "Uploading of Extracted files to Api-App is Successful"
 
                 # Get Url of Web-App 
@@ -278,7 +168,6 @@ try
                 $add=$ADapplication.ReplyUrls.Add("$Redirecturl2"+"$Redirecturl1")
                 $ReplyUrls=$ADapplication.ReplyUrls
                 Set-AzureRmADApplication -ApplicationId $ApplicationID -ReplyUrl $ReplyUrls #>
-
                 Set-AzureRmWebApp -AppSettings $ApiAppSettings -Name $ApiApp -ResourceGroupName $ResourceGroupName
             }
             catch [Exception]
@@ -328,36 +217,20 @@ try
                 # Extract connection information from publishing profile
 
                 Write-Output "Gathering the username, password and publishurl from the Web-App Publishing Profile"
-                $WebAppUserName = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value
-                $WebAppPassword = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
-                $WebAppURL = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
-                
+                $WebAppUserName = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userName").value
+                $WebAppPassword = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userPWD").value
+                $WebAppURL = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@publishUrl").value
+             
                 # Publish Web-App Package files recursively
 
                 Write-Output "Uploading the Extracted files to Web-App"
-                Set-Location $WebAppExtractedPath
-                $WebAppClient = New-Object -TypeName System.Net.WebClient
-                $WebAppClient.Credentials = New-Object System.Net.NetworkCredential($WebAppUserName,$WebAppPassword)
-                $WebAppFiles = Get-ChildItem -Path $WebAppExtractedPath -Recurse
-                foreach ($WebAppFile in $WebAppFiles)
-                {
-                    $WebAppRelativePath = (Resolve-Path -Path $WebAppFile.FullName -Relative).Replace(".\", "").Replace('\', '/')
-                    $WebAppURI = New-Object System.Uri("$WebAppURL/$WebAppRelativePath")
-                    if($WebAppFile.PSIsContainer)
-                    {
-                        $WebAppURI.AbsolutePath + "is Directory"
-                        $WebAppFTP = [System.Net.FtpWebRequest]::Create($WebAppURI);
-                        $WebAppFTP.Method = [System.Net.WebRequestMethods+Ftp]::MakeDirectory
-                        $WebAppFTP.UseBinary = $true
-                        $WebAppFTP.Credentials = New-Object System.Net.NetworkCredential($WebAppUserName,$WebAppPassword)
-                        $WebAppResponse = $WebAppFTP.GetResponse();
-                        $WebAppResponse.StatusDescription
-                        continue
-                    }
-                    "Uploading to..." + $WebAppURI.AbsoluteUri
-                    $WebAppClient.UploadFile($WebAppURI, $WebAppFile.FullName)
-                } 
-                $WebAppClient.Dispose()
+                Get-ChildItem $WebAppExtractedPath  | Compress-Archive -update  -DestinationPath 'c:\msft-rdmi-saas-web.zip' -Verbose 
+                test-path -path 'c:\msft-rdmi-saas-web.zip'
+                $filePath = 'C:\msft-rdmi-saas-web.zip'
+                $apiUrl = "https://$WebAppUrl/api/zipdeploy"
+                $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $WebAppUserName, $WebApppassword)))
+                $userAgent = "powershell/1.0"
+                Invoke-RestMethod -Uri $apiUrl -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)} -UserAgent $userAgent -Method POST -InFile $filePath -ContentType "multipart/form-data"
                 Write-Output "Uploading of Extracted files to Web-App is Successful"
             }
             catch [Exception]
@@ -368,32 +241,63 @@ try
             Write-Output "Api URL : https://$ApiUrl"
             Write-Output "Web URL : https://$WebUrl"
         }
-    
-
-New-PSDrive -Name RemoveRG -PSProvider FileSystem -Root "C:\msft-rdmi-saas-offering\msft-rdmi-saas-offering" | Out-Null
-@"
-<RemoveRG>
-<SubscriptionId>$SubscriptionId</SubscriptionId>
-<UserName>$UserName</UserName>
-<Password>$Password</Password>
-<RGName>$ResourceGroupName</RGName>
-<VMName>$VMName</VMName>
-</RemoveRG>
-"@| Out-File -FilePath RemoveRG:\RemoveRG.xml -Force
-
-# creating job to run the remove resource group script
-
-$jobname = "RemoveResourceGroup"
-$script =  "C:\msft-rdmi-saas-offering\msft-rdmi-saas-offering\RemoveRG.ps1"
-$repeat = (New-TimeSpan -Minutes 1)
-$action = New-ScheduledTaskAction –Execute "$pshome\powershell.exe" -Argument  "-ExecutionPolicy Bypass -Command ${script}"
-$duration = (New-TimeSpan -Days 1)
-$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval $repeat -RepetitionDuration $duration
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RunOnlyIfNetworkAvailable -DontStopOnIdleEnd
-Register-ScheduledTask -TaskName $jobname -Action $action -Trigger $trigger -RunLevel Highest -User "system" -Settings $settings
 }
 
 catch [Exception]
 {
     Write-Output $_.Exception.Message
 }
+
+New-PSDrive -Name RemoveAccount -PSProvider FileSystem -Root "C:\" | Out-Null
+@"
+Param(
+    [Parameter(Mandatory=`$True)]
+    [string] `$SubscriptionId,
+    [Parameter(Mandatory=`$True)]
+    [String] `$Username,
+    [Parameter(Mandatory=`$True)]
+    [string] `$Password,
+    [Parameter(Mandatory=`$True)]
+    [string] `$ResourceGroupName
+ 
+)
+
+Import-Module AzureRM.profile
+Import-Module AzureRM.Automation
+
+`$Securepass=ConvertTo-SecureString -String `$Password -AsPlainText -Force
+`$Azurecred=New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList(`$Username, `$Securepass)
+`$login=Login-AzureRmAccount -Credential `$Azurecred -SubscriptionId `$SubscriptionId
+
+Remove-AzureRmAutomationAccount -Name "msftsaas-autoAccount" -ResourceGroupName `$ResourceGroupName -Force 
+"@| Out-File -FilePath RemoveAccount:\RemoveAccount.ps1 -Force
+
+    $CredentialAssetName = 'DefaultAzureCredential'
+
+    #Get the credential with the above name from the Automation Asset store
+    $Cred = Get-AutomationPSCredential -Name $CredentialAssetName
+   login-AzureRmAccount -Environment 'AzureCloud' -Credential $Cred
+    Select-AzureRmSubscription -SubscriptionId $subsriptionid
+
+
+    $runbookName='removemsftsaasact'
+    $automationAccountName="msftsaas-autoAccount"
+    #Create a Run Book
+    $AAcctRunbook=New-AzureRmAutomationRunbook -Name $runbookName -Type PowerShell -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName
+
+    #Import modules to Automation Account
+    $modules="AzureRM.profile,Azurerm.compute,azurerm.resources"
+    $modulenames=$modules.Split(",")
+    foreach($modulename in $modulenames){
+    Set-AzureRmAutomationModule -Name $modulename -AutomationAccountName $automationAccountName -ResourceGroupName $ResourcegroupName
+    }
+
+    #Importe powershell file to Runbooks
+    Import-AzureRmAutomationRunbook -Path "C:\RemoveAccount.ps1" -Name $runbookName -Type PowerShell -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName -Force
+
+    #Publishing Runbook
+    Publish-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName
+
+    #Providing parameter values to powershell script file
+    $params=@{"UserName"=$UserName;"Password"=$Password;"ResourcegroupName"=$ResourcegroupName;"SubscriptionId"=$subsriptionid}
+    Start-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName -Parameters $params
