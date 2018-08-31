@@ -5,7 +5,7 @@
         "newGuid": {
       "type": "string",
       "metadata": {
-        "description": "Enter new GUID, you can generate one from Powershell using new-guid or get one from this site: <a target=new href=https://guidgenerator.com/online-guid-generator.aspx>GUID Generator</a>"
+        "description": "Enter new GUID, you can generate from this site: <a target=new href=https://guidgenerator.com/online-guid-generator.aspx>GUID Generator</a>"
 			}
 		},
 		"ApplicationID": {
