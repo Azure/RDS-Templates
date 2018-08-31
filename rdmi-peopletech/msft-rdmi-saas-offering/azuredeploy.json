@@ -1,181 +1,170 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
+    "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
+    "contentVersion": "1.0",
     "parameters": {
-    "ApplicationID":
-      {
-        "type": "string",
-        "metadata": {
-          "description":"Application ID / Client ID of the infrastructure.  Ex: 574ee204-xx91-4ac5-xx7a-5a6a4e2784e9"
-        }
-      },
-      "RDBrokerURL":
-      {
-        "type": "string",
-        "metadata": {
-          "description":"RDBroker URL of the infrastructure.   Ex: https://rdbroker-uiyyft4gnswme.azurewebsites.net"
-        }
-      },
-      "ResourceURL":
-      {
-        "type": "string",
-        "metadata": {
-          "description":"Resource URL of the infrastructure.  Ex: https://ContosoVM.onmicrosoft.com/RDInframsftrdmisaasf658465e2b4948fe85e"
-        }
-      },
-
-      "AzureLoginID": {
-        "type": "string",
-        "metadata": {
-            "description": "Your Azure Login ID"
-        }
-      },
-        "AzureLoginPassword": {
-            "type": "securestring",
+        "ApplicationID": {
+            "type": "String",
             "metadata": {
-                "description": "Your Azure Login Password"
+                "description": "Application ID / Client ID of the infrastructure.  Ex: 574ee204-xx91-4ac5-xx7a-5a6a4e2784e9"
+            }
+        },
+        "RDBrokerURL": {
+            "type": "String",
+            "metadata": {
+                "description": "RDBroker URL of the infrastructure.   Ex: https://rdbroker-uiyyft4gnswme.azurewebsites.net"
+            }
+        },
+        "ResourceURL": {
+            "type": "String",
+            "metadata": {
+                "description": "Resource URL of the infrastructure.  Ex: https://ContosoVM.onmicrosoft.com/RDInframsftrdmisaasf658465e2b4948fe85e"
+            }
+        },
+        "AzureLoginID": {
+            "type": "String",
+            "metadata": {
+                "description": "Your Azure Login ID"
+            }
+        },
+        "AzureLoginPassword": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "Your Azure Login AzureLoginPassword"
             }
         }
-
     },
-       "variables": {
-        "nicName": "contosovmnic",
-        "addressPrefix": "10.0.0.0/16",
-        "subscriptionId":"[subscription().subscriptionId]",
-        "subnetName": "ContosoVMsubnet",
-        "subnetPrefix": "10.0.0.0/24",
-        "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-        "vmName": "ContosoVM",
-        "Location":"[resourceGroup().location]",
-        "dnsLabelPrefix":"contoso",
-        "virtualNetworkName": "ContosoVMVNET",
-        "publicIPAddressName": "ContosoVMPublicIP",
-        "dnsNameForPublicIP": "[concat(variables('dnsLabelPrefix'),uniqueString(resourceGroup().name))]",
-        "_artifactsLocation": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/",
-        "adminUsername": "vmadmin",
-        "adminPassword": "password123@",
-        "ResourceGroupName": "[resourceGroup().name]",
-        "FileURI": "[concat(variables('_artifactsLocation'),'/msft-rdmi-saas-offering.zip')]"
+    "variables": {
+        "accountName": "msftsaas-autoAccount",
+        "uniqueid": "[take(tolower(uniquestring(resourceGroup().id)),2)]",
+        "newGuid": "[concat('21dee748','-',91,variables('uniqueid'),'-','4cd1','-',87,variables('uniqueid'),'-','d89e8695dbdc')]",
+        "credentialName": "DefaultAzureCredential",
+        "runbookName": "msftsaasbook",
+        "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/",
+        "scriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/New-RdmiMgmtSetup.ps1",
+        "fileURI": "[concat(variables('baseURL'),'/msft-rdmi-saas-offering.zip')]",
+        "sku": "Free",
+        "automationVariables": [
+            {
+                "name": "Username",
+                "value": "[concat('\"',parameters('AzureLoginID'),'\"')]"
+            },
+            {
+                "name": "password",
+                "value": "[concat('\"',parameters('AzureLoginPassword'),'\"')]"
+            },
+            {
+                "name": "subsriptionid",
+                "value": "[concat('\"',subscription().subscriptionId,'\"')]"
+            },
+            {
+                "name": "resourceGroupName",
+                "value": "[concat('\"',resourceGroup().name,'\"')]"
+            },
+            {
+                "name": "Location",
+                "value": "[concat('\"',resourceGroup().location,'\"')]"
+            },
+            {
+                "name": "ApplicationID",
+                "value": "[concat('\"',parameters('ApplicationID'),'\"')]"
+            },
+            {
+                "name": "RDBrokerURL",
+                "value": "[concat('\"',parameters('RDBrokerURL'),'\"')]"
+            },
+            {
+                "name": "ResourceURL",
+                "value": "[concat('\"',parameters('ResourceURL'),'\"')]"
+            },
+            {
+                "name": "fileURI",
+                "value": "[concat('\"',variables('baseURL'),'/msft-rdmi-saas-offering.zip','\"')]"
+            }
+        ]
     },
     "resources": [
         {
-            "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[variables('publicIPAddressName')]",
-            "apiVersion": "2016-09-01",
-            "location": "[variables('Location')]",
+            "type": "Microsoft.Automation/automationAccounts/variables",
+            "name": "[concat(variables('accountname'), '/', variables('automationVariables')[copyIndex()].name)]",
+            "apiVersion": "2015-10-31",
+            "copy": {
+                "name": "variableLoop",
+                "count": "[length(variables('automationVariables'))]"
+            },
+            "tags": {},
             "properties": {
-                "publicIPAllocationMethod": "Dynamic",
-                "dnsSettings": {
-                    "domainNameLabel": "[variables('dnsNameForPublicIP')]"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks",
-            "name": "[variables('virtualNetworkName')]",
-            "apiVersion": "2016-09-01",
-            "location": "[variables('Location')]",
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "[variables('addressPrefix')]"
-                    ]
-                },
-                "subnets": [
-                    {
-                        "name": "[variables('subnetName')]",
-                        "properties": {
-                            "addressPrefix": "[variables('subnetPrefix')]"
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "[variables('nicName')]",
-            "apiVersion": "2016-09-01",
-            "location": "[variables('Location')]",
-            "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig1",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
-                            },
-                            "subnet": {
-                                "id": "[variables('subnetRef')]"
-                            }
-                        }
-                    }
-                ]
+                "value": "[variables('automationVariables')[copyIndex()].value]"
             },
             "dependsOn": [
-                "[variables('publicIPAddressName')]",
-                "[variables('virtualNetworkName')]"
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('accountname'))]"
             ]
         },
         {
-            "type": "Microsoft.Compute/virtualMachines",
-            "name": "[variables('vmName')]",
-            "apiVersion": "2016-04-30-preview",
-            "location": "[variables('Location')]",
+            "type": "Microsoft.Automation/automationAccounts",
+            "name": "[variables('accountName')]",
+            "apiVersion": "2015-01-01-preview",
+            "location": "[resourceGroup().location]",
+            "tags": {},
             "properties": {
-                "hardwareProfile": {
-                    "vmSize": "Standard_A2"
-                },
-                "osProfile": {
-                    "computerName": "[variables('vmName')]",
-                    "adminUsername": "[variables('adminUsername')]",
-                    "adminPassword": "[variables('adminPassword')]"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "2016-Datacenter",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "createOption": "FromImage"
-                    }
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
-                        }
-                    ]
+                "sku": {
+                    "name": "[variables('sku')]"
                 }
             },
             "resources": [
                 {
-                    "type": "extensions",
-                    "name": "CustomScriptExtension",
-                    "apiVersion": "2016-04-30-preview",
-                    "location": "[variables('Location')]",
+                    "type": "runbooks",
+                    "name": "[variables('runbookName')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {},
                     "properties": {
-                        "publisher": "Microsoft.Compute",
-                        "type": "CustomScriptExtension",
-                        "typeHandlerVersion": "1.8",
-                        "autoUpgradeMinorVersion": true,
-                        "settings": {
-                           "fileUris": [
-                            "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/New-RdmiMgmtSetup.ps1"
-                        ],
-                        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File New-RdmiMgmtSetup.ps1', ' -SubscriptionId \"', variables('subscriptionId'), '\"',' ', ' -ResourceGroupName \"', variables('ResourceGroupName'), '\"',' ', ' -VMName \"', variables('VMName'), '\"',' ', ' -Location \"', variables('Location'), '\"',' ', ' -ApplicationID \"', parameters('ApplicationID'), '\"',' ', ' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ', ' -ResourceURL \"', parameters('ResourceURL'), '\"',' ',' -UserName \"', parameters('AzureLoginID'), '\"',' ',' -Password \"', parameters('AzureLoginPassword'), '\"',' ',' -fileURI \"', variables('FileURI'), '\"')]"
+                        "runbookType": "PowerShell",
+                        "logProgress": "false",
+                        "logVerbose": "false",
+                        "publishContentLink": {
+                            "uri": "[variables('scriptUri')]",
+                            "version": "1.0.0.0"
                         }
                     },
                     "dependsOn": [
-                        "[variables('vmName')]"
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]"
+                    ]
+                },
+                {
+                    "type": "credentials",
+                    "name": "[variables('credentialName')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {},
+                    "properties": {
+                        "userName": "[parameters('AzureLoginID')]",
+                        "password": "[parameters('AzureLoginPassword')]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]"
+                    ]
+                },
+                {
+                    "type": "jobs",
+                    "name": "[variables('newGuid')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {
+                        "key": "value"
+                    },
+                    "properties": {
+                        "runbook": {
+                            "name": "[variables('runbookName')]"
+                        }
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'), '/runbooks/',variables('runbookName'))]"
                     ]
                 }
             ],
-            "dependsOn": [
-                "[variables('nicName')]"
-            ]
+            "dependsOn": []
         }
-    ]
- }
+    ],
+    "outputs": {}
+}
