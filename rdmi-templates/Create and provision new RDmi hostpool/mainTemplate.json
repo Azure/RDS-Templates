@@ -80,6 +80,9 @@
         "rdshUseManagedDisks" : {
             "type": "bool",
             "defaultValue": false,
+            "allowedValues": [
+                false
+            ],
             "metadata": {
                 "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
             }
