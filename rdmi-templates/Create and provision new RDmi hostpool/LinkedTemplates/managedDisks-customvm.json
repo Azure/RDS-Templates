@@ -99,7 +99,7 @@
             "type": "Microsoft.Compute/images",
             "apiVersion": "2016-04-30-preview",
             "name": "[variables('imageName')]",
-            "location": "[parameters('location')]",
+            "location": "[resourceGroup().location]",
             "properties": {
               "storageProfile": {
                 "osDisk": {
