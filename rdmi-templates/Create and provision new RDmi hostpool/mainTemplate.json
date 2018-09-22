@@ -196,7 +196,7 @@
                 "platformFaultDomainCount": 2
             },
             "sku":{
-                "name": "[parameters('avSetSKU')]"
+                "name": "[variables('avSetSKU')]"
             }
         },
         {
