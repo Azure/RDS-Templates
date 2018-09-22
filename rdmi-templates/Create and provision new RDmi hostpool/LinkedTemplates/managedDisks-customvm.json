@@ -91,9 +91,26 @@
         }
     },
     "variables": {
-        "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'HDD'), 'Standard_LRS', 'Premium_LRS')]"
+        "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'HDD'), 'Standard_LRS', 'Premium_LRS')]",
+        "imageName": "[concat(parameters('rdshPrefix'), 'image')]"
     },
     "resources": [
+        {
+            "type": "Microsoft.Compute/images",
+            "apiVersion": "2016-04-30-preview",
+            "name": "[variables('imageName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+              "storageProfile": {
+                "osDisk": {
+                  "osType": "Windows",
+                  "osState": "Generalized",
+                  "blobUri": "[parameters('VmImageVhdUri')]",
+                  "storageAccountType": "Standard_LRS"
+                }
+              }
+            }
+        },
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
@@ -142,14 +159,8 @@
                     "adminPassword": "[parameters('existingDomainPassword')]"
                 },
                 "storageProfile": {
-                    "osDisk": {
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "[variables('storageAccountType')]"
-                        }
-                    },
                     "imageReference": {
-                        "id": "[resourceId( parameters('managedDiskResourceGroupName'), 'Microsoft.Compute/images', parameters('managedDiskName'))]"
+                        "id": "[resourceId('Microsoft.Compute/images', variables('imageName'))]"
                     }
                 },
                 "networkProfile": {
