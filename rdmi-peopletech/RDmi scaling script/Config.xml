@@ -14,9 +14,9 @@
     <Variable Name="hostPoolName" Value="Name of the Hostpool"/>
   </Azure>
   <Deployment>
-<Variable Name="Rdbroker" Value="RDBrokerURL of your Deployment"/>
-  <Variable Name="Username" Value="Delegated Admin UserName"/>
-  <Variable Name="Password" Value="Delegated Admin Password"/>
+    <Variable Name="Rdbroker" Value="RDBrokerURL of your Deployment"/>
+    <Variable Name="Username" Value="Delegated Admin UserName"/>
+    <Variable Name="Password" Value="Delegated Admin Password"/>
   </Deployment>
   <RdmiScaleSettings>
     <!-- Begin of the peak usage time -->

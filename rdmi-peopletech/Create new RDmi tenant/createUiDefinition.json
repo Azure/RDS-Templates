@@ -1,0 +1,207 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+	"handler": "Microsoft.Compute.MultiVm",
+	"version": "0.1.2-preview",
+	"parameters": {
+		"basics": [
+			{
+				"name": "hosterAdminUPN",
+				"type": "Microsoft.Common.TextBox",
+				"label": "Hoster Admin UPN",
+				"toolTip": "Enter the UPN (admin1@contoso.com) of an hostteradmin who will manage the Hoster environment.",
+				"constraints": {
+					"required": true
+				}
+			},
+			{
+				"name": "hosterAdminPassword",
+				"type": "Microsoft.Common.PasswordBox",
+				"label": {
+					"password": "Hoster Admin Password",
+					"confirmPassword": "Confirm password"
+				},
+				"constraints": {
+					"required": true
+				},
+				"toolTip": "Password for the HosterAdminUPN",
+				"options": {
+					"hideConfirmation": false
+				},
+				"visible": true
+			},
+			{
+				"name": "brokerURL",
+				"type": "Microsoft.Common.TextBox",
+				"label": "Broker URL",
+				"toolTip": "The RD Broker URL of the RDmi deployment.",
+				"constraints": {
+					"required": true
+				},
+				"visible": true
+			},
+			{
+				"name": "AadTenantId",
+				"type": "Microsoft.Common.TextBox",
+				"label": "Aad TenantId",
+				"toolTip": "Enter the tenant ID.",
+				"constraints": {
+					"required": true
+				},
+				"visible": true
+			}
+		],
+		"steps": [
+			{
+				"name": "virtualMachineSettings",
+				"label": "Virtual machine settings",
+				"subLabel": {
+					"preValidation": "Select VM configuration settings",
+					"postValidation": "Done"
+				},
+				"bladeTitle": "Configure the VMs for Azure",
+				"bladeSubtitle": "VM configuration",
+				"elements": [
+					{
+						"name": "virtualMachineSize",
+						"type": "Microsoft.Compute.SizeSelector",
+						"label": "Virtual machine size",
+						"osPlatform": "Windows",
+						"constraints": {
+							"excludedSizes": [
+								"Standard_D1",
+								"Standard_D1_v2",
+								"Standard_DS1",
+								"Standard_DS1_v2"
+							]
+						},
+						"recommendedSizes": [
+							"Standard_D1",
+							"Standard_D1_v2",
+							"Standard_DS1",
+							"Standard_DS1_v2"
+						],
+						"visible": true
+					},
+					{
+						"name": "vmImageType",
+						"type": "Microsoft.Common.OptionsGroup",
+						"label": "Image",
+						"defaultValue": "Gallery",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Gallery",
+									"value": "Gallery"
+								}
+							]
+						},
+						"visible": true
+					},
+					{
+						"name": "galleryImageSelection",
+						"type": "Microsoft.Common.DropDown",
+						"label": "",
+						"defaultValue": "Project Eindhoven Windows 10 SKU",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Windows Server 2016 Datacenter",
+									"value": "2016-Datacenter"
+								}
+							]
+						},
+						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'Gallery')]"
+					}
+				]
+			},
+			{
+				"name": "tenantInfo",
+				"label": "Tenant info",
+				"subLabel": {
+					"preValidation": "Should need this longer...",
+					"postValidation": "Done"
+				},
+				"bladeTitle": "Enter this info for now",
+				"bladeSubtitle": "Tenant",
+				"elements": [
+					{
+						"name": "tenantName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Tenant Name",
+						"toolTip": "Enter the name of RDS Tenant.",
+						"constraints": {
+							"required": true
+						}
+					},
+					{
+						"name": "tenantDescription",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Tenant Description",
+						"toolTip": "Enter the description of Tenant.",
+						"constraints": {
+							"required": false
+						}
+					},
+					{
+						"name": "tenantFriendlyName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "tenant FriendlyName",
+						"toolTip": "Enter the friendly name of Tenant.",
+						"constraints": {
+							"required": false
+						}
+					}
+				]
+			},
+			{
+				"name": "hostpoolInfo",
+				"label": "Hostpool info",
+				"subLabel": {
+					"preValidation": "Should need this longer...",
+					"postValidation": "Done"
+				},
+				"bladeTitle": "Enter this info for now",
+				"bladeSubtitle": "Hostpool",
+				"elements": [
+					{
+						"name": "hostpoolName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Hostpool Name",
+						"toolTip": "Enter the name of the hostpool.",
+						"constraints": {
+							"required": true
+						}
+					},
+					{
+						"name": "hostpoolDescription",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Hostpool Description",
+						"toolTip": "Enter the description of Hostpool.",
+						"constraints": {
+							"required": false
+						}
+					},
+					{
+						"name": "hostpoolFriendlyName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Hostpool FriendlyName",
+						"toolTip": "Enter the friendly name of Hostpool.",
+						"constraints": {
+							"required": false
+						}
+					}
+				]
+			}
+		],
+		"outputs": {
+			"hosterAdminUPN": "[basics('hosterAdminUPN')]",
+			"hosterAdminPassword": "[basics('hosterAdminPassword')]",
+			"RDBrokerURL": "[basics('brokerURL')]",
+			"AadTenantId": "[basics('AadTenantId')]",
+			"virtualMachineSize": "[steps('virtualMachineSettings').virtualMachineSize]",
+			"galleryImageSelection": "[steps('virtualMachineSettings').galleryImageSelection]",
+			"tenantName": "[steps('tenantInfo').tenantName]",
+			"hostpoolName": "[steps('hostpoolInfo').hostpoolName]"
+		}
+	}
+}
