@@ -14,20 +14,17 @@
 				"visible": true
 			},
 			{
-				"name": "adminUPN",
-				"type": "Microsoft.Common.TextBox",
-				"label": "Admin UPN",
-				"toolTip": "Enter the UPN (admin1@contoso.com) of an admin who will manage the sytem on behalf of the customer.",
-				"constraints": {
-					"required": true
-				}
-			},
-			{
 				"name": "mrsRegion",
-				"type": "Microsoft.Common.TextBox",
-				"label": "Broker URL",
+				"type": "Microsoft.Common.DropDown",
+				"label": "RDmi Region",
 				"toolTip": "Select your home region for MRS. This is the Azure region where user connection data, session host data, and diagnostic data will reside.",
 				"constraints": {
+					"allowedValues": [
+						{
+							"label": "East US",
+							"value": "https://rdbroker-3u3qbtdiyzjao.azurewebsites.net"
+						}
+					],
 					"required": true
 				},
 				"visible": true
@@ -178,43 +175,16 @@
 						"name": "vmImageType",
 						"type": "Microsoft.Common.OptionsGroup",
 						"label": "Image",
-						"defaultValue": "Gallery",
+						"defaultValue": "Custom",
 						"constraints": {
 							"allowedValues": [
 								{
 									"label": "Custom",
 									"value": "Custom"
-								},
-								{
-									"label": "Gallery",
-									"value": "Gallery"
 								}
 							]
 						},
 						"visible": true
-					},
-					{
-						"name": "galleryImageSelection",
-						"type": "Microsoft.Common.DropDown",
-						"label": "",
-						"defaultValue": "Project Eindhoven Windows 10 SKU",
-						"constraints": {
-							"allowedValues": [
-								{
-									"label": "Project Eindhoven Windows 10 SKU",
-									"value": "Eindhoven-Windows10"
-								},
-								{
-									"label": "Windows Server 2016 Datacenter",
-									"value": "2016-Datacenter"
-								},
-								{
-									"label": "Windows Server 2012 R2 Datacenter",
-									"value": "2012-R2-Datacenter"
-								}
-							]
-						},
-						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'Gallery')]"
 					},
 					{
 						"name": "imageURI",
@@ -226,6 +196,59 @@
 							"validationMessage": "Please enter a valid URL for .vhd file from your storage account."
 						},
 						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'Custom')]"
+					},
+					{
+						"name": "galleryImageSelection",
+						"type": "Microsoft.Common.DropDown",
+						"label": "Session host OS",
+						"defaultValue": "Project Eindhoven Windows 10 SKU",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Project Eindhoven Windows 10 SKU",
+									"value": {
+										"OS": "Project Eindhoven",
+										"IsWindowsServer": false,
+										"IsWindows1809OrLater": true
+									}
+								},
+								{
+									"label": "Windows Server 2016 Datacenter",
+									"value": {
+										"OS": "2016-Datacenter",
+										"IsWindowsServer": true,
+										"IsWindows1809OrLater": false
+									}
+								},
+								{
+									"label": "Windows Server 2012 R2 Datacenter",
+									"value": {
+										"OS": "2012-R2-Datacenter",
+										"IsWindowsServer": true,
+										"IsWindows1809OrLater": false
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "rdshVMDiskType",
+						"type": "Microsoft.Common.OptionsGroup",
+						"label": "Disk Type",
+						"defaultValue": "HDD",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "HDD",
+									"value": "HDD"
+								},
+								{
+									"label": "SSD",
+									"value": "SSD"
+								}
+							]
+						},
+						"visible": true
 					},
 					{
 						"name": "domainUser",
@@ -260,7 +283,7 @@
 						"name": "imageStorageAccount",
 						"type": "Microsoft.Storage.StorageAccountSelector",
 						"label": "Image storage account",
-						"toolTip": "This is the storage account that will be used to store the session host vhds. A container named 'vhds' will be created in blob storage in this storage account, if it does not already exist.",
+						"toolTip": "Select the storage account containing the vhd in blob storage. The vhds for the newly created VMs will also be created in this storage account.",
 						"defaultValue": {
 							"name": "storageaccount01",
 							"type": "Standard_LRS"
@@ -278,15 +301,15 @@
 							"subnets": "Subnets"
 						},
 						"toolTip": {
-							"virtualNetwork": "",
-							"subnets": ""
+							"virtualNetwork": "Select the virtual network connected to the domain. If you do not, the virtual machines will be created but not joined to the domain and will not be able to receive connections.",
+							"subnets": "Select the subnet with available addresses to host the virtual machines."
 						},
 						"defaultValue": {
 							"name": "vnet-01",
 							"addressPrefixSize": "/24"
 						},
 						"constraints": {
-							"minAddressPrefixSize": "/24"
+							"minAddressPrefixSize": "/30"
 						},
 						"options": {
 							"hideExisting": false
@@ -296,10 +319,10 @@
 								"label": "vmSubnet",
 								"defaultValue": {
 									"name": "vmSubnet",
-									"addressPrefixSize": "/24"
+									"addressPrefixSize": "/26"
 								},
 								"constraints": {
-									"minAddressPrefixSize": "/24",
+									"minAddressPrefixSize": "/30",
 									"minAddressCount": "[ div (sub (add( mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize,10,2),'s',' ')), steps('configureVirtualMachines').usageProfile), int(steps('configureVirtualMachines').totalUsers)),1),   mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize, 10, 2), 's', ' ')), steps('configureVirtualMachines').usageProfile) )]",
 									"requireContiguousAddresses": false
 								}
@@ -310,14 +333,14 @@
 				]
 			},
 			{
-				"name": "temporaryTenantInfo",
-				"label": "Temporary tenant info",
+				"name": "rdmiTenantInfo",
+				"label": "RDmi tenant information",
 				"subLabel": {
-					"preValidation": "Shouldn't need this much longer...",
+					"preValidation": "Enter information regarding your RDmi tenant to complete the VM registration",
 					"postValidation": "Done"
 				},
-				"bladeTitle": "Enter this info for now",
-				"bladeSubtitle": "Tenant",
+				"bladeTitle": "RDmi tenant information",
+				"bladeSubtitle": "",
 				"elements": [
 					{
 						"name": "tenantName",
@@ -357,21 +380,28 @@
 			}
 		],
 		"outputs": {
-			"storageAccountName": "[steps('virtualMachineSettings').imageStorageAccount.name]",
+			"rdshUseGalleryImage": "[equals(steps('virtualMachineSettings').vmImageType, 'Gallery')]",
 			"storageAccountResourceGroupName": "[steps('virtualMachineSettings').imageStorageAccount.resourceGroup]",
 			"VmImageVhdUri": "[steps('virtualMachineSettings').imageURI]",
-			"rdshNumberOfInstances": "[ div (sub (add( mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize,10,2),'s',' ')), steps('configureVirtualMachines').usageProfile), int(steps('configureVirtualMachines').totalUsers)),1),   mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize, 10, 2), 's', ' ')), steps('configureVirtualMachines').usageProfile) )]",
+			"rdshGalleryImageSKU": "[steps('virtualMachineSettings').galleryImageSelection.OS]",
+			"rdshIsWindowsServer": "[steps('virtualMachineSettings').galleryImageSelection.IsWindowsServer]",
+			"rdshIs1809OrLater": "[steps('virtualMachineSettings').galleryImageSelection.IsWindows1809OrLater]",
 			"rdshVmSize": "[steps('configureVirtualMachines').virtualMachineSize]",
+			"rdshNumberOfInstances": "[ div (sub (add( mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize,10,2),'s',' ')), steps('configureVirtualMachines').usageProfile), int(steps('configureVirtualMachines').totalUsers)),1),   mul(int(replace(substring(steps('configureVirtualMachines').virtualMachineSize, 10, 2), 's', ' ')), steps('configureVirtualMachines').usageProfile) )]",
+			"rdshVMDiskType": "[steps('configureVirtualMachines').rdshVMDiskType]",
+			"rdshUseManagedDisks": false,
+			"managedDiskResourceGroupName": "",
+			"managedDiskName": "",
 			"existingDomainUPN": "[steps('virtualMachineSettings').domainUser]",
 			"existingDomainPassword": "[steps('virtualMachineSettings').password.password]",
-			"virtualNetworkResourceGroupName": "[steps('virtualMachineSettings').hostpoolVnet.resourceGroup]",
 			"existingVnetName": "[steps('virtualMachineSettings').hostpoolVnet.name]",
 			"existingSubnetName": "[steps('virtualMachineSettings').hostpoolVnet.subnets.subnet1.name]",
+			"virtualNetworkResourceGroupName": "[steps('virtualMachineSettings').hostpoolVnet.resourceGroup]",
 			"RDBrokerURL": "[basics('mrsRegion')]",
+			"ExistingTenantName": "[steps('rdmiTenantInfo').tenantName]",
 			"HostPoolName": "[basics('hostpoolName')]",
-			"ExistingTenantName": "[steps('temporaryTenantInfo').tenantName]",
-			"TenantAdminUPN": "[steps('temporaryTenantInfo').tenantAdminUPN]",
-			"TenantAdminPassword": "[steps('temporaryTenantInfo').tenantAdminPassword]"
+			"TenantAdminUPN": "[steps('rdmiTenantInfo').tenantAdminUPN]",
+			"TenantAdminPassword": "[steps('rdmiTenantInfo').tenantAdminPassword]"
 		}
 	}
 }

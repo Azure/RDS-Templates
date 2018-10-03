@@ -48,7 +48,10 @@ param(
     [string]$localAdminUserName,
 
     [Parameter(mandatory = $true)]
-    [string]$localAdminPassword
+    [string]$localAdminPassword,
+
+    [Parameter(mandatory = $true)]
+    [string]$rdshIs1809OrLater
 )
 
 
@@ -83,18 +86,22 @@ function Write-Log {
     } 
 }
 
+# Setting to Tls12 due to Azure web app security requirements
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+$DeployAgentLocation = "C:\DeployAgent"
+$rdshIs1809OrLaterBool = ($rdshIs1809OrLater -eq "True")
 try {
     #Downloading the DeployAgent zip file to rdsh vm
     Invoke-WebRequest -Uri $fileURI -OutFile "C:\DeployAgent.zip"
     Write-Log -Message "Downloaded DeployAgent.zip into this location C:\"
 
     #Creating a folder inside rdsh vm for extracting deployagent zip file
-    New-Item -Path "C:\DeployAgent" -ItemType directory -Force -ErrorAction SilentlyContinue
+    New-Item -Path "$DeployAgentLocation" -ItemType directory -Force -ErrorAction SilentlyContinue
     Write-Log -Message "Created a new folder 'DeployAgent' inside VM"
-    Expand-Archive "C:\DeployAgent.zip" -DestinationPath "C:\DeployAgent" -ErrorAction SilentlyContinue
-    Write-Log -Message "Extracted the 'Deployagent.zip' file into 'C:\Deployagent' folder inside VM"
-    Set-Location "C:\DeployAgent"
+    Expand-Archive "C:\DeployAgent.zip" -DestinationPath "$DeployAgentLocation" -ErrorAction SilentlyContinue
+    Write-Log -Message "Extracted the 'Deployagent.zip' file into '$DeployAgentLocation' folder inside VM"
+    Set-Location "$DeployAgentLocation"
     Write-Log -Message "Setting up the location of Deployagent folder"
 
     #Checking if RDInfragent is registered or not in rdsh vm
@@ -127,7 +134,7 @@ try {
         Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
     
         #Setting RDS Context
-        $authentication = Set-RdsContext -DeploymentUrl $RDBrokerURL -Credential $Credentials
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $Credentials
         $obj = $authentication | Out-String
     
         if ($authentication) {
@@ -180,7 +187,8 @@ try {
                 Write-Log -Message "Registerationinfo not expired and expiring on $reglogexpired"
             }
             #Executing DeployAgent psl file in rdsh vm and add to hostpool
-            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $adminCredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true
+            Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall, SxS is $DeployAgentLocation\RDInfraSxSStackInstall"
+            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" -AdminCredentials $adminCredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $Registered.Token -StartAgent $true -rdshIs1809OrLater $rdshIs1809OrLaterBool
             Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName `
         $DAgentInstall"
         }
@@ -206,7 +214,7 @@ try {
             Write-Log -Message "Successfully registered $HName, expiration date: $newRegInfo"
         
             #Executing DeployAgent psl file in rdsh vm and add to hostpool
-            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstaller ".\RDAgentBootLoaderInstall\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" -AgentInstaller ".\RDInfraAgentInstall\Microsoft.RDInfra.RDAgent.Installer-x64.msi" -SxSStackInstaller ".\RDInfraSxSStackInstall\Microsoft.RDInfra.StackSxS.Installer-x64.msi" -AdminCredentials $adminCredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $ToRegister.Token -StartAgent $true
+            $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" -AdminCredentials $adminCredentials -TenantName $TenantName -PoolName $HostPoolName -RegistrationToken $ToRegister.Token -StartAgent $true -rdshIs1809OrLater $rdshIs1809OrLaterBool
         
             Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader, RDAgent, StackSxS installed inside VM for new $HName `
         $DAgentInstall"
