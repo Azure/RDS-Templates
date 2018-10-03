@@ -166,7 +166,7 @@
                 "description": "The base URL for RDmi info",
                 "artifactsBaseUrl": ""
             },
-            "defaultValue": "https://raw.githubusercontent.com/ChristianMontoya/RDS-Templates/master/rdmi-templates/Create%20and%20provision%20new%20RDmi%20hostpool/"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-templates/Create%20and%20provision%20new%20RDmi%20hostpool/"
         }
     },
     "variables": {
