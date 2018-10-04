@@ -6,7 +6,11 @@
             "type": "bool",
             "metadata": {
                 "description": "Either gallery or custom."
-            }
+            },
+            "defaultValue": false,
+            "allowedValues": [
+                false
+            ]
         },
         "VmImageVhdUri": {
             "type": "string",
