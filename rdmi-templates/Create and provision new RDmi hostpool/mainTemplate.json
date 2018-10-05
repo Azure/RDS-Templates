@@ -164,6 +164,20 @@
                 "description": "The password that corresponds to the tenant admin UPN."
             }
         },
+        "isServicePrincipal": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "The boolean value indicating if the credentials are for a service principal."
+            }
+        },
+        "AadTenantId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "This value required when providing a service principal and identifies the Azure AD tenant of the service principal."
+            }
+        },
         "baseUrl": {
             "type": "string",
             "metadata": {
@@ -326,7 +340,7 @@
                     ]
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUPN'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"')]"
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUPN'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"', ' ', ' -isServicePrincipal $', parameters('isServicePrincipal'), ' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"')]"
                 }
             }
         }
