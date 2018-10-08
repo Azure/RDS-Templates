@@ -241,8 +241,8 @@
                     "existingDomainPassword": { "value": "[parameters('existingDomainPassword')]" },
                     "subnet-id": { "value": "[variables('subnet-id')]" },
                     "vhds": { "value": "[variables('vhds')]" },
-                    "managedDiskResourceGroupName": { "value": "[parameters('managedDiskResourceGroupName')]" },
-                    "managedDiskName": { "value": "[parameters('managedDiskName')]" }
+                    "rdshImageSourceResourceGroup": { "value": "[parameters('rdshImageSourceResourceGroup')]" },
+                    "rdshImageSourceName": { "value": "[parameters('rdshImageSourceName')]" }
                 }
             },
             "dependsOn": [
