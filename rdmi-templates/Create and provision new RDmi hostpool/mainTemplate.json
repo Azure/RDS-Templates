@@ -2,22 +2,49 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "rdshUseGalleryImage": {
-            "type": "bool",
+        "rdshImageSource": {
+            "type": "string",
             "metadata": {
-                "description": "Either gallery or custom."
+                "description": "Select the image source for the session host vms."
             },
-            "defaultValue": false,
+            "defaultValue": "Custom VHD",
             "allowedValues": [
-                false
+                "Custom VHD",
+                "Custom Image"
             ]
         },
         "VmImageVhdUri": {
             "type": "string",
             "metadata": {
-                "description": "URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
+                "description": "[Required when rdshImageSource = Custom VHD] URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
             },
             "defaultValue": ""
+        },
+        "rdshGalleryImageSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "[Required when rdshImageSource = Gallery] Gallery image SKU."
+            },
+            "allowedValues": [
+                "Windows-10-Enterprise-multi-session",
+                "2016-Datacenter",
+                "2012-R2-Datacenter"
+            ],
+            "defaultValue": "Windows-10-Enterprise-multi-session"
+        },
+        "rdshImageSourceName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "[Required when rdshImageSource = Custom Image] Name of the managed disk."
+            }
+        },
+        "rdshImageSourceResourceGroup": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "[Required when rdshImageSource = Custom Image] Resource group name for the managed disk, if you choose to provide one."
+            }
         },
         "storageAccountResourceGroupName": {
             "type": "string",
@@ -25,18 +52,6 @@
                 "description": "The resource group containing the storage account of the image vhd file."
             },
             "defaultValue": ""
-        },
-        "rdshGalleryImageSKU": {
-            "type": "string",
-            "metadata": {
-                "description": "Gallery image SKU."
-            },
-            "allowedValues": [
-                "Project Eindhoven",
-                "2016-Datacenter",
-                "2012-R2-Datacenter"
-            ],
-            "defaultValue": "Project Eindhoven"
         },
         "rdshIsWindowsServer": {
             "type": "bool",
@@ -86,20 +101,6 @@
             "defaultValue": false,
             "metadata": {
                 "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
-            }
-        },
-        "managedDiskResourceGroupName": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Resource group name for the managed disk, if you choose to provide one."
-            }
-        },
-        "managedDiskName": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Name of the managed disk."
             }
         },
         "existingDomainUPN": {
@@ -188,8 +189,9 @@
         }
     },
     "variables": {
+        "rdshManagedDisks": "[if(equals(parameters('rdshImageSource'), 'Custom VHD'), bool('true'), parameters('rdshUseManagedDisks'))]",
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
-        "avSetSKU": "[if(parameters('rdshUseManagedDisks'), 'Aligned', 'Classic')]",
+        "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainName": "[last(split(parameters('existingDomainUPN'), '@'))]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
@@ -200,7 +202,7 @@
         "scriptURI": "[concat(parameters('baseUrl'),'/Scripts/Script.ps1')]",
         "deployAgentURI": "[concat(parameters('baseUrl'),'/Scripts/DeployAgent.zip')]",
         "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'SSD'), 'Premium_LRS', 'Standard_LRS')]",
-        "vmTemplateName": "[concat( if(parameters('rdshUseManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', if(parameters('rdshUseGalleryImage'), 'gallery', 'custom'), 'vm')]",
+        "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('baseUrl'),'/LinkedTemplates/',variables('vmTemplateName'),'.json')]"
     },
     "resources": [
