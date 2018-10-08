@@ -51,7 +51,13 @@ param(
     [string]$localAdminPassword,
 
     [Parameter(mandatory = $true)]
-    [string]$rdshIs1809OrLater
+    [string]$rdshIs1809OrLater,
+
+    [Parameter(mandatory = $false)]
+    [string]$isServicePrincipal = "False",
+
+    [Parameter(Mandatory = $false)]
+    [string]$AadTenantId
 )
 
 
@@ -126,7 +132,11 @@ if (!$CheckRegistry) {
     Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
     # Authenticating to WVD
-    $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $Credentials
+    if ($isServicePrincipal -eq "True"){
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $Credentials -ServicePrincipal -TenantId $AadTenantId 
+    } else {
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $Credentials
+    }
     $obj = $authentication | Out-String
 
     if ($authentication) {
