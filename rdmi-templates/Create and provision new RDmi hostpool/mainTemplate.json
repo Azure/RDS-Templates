@@ -175,7 +175,7 @@
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "This value required when providing a service principal and identifies the Azure AD tenant of the service principal."
+                "description": "[Required when isServicePrincipal = True] This value identifies the Azure AD tenant of the service principal."
             }
         },
         "baseUrl": {
