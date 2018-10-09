@@ -32,26 +32,19 @@
             ],
             "defaultValue": "Windows-10-Enterprise-multi-session"
         },
-        "rdshImageSourceName": {
+        "rdshCustomImageSourceName": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
                 "description": "[Required when rdshImageSource = Custom Image] Name of the managed disk."
             }
         },
-        "rdshImageSourceResourceGroup": {
+        "rdshCustomImageSourceResourceGroup": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
                 "description": "[Required when rdshImageSource = Custom Image] Resource group name for the managed disk, if you choose to provide one."
             }
-        },
-        "storageAccountResourceGroupName": {
-            "type": "string",
-            "metadata": {
-                "description": "The resource group containing the storage account of the image vhd file."
-            },
-            "defaultValue": ""
         },
         "rdshIsWindowsServer": {
             "type": "bool",
@@ -98,10 +91,17 @@
         },
         "rdshUseManagedDisks" : {
             "type": "bool",
-            "defaultValue": false,
+            "defaultValue": true,
             "metadata": {
                 "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
             }
+        },
+        "storageAccountResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "[Required when rdshUseManagedDisks = False] The resource group containing the storage account of the image vhd file."
+            },
+            "defaultValue": ""
         },
         "existingDomainUPN": {
             "type": "string",
@@ -151,16 +151,14 @@
                 "description": "The name of the hostpool to be created in the RDS Tenant."
             }
         },
-        "TenantAdminUPN": {
+        "TenantAdminUpnOrApplicationId": {
             "type": "string",
-            "defaultvalue": "",
             "metadata": {
                 "description": "The UPN that has rights in the RDS Tenant to create the hostpool. For example, “admin1@contoso.com”"
             }
         },
         "TenantAdminPassword": {
             "type": "securestring",
-            "defaultvalue": "",
             "metadata": {
                 "description": "The password that corresponds to the tenant admin UPN."
             }
@@ -189,7 +187,7 @@
         }
     },
     "variables": {
-        "rdshManagedDisks": "[if(equals(parameters('rdshImageSource'), 'Custom VHD'), bool('true'), parameters('rdshUseManagedDisks'))]",
+        "rdshManagedDisks": "[if(equals(parameters('rdshImageSource'), 'Custom Image'), bool('true'), parameters('rdshUseManagedDisks'))]",
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainName": "[last(split(parameters('existingDomainUPN'), '@'))]",
@@ -197,11 +195,10 @@
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
         "HostPoolFriendlyName": "Hostpool",
-        "HostPoolDescription": "template through create hostpool",
+        "HostPoolDescription": "Created through ARM template",
         "RegistrationExpirationHours": "48",
         "scriptURI": "[concat(parameters('baseUrl'),'/Scripts/Script.ps1')]",
         "deployAgentURI": "[concat(parameters('baseUrl'),'/Scripts/DeployAgent.zip')]",
-        "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'SSD'), 'Premium_LRS', 'Standard_LRS')]",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('baseUrl'),'/LinkedTemplates/',variables('vmTemplateName'),'.json')]"
     },
@@ -241,8 +238,8 @@
                     "existingDomainPassword": { "value": "[parameters('existingDomainPassword')]" },
                     "subnet-id": { "value": "[variables('subnet-id')]" },
                     "vhds": { "value": "[variables('vhds')]" },
-                    "rdshImageSourceResourceGroup": { "value": "[parameters('rdshImageSourceResourceGroup')]" },
-                    "rdshImageSourceName": { "value": "[parameters('rdshImageSourceName')]" }
+                    "rdshImageSourceResourceGroup": { "value": "[parameters('rdshCustomImageSourceResourceGroup')]" },
+                    "rdshImageSourceName": { "value": "[parameters('rdshCustomImageSourceName')]" }
                 }
             },
             "dependsOn": [
@@ -342,7 +339,7 @@
                     ]
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUPN'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"', ' ', ' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"', ' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"')]"
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUpnOrApplicationId'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"', ' ', ' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"', ' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"')]"
                 }
             }
         }

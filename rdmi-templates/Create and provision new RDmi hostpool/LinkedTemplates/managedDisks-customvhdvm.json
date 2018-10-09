@@ -106,7 +106,7 @@
                   "osType": "Windows",
                   "osState": "Generalized",
                   "blobUri": "[parameters('VmImageVhdUri')]",
-                  "storageAccountType": "Standard_LRS"
+                  "storageAccountType": "[variables('storageAccountType')]"
                 }
               }
             }
