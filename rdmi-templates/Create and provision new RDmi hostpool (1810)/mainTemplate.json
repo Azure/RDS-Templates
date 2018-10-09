@@ -183,7 +183,7 @@
                 "description": "The base URL for RDmi info",
                 "artifactsBaseUrl": ""
             },
-            "defaultValue": "https://raw.githubusercontent.com/ChristianMontoya/RDS-Templates/oct-update/rdmi-templates/Create%20and%20provision%20new%20RDmi%20hostpool(1810)/"
+            "defaultValue": "https://raw.githubusercontent.com/ChristianMontoya/RDS-Templates/oct-update/rdmi-templates/Create%20and%20provision%20new%20RDmi%20hostpool%20(1810)/"
         }
     },
     "variables": {
