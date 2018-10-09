@@ -187,7 +187,7 @@
         }
     },
     "variables": {
-        "rdshManagedDisks": "[if(equals(parameters('rdshImageSource'), 'Custom VHD'), bool('true'), parameters('rdshUseManagedDisks'))]",
+        "rdshManagedDisks": "[if(equals(parameters('rdshImageSource'), 'Custom Image'), bool('true'), parameters('rdshUseManagedDisks'))]",
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainName": "[last(split(parameters('existingDomainUPN'), '@'))]",
