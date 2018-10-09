@@ -75,14 +75,14 @@
                 "description": "The unique id of the subnet for the nics."
             }
         },
-        "managedDiskResourceGroupName": {
+        "rdshImageSourceResourceGroup": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
                 "description": "Resource group name for the managed disk, if you choose to provide one."
             }
         },
-        "managedDiskName": {
+        "rdshImageSourceName": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
