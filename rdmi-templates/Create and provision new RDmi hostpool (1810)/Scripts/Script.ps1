@@ -176,12 +176,15 @@ if (!$CheckRegistry) {
     $Registered = $null
     try {
         $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName
-        Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $reglog"
-        Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $reglog"
+        if (!$Registered) {
+            $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
+            Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $Registered"
+        } else {
+            Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $Registered"
+        }
     } catch {
         $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
-        Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $reglog"
-        Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $reglog"
+        Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $Registered"
     }
 
     # Executing DeployAgent psl file in rdsh vm and add to hostpool
