@@ -127,8 +127,7 @@
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', parameters('rdshPrefix'), copyindex(), '-nic')]",
-                "[variables('imageResourceId')]"
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('rdshPrefix'), copyindex(), '-nic')]"
             ],
             "properties": {
                 "hardwareProfile": {
