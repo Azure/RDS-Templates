@@ -154,7 +154,7 @@
         "TenantAdminUpnOrApplicationId": {
             "type": "string",
             "metadata": {
-                "description": "The UPN that has rights in the RDS Tenant to create the hostpool. For example, “admin1@contoso.com”"
+                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the WVD Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
             }
         },
         "TenantAdminPassword": {
