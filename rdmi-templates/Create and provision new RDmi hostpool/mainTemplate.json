@@ -6,7 +6,11 @@
             "type": "bool",
             "metadata": {
                 "description": "Either gallery or custom."
-            }
+            },
+            "defaultValue": false,
+            "allowedValues": [
+                false
+            ]
         },
         "VmImageVhdUri": {
             "type": "string",
@@ -80,9 +84,6 @@
         "rdshUseManagedDisks" : {
             "type": "bool",
             "defaultValue": false,
-            "allowedValues": [
-                false
-            ],
             "metadata": {
                 "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
             }
@@ -163,6 +164,20 @@
                 "description": "The password that corresponds to the tenant admin UPN."
             }
         },
+        "isServicePrincipal": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "The boolean value indicating if the credentials are for a service principal."
+            }
+        },
+        "AadTenantId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "[Required when isServicePrincipal = True] This value identifies the Azure AD tenant of the service principal."
+            }
+        },
         "baseUrl": {
             "type": "string",
             "metadata": {
@@ -174,6 +189,7 @@
     },
     "variables": {
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
+        "avSetSKU": "[if(parameters('rdshUseManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainName": "[last(split(parameters('existingDomainUPN'), '@'))]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
@@ -194,7 +210,11 @@
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
             "location": "[resourceGroup().location]",
             "properties": {
-                "managed": "[parameters('rdshUseManagedDisks')]"
+                "platformUpdateDomainCount": 5,
+                "platformFaultDomainCount": 2
+            },
+            "sku":{
+                "name": "[variables('avSetSKU')]"
             }
         },
         {
@@ -317,8 +337,10 @@
                 "settings": {
                     "fileUris": [
                         "[variables('scriptURI')]"
-                    ],
-                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUPN'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"')]"
+                    ]
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUPN'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"', ' ', ' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"', ' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"')]"
                 }
             }
         }
