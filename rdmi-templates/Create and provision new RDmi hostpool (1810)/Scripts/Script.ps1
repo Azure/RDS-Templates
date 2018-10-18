@@ -17,6 +17,9 @@ param(
     [Parameter(mandatory = $true)]
     [string]$RDBrokerURL,
 
+    [Parameter(mandatory = $false)]
+    [string]$TenantGroupName = "Default Tenant Group",
+
     [Parameter(mandatory = $true)]
     [string]$TenantName,
 
@@ -30,7 +33,6 @@ param(
     [Parameter(mandatory = $false)]
     [string]$FriendlyName,
 
-
     [Parameter(mandatory = $true)]
     [string]$Hours,
 
@@ -42,7 +44,6 @@ param(
 
     [Parameter(mandatory = $true)]
     [string]$TenantAdminPassword,
-
 
     [Parameter(mandatory = $true)]
     [string]$localAdminUserName,
@@ -147,6 +148,17 @@ if (!$CheckRegistry) {
         Write-Log -Error "RDMI Authentication Failed, Error: `
     $obj"
     
+    }
+
+    # Set context to the appropriate tenant group
+    Set-RdsContext -TenantGroupName $TenantGroupName
+    try {
+        $tenants = Get-RdsTenant
+        if( !$tenants ) {
+            Write-Output "No tenants exist or you do not have proper access."
+        }
+    } catch {
+        Write-log -Message ""
     }
 
     # Checking if host pool exists. If not, create a new one with the given HostPoolName

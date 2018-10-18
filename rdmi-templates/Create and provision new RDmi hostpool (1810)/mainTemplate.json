@@ -136,13 +136,20 @@
         "RDBrokerURL": {
             "type": "string",
             "metadata": {
-                "description": "The RD Broker URL of the RDmi deployment the session hosts will be connected to."
+                "description": "The Broker URL of the Windows Virtual Desktop deployment the session hosts will be connected to."
+            },
+            "defaultValue": "Default Tenant Group"
+        },
+        "ExistingTenantGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the tenant group in the Windows Virtual Desktop deployment"
             }
         },
         "ExistingTenantName": {
             "type": "string",
             "metadata": {
-                "description": "The name of the RDS Tenant in the RDmi deployment."
+                "description": "The name of the tenant in the Windows Virtual Desktop deployment."
             }
         },
         "HostPoolName": {
@@ -180,7 +187,7 @@
         "baseUrl": {
             "type": "string",
             "metadata": {
-                "description": "The base URL for RDmi info",
+                "description": "The base URL for Windows Virtual Desktop info",
                 "artifactsBaseUrl": ""
             },
             "defaultValue": "https://raw.githubusercontent.com/ChristianMontoya/RDS-Templates/oct-update/rdmi-templates/Create%20and%20provision%20new%20RDmi%20hostpool%20(1810)/"
@@ -339,7 +346,7 @@
                     ]
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUpnOrApplicationId'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"', ' ', ' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"', ' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"')]"
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUpnOrApplicationId'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"', ' ', ' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"', ' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"', ' -TenantGroupName \"', parameters('ExistingTenantGroupName'), '\"')]"
                 }
             }
         }
