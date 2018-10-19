@@ -191,7 +191,7 @@
                 "description": "The base URL for Windows Virtual Desktop info",
                 "artifactsBaseUrl": ""
             },
-            "defaultValue": "https://raw.githubusercontent.com/ChristianMontoya/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20hostpool/"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20hostpool/"
         }
     },
     "variables": {
