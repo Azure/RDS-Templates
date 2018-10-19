@@ -138,13 +138,14 @@
             "metadata": {
                 "description": "The Broker URL of the Windows Virtual Desktop deployment the session hosts will be connected to."
             },
-            "defaultValue": "Default Tenant Group"
+            "defaultValue": "https://rdbroker.wvd.microsoft.com"
         },
         "ExistingTenantGroupName": {
             "type": "string",
             "metadata": {
                 "description": "The name of the tenant group in the Windows Virtual Desktop deployment"
-            }
+            },
+            "defaultValue": "Default Tenant Group"
         },
         "ExistingTenantName": {
             "type": "string",

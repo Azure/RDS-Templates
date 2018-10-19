@@ -151,6 +151,7 @@ if (!$CheckRegistry) {
     }
 
     # Set context to the appropriate tenant group
+    Write-Log "Running switching to the $TenantGroupName context"
     Set-RdsContext -TenantGroupName $TenantGroupName
     try {
         $tenants = Get-RdsTenant
@@ -158,7 +159,7 @@ if (!$CheckRegistry) {
             Write-Output "No tenants exist or you do not have proper access."
         }
     } catch {
-        Write-log -Message ""
+        Write-Log -Message ""
     }
 
     # Checking if host pool exists. If not, create a new one with the given HostPoolName
