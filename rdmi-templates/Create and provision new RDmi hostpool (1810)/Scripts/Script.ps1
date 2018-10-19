@@ -17,8 +17,8 @@ param(
     [Parameter(mandatory = $true)]
     [string]$RDBrokerURL,
 
-    [Parameter(mandatory = $false)]
-    [string]$TenantGroupName = "Default Tenant Group",
+    [Parameter(mandatory = $true)]
+    [string]$TenantGroupName,
 
     [Parameter(mandatory = $true)]
     [string]$TenantName,
