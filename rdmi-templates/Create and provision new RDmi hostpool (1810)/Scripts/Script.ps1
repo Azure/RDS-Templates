@@ -18,7 +18,7 @@ param(
     [string]$RDBrokerURL,
 
     [Parameter(mandatory = $true)]
-    [string]$TenantGroupName,
+    [string]$definedTenantGroupName,
 
     [Parameter(mandatory = $true)]
     [string]$TenantName,
@@ -151,12 +151,12 @@ if (!$CheckRegistry) {
     }
 
     # Set context to the appropriate tenant group
-    Write-Log "Running switching to the $TenantGroupName context"
-    Set-RdsContext -TenantGroupName $TenantGroupName
+    Write-Log "Running switching to the $definedTenantGroupName context"
+    Set-RdsContext -TenantGroupName $definedTenantGroupName
     try {
         $tenants = Get-RdsTenant
         if( !$tenants ) {
-            Write-Output "No tenants exist or you do not have proper access."
+            Write-Log "No tenants exist or you do not have proper access."
         }
     } catch {
         Write-Log -Message ""
