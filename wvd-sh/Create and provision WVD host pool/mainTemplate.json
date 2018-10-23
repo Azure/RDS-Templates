@@ -87,7 +87,7 @@
             "metadata": {
                 "description": "The size of the session host VMs."
             },
-            "defaultValue": "Standard_A2"
+            "defaultValue": "Standard_D4s_v3"
         },
         "rdshUseManagedDisks" : {
             "type": "bool",
