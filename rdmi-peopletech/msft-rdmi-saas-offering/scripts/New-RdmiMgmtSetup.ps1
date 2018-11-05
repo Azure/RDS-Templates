@@ -113,7 +113,8 @@ try
                 $requiredAccessName=$ResourceURL.Split("/")[3]
                 $redirectURL="https://"+"$WebUrl"+"/"
                 
-  
+                    #Static value of RDMIInfra web appname
+                    $requiredAccessName = "Windows Virtual Desktop"
                 #generate unique ID based on subscription ID
                 $unique_subscription_id = ($subsriptionid).Replace('-', '').substring(0, 19)
                 
