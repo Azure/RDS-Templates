@@ -67,6 +67,13 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				ValueName   = "VHDLocations"
 				ValueData   = $Prof
 		}
+		Registry LogPerios
+		{
+			Ensure      = "Present"
+				Key         = "HKLM\SOFTWARE\FSLogix\Logging"
+				ValueName   = "LogFileKeepingPeriod"
+				ValueData   = 10
+		}
 
 
 
