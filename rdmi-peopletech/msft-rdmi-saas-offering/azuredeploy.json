@@ -2,12 +2,6 @@
     "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
     "contentVersion": "1.0",
     "parameters": {
-      "ApplicationID": {
-            "type": "String",
-            "metadata": {
-                "description": "Application ID / Client ID of the infrastructure.  Ex: 574ee204-xx91-4ac5-xx7a-5a6a4e2784e9"
-            }
-        },
         "RDBrokerURL": {
             "type": "String",
             "metadata": {
@@ -35,7 +29,6 @@
     },
     "variables": {
         "accountName": "msftsaas-autoAccount",
-
         "credentialName": "DefaultAzureCredential",
         "runbookName": "msftsaasbook",
         "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/",
@@ -63,10 +56,6 @@
             {
                 "name": "Location",
                 "value": "[concat('\"',resourceGroup().location,'\"')]"
-            },
-            {
-                "name": "ApplicationID",
-                "value": "[concat('\"',parameters('ApplicationID'),'\"')]"
             },
             {
                 "name": "RDBrokerURL",

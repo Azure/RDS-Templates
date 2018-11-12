@@ -1,7 +1,6 @@
 ﻿$subsriptionid = Get-AutomationVariable -Name 'subsriptionid'
 $ResourceGroupName = Get-AutomationVariable -Name 'ResourceGroupName'
 $Location = Get-AutomationVariable -Name 'Location'
-$ApplicationID = Get-AutomationVariable -Name 'ApplicationID'
 $RDBrokerURL = Get-AutomationVariable -Name 'RDBrokerURL'
 $ResourceURL = Get-AutomationVariable -Name 'ResourceURL'
 $fileURI = Get-AutomationVariable -Name 'fileURI'
@@ -20,6 +19,7 @@ Import-Module AzureRM.Profile
 Import-Module AzureRM.Websites
 Import-Module Azure
 Import-Module AzureRM.Automation
+Import-Module AzureAD
 
     Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
@@ -106,6 +106,34 @@ try
         
         }
         
+                # Get Url of Web-App 
+                $GetWebApp = Get-AzureRmWebApp -Name $WebApp -ResourceGroupName $ResourceGroupName
+                $WebUrl = $GetWebApp.DefaultHostName
+                 
+                #$requiredAccessName=$ResourceURL.Split("/")[3]
+                $redirectURL="https://"+"$WebUrl"+"/"
+                
+                    #Static value of RDMIInfra web appname
+                    $rdmiInfraWebAppName = "Windows Virtual Desktop"
+                #generate unique ID based on subscription ID
+                $unique_subscription_id = ($subsriptionid).Replace('-', '').substring(0, 19)
+                
+
+                #generate the display name for native app in AAD
+                $rdmiSaaS_clientapp_display_name = "RdmiSaaS" + $ResourceGroupName.ToLowerInvariant() + $unique_subscription_id.ToLowerInvariant()
+                #Creating Client application in azure ad
+                Connect-AzureAD -Credential $Cred
+                $clientAdApp = New-AzureADApplication -DisplayName $rdmiSaaS_clientapp_display_name -ReplyUrls $redirectURL -PublicClient $true -AvailableToOtherTenants $true -Verbose -ErrorAction Stop
+                $resourceAppId = Get-AzureADServicePrincipal -SearchString $rdmiInfraWebAppName | Where-Object {$_.DisplayName -eq $rdmiInfraWebAppName}
+                $clientappreq = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
+                $clientappreq.ResourceAppId = $resourceAppId.AppId
+               
+                foreach($permission in $resourceAppId.Oauth2Permissions){
+                    $clientappreq.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
+                }
+                Set-AzureADApplication -ObjectId $clientAdApp.ObjectId -RequiredResourceAccess $clientappreq -ErrorAction Stop
+
+
         if($ApiApp)
         {
             try
@@ -147,16 +175,10 @@ try
                 $userAgent = "powershell/1.0"
                 Invoke-RestMethod -Uri $apiUrl -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)} -UserAgent $userAgent -Method POST -InFile $filePath -ContentType "multipart/form-data"
                 Write-Output "Uploading of Extracted files to Api-App is Successful"
-
-                # Get Url of Web-App 
-
-                $GetWebApp = Get-AzureRmWebApp -Name $WebApp -ResourceGroupName $ResourceGroupName
-                $WebUrl = $GetWebApp.DefaultHostName 
-
+                $ApplicationId=$clientAdApp.AppID
                 # Adding App Settings to Api-App
-                
                 Write-Output "Adding App settings to Api-App"
-                $ApiAppSettings = @{"ApplicationId" = "$ApplicationID";
+                $ApiAppSettings = @{"ApplicationId" = "$ApplicationId";
                                     "RDBrokerUrl" = "$RDBrokerURL";
                                     "ResourceUrl" = "$ResourceURL";
                                     "RedirectURI" = "https://"+"$WebUrl"+"/";
@@ -248,6 +270,8 @@ catch [Exception]
     Write-Output $_.Exception.Message
 }
 
+
+
 New-PSDrive -Name RemoveAccount -PSProvider FileSystem -Root "C:\" | Out-Null
 @"
 Param(
@@ -261,14 +285,11 @@ Param(
     [string] `$ResourceGroupName
  
 )
-
 Import-Module AzureRM.profile
 Import-Module AzureRM.Automation
-
 `$Securepass=ConvertTo-SecureString -String `$Password -AsPlainText -Force
 `$Azurecred=New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList(`$Username, `$Securepass)
 `$login=Login-AzureRmAccount -Credential `$Azurecred -SubscriptionId `$SubscriptionId
-
 Remove-AzureRmAutomationAccount -Name "msftsaas-autoAccount" -ResourceGroupName `$ResourceGroupName -Force 
 "@| Out-File -FilePath RemoveAccount:\RemoveAccount.ps1 -Force
 
@@ -276,7 +297,7 @@ Remove-AzureRmAutomationAccount -Name "msftsaas-autoAccount" -ResourceGroupName 
 
     #Get the credential with the above name from the Automation Asset store
     $Cred = Get-AutomationPSCredential -Name $CredentialAssetName
-   login-AzureRmAccount -Environment 'AzureCloud' -Credential $Cred
+    login-AzureRmAccount -Environment 'AzureCloud' -Credential $Cred
     Select-AzureRmSubscription -SubscriptionId $subsriptionid
 
 

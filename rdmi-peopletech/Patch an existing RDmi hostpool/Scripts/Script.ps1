@@ -97,7 +97,7 @@ try {
     Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
     
     #Setting RDS Context
-    $authentication = Set-RdsContext -DeploymentUrl $RDBrokerURL -Credential $Credentials
+    $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $Credentials
     $obj = $authentication | Out-String
     
     if ($authentication) {
