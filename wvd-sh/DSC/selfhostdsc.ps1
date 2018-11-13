@@ -45,6 +45,7 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
 				ValueName   = "Enabled"
 				ValueData   = 1
+                                ValueType   = "DWORD"
 		}
 		Registry ProfileLocation
 		{
@@ -59,6 +60,7 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\FSLogix\ODFC"
 				ValueName   = "Enabled"
 				ValueData   = 1
+                                ValueType   = "DWORD"
 		}
 		Registry OfficeLocation
 		{
@@ -73,6 +75,7 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Logging"
 				ValueName   = "LogFileKeepingPeriod"
 				ValueData   = 10
+                                ValueType   = "DWORD"
 		}
 
 
@@ -130,6 +133,9 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				ValueData   = "00000b40"
                                 DependsOn ="[Script]SXSStack"
 		}
+
+
+
 # End of 5k Resolution
 
 		`
