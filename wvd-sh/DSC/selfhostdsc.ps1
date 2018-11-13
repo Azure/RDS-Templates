@@ -38,7 +38,7 @@ $scriptUrl = "$BaseUrl/$enableScript"
 
 
 
-#FSLogix Keuys
+#FSLogix Keys
 		Registry ProfileEnable
 		{
 			Ensure      = "Present"
@@ -67,10 +67,10 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				ValueName   = "VHDLocations"
 				ValueData   = $Prof
 		}
-		Registry LogPerios
+		Registry LogPeriod
 		{
 			Ensure      = "Present"
-				Key         = "HKLM\SOFTWARE\FSLogix\Logging"
+				Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Logging"
 				ValueName   = "LogFileKeepingPeriod"
 				ValueData   = 10
 		}
