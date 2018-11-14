@@ -42,42 +42,69 @@ $scriptUrl = "$BaseUrl/$enableScript"
 		Registry ProfileEnable
 		{
 			Ensure      = "Present"
-				Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
-				ValueName   = "Enabled"
-				ValueData   = 1
-                                ValueType   = "DWORD"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
+                        ValueName   = "Enabled"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
 		}
 		Registry ProfileLocation
 		{
 			Ensure      = "Present"
-				Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
-				ValueName   = "VHDLocations"
-				ValueData   = $Prof
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
+                        ValueName   = "VHDLocations"
+                        ValueData   = $Prof
 		}
 		Registry OfficeEnabled
 		{
 			Ensure      = "Present"
-				Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\FSLogix\ODFC"
-				ValueName   = "Enabled"
-				ValueData   = 1
-                                ValueType   = "DWORD"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\FSLogix\ODFC"
+                        ValueName   = "Enabled"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
 		}
 		Registry OfficeLocation
 		{
 			Ensure      = "Present"
-				Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\FSLogix\ODFC"
-				ValueName   = "VHDLocations"
-				ValueData   = $Prof
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\FSLogix\ODFC"
+                        ValueName   = "VHDLocations"
+                        ValueData   = $Prof
 		}
 		Registry LogPeriod
 		{
 			Ensure      = "Present"
-				Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Logging"
-				ValueName   = "LogFileKeepingPeriod"
-				ValueData   = 10
-                                ValueType   = "DWORD"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Logging"
+                        ValueName   = "LogFileKeepingPeriod"
+                        ValueData   = 10
+                        ValueType   = "DWORD"
 		}
 
+
+# TermServ limits       
+
+		Registry MaxIdleTime
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+                        ValueName   = "MaxIdleTime"
+                        ValueData   = 900000
+                        ValueType   = "DWORD"
+		}
+		Registry MaxDisconnectionTime
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+                        ValueName   = "MaxDisconnectionTime"
+                        ValueData   = 86400000
+                        ValueType   = "DWORD"
+		}
+		Registry RemoteAppLogoffTimeLimit
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+                        ValueName   = "RemoteAppLogoffTimeLimit"
+                        ValueData   = 86400000
+                        ValueType   = "DWORD"
+		}
 
 
 # 5k resolution
