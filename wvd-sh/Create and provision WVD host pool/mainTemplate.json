@@ -309,7 +309,7 @@
                     "ModulesUrl": "[concat(parameters('baseUrl'),'/DSC/Configuration.zip')]",
                     "ConfigurationFunction": "Configuration.ps1\\SessionHost",
                     "Properties": {
-                        "DomainName": "[variables('existingDomainName')]",
+                        "DomainName": "[variables(''domainToJoin’')]",
                         "AdminCreds": {
                             "UserName": "[variables('existingDomainUsername')]",
                             "Password": "PrivateSettingsRef:AdminPassword"
