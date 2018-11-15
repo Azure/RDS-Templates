@@ -89,7 +89,7 @@
             },
             "defaultValue": "Standard_A2"
         },
-        "rdshUseManagedDisks" : {
+        "rdshUseManagedDisks": {
             "type": "bool",
             "defaultValue": true,
             "metadata": {
@@ -104,11 +104,11 @@
             "defaultValue": ""
         },
         "domainToJoin": {
-            "type": "string",
-            "defaultValue": "contoso.com",
+            "type": "string",            
             "metadata": {
                 "description": "FQDN of the AD domain controller to which sesion host VMs are going to be joined. For example, “contoso.com”."
-            }
+            },
+            "defaultValue": "contoso.com"
         },
         "existingDomainUPN": {
             "type": "string",
@@ -204,7 +204,7 @@
     "variables": {
         "rdshManagedDisks": "[if(equals(parameters('rdshImageSource'), 'Custom Image'), bool('true'), parameters('rdshUseManagedDisks'))]",
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
-        "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",        
+        "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainName": "[last(split(parameters('existingDomainUPN'), '@'))]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
@@ -227,7 +227,7 @@
                 "platformUpdateDomainCount": 5,
                 "platformFaultDomainCount": 2
             },
-            "sku":{
+            "sku": {
                 "name": "[variables('avSetSKU')]"
             }
         },
@@ -242,19 +242,45 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "VmImageVhdUri": { "value": "[parameters('VmImageVhdUri')]" },
-                    "storageAccountResourceGroupName": { "value": "[parameters('storageAccountResourceGroupName')]" },
-                    "rdshGalleryImageSKU": { "value": "[parameters('rdshGalleryImageSKU')]"},
-                    "rdshPrefix": { "value": "[variables('rdshPrefix')]" },
-                    "rdshNumberOfInstances": { "value": "[parameters('rdshNumberOfInstances')]" },
-                    "rdshVMDiskType": { "value": "[parameters('rdshVMDiskType')]" },
-                    "rdshVmSize": { "value": "[parameters('rdshVmSize')]" },
-                    "existingDomainusername": { "value": "[variables('existingDomainUsername')]" },
-                    "existingDomainPassword": { "value": "[parameters('existingDomainPassword')]" },
-                    "subnet-id": { "value": "[variables('subnet-id')]" },
-                    "vhds": { "value": "[variables('vhds')]" },
-                    "rdshImageSourceResourceGroup": { "value": "[parameters('rdshCustomImageSourceResourceGroup')]" },
-                    "rdshImageSourceName": { "value": "[parameters('rdshCustomImageSourceName')]" }
+                    "VmImageVhdUri": {
+                        "value": "[parameters('VmImageVhdUri')]"
+                    },
+                    "storageAccountResourceGroupName": {
+                        "value": "[parameters('storageAccountResourceGroupName')]"
+                    },
+                    "rdshGalleryImageSKU": {
+                        "value": "[parameters('rdshGalleryImageSKU')]"
+                    },
+                    "rdshPrefix": {
+                        "value": "[variables('rdshPrefix')]"
+                    },
+                    "rdshNumberOfInstances": {
+                        "value": "[parameters('rdshNumberOfInstances')]"
+                    },
+                    "rdshVMDiskType": {
+                        "value": "[parameters('rdshVMDiskType')]"
+                    },
+                    "rdshVmSize": {
+                        "value": "[parameters('rdshVmSize')]"
+                    },
+                    "existingDomainusername": {
+                        "value": "[variables('existingDomainUsername')]"
+                    },
+                    "existingDomainPassword": {
+                        "value": "[parameters('existingDomainPassword')]"
+                    },
+                    "subnet-id": {
+                        "value": "[variables('subnet-id')]"
+                    },
+                    "vhds": {
+                        "value": "[variables('vhds')]"
+                    },
+                    "rdshImageSourceResourceGroup": {
+                        "value": "[parameters('rdshCustomImageSourceResourceGroup')]"
+                    },
+                    "rdshImageSourceName": {
+                        "value": "[parameters('rdshCustomImageSourceName')]"
+                    }
                 }
             },
             "dependsOn": [
@@ -287,7 +313,7 @@
                         "AdminCreds": {
                             "UserName": "[variables('existingDomainUsername')]",
                             "Password": "PrivateSettingsRef:AdminPassword"
-                           }
+                        }
                     }
                 },
                 "protectedSettings": {
@@ -316,9 +342,9 @@
                 "typeHandlerVersion": "1.3",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "Name": "[parameters('domainToJoin')]",
+                    "Name": "[variables('existingDomainName')]",
                     "OUPath": "",
-                    "User": "[concat(variables('domainToJoin'),'\\', variables('existingDomainUsername'))]",
+                    "User": "[concat(variables('existingDomainName'),'\\', variables('existingDomainUsername'))]",
                     "Restart": "true",
                     "Options": "3"
                 },
