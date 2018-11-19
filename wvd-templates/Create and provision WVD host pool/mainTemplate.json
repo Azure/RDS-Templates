@@ -10,7 +10,8 @@
             "defaultValue": "Custom VHD",
             "allowedValues": [
                 "Custom VHD",
-                "Custom Image"
+                "Custom Image",
+                "Gallery"
             ]
         },
         "VmImageVhdUri": {
