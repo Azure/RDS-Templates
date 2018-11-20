@@ -158,8 +158,9 @@
                     "osDisk": {
                         "createOption": "FromImage",
                         "managedDisk": {
-                            "storageAccountType": "[parameters('storageAccountType')]"
-                        }                    }
+                            "storageAccountType": "[variables('storageAccountType')]"
+                        }
+                    }
                 },
                 "networkProfile": {
                     "networkInterfaces": [
