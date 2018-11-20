@@ -1,4 +1,4 @@
-# Create and provision new RDmi hostpool
+# Create and provision new WVD hostpool
 
 This template updates RDSH servers in existing or new hostpool.
 
