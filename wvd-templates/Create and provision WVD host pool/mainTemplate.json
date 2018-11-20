@@ -5,7 +5,7 @@
         "rdshImageSource": {
             "type": "string",
             "metadata": {
-                "description": "Select the image source for the session host vms."
+                "description": "Select the image source for the session host vms. VMs from a Gallery image will be created with Managed Disks."
             },
             "defaultValue": "Custom VHD",
             "allowedValues": [
@@ -28,8 +28,7 @@
             },
             "allowedValues": [
                 "Windows-10-Enterprise-multi-session",
-                "2016-Datacenter",
-                "2012-R2-Datacenter"
+                "2016-Datacenter"
             ],
             "defaultValue": "Windows-10-Enterprise-multi-session"
         },
@@ -203,7 +202,7 @@
         }
     },
     "variables": {
-        "rdshManagedDisks": "[if(equals(parameters('rdshImageSource'), 'Custom Image'), bool('true'), parameters('rdshUseManagedDisks'))]",
+        "rdshManagedDisks": "[if(equals(parameters('rdshImageSource'), 'Custom VHD'), parameters('rdshUseManagedDisks'), bool('true'))]",
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainName": "[last(split(parameters('existingDomainUPN'), '@'))]",
