@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "Select the image source for the session host vms. VMs from a Gallery image will be created with Managed Disks."
             },
-            "defaultValue": "Custom VHD",
+            "defaultValue": "Gallery",
             "allowedValues": [
                 "Custom VHD",
                 "Custom Image",
