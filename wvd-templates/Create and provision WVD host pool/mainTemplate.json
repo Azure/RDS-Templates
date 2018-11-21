@@ -344,7 +344,7 @@
                 "settings": {
                     "Name": "[parameters('domainToJoin')]",
                     "OUPath": "",
-                    "User": "[concat(parameters('domainToJoin'),'\\', variables('existingDomainUsername'))]",
+                    "User": "[concat(parameters('existingDomainUPN'))]",
                     "Restart": "true",
                     "Options": "3"
                 },
