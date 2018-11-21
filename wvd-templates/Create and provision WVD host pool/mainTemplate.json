@@ -122,6 +122,12 @@
                 "description": "The password that corresponds to the existing domain username."
             }
         },
+        "existingOUPath": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The existing Organization Unit (OU) path in Active Directory where you whant to join the Host VM's. For Example OU=Servers,OU=WVD,DC=contoso,DC=com"
+            }
+        },
         "existingVnetName": {
             "type": "string",
             "metadata": {
@@ -343,6 +349,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "Name": "[parameters('domainToJoin')]",
+                    "OUPath": "[parameters('existingOUPath')]",
                     "OUPath": "",
                     "User": "[concat(parameters('domainToJoin'),'\\', variables('existingDomainUsername'))]",
                     "Restart": "true",
