@@ -1,0 +1,388 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "rdshImageSource": {
+            "type": "string",
+            "metadata": {
+                "description": "Select the image source for the session host vms."
+            },
+            "defaultValue": "Custom VHD",
+            "allowedValues": [
+                "Custom VHD",
+                "Custom Image"
+            ]
+        },
+        "VmImageVhdUri": {
+            "type": "string",
+            "metadata": {
+                "description": "[Required when rdshImageSource = Custom VHD] URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
+            },
+            "defaultValue": ""
+        },
+        "rdshGalleryImageSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "[Required when rdshImageSource = Gallery] Gallery image SKU."
+            },
+            "allowedValues": [
+                "Windows-10-Enterprise-multi-session",
+                "2016-Datacenter",
+                "2012-R2-Datacenter"
+            ],
+            "defaultValue": "Windows-10-Enterprise-multi-session"
+        },
+        "rdshCustomImageSourceName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "[Required when rdshImageSource = Custom Image] Name of the managed disk."
+            }
+        },
+        "rdshCustomImageSourceResourceGroup": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "[Required when rdshImageSource = Custom Image] Resource group name for the managed disk, if you choose to provide one."
+            }
+        },
+        "rdshIsWindowsServer": {
+            "type": "bool",
+            "metadata": {
+                "description": "If the VM is a Windows Server SKU (2016, 2012R2, etc.), enter true. If the VM is a Windows client SKU (Windows 10, Windows 7, etc.)."
+            }
+        },
+        "rdshIs1809OrLater": {
+            "type": "bool",
+            "metadata": {
+                "description": "If the VM is Windows Server 2019+ or Windows 10 1809+, enter true. Else, enter false."
+            }
+        },
+        "rdshNamePrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "This prefix will be used in combination with the VM number to create the VM name. If using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
+            },
+            "defaultValue": "[take(toLower(resourceGroup().name),10)]"
+        },
+        "rdshNumberOfInstances": {
+            "type": "int",
+            "metadata": {
+                "description": "Number of session hosts that will be created and added to the hostpool."
+            }
+        },
+        "rdshVMDiskType": {
+            "type": "string",
+            "allowedValues": [
+                "SSD",
+                "HDD"
+            ],
+            "metadata": {
+                "description": "The VM disk type for the VM: HDD or SSD."
+            },
+            "defaultValue": "SSD"
+        },
+        "rdshVmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "The size of the session host VMs."
+            },
+            "defaultValue": "Standard_D2s_v3"
+        },
+        "rdshUseManagedDisks": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
+            }
+        },
+        "storageAccountResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "[Required when rdshUseManagedDisks = False] The resource group containing the storage account of the image vhd file."
+            },
+            "defaultValue": ""
+        },
+        "domainToJoin": {
+            "type": "string",            
+            "metadata": {
+                "description": "FQDN of the AD domain controller to which sesion host VMs are going to be joined. For example, “contoso.com”."
+            },
+            "defaultValue": "contoso.com"
+        },
+        "existingDomainUPN": {
+            "type": "string",
+            "metadata": {
+                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, “user1@contoso.com”."
+            }
+        },
+        "existingDomainPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password that corresponds to the existing domain username."
+            }
+        },
+        "existingVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the virtual network the VMs will be connected to."
+            }
+        },
+        "existingSubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The subnet the VMs will be placed in."
+            }
+        },
+        "virtualNetworkResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The resource group containing the existing virtual network."
+            }
+        },
+        "RDBrokerURL": {
+            "type": "string",
+            "metadata": {
+                "description": "The Broker URL of the Windows Virtual Desktop deployment the session hosts will be connected to."
+            },
+            "defaultValue": "https://rdbroker.wvd.microsoft.com"
+        },
+        "ExistingTenantGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the tenant group in the Windows Virtual Desktop deployment"
+            },
+            "defaultValue": "Default Tenant Group"
+        },
+        "ExistingTenantName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the tenant in the Windows Virtual Desktop deployment."
+            }
+        },
+        "HostPoolName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the hostpool to be created in the RDS Tenant."
+            }
+        },
+        "TenantAdminUpnOrApplicationId": {
+            "type": "string",
+            "metadata": {
+                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the WVD Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
+            }
+        },
+        "TenantAdminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password that corresponds to the tenant admin UPN."
+            }
+        },
+        "isServicePrincipal": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "The boolean value indicating if the credentials are for a service principal."
+            }
+        },
+        "AadTenantId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "[Required when isServicePrincipal = True] This value identifies the Azure AD tenant of the service principal."
+            }
+        },
+        "baseUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "The base URL for Windows Virtual Desktop info",
+                "artifactsBaseUrl": ""
+            },
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool/"
+        }
+    },
+    "variables": {
+        "rdshManagedDisks": "[if(equals(parameters('rdshImageSource'), 'Custom Image'), bool('true'), parameters('rdshUseManagedDisks'))]",
+        "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
+        "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
+        "existingDomainName": "[last(split(parameters('existingDomainUPN'), '@'))]",
+        "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
+        "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
+        "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
+        "HostPoolFriendlyName": "Hostpool",
+        "HostPoolDescription": "Created through ARM template",
+        "RegistrationExpirationHours": "48",
+        "scriptURI": "[concat(parameters('baseUrl'),'/Scripts/Script.ps1')]",
+        "deployAgentURI": "[concat(parameters('baseUrl'),'/Scripts/DeployAgent.zip')]",
+        "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
+        "vmTemplateUri": "[concat(parameters('baseUrl'),'/LinkedTemplates/',variables('vmTemplateName'),'.json')]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2016-04-30-preview",
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "platformUpdateDomainCount": 5,
+                "platformFaultDomainCount": 2
+            },
+            "sku": {
+                "name": "[variables('avSetSKU')]"
+            }
+        },
+        {
+            "apiVersion": "2017-05-10",
+            "name": "vmCreation-linkedTemplate",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vmTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "VmImageVhdUri": {
+                        "value": "[parameters('VmImageVhdUri')]"
+                    },
+                    "storageAccountResourceGroupName": {
+                        "value": "[parameters('storageAccountResourceGroupName')]"
+                    },
+                    "rdshGalleryImageSKU": {
+                        "value": "[parameters('rdshGalleryImageSKU')]"
+                    },
+                    "rdshPrefix": {
+                        "value": "[variables('rdshPrefix')]"
+                    },
+                    "rdshNumberOfInstances": {
+                        "value": "[parameters('rdshNumberOfInstances')]"
+                    },
+                    "rdshVMDiskType": {
+                        "value": "[parameters('rdshVMDiskType')]"
+                    },
+                    "rdshVmSize": {
+                        "value": "[parameters('rdshVmSize')]"
+                    },
+                    "existingDomainusername": {
+                        "value": "[variables('existingDomainUsername')]"
+                    },
+                    "existingDomainPassword": {
+                        "value": "[parameters('existingDomainPassword')]"
+                    },
+                    "subnet-id": {
+                        "value": "[variables('subnet-id')]"
+                    },
+                    "vhds": {
+                        "value": "[variables('vhds')]"
+                    },
+                    "rdshImageSourceResourceGroup": {
+                        "value": "[parameters('rdshCustomImageSourceResourceGroup')]"
+                    },
+                    "rdshImageSourceName": {
+                        "value": "[parameters('rdshCustomImageSourceName')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
+            ]
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'dscextension')]",
+            "location": "[resourceGroup().location]",
+            "condition": "[parameters('rdshIsWindowsServer')]",
+            "dependsOn": [
+                "vmCreation-linkedTemplate"
+            ],
+            "copy": {
+                "name": "rdsh-dsc-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.11",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "ModulesUrl": "[concat(parameters('baseUrl'),'/DSC/Configuration.zip')]",
+                    "ConfigurationFunction": "Configuration.ps1\\SessionHost",
+                    "Properties": {
+                        "DomainName": "[parameters('domainToJoin')]",
+                        "AdminCreds": {
+                            "UserName": "[variables('existingDomainUsername')]",
+                            "Password": "PrivateSettingsRef:AdminPassword"
+                        }
+                    }
+                },
+                "protectedSettings": {
+                    "Items": {
+                        "AdminPassword": "[parameters('existingDomainPassword')]"
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
+            "location": "[resourceGroup().location]",
+            "condition": "[not(parameters('rdshIsWindowsServer'))]",
+            "dependsOn": [
+                "vmCreation-linkedTemplate"
+            ],
+            "copy": {
+                "name": "rdsh-dsc-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "JsonADDomainExtension",
+                "typeHandlerVersion": "1.3",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "Name": "[parameters('domainToJoin')]",
+                    "OUPath": "",
+                    "User": "[concat(parameters('domainToJoin'),'\\', variables('existingDomainUsername'))]",
+                    "Restart": "true",
+                    "Options": "3"
+                },
+                "protectedSettings": {
+                    "Password": "[parameters('existingDomainPassword')]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('rdshPrefix'), copyindex(),'/','rdAgent')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/dscextension'))]",
+                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/joindomain'))]"
+            ],
+            "copy": {
+                "name": "rdsh-vm-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "tags": {
+                "displayName": "script"
+            },
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.8",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[variables('scriptURI')]"
+                    ]
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File Script.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"', ' ', ' -definedTenantGroupName \"', parameters('ExistingTenantGroupName'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('HostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('TenantAdminUpnOrApplicationId'), '\"',' ', ' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -Fileuri \"', variables('deployAgentURI'), '\"', ' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"', ' ', ' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"', ' ', ' -AadTenantId \"', parameters('AadTenantId'), '\"')]"
+                }
+            }
+        }
+    ]
+}

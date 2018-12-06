@@ -110,10 +110,11 @@ try
                 $GetWebApp = Get-AzureRmWebApp -Name $WebApp -ResourceGroupName $ResourceGroupName
                 $WebUrl = $GetWebApp.DefaultHostName
                  
-                $requiredAccessName=$ResourceURL.Split("/")[3]
+                #$requiredAccessName=$ResourceURL.Split("/")[3]
                 $redirectURL="https://"+"$WebUrl"+"/"
                 
-  
+                    #Static value of RDMIInfra web appname
+                    $rdmiInfraWebAppName = "Windows Virtual Desktop"
                 #generate unique ID based on subscription ID
                 $unique_subscription_id = ($subsriptionid).Replace('-', '').substring(0, 19)
                 
@@ -123,7 +124,7 @@ try
                 #Creating Client application in azure ad
                 Connect-AzureAD -Credential $Cred
                 $clientAdApp = New-AzureADApplication -DisplayName $rdmiSaaS_clientapp_display_name -ReplyUrls $redirectURL -PublicClient $true -AvailableToOtherTenants $true -Verbose -ErrorAction Stop
-                $resourceAppId = Get-AzureADServicePrincipal -SearchString $requiredAccessName
+                $resourceAppId = Get-AzureADServicePrincipal -SearchString $rdmiInfraWebAppName | Where-Object {$_.DisplayName -eq $rdmiInfraWebAppName}
                 $clientappreq = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
                 $clientappreq.ResourceAppId = $resourceAppId.AppId
                

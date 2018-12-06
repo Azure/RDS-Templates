@@ -2,6 +2,28 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "VmImageVhdUri": {
+            "type": "string",
+            "metadata": {
+                "description": "URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
+            }
+        },
+        "storageAccountResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The storage account containing the custom VHD."
+            }
+        },
+        "rdshGalleryImageSKU": {
+            "type": "string",
+            "allowedValues": [
+                "Windows-10-Enterprise-multi-session",
+                "2016-Datacenter"
+            ],
+            "metadata": {
+                "description": "Gallery image SKU."
+            }
+        },
         "rdshPrefix": {
             "type": "string",
             "metadata": {
@@ -9,24 +31,11 @@
             },
             "defaultValue": "[take(toLower(resourceGroup().name),10)]"
         },
-        "rdshGalleryImageSKU": {
-            "type": "string",
-            "metadata": {
-                "description": "Gallery image SKU."
-            }
-        },
         "rdshNumberOfInstances": {
             "type": "int",
             "metadata": {
                 "description": "Number of session hosts that will be created and added to the hostpool."
             }
-        },
-        "rdshVmSize": {
-            "type": "string",
-            "metadata": {
-                "description": "The size of the session host VMs."
-            },
-            "defaultValue": "Standard_A2"
         },
         "rdshVMDiskType": {
             "type": "string",
@@ -39,6 +48,13 @@
             },
             "defaultValue": "SSD"
         },
+        "rdshVmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "The size of the session host VMs."
+            },
+            "defaultValue": "Standard_A2"
+        },
         "existingDomainusername": {
             "type": "string",
             "metadata": {
@@ -49,18 +65,6 @@
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
-            }
-        },
-        "VmImageVhdUri": {
-            "type": "string",
-            "metadata": {
-                "description": "URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
-            }
-        },
-        "storageaccount": {
-            "type": "string",
-            "metadata": {
-                "description": "The storage account containing the custom VHD."
             }
         },
         "vhds": {
@@ -90,7 +94,13 @@
             }
         }
     },
-    "variables": {},
+    "variables": {
+        "galleryPublisher": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'MicrosoftWindowsDesktop', 'MicrosoftwindowsServer')]",
+        "galleryOffer": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'Windows-10', 'WindowsServer')]",
+        "gallerySku": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'rs5-evd', parameters('rdshGalleryImageSKU'))]",
+        "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
+        "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]"
+    },
     "resources": [
         {
             "apiVersion": "2015-06-15",
@@ -141,15 +151,15 @@
                 },
                 "storageProfile": {
                     "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "[parameters('rdshGalleryImageSKU')]",
+                        "publisher": "[variables('galleryPublisher')]",
+                        "offer": "[variables('galleryOffer')]",
+                        "sku": "[variables('gallerySku')]",
                         "version": "latest"
                     },
                     "osDisk": {
                         "createOption": "FromImage",
                         "vhd": {
-                            "uri": "[concat(reference(parameters('storageaccount'), '2016-01-01').primaryEndpoints.blob, parameters('vhds'), copyindex(), '-osdisk.vhd')]"
+                            "uri": "[concat(reference(variables('storageaccount'), '2016-01-01').primaryEndpoints.blob, parameters('vhds'), copyindex(), '-osdisk.vhd')]"
                         },
                         "name": "[concat(parameters('rdshPrefix'), copyindex(),'-osDisk')]"
                     }
@@ -164,7 +174,7 @@
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
                         "enabled": "[equals(parameters('rdshVMDiskType'), 'HDD')]",
-                        "storageUri": "[reference(parameters('storageaccount'), '2016-01-01').primaryEndpoints.blob]"
+                        "storageUri": "[reference(variables('storageaccount'), '2016-01-01').primaryEndpoints.blob]"
                     }
                 }
             }
