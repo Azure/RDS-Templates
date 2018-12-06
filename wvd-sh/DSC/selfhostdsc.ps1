@@ -106,6 +106,18 @@ $scriptUrl = "$BaseUrl/$enableScript"
                         ValueType   = "DWORD"
 		}
 
+# TermServ Redirection
+
+		Registry TimeZoneRedirection
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+                        ValueName   = "fEnableTimeZoneRedirection"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+                
+
 
 # 5k resolution
 		Registry MaxMonitors
