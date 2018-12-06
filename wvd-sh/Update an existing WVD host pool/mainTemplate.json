@@ -166,12 +166,16 @@
                 ]
             }
         },
-        {
-            "type": "Microsoft.Compute/availabilitySets",
-            "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
-            "apiVersion": "2015-06-15",
-            "location": "[resourceGroup().location]"
-        },
+      {
+        "apiVersion": "2016-04-30-preview",
+        "type": "Microsoft.Compute/availabilitySets",
+        "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
+        "location": "[resourceGroup().location]",
+        "properties": {
+          "platformUpdateDomainCount": 5,
+          "platformFaultDomainCount": 2
+        }
+      },
         {
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat(variables('rdshPrefix'), copyindex())]",
