@@ -144,19 +144,6 @@
     },
   "resources": [
     {
-      "apiVersion": "2016-04-30-preview",
-      "type": "Microsoft.Compute/availabilitySets",
-      "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "platformUpdateDomainCount": 5,
-        "platformFaultDomainCount": 2
-      },
-      "sku": {
-        "name": "[variables('avSetSKU')]"
-      }
-    },
-    {
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[concat(variables('rdshPrefix'), copyindex(), '-nic')]",
       "apiVersion": "2015-06-15",
@@ -178,7 +165,13 @@
           }
         ]
       }
-    },   
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]"
+    },
     {
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(variables('rdshPrefix'), copyindex())]",
@@ -265,6 +258,36 @@
         "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]",
         "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
       ]
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
+      "location": "[resourceGroup().location]",
+      "condition": "[not(parameters('rdshIsWindowsServer'))]",
+      "dependsOn": [
+        "vmCreation-linkedTemplate"
+      ],
+      "copy": {
+        "name": "rdsh-dsc-loop",
+        "count": "[parameters('rdshNumberOfInstances')]"
+      },
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "JsonADDomainExtension",
+        "typeHandlerVersion": "1.3",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "Name": "[parameters('domainToJoin')]",
+          "OUPath": "",
+          "User": "[concat(parameters('domainToJoin'),'\\', variables('existingDomainUsername'))]",
+          "Restart": "true",
+          "Options": "3"
+        },
+        "protectedSettings": {
+          "Password": "[parameters('existingDomainPassword')]"
+        }
+      }
     },
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
