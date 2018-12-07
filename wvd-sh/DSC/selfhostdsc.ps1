@@ -77,6 +77,14 @@ $scriptUrl = "$BaseUrl/$enableScript"
                         ValueData   = 10
                         ValueType   = "DWORD"
 		}
+		Registry ProfileEnable
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
+                        ValueName   = "DisableRegistryLocalRedirect"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
 
 
 # TermServ limits       
