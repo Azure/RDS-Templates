@@ -77,6 +77,14 @@ $scriptUrl = "$BaseUrl/$enableScript"
                         ValueData   = 10
                         ValueType   = "DWORD"
 		}
+		Registry DisableRegistryLocalRedirect
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
+                        ValueName   = "DisableRegistryLocalRedirect"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
 
 
 # TermServ limits       
@@ -105,6 +113,18 @@ $scriptUrl = "$BaseUrl/$enableScript"
                         ValueData   = 86400000
                         ValueType   = "DWORD"
 		}
+
+# TermServ Redirection
+
+		Registry TimeZoneRedirection
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+                        ValueName   = "fEnableTimeZoneRedirection"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+                
 
 
 # 5k resolution
@@ -165,6 +185,53 @@ $scriptUrl = "$BaseUrl/$enableScript"
 
 # End of 5k Resolution
 
+
+# Edge defaults
+
+		Registry ConfigureOpenMicrosoftEdgeWith
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Internet Settings"
+                        ValueName   = "ConfigureOpenMicrosoftEdgeWith"
+                        ValueData   = 3
+                        ValueType   = "DWORD"
+		}
+		Registry DisableLockdownOfStartPages
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Internet Settings"
+                        ValueName   = "DisableLockdownOfStartPages"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+		Registry ConfigureHomeButton
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Internet Settings"
+                        ValueName   = "ConfigureHomeButton"
+                        ValueData   = 0
+                        ValueType   = "DWORD"
+		}
+		Registry UnlockHomeButton
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Internet Settings"
+                        ValueName   = "UnlockHomeButton"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+		Registry ProvisionedHomePages
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Internet Settings"
+                        ValueName   = "ProvisionedHomePages"
+                        ValueData   = "<https://www.office.com/?auth=2&from=WVD>"
+		}
+
+
+
+
+
 		`
 			Group AddAdminGroups {
 				GroupName        = 'administrators'
@@ -172,6 +239,7 @@ $scriptUrl = "$BaseUrl/$enableScript"
 					MembersToInclude = $Admins
 			}
 
+# End Edge defaults
 
 		Script OutlookCacheMode {
 
