@@ -235,7 +235,7 @@
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
         "scriptUri": "[concat(parameters('_artifactsLocation'),'/Scripts/Script.ps1',parameters('_artifactsLocationSasToken'))]",
-        "deployAgentUri": "[concat(parameters('_artifactsLocation'),'/Scripts/DeployAgent.zip',parameters('_artifactsLocationSasToken'))]",
+        "deployAgentUri": "[concat(parameters('_artifactsLocation'),'/Scripts/DeployAgent.zip',parameters('_artifactsLocationSasToken'))]"
     },
     "resources": [
         {
