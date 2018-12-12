@@ -229,9 +229,6 @@ $scriptUrl = "$BaseUrl/$enableScript"
 		}
 
 
-
-
-
 		`
 			Group AddAdminGroups {
 				GroupName        = 'administrators'
@@ -240,6 +237,19 @@ $scriptUrl = "$BaseUrl/$enableScript"
 			}
 
 # End Edge defaults
+
+# Start Outlook
+
+		Registry PreventIndexingEmailAttachments
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
+                        ValueName   = "PreventIndexingEmailAttachments"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+
+
 
 		Script OutlookCacheMode {
 
