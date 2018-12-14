@@ -282,17 +282,18 @@ else
     
     Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName`n$DAgentInstall"
 
+    # TODO: Change TryAddSessionHost to become a class and support both Set-RdsSessionHost or Get-RdsSessionHost
     # Add rdsh vm to hostpool
-    Write-Log -Message "Adding rdsh host  $SessionHostName to hostpool $HostPoolName "
+    #Write-Log -Message "Adding rdsh host  $SessionHostName to hostpool $HostPoolName "
 
-    $addRdsh = TryAddSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName
-    $rdshName = $addRdsh.SessionHostName | Out-String -Stream
-    $poolName = $addRdsh.hostpoolname | Out-String -Stream
+    #$addRdsh = TryAddSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName
+    #$rdshName = $addRdsh.SessionHostName | Out-String -Stream
+    #$poolName = $addRdsh.hostpoolname | Out-String -Stream
   
     Write-Log -Message "Activating Windows Virtual Desktop SKU"
     ActivateWvdSku -ActivationKey $ActivationKey
 
-    Write-Log -Message "Successfully added $rdshName VM to $poolName"
+    #Write-Log -Message "Successfully added $rdshName VM to $poolName"
 
     Write-Log -Message "Reeboting VM"
     Shutdown -r -t 90
