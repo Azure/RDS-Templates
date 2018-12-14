@@ -94,7 +94,7 @@ $scriptUrl = "$BaseUrl/$enableScript"
 			Ensure      = "Present"
                         Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
                         ValueName   = "MaxIdleTime"
-                        ValueData   = 900000
+                        ValueData   = 3600000
                         ValueType   = "DWORD"
 		}
 		Registry MaxDisconnectionTime
