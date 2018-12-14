@@ -178,5 +178,3 @@ Function Get-StoredCredential {
         return $Credential
     }
 }
-
-Get-StoredCredential -UserName ssa 
