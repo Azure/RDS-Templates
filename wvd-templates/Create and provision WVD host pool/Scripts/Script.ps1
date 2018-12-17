@@ -101,41 +101,94 @@ function ActivateWvdSku
     dism /online /Enable-Feature /FeatureName:AppServerClient /NoRestart /Quiet
 }
 
-function TryAddSessionHost
+class PsRdsSessionHost
 {
-    param
-    (
-        [Parameter(Mandatory = $true)] 
-        [string]$TenantName,
-        [Parameter(Mandatory = $true)] 
-        [string]$HostPoolName,
-        [Parameter(Mandatory = $true)] 
-        [string]$SessionHostName,
-        [Parameter(Mandatory = $false)]
-        [int]$TimeoutInMin=900 
-    )
-    
-    $sessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true -ErrorAction SilentlyContinue
+    [string]$TenantName = [string]::Empty
+    [string]$HostPoolName = [string]::Empty
+    [string]$SessionHostName = [string]::Empty
+    [int]$TimeoutInMin=900 
 
-    $StartTime = Get-Date
-    while ($sessionHost -eq $null)
-    {
-        Start-Sleep (60..120 | Get-Random)
-        Write-Log -Message "Retrying Add SessionHost..."
-        $sessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $true -ErrorAction SilentlyContinue
+    PsRdsSessionHost() {}
 
-        if ((get-date).Subtract($StartTime).Minutes -gt $TimeoutInMin)
-        {
-            if ($sessionHost -eq $null)
-            {
-                Write-Log -Message "An error ocurred while adding session host:`nSessionHost:$SessionHostname`nHostPoolName:$HostPoolNmae`nTenantName:$TenantName`nError Message: $($error[0] | Out-String)"
-                throw "An error ocurred while adding session host:`nSessionHost:$SessionHostname`nHostPoolName:$HostPoolNmae`nTenantName:$TenantName`nError Message: $($error[0] | Out-String)"
-            }
-        }
+    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName) {
+        $this.TenantName = $TenantName
+        $this.HostPoolName = $HostPoolName
+        $this.SessionHostName = $SessionHostName
     }
 
-    return $sessionHost
+    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName, [int]$TimeoutInMin) {
+        
+        if ($TimeoutInMin -gt 1800)
+        {
+            throw "TimeoutInMin is too high, maximum value is 1800"
+        }
+
+        $this.TenantName = $TenantName
+        $this.HostPoolName = $HostPoolName
+        $this.SessionHostName = $SessionHostName
+        $this.TimeoutInMin = $TimeoutInMin
+    }
+
+    #Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost
+
+    hidden [object] _trySessionHost([string]$operation)
+    {
+        if ($operation -ne "get" -and $operation -ne "set")
+        {
+            throw "PsRdsSessionHost: Invalid operation: $operation. Valid Operations are get or set"
+        }
+
+        $specificToSet=@{$true = "-AllowNewSession `$true"; $false = ""}[$operation -eq "set"]
+        $commandToExecute="$operation-RdsSessionHost -TenantName `$this.TenantName -HostPoolName `$this.HostPoolName -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
+
+        $sessionHost = (Invoke-Expression $commandToExecute )
+
+        $StartTime = Get-Date
+        while ($sessionHost -eq $null)
+        {
+            Start-Sleep (60..120 | Get-Random)
+            Write-Output "PsRdsSessionHost: Retrying Add SessionHost..."
+            $sessionHost = (Invoke-Expression $commandToExecute)
+    
+            if ((get-date).Subtract($StartTime).Minutes -gt $this.TimeoutInMin)
+            {
+                if ($sessionHost -eq $null)
+                {
+                    Write-Output "PsRdsSessionHost: An error ocurred while adding session host:`nSessionHost:$this.SessionHostname`nHostPoolName:$this.HostPoolNmae`nTenantName:$this.TenantName`nError Message: $($error[0] | Out-String)"
+                    return $null
+                }
+            }
+        }
+
+        return $sessionHost
+    }
+
+    [object] SetSessionHost() {
+
+        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName))
+        {
+            return $null
+        }
+        else
+        {
+            
+            return ($this._trySessionHost("set"))
+        }
+    }
+    
+    [object] GetSessionHost() {
+
+        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName))
+        {
+            return $null
+        }
+        else
+        {
+            return ($this._trySessionHost("get"))
+        }
+    }
 }
+
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
@@ -282,18 +335,19 @@ else
     
     Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName`n$DAgentInstall"
 
-    # TODO: Change TryAddSessionHost to become a class and support both Set-RdsSessionHost or Get-RdsSessionHost
-    # Add rdsh vm to hostpool
-    #Write-Log -Message "Adding rdsh host  $SessionHostName to hostpool $HostPoolName "
+    # Get Session Host Info
+    Write-Log -Message "Getting rdsh host $SessionHostName information"
 
-    #$addRdsh = TryAddSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName
-    #$rdshName = $addRdsh.SessionHostName | Out-String -Stream
-    #$poolName = $addRdsh.hostpoolname | Out-String -Stream
+    [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = ([PsRdsSessionHost]::new($TenantName,$HostPoolName,$SessionHostName)).GetSessionHost()
+    Write-Log -Message "RDSH object content: `n$($rdsh | Out-String)"
+
+    $rdshName = $rdsh.SessionHostName | Out-String -Stream
+    $poolName = $rdsh.hostpoolname | Out-String -Stream
   
     Write-Log -Message "Activating Windows Virtual Desktop SKU"
     ActivateWvdSku -ActivationKey $ActivationKey
 
-    #Write-Log -Message "Successfully added $rdshName VM to $poolName"
+    Write-Log -Message "Successfully added $rdshName VM to $poolName"
 
     Write-Log -Message "Reeboting VM"
     Shutdown -r -t 90
