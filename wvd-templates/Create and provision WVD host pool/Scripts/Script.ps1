@@ -129,8 +129,6 @@ class PsRdsSessionHost
         $this.TimeoutInMin = $TimeoutInMin
     }
 
-    #Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost
-
     hidden [object] _trySessionHost([string]$operation)
     {
         if ($operation -ne "get" -and $operation -ne "set")
