@@ -1,4 +1,4 @@
-﻿<#
+<#
 Copyright 2018 Peopletech Group
 
 Version 1.0 June 2018
@@ -94,10 +94,10 @@ $CurrentPath = Split-Path $script:MyInvocation.MyCommand.Path
 $XMLPath = "$CurrentPath\Config.xml"
 
 #Log path
-$rdmiTenantlog = "$CurrentPath\RdmiTenantScale.log"
+$rdmiTenantlog = "$CurrentPath\WVDTenantScale.log"
 
 #usage log path
-$RdmiTenantUsagelog = "$CurrentPath\RdmiTenantUsage.log"
+$RdmiTenantUsagelog = "$CurrentPath\WVDTenantUsage.log"
 
 
 ###### Verify XML file ######
@@ -134,7 +134,7 @@ $Variable.RDMIScale.Deployment | ForEach-Object {$_.Variable} | Where-Object {$_
 
 Set-Variable -Name KeyPath -Scope Global -Value "C:\Scripts"
 . C:\Scripts\Functions-PSStoredCredentials.ps1
-Import-Module "C:\Program Files\WindowsPowerShell\Modules\RdsPowerShell\Microsoft.RDInfra.RDPowershell.dll"
+Import-Module .\Microsoft.RdInfra.RdPowershell.dll
 
 #Get credential
 $Credential = Get-StoredCredential -UserName $RDServicePrincipal
@@ -650,4 +650,3 @@ else
 }#Scale hostPools
 
 Write-Log 3 "End WVD Tenant Scale Optimization." "Info"
-
