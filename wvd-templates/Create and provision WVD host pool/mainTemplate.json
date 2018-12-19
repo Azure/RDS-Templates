@@ -337,7 +337,6 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
             "location": "[resourceGroup().location]",
-            "condition": "[not(parameters('rdshIsWindowsServer'))]",
             "dependsOn": [
                 "vmCreation-linkedTemplate"
             ],
