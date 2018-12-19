@@ -338,7 +338,8 @@
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "vmCreation-linkedTemplate"
+                "vmCreation-linkedTemplate",
+                "rdsh-dsc-loop"
             ],
             "copy": {
                 "name": "rdsh-domain-join-loop",
