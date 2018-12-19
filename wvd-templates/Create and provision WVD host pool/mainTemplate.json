@@ -328,18 +328,7 @@
                 "settings": {
                     "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
                     "configurationFunction": "Configuration.ps1\\SessionHost",
-                    "properties": {
-                        "domainName": "[parameters('domainToJoin')]",
-                        "adminCreds": {
-                            "userName": "[variables('existingDomainUsername')]",
-                            "Password": "PrivateSettingsRef:AdminPassword"
-                        }
-                    }
-                },
-                "protectedSettings": {
-                    "items": {
-                        "adminPassword": "[parameters('existingDomainPassword')]"
-                    }
+                    "properties": {}
                 }
             }
         },
@@ -348,7 +337,6 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
             "location": "[resourceGroup().location]",
-            "condition": "[not(parameters('rdshIsWindowsServer'))]",
             "dependsOn": [
                 "vmCreation-linkedTemplate"
             ],
