@@ -339,7 +339,7 @@
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "vmCreation-linkedTemplate",
-                "rdsh-dsc-loop"
+                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/dscextension'))]"
             ],
             "copy": {
                 "name": "rdsh-domain-join-loop",
