@@ -194,6 +194,7 @@ $ErrorActionPreference = "Stop"
 # Setting to Tls12 due to Azure web app security requirements
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+$ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
 $DeployAgentLocation = "C:\DeployAgent"
 $rdshIs1809OrLaterBool = ($rdshIs1809OrLater -eq "True")
 
@@ -205,8 +206,16 @@ if (Test-Path $DeployAgentLocation)
 
 New-Item -Path "$DeployAgentLocation" -ItemType directory -Force 
 
+# Locating and extracting DeployAgent.zip
+Write-Log -Message "Locating DeployAgent.zip within Custom Script Extension folder structure: $ScriptPath"
+$DeployAgentFromRepo = (Get-ChildItem $ScriptPath\ -Filter DeployAgent.zip -Recurse | Select-Object).FullName
+if ((-not $DeployAgentFromRepo) -or (-not (Test-Path $DeployAgentFromRepo)))
+{
+    throw "DeployAgent.zip file not found at $ScriptPath"
+}
+
 Write-Log -Message "Extracting 'Deployagent.zip' file into '$DeployAgentLocation' folder inside VM"
-Expand-Archive "DeployAgent.zip" -DestinationPath "$DeployAgentLocation" 
+Expand-Archive $DeployAgentFromRepo -DestinationPath "$DeployAgentLocation" 
 
 Write-Log -Message "Changing current folder to Deployagent folder: $DeployAgentLocation"
 Set-Location "$DeployAgentLocation"
