@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool/"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -390,7 +390,7 @@
                     ]
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File ./Scripts/Script.ps1',' -RdBrokerURL \"', parameters('rdBrokerURL'), '\"', ' ', ' -DefinedTenantGroupName \"', parameters('existingTenantGroupName'), '\"',' ',' -TenantName \"', parameters('existingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('hostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('registrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('tenantAdminUpnOrApplicationId'), '\"',' ', ' -TenantAdminPassword \"', parameters('tenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"', ' ', ' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"', ' ', ' -aadTenantId \"', parameters('aadTenantId'), '\"', ' ', ' -ActivationKey \"', parameters('activationKey'), '\"')]"
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File ./Script.ps1',' -RdBrokerURL \"', parameters('rdBrokerURL'), '\"', ' ', ' -DefinedTenantGroupName \"', parameters('existingTenantGroupName'), '\"',' ',' -TenantName \"', parameters('existingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('hostPoolName'), '\"',' ', ' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' ', ' -Description \"', variables('HostPoolDescription'), '\"',' ', ' -Hours \"', variables('registrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('tenantAdminUpnOrApplicationId'), '\"',' ', ' -TenantAdminPassword \"', parameters('tenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"', ' ', ' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"', ' ', ' -aadTenantId \"', parameters('aadTenantId'), '\"', ' ', ' -ActivationKey \"', parameters('activationKey'), '\"')]"
                 }
             }
         }
