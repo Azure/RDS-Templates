@@ -206,7 +206,7 @@ if (Test-Path $DeployAgentLocation)
 New-Item -Path "$DeployAgentLocation" -ItemType directory -Force 
 
 Write-Log -Message "Extracting 'Deployagent.zip' file into '$DeployAgentLocation' folder inside VM"
-Expand-Archive ".\Scripts\DeployAgent.zip" -DestinationPath "$DeployAgentLocation" 
+Expand-Archive ".\DeployAgent.zip" -DestinationPath "$DeployAgentLocation" 
 
 Write-Log -Message "Changing current folder to Deployagent folder: $DeployAgentLocation"
 Set-Location "$DeployAgentLocation"
