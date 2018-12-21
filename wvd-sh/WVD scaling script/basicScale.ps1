@@ -1,5 +1,5 @@
 <#
-Copyright 2018 Peopletech Group
+Copyright 2018 Microsoft
 
 Version 1.0 June 2018
 
@@ -128,22 +128,24 @@ $Variable.RDMIScale.Azure | ForEach-Object {$_.Variable} | Where-Object {$_.Name
 $Variable.RDMIScale.RdmiScaleSettings | ForEach-Object {$_.Variable} | Where-Object {$_.Name -ne $null} | ForEach-Object {Set-ScriptVariable -Name $_.Name -Value $_.Value}
 $Variable.RDMIScale.Deployment | ForEach-Object {$_.Variable} | Where-Object {$_.Name -ne $null} | ForEach-Object {Set-ScriptVariable -Name $_.Name -Value $_.Value}
 
+##### Load functions/module #####
+# Set-Variable -Name KeyPath -Scope Global -Value "C:\scaling"
+. $CurrentPath\Functions-PSStoredCredentials.ps1
+Import-Module $CurrentPath\PowershellModules\Microsoft.RdInfra.RdPowershell.dll
+
+
 #Load Azure ps module and WVD Module
 #region Custom for customer: Login with delgated admin
-#Load functions/module
-
-Set-Variable -Name KeyPath -Scope Global -Value "C:\Scripts"
-. C:\Scripts\Functions-PSStoredCredentials.ps1
-Import-Module .\Microsoft.RdInfra.RdPowershell.dll
 
 #Get credential
-$Credential = Get-StoredCredential -UserName $RDServicePrincipal
+$Credential = Get-StoredCredential -UserName $Username
 
 #Login
 #Setting RDS Context
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $authentication = Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $AADTenantId -Credential $Credential 
 #endregion
+
 #The following three lines is to use password/secret based authentication for service principal, to use certificate based authentication, please comment those lines, and uncomment the above line
 $secpasswd = ConvertTo-SecureString $AADServicePrincipalSecret -AsPlainText -Force
 $appcreds = New-Object System.Management.Automation.PSCredential ($AADApplicationId, $secpasswd)
