@@ -87,7 +87,6 @@ Function Set-ScriptVariable ($Name, $Value) {
     Invoke-Expression ("`$Script:" + $Name + " = `"" + $Value + "`"")
 }
 
-
 $CurrentPath = Split-Path $script:MyInvocation.MyCommand.Path
 
 #XML path
@@ -129,31 +128,49 @@ $Variable.RDMIScale.RdmiScaleSettings | ForEach-Object {$_.Variable} | Where-Obj
 $Variable.RDMIScale.Deployment | ForEach-Object {$_.Variable} | Where-Object {$_.Name -ne $null} | ForEach-Object {Set-ScriptVariable -Name $_.Name -Value $_.Value}
 
 ##### Load functions/module #####
-# Set-Variable -Name KeyPath -Scope Global -Value "C:\scaling"
 . $CurrentPath\Functions-PSStoredCredentials.ps1
 Import-Module $CurrentPath\PowershellModules\Microsoft.RdInfra.RdPowershell.dll
 
-
-#Load Azure ps module and WVD Module
-#region Custom for customer: Login with delgated admin
-
-#Get credential
+# Login with delgated admin
 $Credential = Get-StoredCredential -UserName $Username
 
-#Login
-#Setting RDS Context
+# Setting RDS Context
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$authentication = Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $AADTenantId -Credential $Credential 
+
+# Check if service principal or user accoung is being user 
+if (!$isServicePrincipal) {
+    # if standard account is provided login in WVD with that account 
+    
+    try {
+
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBroker -Credential $Credential 
+    
+    }
+    catch {
+    
+        Write-Log 1 "Failed to authenticate with WVD Tenant with standart account: $($_.exception.message)" "Error"
+        Exit 1
+    
+    }
+    Write-Log 3 "Authenticating as standard account." "Info"
+} 
+else {
+    # if service principal account is provided login in WVD with that account 
+
+    try {
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $AADTenantId -Credential $Credential -ServicePrincipal 
+    } 
+    catch {
+        Write-Log 1 "Failed to authenticate with WVD Tenant with service principal: $($_.exception.message)" "Error"
+        Exit 1
+    }
+    Write-Log 3 "Authenticating as service principal account." "Info"
+}
+
 #endregion
 
-#The following three lines is to use password/secret based authentication for service principal, to use certificate based authentication, please comment those lines, and uncomment the above line
-$secpasswd = ConvertTo-SecureString $AADServicePrincipalSecret -AsPlainText -Force
-$appcreds = New-Object System.Management.Automation.PSCredential ($AADApplicationId, $secpasswd)
-
-Login-AzureRmAccount -ServicePrincipal -Credential $appcreds -TenantId $AADTenantId
-
 #select the current Azure Subscription specified in the config
-Select-AzureRmSubscription -SubscriptionName $CurrentAzureSubscriptionName
+Select-AzureRmSubscription -SubscriptionName $currentAzureSubscriptionName
             
 #Construct Begin time and End time for the Peak period
 $CurrentDateTime = Get-Date
@@ -162,37 +179,20 @@ Write-Log 3 "Starting WVD Tenant Hosts Scale Optimization: Current Date Time is:
 $BeginPeakDateTime = [DateTime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 	
 $EndPeakDateTime = [DateTime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
-	
+
     
 #check the calculated end time is later than begin time in case of time zone
 if ($EndPeakDateTime -lt $BeginPeakDateTime) {
     $EndPeakDateTime = $EndPeakDateTime.AddDays(1)
 }	
-
-#get the available HostPoolnames in the WVD Tenant
-try {
-    Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $AADTenantId -Credential $Credentia
-    #Set-RdsContext -DeploymentUrl $Rdbroker -Credential $credential
-    
-}
-catch {
-    Write-Log 1 "Failed to retrieve WVD Tenant Hostpools: $($_.exception.message)" "Error"
-    Exit 1
-}
-
-
-
 	
 #check if it is during the peak or off-peak time
 if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
     Write-Host "It is in peak hours now"
     Write-Log 3 "Peak hours: starting session hosts as needed based on current workloads." "Info"
-    #Get the Session Hosts in the hostPool
-		
+    #Get the Session Hosts in the hostPool		
    try {
-        $RDSessionHost = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -ErrorAction SilentlyContinue
-            
-            
+        $RDSessionHost = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -ErrorAction SilentlyContinue                       
     }
     catch {
         Write-Log 1 "Failed to retrieve RDS session hosts in hostPool $($hostPoolName) : $($_.exception.message)" "Error"
@@ -201,8 +201,7 @@ if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDa
 		
     #Get the User Sessions in the hostPool
     try {    
-        $hostPoolUserSessions = Get-RdsUserSession -TenantName $tenantName -HostPoolName $hostPoolName
-              
+        $hostPoolUserSessions = Get-RdsUserSession -TenantName $tenantName -HostPoolName $hostPoolName              
     }
     catch {
         Write-Log 1 "Failed to retrieve user sessions in hostPool:$($hostPoolName) with error: $($_.exception.message)" "Error"
@@ -223,14 +222,12 @@ if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDa
 			
         #Get Azure Virtual Machines
         try {
-            $TenantLogin = Add-AzureRmAccount -ServicePrincipal -Credential $appcreds -TenantId $AADTenantId
-				
+            $TenantLogin = Add-AzureRmAccount -ServicePrincipal -Credential $appcreds -TenantId $AADTenantId				
         }
         catch {
             Write-Log 1 "Failed to retrieve deployment information from Azure with error: $($_.exception.message)" "Error"
             Exit 1
-        }
-			
+        }			
 			
         #foreach ($roleInstance in $Deployment)
         #{
@@ -243,11 +240,9 @@ if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDa
             if ($roleInstance.PowerState -eq "VM running") {
                 $numberOfRunningHost = $numberOfRunningHost + 1
 						
-                #we need to calculate available capacity of sessions
+                #we need to calculate available capacity of sessions						
 						
-						
-                $roleSize = Get-AzureRmVMSize -Location $roleInstance.Location | Where-Object {$_.Name -eq $roleInstance.HardwareProfile.VmSize}
-                       
+                $roleSize = Get-AzureRmVMSize -Location $roleInstance.Location | Where-Object {$_.Name -eq $roleInstance.HardwareProfile.VmSize}                       
 						
                 $AvailableSessionCapacity = $AvailableSessionCapacity + $roleSize.NumberOfCores * $SessionThresholdPerCPU
 						
@@ -521,8 +516,10 @@ else
 										
                             } 
                             catch {
+
                                 Write-Log 1 "Failed to set drain mode on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
                                 Exit 1
+
                             }
 								
                             #notify user to log off session
@@ -533,8 +530,10 @@ else
                                 
                             }
                             catch {
+
                                 Write-Log 1 "Failed to retrieve user sessions in hostPool: $($hostPoolName) with error: $($_.exception.message)" "Error"
                                 Exit 1
+
                             }
                             $hostUserSessionCount = ($hostPoolUserSessions | Where-Object -FilterScript { $_.sessionhostname -eq $sessionHost }).Count
 							Write-Log 1 "Counting the current sessions on the host $sessionhost...:$hostUserSessionCount" "Info"	
@@ -548,12 +547,14 @@ else
                                         #send notification
                                         try {
 
-                                            Send-RdsUserSessionMessage -TenantName $tenantName -HostPoolName $hostPoolName -SessionHostName $sessionHost -SessionId $session.sessionid -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoConfirm:$false
+                                            Send-RdsUserSessionMessage -TenantName $tenantName -HostPoolName $hostPoolName -SessionHostName $sessionHost -SessionId $session.sessionid -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will logged off in $($LimitSecondsToForceLogOffUser) seconds." #-NoConfirm:$false
                                             
                                         }
                                         catch {
+
                                             Write-Log 1 "Failed to send message to user with error: $($_.exception.message)" "Error"
                                             Exit 1
+                                        
                                         }
                                     }
 											
@@ -581,7 +582,7 @@ else
                                         #log off user
                                         try {
     													
-                                            Invoke-RdsUserSessionLogoff -TenantName $tenantName -HostPoolName $hostPoolName -SessionHostName $session.SessionHostName -SessionId $session.SessionId -NoConfirm:$false
+                                            Invoke-RdsUserSessionLogoff -TenantName $tenantName -HostPoolName $hostPoolName -SessionHostName $session.SessionHostName -SessionId $session.SessionId -NoConfirm #:$false
                                                    
                                             $existingSession = $existingSession - 1
                                         }
@@ -591,8 +592,7 @@ else
                                         }
                                     }
                                 }
-                            }
-									
+                            }									
 									
 									
                             #check the session count before shutting down the VM
@@ -600,7 +600,7 @@ else
 										
                                 #shutdown the Azure VM
                                 try {
-                                    Write-Log 1 "Stopping Azure VM: $($roleInstance.Name) and waiting for it to start up ..." "Info"
+                                    Write-Log 1 "Stopping Azure VM: $($roleInstance.Name) and waiting for it to complete ..." "Info"
                                     Stop-AzureRmVM -Name $roleInstance.Name -Id $roleInstance.Id -Force -ErrorAction SilentlyContinue
 											
                                 }

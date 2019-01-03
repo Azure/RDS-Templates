@@ -4,19 +4,23 @@
   <Azure>
     <!--Settings required to authenticate to Azure subscription -->
     <Variable Name="AADTenantId" Value="ad638926-c4fa-462d-8b20-1dd3f162028b"/>
-    <Variable Name="AADApplicationId" Value="b7aae514-4f13-453a-bb11-f2ebb9305d79"/>
-    <Variable Name="AADAppCertThumbprint" Value="Thumbprint of the cert added to the AAD Service Principal"/>
-    <Variable Name="AADServicePrincipalSecret" Value="pWQ91Eh4mdtooltCkAbKJ4JDmLdjSoMyj0034y5FIgw="/>
+    <Variable Name="AADApplicationId" Value="74e98113-e2ca-48c8-963d-fe33ae70c756"/>    
+    <!-- use AADServicePrincipalSecret filed for testing only, set via New-StoredCredential -->
+    <Variable Name="AADServicePrincipalSecret" Value=""/>
+    <!--<Variable Name="AADAppCertThumbprint" Value="Thumbprint of the cert added to the AAD Service Principal"/>-->    
     <!--Azure subscription name -->
-    <Variable Name="CurrentAzureSubscriptionName" Value="Microsoft Azure"/>
+    <Variable Name="currentAzureSubscriptionName" Value="Microsoft Azure"/>
     <!--Resource Group Name -->
     <Variable Name="tenantName" Value="RdsIsmTenant1"/>
     <Variable Name="hostPoolName" Value="WS2016-p"/>
   </Azure>
   <Deployment>
     <Variable Name="Rdbroker" Value="https://rdbroker.wvd.microsoft.com"/>
-    <Variable Name="Username" Value="ssa@green10ant.com"/>
-    <!--<Variable Name="Password" Value="Edno1Nula0!"/>-->
+    <Variable Name="Username" Value="74e98113-e2ca-48c8-963d-fe33ae70c756"/>
+    <!-- use Password filed for testing only, set via New-StoredCredential -->
+    <Variable Name="Password" Value=""/> 
+    <!-- accepted values True/False, True indicate service principal is being used to authenticate to WVD -->
+    <Variable Name="isServicePrincipal" Value="True" />
   </Deployment>
   <RdmiScaleSettings>
     <!-- Begin of the peak usage time -->
