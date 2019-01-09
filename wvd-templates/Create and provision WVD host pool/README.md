@@ -8,7 +8,7 @@ This template creates virtual machines and registers them as session hosts to a 
 
 Follow the guidance below for entering the appropriate parameters for your scenario.
 
-### VM image
+## VM image
 When creating the virtual machines, you have three options:
 - Azure Gallery image
 - Custom VHD from blob storage
@@ -74,12 +74,12 @@ Enter the following properties to connect the virtual machines to the appropriat
 - **Existing Subnet Name**
 - **Virtual Network Resource Group Name**
 
-### Windows Virtual Desktop Persistent Desktop
+## Windows Virtual Desktop host pool type
 The following property will change the default template behavior from setting up a non-persistent environment to persistent if changed to True.
 
 - **Enable Persistent Desktop**. Default value is False, change to True to creat the host pool with persistent desktops.
 
-### Authentication to Windows Virtual Desktop
+## Authentication to Windows Virtual Desktop
 Enter the following information to authenticate to Windows Virtual Desktop and register the new virtual machines as session hosts to a new or existing host pool.
 
 - **Rd Broker URL**
