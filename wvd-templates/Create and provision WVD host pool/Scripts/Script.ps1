@@ -55,7 +55,10 @@ param(
     [string]$AadTenantId,
 
     [Parameter(Mandatory = $true)]
-    [string]$ActivationKey
+    [string]$ActivationKey,
+
+    [Parameter(Mandatory = $true)]
+    [string]$EnablePersistentDesktop="False"
 
 )
 
@@ -194,6 +197,7 @@ $ErrorActionPreference = "Stop"
 # Setting to Tls12 due to Azure web app security requirements
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+$BlnEnablePersistentDesktop = [System.Convert]::ToBoolean($EnablePersistentDesktop)
 $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
 $DeployAgentLocation = "C:\DeployAgent"
 $rdshIs1809OrLaterBool = ($rdshIs1809OrLater -eq "True")
@@ -288,21 +292,22 @@ else
 
     # Checking if host pool exists. If not, create a new one with the given HostPoolName
     Write-Log -Message "Checking Hostpool exists inside the Tenant"
-    $HPName = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
-    if ($HPName)
+    $HostPool = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
+    if ($HostPool)
     {
         Write-log -Message "Hostpool exists inside tenant: $TenantName"
     }
     else
     {
-        $HPName = New-RdsHostPool -TenantName $TenantName -Name $HostPoolName -Description $Description -FriendlyName $FriendlyName
-        $HName = $HPName.name | Out-String -Stream
+        $EnablePersistentDesktopOption=@{$true = "-Persistent"; $false = ""}[$BlnEnablePersistentDesktop -eq $true]
+        $HostPool = Invoke-Expression( "New-RdsHostPool -TenantName `$TenantName -Name `$HostPoolName -Description `$Description -FriendlyName `$FriendlyName $EnablePersistentDesktopOption")
+        $HName = $HostPool.name | Out-String -Stream
         Write-Log -Message "Successfully created new Hostpool: $HName"
     }
 
     # Setting UseReverseConnect property to true
     Write-Log -Message "Checking Hostpool UseResversconnect is true or false"
-    if ($HPName.UseReverseConnect -eq $False)
+    if ($HostPool.UseReverseConnect -eq $False)
     {
         Write-Log -Message "UseReverseConnect is false, it will be changed to true"
         Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true

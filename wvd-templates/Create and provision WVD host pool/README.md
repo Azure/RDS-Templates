@@ -8,7 +8,7 @@ This template creates virtual machines and registers them as session hosts to a 
 
 Follow the guidance below for entering the appropriate parameters for your scenario.
 
-## VM image
+### VM image
 When creating the virtual machines, you have three options:
 - Azure Gallery image
 - Custom VHD from blob storage
@@ -30,7 +30,6 @@ Ignore the following parameters :
 - **Rdsh Use Managed Disks**
 - **Storage Account Resource Group Name**
 
-
 ### Custom VHD from blob storage
 By selecting a custom VHD from blob storage, you can create your own image locally through Hyper-V or on an Azure VM. Enter or select values for the following parameters:
 - **Rdsh Image Source**, select **CustomVHD**.
@@ -43,8 +42,6 @@ Ignore the following parameters:
 - **Rdsh Gallery Image SKU**
 - **Rdsh Custom Image Source Name**
 - **Rdsh Custom Image Source Resource Group**
-
-
 
 ### Custom Azure Image resource from a resource group
 By selecting a custom Azure Image resource from a resource group, you can create your own image locally through Hyper-V or an Azure VM but have the portability and flexibility of image management through an Azure Image resource. Enter or select values for the following parameters:
@@ -77,17 +74,26 @@ Enter the following properties to connect the virtual machines to the appropriat
 - **Existing Subnet Name**
 - **Virtual Network Resource Group Name**
 
-## Authentication to Windows Virtual Desktop
+### Windows Virtual Desktop Persistent Desktop
+The following property will change the default template behavior from setting up a non-persistent environment to persistent if changed to True.
+
+- **Enable Persistent Desktop**. Default value is False, change to True to creat the host pool with persistent desktops.
+
+### Authentication to Windows Virtual Desktop
 Enter the following information to authenticate to Windows Virtual Desktop and register the new virtual machines as session hosts to a new or existing host pool.
+
 - **Rd Broker URL**
 - **Existing Tenant Group Name**. If you were not given a specific tenant group name, leave this value as "Default Tenant Group".
 - **Existing Tenant Name**
 - **Host Pool Name**
 - **Tenant Admin Upn or Application Id**. If you are creating a new host pool, this principal must be assigned either the *RDS Owner* or *RDS Contributor* role at the tenant scope (or higher). If you are registering these virtual machines to an existing host pool, this principal must be assigned either the *RDS Owner* or *RDS Contributor* role at the host pool scope (or higher).
+  
   > [!WARNING]
   You cannot enter a UPN that requires MFA to successfully authenticate. If you do, this template will create the virtual machines but fail to register them to a host pool.
+
 - **Tenant Admin Password**
 - **Is Service Principal**. If you select **True** for **Is Service Principal**, enter your Azure AD tenant ID for the **Aad Tenant Id** parameter to properly identify the directory of your service principal and successfully authenticate to Windows Virtual Desktop. Otherwise, leave the **Aad Tenant Id** parameter empty.
+
 
 Click the button below to deploy:
 
