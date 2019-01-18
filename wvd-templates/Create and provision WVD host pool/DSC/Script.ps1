@@ -34,19 +34,10 @@ param(
     [string]$Hours,
 
     [Parameter(mandatory = $true)]
-    [string]$TenantAdminUPN,
+    [PSCredential]$TenantAdminCredentials,
 
     [Parameter(mandatory = $true)]
-    [string]$TenantAdminPassword,
-
-    [Parameter(mandatory = $true)]
-    [string]$localAdminUserName,
-
-    [Parameter(mandatory = $true)]
-    [string]$localAdminPassword,
-
-    [Parameter(mandatory = $true)]
-    [string]$rdshIs1809OrLater,
+    [PSCredential]$ADAdminCredentials,
 
     [Parameter(mandatory = $false)]
     [string]$isServicePrincipal = "False",
@@ -59,7 +50,6 @@ param(
 
     [Parameter(Mandatory = $true)]
     [string]$EnablePersistentDesktop="False"
-
 )
 
 function Write-Log
@@ -90,18 +80,6 @@ function Write-Log
     { 
         Write-Error $_.Exception.Message 
     } 
-}
-
-function ActivateWvdSku
-{
-    param
-    (
-        [Parameter(Mandatory = $true)] 
-        [string]$ActivationKey
-    )
-
-    cscript c:\windows\system32\slmgr.vbs /ipk $ActivationKey
-    dism /online /Enable-Feature /FeatureName:AppServerClient /NoRestart /Quiet
 }
 
 class PsRdsSessionHost
@@ -190,17 +168,45 @@ class PsRdsSessionHost
     }
 }
 
+$ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
+
+# Testing if it is a ServicePrincipal and validade that AadTenant ID in this case is not null or empty
+if ($isServicePrincipal)
+{
+    if ([string]::IsNullOrEmpty($AadTenantId))
+    {
+        throw "When IsServicePrincipal = True, AadTenant ID is mandatory. Please provide a valid AadTenant ID."
+    }
+}
 
 # Setting to Tls12 due to Azure web app security requirements
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $BlnEnablePersistentDesktop = [System.Convert]::ToBoolean($EnablePersistentDesktop)
-$ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
+
 $DeployAgentLocation = "C:\DeployAgent"
-$rdshIs1809OrLaterBool = ($rdshIs1809OrLater -eq "True")
+
+Write-Log -Message "Identifying if this VM is Build >= 1809"
+$rdshIs1809OrLaterBool = $false
+$rdshIsServer = $true
+$OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+if ($OSVersionInfo -ne $null)
+{
+    if ($OSVersionInfo.ReleaseId -ne $null)
+    {
+        Write-Log -Message "Build: $($OSVersionInfo.ReleaseId)"
+        $rdshIs1809OrLaterBool=@{$true = $true; $false = $false}[$OSVersionInfo.ReleaseId -ge 1809]
+    }
+
+    if ($OSVersionInfo.InstallationType -ne $null)
+    {
+        Write-Log -Message "OS Installation type: $($OSVersionInfo.InstallationType)"
+        $rdshIsServer=@{$true = $true; $false = $false}[$OSVersionInfo.InstallationType -eq "Server"]
+    }
+}
 
 Write-Log -Message "Creating a folder inside rdsh vm for extracting deployagent zip file"
 if (Test-Path $DeployAgentLocation)
@@ -241,11 +247,6 @@ else
     Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
 
     Write-Log -Message "Imported RDMI PowerShell modules successfully"
-    
-    $Securepass = ConvertTo-SecureString -String $TenantAdminPassword -AsPlainText -Force
-    $Credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($TenantAdminUPN, $Securepass)
-    $AdminSecurepass = ConvertTo-SecureString -String $localAdminPassword -AsPlainText -Force
-    $adminCredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($localAdminUserName, $AdminSecurepass)
 
     # Getting fqdn of rdsh vm
     $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
@@ -255,11 +256,11 @@ else
     # Authenticating to WVD
     if ($isServicePrincipal -eq "True")
     {
-        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $Credentials -ServicePrincipal -TenantId $AadTenantId 
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId 
     }
     else
     {
-        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $Credentials
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
     }
     $obj = $authentication | Out-String
 
@@ -338,7 +339,7 @@ else
                                        -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
                                        -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" `
                                        -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" `
-                                       -AdminCredentials $adminCredentials `
+                                       -AdminCredentials $ADAdminCredentials `
                                        -TenantName $TenantName `
                                        -PoolName $HostPoolName `
                                        -RegistrationToken $Registered.Token `
@@ -355,12 +356,6 @@ else
 
     $rdshName = $rdsh.SessionHostName | Out-String -Stream
     $poolName = $rdsh.hostpoolname | Out-String -Stream
-  
-    Write-Log -Message "Activating Windows Virtual Desktop SKU"
-    ActivateWvdSku -ActivationKey $ActivationKey
 
     Write-Log -Message "Successfully added $rdshName VM to $poolName"
-
-    Write-Log -Message "Reeboting VM"
-    Shutdown -r -t 90
 }
