@@ -171,7 +171,7 @@ $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
 $ErrorActionPreference = "Stop"
 
 # Testing if it is a ServicePrincipal and validade that AadTenant ID in this case is not null or empty
-if ($isServicePrincipal)
+if ($isServicePrincipal -eq "True")
 {
     if ([string]::IsNullOrEmpty($AadTenantId))
     {
