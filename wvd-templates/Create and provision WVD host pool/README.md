@@ -20,8 +20,6 @@ Enter the appropriate parameters depending on the image option you choose.
 By selecting Azure Gallery, you can select up-to-date images provided by Microsoft and other publishers. Enter or select values for the following parameters:
 - **Rdsh Image Source**, select **Gallery**.
 - **Rdsh Gallery Image SKU**
-- **Rdsh Is Windows Server**. Note: Windows 10 Enterprise multi-session is *not* considered Windows Server.
-- **Rdsh is 1809 Or Later**. Note that Windows Server 2019 is an 1809 release.
 
 Ignore the following parameters :
 - **Vm Image Vhd Uri**
@@ -34,8 +32,6 @@ Ignore the following parameters :
 By selecting a custom VHD from blob storage, you can create your own image locally through Hyper-V or on an Azure VM. Enter or select values for the following parameters:
 - **Rdsh Image Source**, select **CustomVHD**.
 - **Vm Image Vhd Uri**
-- **Rdsh Is Windows Server**. Note: Windows 10 Enterprise multi-session is *not* considered Windows Server.
-- **Rdsh is 1809 Or Later**. Note that Windows Server 2019 is an 1809 release.
 - **Rdsh Use Managed Disks**. If you select **false** for **Rdsh Use Managed Disks**, enter the name of the resource group containing the storage account and image for the **Storage Account Resource Group Name** parameter. Otherwise, leave the **Storage Account Resource Group Name** parameter empty.
 
 Ignore the following parameters:
@@ -48,8 +44,6 @@ By selecting a custom Azure Image resource from a resource group, you can create
 - **Rdsh Image Source**, select **CustomImage**.
 - **Rdsh Custom Image Source Name**
 - **Rdsh Custom Image Source Resource Group**
-- **Rdsh Is Windows Server**. Note: Windows 10 Enterprise multi-session is *not* considered Windows Server.
-- **Rdsh is 1809 Or Later**. Note that Windows Server 2019 is an 1809 release.
 
 Ignore the following parameters:
 - **Vm Image Vhd Uri**
