@@ -87,7 +87,7 @@ configuration SessionHost
                     return @{'Result' = ''}
                 }
                 SetScript = {
-                    & "$using:ScriptPath\Script.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName -FriendlyName $using:FriendlyName -Description $using:Description -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -ActivationKey $using:ActivationKey -EnablePersistentDesktop $using:EnablePersistentDesktop
+                    & "$using:ScriptPath\Script.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName -FriendlyName $using:FriendlyName -Description $using:Description -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -EnablePersistentDesktop $using:EnablePersistentDesktop
                 }
                 TestScript = {
                     return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
@@ -103,7 +103,7 @@ configuration SessionHost
                     return @{'Result' = ''}
                 }
                 SetScript = {
-                    & "$using:ScriptPath\Script.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName -FriendlyName $using:FriendlyName -Description $using:Description -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -ActivationKey $using:ActivationKey -EnablePersistentDesktop $using:EnablePersistentDesktop
+                    & "$using:ScriptPath\Script.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName -FriendlyName $using:FriendlyName -Description $using:Description -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -EnablePersistentDesktop $using:EnablePersistentDesktop
                 }
                 TestScript = {
                     return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
@@ -141,7 +141,18 @@ configuration SessionHost
                         }
 
                         $CodeToSearch = "Write-Log `"Starting DSC Extension ...`""
-                        $CodeToReplace = "Write-Log `"Starting DSC Extension ...`"; while ((get-service -Name WinRM).Status -ne `"Running`"){Write-Log `"Waiting for WinRM...`" ; Start-Sleep 10}"
+                        $CodeToReplace = "Write-Log `"Starting DSC Extension ...`"`n
+            `$Start = Get-Date
+            `$TimeOutInMin = 15
+            While ((get-service -Name WinRM).Status -ne `"Running`")
+            {
+                Write-Log `"Waiting for WinRM...`"
+                if (-(`$Start.Subtract((Get-Date)).minutes) -ge `$TimeOutInMin)
+                {
+                    throw(`"Reached out timeout of `$TimeOutInMin minute(s) while waiting for WinRM`")
+                }
+                Start-Sleep 10
+            }"
 
                         (Get-Content $DscModuleFile).replace($CodeToSearch, $CodeToReplace) | Set-Content $DscModuleFile
 
