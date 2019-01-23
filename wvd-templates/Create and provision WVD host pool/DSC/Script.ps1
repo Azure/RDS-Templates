@@ -253,12 +253,16 @@ else
     # Authenticating to WVD
     if ($isServicePrincipal -eq "True")
     {
+        Write-Log  -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
         $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId 
     }
     else
     {
+        Write-Log  -Message "Authenticating using user $TenantAdminCredentials.username "
         $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
     }
+
+    Write-Log  -Message "Authentication object: $($authentication | Out-String)"
     $obj = $authentication | Out-String
 
     if ($authentication)
