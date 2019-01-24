@@ -60,20 +60,6 @@
                 "description": "(Required when rdshImageSource = CustomImage) Resource group name for the managed disk, if you choose to provide one."
             }
         },
-        "rdshIsWindowsServer": {
-            "type": "bool",
-            "metadata": {
-                "description": "If the VM is a Windows Server SKU (2016, 2012R2, etc.), enter true. If the VM is a Windows client SKU (Windows 10, Windows 7, etc.)."
-            },
-            "defaultValue": false
-        },
-        "rdshIs1809OrLater": {
-            "type": "bool",
-            "metadata": {
-                "description": "If the VM is Windows Server 2019+ or Windows 10 1809+, enter true. Else, enter false."
-            },
-            "defaultValue": true
-        },
         "rdshNamePrefix": {
             "type": "string",
             "metadata": {
@@ -223,7 +209,7 @@
             }
         },
         "activationKey": {
-            "type": "securestring",
+            "type": "string",
             "metadata": {
                 "description": "Windows Virtual Desktop Activation Key (required until this process gets available in Azure platform)"
             }
@@ -236,15 +222,11 @@
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
-        "HostPoolFriendlyName": "Hostpool",
-        "HostPoolDescription": "Created through ARM template",
+        "hostPoolFriendlyName": "Hostpool",
+        "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
-        "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
-        "scriptUri": "[concat(parameters('_artifactsLocation'),'/Scripts/Script.ps1',parameters('_artifactsLocationSasToken'))]",
-        "scriptParameters": "[concat('-RdBrokerURL \"', parameters('rdBrokerURL'), '\"', ' -DefinedTenantGroupName \"', parameters('existingTenantGroupName'), '\"',' -TenantName \"', parameters('existingTenantName'), '\"',' -HostPoolName \"', parameters('hostPoolName'), '\"',' -FriendlyName \"', variables('HostPoolFriendlyName'), '\"',' -Description \"', variables('HostPoolDescription'), '\"',' -Hours \"', variables('registrationExpirationHours'), '\"',' -TenantAdminUPN \"', parameters('tenantAdminUpnOrApplicationId'), '\"',' -TenantAdminPassword \"', parameters('tenantAdminPassword'), '\"',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"',' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"',' -aadTenantId \"', parameters('aadTenantId'), '\"',' -ActivationKey \"', parameters('activationKey'), '\"',' -EnablePersistentDesktop ', parameters('enablePersistentDesktop'))]",
-        "deployAgentUri": "[concat(parameters('_artifactsLocation'),'/Scripts/DeployAgent.zip',parameters('_artifactsLocationSasToken'))]",
-        "deployAgentScriptRelativePath":"[if(equals(parameters('_artifactsLocationSasToken'), ''), '', 'Scripts/')]"
+        "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]"
     },
     "resources": [
         {
@@ -319,36 +301,10 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'dscextension')]",
-            "location": "[resourceGroup().location]",
-            "condition": "[parameters('rdshIsWindowsServer')]",
-            "dependsOn": [
-                "vmCreation-linkedTemplate"
-            ],
-            "copy": {
-                "name": "rdsh-dsc-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
-            "properties": {
-                "publisher": "Microsoft.Powershell",
-                "type": "DSC",
-                "typeHandlerVersion": "2.11",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\SessionHost",
-                    "properties": {}
-                }
-            }
-        },
-        {
-            "apiVersion": "2015-06-15",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "vmCreation-linkedTemplate",
-                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/dscextension'))]"
+                "vmCreation-linkedTemplate"
             ],
             "copy": {
                 "name": "rdsh-domain-join-loop",
@@ -374,32 +330,50 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), copyindex(),'/','rdAgent')]",
+            "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'dscextension')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/dscextension'))]",
-                "[concat('Microsoft.Compute/virtualMachines/', concat(variables('rdshPrefix'), copyindex(),'/extensions/joindomain'))]"
+                "rdsh-domain-join-loop"
             ],
             "copy": {
-                "name": "rdsh-vm-loop",
+                "name": "rdsh-dsc-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
-            "tags": {
-                "displayName": "script"
-            },
             "properties": {
-                "publisher": "Microsoft.Compute",
-                "type": "CustomScriptExtension",
-                "typeHandlerVersion": "1.8",
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "fileUris": [
-                        "[variables('deployAgentUri')]",
-                        "[variables('scriptUri')]"
-                    ]
+                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "configurationFunction": "Configuration.ps1\\SessionHost",
+                    "properties": {
+                        "TenantAdminCredentials":{
+                            "userName":"[parameters('tenantAdminUpnOrApplicationId')]",
+                            "password":"PrivateSettingsRef:tenantAdminPassword"
+                        },
+                        "ADAdminCredentials":{
+                            "userName":"[parameters('existingDomainUPN')]",
+                            "password":"PrivateSettingsRef:adAdminPassword"
+                        },
+                        "RDBrokerURL":"[parameters('rdBrokerURL')]",
+                        "DefinedTenantGroupName":"[parameters('existingTenantGroupName')]",
+                        "TenantName":"[parameters('existingTenantName')]",
+                        "HostPoolName":"[parameters('hostPoolName')]",
+                        "Description":"[variables('hostPoolDescription')]",
+                        "FriendlyName":"[variables('hostPoolFriendlyName')]",
+                        "Hours":"[variables('registrationExpirationHours')]",
+                        "isServicePrincipal":"[parameters('isServicePrincipal')]",
+                        "AadTenantId":"[parameters('aadTenantId')]",
+                        "ActivationKey":"[parameters('activationKey')]",
+                        "EnablePersistentDesktop":"[parameters('enablePersistentDesktop')]"
+                    }
                 },
-                "protectedSettings": {
-                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File ./', variables('deployAgentScriptRelativePath'),'Script.ps1',' ', variables('scriptParameters'))]"
+                "ProtectedSettings":{
+                    "items":{
+                        "tenantAdminPassword":"[parameters('tenantAdminPassword')]",
+                        "adAdminPassword":"[parameters('existingDomainPassword')]"
+                    }
                 }
             }
         }
