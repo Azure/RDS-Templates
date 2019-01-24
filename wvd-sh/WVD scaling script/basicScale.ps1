@@ -430,8 +430,8 @@ else
     #Get the Session Hosts in the hostPool
     try {
             
-        $RDSessionHost = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName
-            
+        $RDSessionHost = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName            
+			
                        
     }
     catch {
@@ -450,13 +450,16 @@ else
 			
         #refresh the Azure VM list
         try {
+
             $TenantLogin = Add-AzureRmAccount -ServicePrincipal -Credential $appcreds -TenantId $AADTenantId
-				
-				
+								
+	
         }
         catch {
+
             Write-Log 1 "Failed to retrieve Azure deployment information for cloud service: $ResourceGroupName with error: $($_.exception.message)" "Error"
             Exit 1
+
         }
 			
         #foreach ($roleInstance in $Deployment)
@@ -535,10 +538,12 @@ else
                                 Exit 1
 
                             }
+
                             $hostUserSessionCount = ($hostPoolUserSessions | Where-Object -FilterScript { $_.sessionhostname -eq $sessionHost }).Count
 							Write-Log 1 "Counting the current sessions on the host $sessionhost...:$hostUserSessionCount" "Info"	
                             #Write-Log 1 "Counting the current sessions on the host..." "Info"
                             $existingSession = 0
+
                             foreach ($session in $hostPoolUserSessions) {
                                 
                                 if ($session.SessionHostName -eq $sessionHost) {
@@ -592,8 +597,8 @@ else
                                         }
                                     }
                                 }
-                            }									
-									
+                            }																                            		
+		 
 									
                             #check the session count before shutting down the VM
                             if ($existingSession -eq 0) {
@@ -624,11 +629,23 @@ else
                                     #Start-Sleep -Seconds 15
                                     }
                                 }
+
+                                #ensure the Azure VMs that are off have the AllowNewSession mode set to True
+                                try {
+                                                                               
+                                   Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true -ErrorAction SilentlyContinue
+										
+                                } 
+                                catch {
+
+                                    Write-Log 1 "Failed to set drain mode on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
+                                    Exit 1
+
+                                }
 										
                                 $vm = Get-AzureRmVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
 										
-                                $roleSize = Get-AzureRmVMSize -Location $roleInstance.Location | Where-Object {$_.Name -eq $roleInstance.HardwareProfile.VmSize}
-										
+                                $roleSize = Get-AzureRmVMSize -Location $roleInstance.Location | Where-Object {$_.Name -eq $roleInstance.HardwareProfile.VmSize}										
 										
                                 #decrement the number of running session host
                                 $numberOfRunningHost = $numberOfRunningHost - 1
