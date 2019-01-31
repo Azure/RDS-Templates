@@ -41,10 +41,10 @@
                 "description": "(Required when rdshImageSource = Gallery) Gallery image SKU."
             },
             "allowedValues": [
-                "Windows-10-Enterprise-multi-session",
+                "Windows-10-Enterprise-for-Virtual-Desktops-Preview",
                 "2016-Datacenter"
             ],
-            "defaultValue": "Windows-10-Enterprise-multi-session"
+            "defaultValue": "Windows-10-Enterprise-for-Virtual-Desktops-Preview"
         },
         "rdshCustomImageSourceName": {
             "type": "string",
