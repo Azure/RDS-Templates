@@ -36,9 +36,6 @@ configuration SessionHost
         [string]$AadTenantId,
     
         [Parameter(Mandatory = $true)]
-        [string]$ActivationKey,
-    
-        [Parameter(Mandatory = $true)]
         [string]$EnablePersistentDesktop="False"
     )
 
