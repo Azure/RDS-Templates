@@ -251,7 +251,7 @@ else
     }
     else
     {
-        Write-Log  -Message "Authenticating using user $TenantAdminCredentials.username "
+        Write-Log  -Message "Authenticating using user $($TenantAdminCredentials.username) "
         $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
     }
 
