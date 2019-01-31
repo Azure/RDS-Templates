@@ -17,7 +17,7 @@
         "rdshGalleryImageSKU": {
             "type": "string",
             "allowedValues": [
-                "Windows-10-Enterprise-for-Virtual-Desktops-Preview",
+                "Windows-10-Enterprise-multi-session",
                 "2016-Datacenter"
             ],
             "metadata": {
@@ -95,9 +95,9 @@
         }
     },
     "variables": {
-        "galleryPublisher": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-for-Virtual-Desktops-Preview'), 'MicrosoftWindowsDesktop', 'MicrosoftwindowsServer')]",
-        "galleryOffer": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-for-Virtual-Desktops-Preview'), 'Windows-10', 'WindowsServer')]",
-        "gallerySku": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-for-Virtual-Desktops-Preview'), 'rs5-evd', parameters('rdshGalleryImageSKU'))]",
+        "galleryPublisher": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'MicrosoftWindowsDesktop', 'MicrosoftwindowsServer')]",
+        "galleryOffer": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'Windows-10', 'WindowsServer')]",
+        "gallerySku": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'rs5-evd', parameters('rdshGalleryImageSKU'))]",
         "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'HDD'), 'Standard_LRS', 'Premium_LRS')]"
     },
     "resources": [
