@@ -79,6 +79,13 @@ $scriptUrl = "$BaseUrl/$enableScript"
                         ValueData   = 10
                         ValueType   = "DWORD"
 		}
+		Registry LogLocation
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Logging"
+                        ValueName   = "LogDir"
+                        ValueData   = "\\wvdselfhost-sofs\fsxlogs\$($env:computername)"
+		}
 		Registry DisableRegistryLocalRedirect
 		{
 			Ensure      = "Present"
@@ -88,6 +95,16 @@ $scriptUrl = "$BaseUrl/$enableScript"
                         ValueType   = "DWORD"
 		}
 
+# Diasble MMA to change watson settings
+
+		Registry DisableMMAWatson
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HealthService\Parameters"
+                        ValueName   = "Disable CDR Agent"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
 
 # TermServ limits       
 
