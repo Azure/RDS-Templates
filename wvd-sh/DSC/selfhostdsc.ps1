@@ -2,10 +2,8 @@ Configuration SelfhostConfig {
 
         param(
                         [parameter(Mandatory=$true)][string]$Prof,
-                        [parameter(Mandatory=$true)][string] $BaseUrl,
                         [parameter(Mandatory=$true)][string[]] $Admins,
-                        [string] $SXSMsi,
-                        [string] $enableScript
+                        [parameter(Mandatory=$true)][string[]] $FSXLogPath
              )
 
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
@@ -16,23 +14,6 @@ Configuration SelfhostConfig {
 				@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
 				@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
 				@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="syncwindowsetting"; value=1})
-
-#Find the SKU
-$osinfo = Get-WmiObject -Class Win32_OperatingSystem -Namespace "root\cimv2"
-if($osinfo.Caption.Contains("Enterprise"))
-{
-        $rdshName = "AppServerClient"
-}
-else
-{
-        $rdshName = "RDS-RD-Server"
-}
-
-
-
-$msiUrl = "$BaseUrl/$SXSMsi"
-$scriptUrl = "$BaseUrl/$enableScript"
-
 
 
 	Node "localhost"
@@ -79,6 +60,13 @@ $scriptUrl = "$BaseUrl/$enableScript"
                         ValueData   = 10
                         ValueType   = "DWORD"
 		}
+		Registry LogLocation
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Logging"
+                        ValueName   = "LogDir"
+                        ValueData   = "$FSXLogPath\$($env:computername)"
+		}
 		Registry DisableRegistryLocalRedirect
 		{
 			Ensure      = "Present"
@@ -88,6 +76,16 @@ $scriptUrl = "$BaseUrl/$enableScript"
                         ValueType   = "DWORD"
 		}
 
+# Diasble MMA to change watson settings
+
+		Registry DisableMMAWatson
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HealthService\Parameters"
+                        ValueName   = "Disable CDR Agent"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
 
 # TermServ limits       
 
@@ -136,7 +134,6 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
 				ValueName   = "MaxMonitors"
 				ValueData   = 4
-                                DependsOn ="[Script]SXSStack"
 		}
 		Registry MaxXResolution
 		{
@@ -145,7 +142,6 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				ValueName   = "MaxXResolution"
 				Hex         = $true
 				ValueData   = "00001400"
-                                DependsOn ="[Script]SXSStack"
 		}
 		Registry MaxYResolution
 		{
@@ -154,7 +150,6 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				ValueName   = "MaxYResolution"
 				Hex         = $true
 				ValueData   = "00000b40"
-                                DependsOn ="[Script]SXSStack"
 		}
 		Registry MaxMonitorsS
 		{
@@ -162,7 +157,6 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\rdp-sxs"
 				ValueName   = "MaxMonitors"
 				ValueData   = 4
-                                DependsOn ="[Script]SXSStack"
 		}
 		Registry MaxXResolutionS
 		{
@@ -171,7 +165,6 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				ValueName   = "MaxXResolution"
 				Hex         = $true
 				ValueData   = "00001400"
-                                DependsOn ="[Script]SXSStack"
 		}
 		Registry MaxYResolutionS
 		{
@@ -180,7 +173,6 @@ $scriptUrl = "$BaseUrl/$enableScript"
 				ValueName   = "MaxYResolution"
 				Hex         = $true
 				ValueData   = "00000b40"
-                                DependsOn ="[Script]SXSStack"
 		}
 
 
@@ -319,68 +311,6 @@ $scriptUrl = "$BaseUrl/$enableScript"
 			GetScript = {@{Result="Ok"}}
 		}
 
-
-                Script SXSStack {
-
-                        SetScript = { 
-                                function Download($url, $output)
-                                {
-
-                                        $wc = New-Object System.Net.WebClient
-                                                $wc.DownloadFile($url, $output)   
-
-                                }
-
-                                if([environment]::OSversion.Version.Build -lt 16773)
-                                {
-# Intall SXS msi
-
-                                        Download $using:msiUrl ".\sxs.msi"
-
-# Wait for msi to finish
-                                                Start-Process msiexec.exe -Wait -ArgumentList '/I .\sxs.msi /quiet'
-
-                                                $DataStamp = get-date -Format yyyyMMddTHHmmss
-                                                $logFile = 'SXSinstall-{0}.log' -f $DataStamp
-                                                $MSIArguments = @(
-                                                                "/i"
-                                                                "sxs.msi"
-                                                                "/qn"
-                                                                "/norestart"
-                                                                "/L*v"
-                                                                $logFile
-                                                                )
-                                                Start-Process "msiexec.exe" -ArgumentList $MSIArguments -Wait -NoNewWindow 
-
-                                }
-                                else
-                                { 
-                                        Get-Location|Write-Verbose
-                                        Write-Verbose "Donloading $($using:scriptUrl)"
-                                        Download $using:scriptUrl  ".\enable.ps1"
-                                        Write-Verbose "Calling .\enable.ps1"
-
-                                        $enablesxs_deploy_status = PowerShell.exe -ExecutionPolicy Unrestricted -File "enable.ps1"
-                                        $sts = $enablesxs_deploy_status.ExitCode
-                                        Write-Verbose "Enabling Built-in RD SxS Stack on VM Complete. Exit code=$sts"
-                                }
-                        }
-                        TestScript = {
-                                $out = qwinsta
-                                $result =$false
-                                foreach($line in $out)
-                                {
-                                        if($line.Contains("rdp-sxs")) {
-                                                Write-Verbose "Found sxs stack:$line"
-                                                $result = $true
-                                        }
-
-                                }
-
-                                $result        
-                        }
-			GetScript = {@{Result="Ok"}}
-                }
 
 	}
 
