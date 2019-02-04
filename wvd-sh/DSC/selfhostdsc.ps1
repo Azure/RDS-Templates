@@ -102,7 +102,7 @@ Configuration SelfhostConfig {
 			Ensure      = "Present"
                         Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
                         ValueName   = "MaxDisconnectionTime"
-                        ValueData   = 86400000
+                        ValueData   = 28800000
                         ValueType   = "DWORD"
 		}
 		Registry RemoteAppLogoffTimeLimit
@@ -110,7 +110,7 @@ Configuration SelfhostConfig {
 			Ensure      = "Present"
                         Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
                         ValueName   = "RemoteAppLogoffTimeLimit"
-                        ValueData   = 86400000
+                        ValueData   = 28800000
                         ValueType   = "DWORD"
 		}
 
