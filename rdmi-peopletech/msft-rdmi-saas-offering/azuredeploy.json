@@ -1,0 +1,182 @@
+{
+    "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
+    "contentVersion": "1.0",
+    "parameters": {
+        "RDBrokerURL": {
+            "type": "String",
+            "metadata": {
+                "description": "RDBroker URL of the infrastructure.   Ex: https://rdbroker-uiyyft4gnswme.azurewebsites.net"
+            }
+        },
+        "ResourceURL": {
+            "type": "String",
+            "metadata": {
+                "description": "Resource URL of the infrastructure.  Ex: https://ContosoVM.onmicrosoft.com/RDInframsftrdmisaasf658465e2b4948fe85e"
+            }
+        },
+        "AzureLoginID": {
+            "type": "String",
+            "metadata": {
+                "description": "Your Azure Login ID"
+            }
+        },
+        "AzureLoginPassword": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "Your Azure Login AzureLoginPassword"
+            }
+        }
+    },
+    "variables": {
+        "accountName": "msftsaas-autoAccount",
+        "credentialName": "DefaultAzureCredential",
+        "runbookName": "msftsaasbook",
+        "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/",
+        "scriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/rdmi-peopletech/msft-rdmi-saas-offering/scripts/New-RdmiMgmtSetup.ps1",
+        "fileURI": "[concat(variables('baseURL'),'/msft-rdmi-saas-offering.zip')]",
+
+        "sku": "Free",
+        "automationVariables": [
+            {
+                "name": "Username",
+                "value": "[concat('\"',parameters('AzureLoginID'),'\"')]"
+            },
+            {
+                "name": "password",
+                "value": "[concat('\"',parameters('AzureLoginPassword'),'\"')]"
+            },
+            {
+                "name": "subsriptionid",
+                "value": "[concat('\"',subscription().subscriptionId,'\"')]"
+            },
+            {
+                "name": "resourceGroupName",
+                "value": "[concat('\"',resourceGroup().name,'\"')]"
+            },
+            {
+                "name": "Location",
+                "value": "[concat('\"',resourceGroup().location,'\"')]"
+            },
+            {
+                "name": "RDBrokerURL",
+                "value": "[concat('\"',parameters('RDBrokerURL'),'\"')]"
+            },
+            {
+                "name": "ResourceURL",
+                "value": "[concat('\"',parameters('ResourceURL'),'\"')]"
+            },
+            {
+                "name": "fileURI",
+                "value": "[concat('\"',variables('baseURL'),'/msft-rdmi-saas-offering.zip','\"')]"
+            }
+        ],
+	"uniqueBase": "[toLower(uniqueString(parameters('ResourceURL'), resourceGroup().id, deployment().name))]",
+    "temp": "[concat(variables('uniqueBase') , variables('uniqueBase'), substring(variables('uniqueBase'), 0, 10))]",
+    "g": "[replace(variables('temp'), 'g', '0')]",
+    "h": "[replace(variables('g'), 'h', '1')]",
+    "i": "[replace(variables('h'), 'i', '2')]",
+    "j": "[replace(variables('i'), 'j', '3')]",
+    "k": "[replace(variables('j'), 'k', '4')]",
+    "l": "[replace(variables('k'), 'l', '5')]",
+    "m": "[replace(variables('l'), 'm', '6')]",
+    "n": "[replace(variables('m'), 'n', '7')]",
+    "o": "[replace(variables('n'), 'o', '8')]",
+    "p": "[replace(variables('o'), 'p', '9')]",
+    "q": "[replace(variables('p'), 'q', 'a')]",
+    "r": "[replace(variables('q'), 'r', 'b')]",
+    "s": "[replace(variables('r'), 's', 'c')]",
+    "t": "[replace(variables('s'), 't', 'd')]",
+    "u": "[replace(variables('t'), 'u', 'e')]",
+    "v": "[replace(variables('u'), 'v', 'f')]",
+    "w": "[replace(variables('v'), 'w', '0')]",
+    "x": "[replace(variables('w'), 'x', '1')]",
+    "y": "[replace(variables('x'), 'y', '2')]",
+    "z": "[replace(variables('y'), 'z', '3')]",
+    "newGuid": "[concat(substring(variables('z'), 0, 8), '-', substring(variables('z'), 9, 4), '-', substring(variables('z'), 14, 4), '-', substring(variables('z'), 19, 4), '-', substring(variables('z'), 24, 12))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Automation/automationAccounts/variables",
+            "name": "[concat(variables('accountname'), '/', variables('automationVariables')[copyIndex()].name)]",
+            "apiVersion": "2015-10-31",
+            "copy": {
+                "name": "variableLoop",
+                "count": "[length(variables('automationVariables'))]"
+            },
+            "tags": {},
+            "properties": {
+                "value": "[variables('automationVariables')[copyIndex()].value]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('accountname'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts",
+            "name": "[variables('accountName')]",
+            "apiVersion": "2015-01-01-preview",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "sku": {
+                    "name": "[variables('sku')]"
+                }
+            },
+            "resources": [
+                {
+                    "type": "runbooks",
+                    "name": "[variables('runbookName')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {},
+                    "properties": {
+                        "runbookType": "PowerShell",
+                        "logProgress": "false",
+                        "logVerbose": "false",
+                        "publishContentLink": {
+                            "uri": "[variables('scriptUri')]",
+                            "version": "1.0.0.0"
+                        }
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]"
+                    ]
+                },
+                {
+                    "type": "credentials",
+                    "name": "[variables('credentialName')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {},
+                    "properties": {
+                        "userName": "[parameters('AzureLoginID')]",
+                        "password": "[parameters('AzureLoginPassword')]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]"
+                    ]
+                },
+                {
+                    "type": "jobs",
+                    "name": "[variables('newGuid')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {
+                        "key": "value"
+                    },
+                    "properties": {
+                        "runbook": {
+                            "name": "[variables('runbookName')]"
+                        }
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'), '/runbooks/',variables('runbookName'))]"
+                    ]
+                }
+            ],
+            "dependsOn": []
+        }
+    ],
+    "outputs": {}
+}

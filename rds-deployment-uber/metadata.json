@@ -1,0 +1,7 @@
+{
+    "itemDisplayName": "RDS Uber Template",
+    "description": "This template provides created a full RDS HA environment by calling several nested templates",
+    "summary": "Created a RDS HA environment",
+    "githubUsername": "fberson",
+    "dateUpdated": "2017-03-16"
+}

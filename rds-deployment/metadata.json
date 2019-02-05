@@ -1,7 +1,7 @@
 {
-  "itemDisplayName": "Basic RDS farm deployment",
-  "description": "This template creates a basic RDS farm deployment",
-  "summary": "Creates and deploys a fully functional RDS farm",
-  "githubUsername": "MahendraAgrawal",
-  "dateUpdated": "2016-10-12"
+  "itemDisplayName": "Basic RDS deployment",
+  "description": "Template creates a simple RDS deployment",
+  "summary": "Deploys and configures all required RDS infra roles and creates one session collection with specified number of RDSH hosts.",
+  "githubUsername": "mmarch",
+  "dateUpdated": "2017-07-23"
 }

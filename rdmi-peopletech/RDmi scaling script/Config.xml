@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Version 1.1.0  -->
+<RDMIScale>
+  <Azure>
+    <!--Settings required to authenticate to Azure subscription -->
+    <Variable Name="AADTenantId" Value="AAD tenant ID GUID"/>
+    <Variable Name="AADApplicationId" Value="AAD application ID GUID"/>
+    <!--<Variable Name="AADAppCertThumbprint" Value="Thumbprint of the cert added to the AAD Service Principal"/>-->
+    <Variable Name="AADServicePrincipalSecret" Value="AADServicePrincipalSecret"/>
+    <!--Azure subscription name -->
+    <Variable Name="CurrentAzureSubscriptionName" Value="SubscriptionName of the Tenant Environment"/>
+    <!--Resource Group Name -->
+    <Variable Name="tenantName" Value="Name of the Tenant"/>
+    <Variable Name="hostPoolName" Value="Name of the Hostpool"/>
+  </Azure>
+  <Deployment>
+    <Variable Name="Rdbroker" Value="RDBrokerURL of your Deployment"/>
+    <Variable Name="Username" Value="Delegated Admin UserName"/>
+    <Variable Name="Password" Value="Delegated Admin Password"/>
+  </Deployment>
+  <RdmiScaleSettings>
+    <!-- Begin of the peak usage time -->
+    <Variable Name="BeginPeakTime" Value="08:00:00"/>
+    <!-- End of the peak usage time -->
+    <Variable Name="EndPeakTime" Value="12:00:00"/>
+    <!-- Time difference between local time and UTC, in hours -->
+    <Variable Name="TimeDifferenceInHours" Value="-1" />
+    <!-- Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started -->
+    <Variable Name="SessionThresholdPerCPU" Value="2"/>
+    <!-- Minimum number of RDSH servers to keep running during off-peak usage time -->
+    <Variable Name="MinimumNumberOfRDSH" Value="1"/>
+    <!--Number of seconds to wait before forcing users to logoff. If 0, don't force users to logoff -->
+    <Variable Name="LimitSecondsToForceLogOffUser" Value="10"/>
+    <!--Message title sent to a user before forcing logoff -->
+    <Variable Name="LogOffMessageTitle" Value="System Under Maintenance"/>
+    <!--Message body to sent to a user before forcing logoff -->
+    <Variable Name="LogOffMessageBody" Value="Please save your work and logoff!"/>
+  </RdmiScaleSettings>
+</RDMIScale>
