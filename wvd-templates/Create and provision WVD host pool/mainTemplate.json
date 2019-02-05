@@ -207,12 +207,6 @@
             "metadata": {
                 "description": "Specifies an organizational unit (OU) for the domain account. Example: OU=testOU;DC=domain;DC=Domain;DC=com"
             }
-        },
-        "activationKey": {
-            "type": "string",
-            "metadata": {
-                "description": "Windows Virtual Desktop Activation Key (required until this process gets available in Azure platform)"
-            }
         }
     },
     "variables": {
@@ -365,7 +359,6 @@
                         "Hours":"[variables('registrationExpirationHours')]",
                         "isServicePrincipal":"[parameters('isServicePrincipal')]",
                         "AadTenantId":"[parameters('aadTenantId')]",
-                        "ActivationKey":"[parameters('activationKey')]",
                         "EnablePersistentDesktop":"[parameters('enablePersistentDesktop')]"
                     }
                 },

@@ -188,7 +188,6 @@ $DeployAgentLocation = "C:\DeployAgent"
 
 Write-Log -Message "Identifying if this VM is Build >= 1809"
 $rdshIs1809OrLaterBool = $false
-$rdshIsServer = $true
 $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
 if ($OSVersionInfo -ne $null)
 {
@@ -196,12 +195,6 @@ if ($OSVersionInfo -ne $null)
     {
         Write-Log -Message "Build: $($OSVersionInfo.ReleaseId)"
         $rdshIs1809OrLaterBool=@{$true = $true; $false = $false}[$OSVersionInfo.ReleaseId -ge 1809]
-    }
-
-    if ($OSVersionInfo.InstallationType -ne $null)
-    {
-        Write-Log -Message "OS Installation type: $($OSVersionInfo.InstallationType)"
-        $rdshIsServer=@{$true = $true; $false = $false}[$OSVersionInfo.InstallationType -eq "Server"]
     }
 }
 
@@ -258,7 +251,7 @@ else
     }
     else
     {
-        Write-Log  -Message "Authenticating using user $TenantAdminCredentials.username "
+        Write-Log  -Message "Authenticating using user $($TenantAdminCredentials.username) "
         $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
     }
 
