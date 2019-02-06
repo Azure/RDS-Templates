@@ -49,7 +49,7 @@ Function New-StoredCredential {
     Written by: Paul Cunningham
 
     Find me on:
-
+    
     * My Blog:	http://paulcunningham.me
     * Twitter:	https://twitter.com/paulcunningham
     * LinkedIn:	http://au.linkedin.com/in/cunninghamp/
@@ -178,3 +178,8 @@ Function Get-StoredCredential {
         return $Credential
     }
 }
+
+# Set-Variable -Name KeyPath -Scope Global -Value $path
+# New-StoredCredential -KeyPath $KeyPath
+# Get-StoredCredential -List # -KeyPath "c:\scaling"
+# Get-StoredCredential -UserName ssa@green10ant.com

@@ -15,7 +15,7 @@
     "allowUnsafe": false,
     "warningsAsErrors": true,
     "optimize": true,
-    "keyFile": "C:\\agent\\_work\\12\\s\\src\\Key.snk",
+    "keyFile": "C:\\agent\\_work\\1\\s\\src\\Key.snk",
     "emitEntryPoint": false,
     "xmlDoc": false,
     "debugType": "full"
@@ -34,21 +34,21 @@
           "Newtonsoft.Json": "11.0.2",
           "Pester": "4.3.1",
           "Microsoft.CSharp": "4.0.0.0",
-          "System.ComponentModel.Composition": "4.0.0.0",
-          "System.Core": "4.0.0.0",
           "System.Data": "4.0.0.0",
-          "System": "4.0.0.0",
           "System.Drawing": "4.0.0.0",
-          "System.IO.Compression.Reference": "4.0.0.0",
           "System.IO.Compression.FileSystem": "4.0.0.0",
-          "System.Net.Http.Reference": "4.0.0.0",
-          "System.Numerics": "4.0.0.0",
           "System.Runtime.Reference": "4.0.10.0",
           "System.Runtime.Serialization": "4.0.0.0",
           "System.Threading.Tasks.Reference": "4.0.0.0",
+          "mscorlib": "4.0.0.0",
+          "System.ComponentModel.Composition": "4.0.0.0",
+          "System.Core": "4.0.0.0",
+          "System": "4.0.0.0",
+          "System.IO.Compression.Reference": "4.0.0.0",
+          "System.Net.Http.Reference": "4.0.0.0",
+          "System.Numerics": "4.0.0.0",
           "System.Xml": "4.0.0.0",
           "System.Xml.Linq": "4.0.0.0",
-          "mscorlib": "4.0.0.0",
           "System.Collections.Concurrent.Reference": "0.0.0.0",
           "System.Collections.Reference": "0.0.0.0",
           "System.ComponentModel.Annotations": "0.0.0.0",
@@ -108,24 +108,9 @@
           ".NETFramework/v4.5.1/Microsoft.CSharp.dll": {}
         }
       },
-      "System.ComponentModel.Composition/4.0.0.0": {
-        "compile": {
-          ".NETFramework/v4.5.1/System.ComponentModel.Composition.dll": {}
-        }
-      },
-      "System.Core/4.0.0.0": {
-        "compile": {
-          ".NETFramework/v4.5.1/System.Core.dll": {}
-        }
-      },
       "System.Data/4.0.0.0": {
         "compile": {
           ".NETFramework/v4.5.1/System.Data.dll": {}
-        }
-      },
-      "System/4.0.0.0": {
-        "compile": {
-          ".NETFramework/v4.5.1/System.dll": {}
         }
       },
       "System.Drawing/4.0.0.0": {
@@ -133,24 +118,9 @@
           ".NETFramework/v4.5.1/System.Drawing.dll": {}
         }
       },
-      "System.IO.Compression.Reference/4.0.0.0": {
-        "compile": {
-          ".NETFramework/v4.5.1/System.IO.Compression.dll": {}
-        }
-      },
       "System.IO.Compression.FileSystem/4.0.0.0": {
         "compile": {
           ".NETFramework/v4.5.1/System.IO.Compression.FileSystem.dll": {}
-        }
-      },
-      "System.Net.Http.Reference/4.0.0.0": {
-        "compile": {
-          ".NETFramework/v4.5.1/System.Net.Http.dll": {}
-        }
-      },
-      "System.Numerics/4.0.0.0": {
-        "compile": {
-          ".NETFramework/v4.5.1/System.Numerics.dll": {}
         }
       },
       "System.Runtime.Reference/4.0.10.0": {
@@ -168,6 +138,41 @@
           ".NETFramework/v4.5.1/Facades/System.Threading.Tasks.dll": {}
         }
       },
+      "mscorlib/4.0.0.0": {
+        "compile": {
+          ".NETFramework/v4.5.1/mscorlib.dll": {}
+        }
+      },
+      "System.ComponentModel.Composition/4.0.0.0": {
+        "compile": {
+          ".NETFramework/v4.5.1/System.ComponentModel.Composition.dll": {}
+        }
+      },
+      "System.Core/4.0.0.0": {
+        "compile": {
+          ".NETFramework/v4.5.1/System.Core.dll": {}
+        }
+      },
+      "System/4.0.0.0": {
+        "compile": {
+          ".NETFramework/v4.5.1/System.dll": {}
+        }
+      },
+      "System.IO.Compression.Reference/4.0.0.0": {
+        "compile": {
+          ".NETFramework/v4.5.1/System.IO.Compression.dll": {}
+        }
+      },
+      "System.Net.Http.Reference/4.0.0.0": {
+        "compile": {
+          ".NETFramework/v4.5.1/System.Net.Http.dll": {}
+        }
+      },
+      "System.Numerics/4.0.0.0": {
+        "compile": {
+          ".NETFramework/v4.5.1/System.Numerics.dll": {}
+        }
+      },
       "System.Xml/4.0.0.0": {
         "compile": {
           ".NETFramework/v4.5.1/System.Xml.dll": {}
@@ -176,11 +181,6 @@
       "System.Xml.Linq/4.0.0.0": {
         "compile": {
           ".NETFramework/v4.5.1/System.Xml.Linq.dll": {}
-        }
-      },
-      "mscorlib/4.0.0.0": {
-        "compile": {
-          ".NETFramework/v4.5.1/mscorlib.dll": {}
         }
       },
       "System.Collections.Concurrent.Reference/0.0.0.0": {
@@ -565,6 +565,7 @@
           "Microsoft.AspNet.WebApi.Client": "5.2.6",
           "Microsoft.RDInfra.Diagnostics.Common": "1.0.0",
           "Microsoft.RDInfra.Shared.Common": "1.0.0",
+          "Microsoft.RDInfra.Shared.Common.Data": "1.0.0",
           "Newtonsoft.Json": "11.0.2"
         },
         "compile": {
@@ -591,6 +592,14 @@
           "Microsoft.RDInfra.Shared.Common.dll": {}
         }
       },
+      "Microsoft.RDInfra.Shared.Common.Data/1.0.0": {
+        "dependencies": {
+          "Microsoft.RDInfra.Shared.Common.Enums": "1.0.0"
+        },
+        "compile": {
+          "Microsoft.RDInfra.Shared.Common.Data.dll": {}
+        }
+      },
       "Microsoft.RDInfra.Shared.Common.Enums/1.0.0": {
         "compile": {
           "Microsoft.RDInfra.Shared.Common.Enums.dll": {}
@@ -610,21 +619,21 @@
           "Newtonsoft.Json": "11.0.2",
           "Pester": "4.3.1",
           "Microsoft.CSharp": "4.0.0.0",
-          "System.ComponentModel.Composition": "4.0.0.0",
-          "System.Core": "4.0.0.0",
           "System.Data": "4.0.0.0",
-          "System": "4.0.0.0",
           "System.Drawing": "4.0.0.0",
-          "System.IO.Compression.Reference": "4.0.0.0",
           "System.IO.Compression.FileSystem": "4.0.0.0",
-          "System.Net.Http.Reference": "4.0.0.0",
-          "System.Numerics": "4.0.0.0",
           "System.Runtime.Reference": "4.0.10.0",
           "System.Runtime.Serialization": "4.0.0.0",
           "System.Threading.Tasks.Reference": "4.0.0.0",
+          "mscorlib": "4.0.0.0",
+          "System.ComponentModel.Composition": "4.0.0.0",
+          "System.Core": "4.0.0.0",
+          "System": "4.0.0.0",
+          "System.IO.Compression.Reference": "4.0.0.0",
+          "System.Net.Http.Reference": "4.0.0.0",
+          "System.Numerics": "4.0.0.0",
           "System.Xml": "4.0.0.0",
           "System.Xml.Linq": "4.0.0.0",
-          "mscorlib": "4.0.0.0",
           "System.Collections.Concurrent.Reference": "0.0.0.0",
           "System.Collections.Reference": "0.0.0.0",
           "System.ComponentModel.Annotations": "0.0.0.0",
@@ -816,6 +825,7 @@
           "Microsoft.AspNet.WebApi.Client": "5.2.6",
           "Microsoft.RDInfra.Diagnostics.Common": "1.0.0",
           "Microsoft.RDInfra.Shared.Common": "1.0.0",
+          "Microsoft.RDInfra.Shared.Common.Data": "1.0.0",
           "Newtonsoft.Json": "11.0.2"
         },
         "runtime": {
@@ -842,6 +852,14 @@
           "Microsoft.RDInfra.Shared.Common.dll": {}
         }
       },
+      "Microsoft.RDInfra.Shared.Common.Data/1.0.0": {
+        "dependencies": {
+          "Microsoft.RDInfra.Shared.Common.Enums": "1.0.0"
+        },
+        "runtime": {
+          "Microsoft.RDInfra.Shared.Common.Data.dll": {}
+        }
+      },
       "Microsoft.RDInfra.Shared.Common.Enums/1.0.0": {
         "runtime": {
           "Microsoft.RDInfra.Shared.Common.Enums.dll": {}
@@ -865,28 +883,28 @@
     "Microsoft.Extensions.DependencyInjection.Abstractions/1.1.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-sKsx2jEkabcI954cB6MoU2LUxv8YTByV8+ifqbFtIF8gFqPb4/CfPxwvxrYW+aXc4V44KKHOyeTDgyc4B7fjYg==",
+      "sha512": "sha512-AZ8T8Jhd/yHLPhYSGlKGer22J2GnhBPO/X2uUhkCr2MByJYvQk917Ld9NiThSFcuGgLJbrD5KVZJptak5nd7Mg==",
       "path": "microsoft.extensions.dependencyinjection.abstractions/1.1.1",
       "hashPath": "microsoft.extensions.dependencyinjection.abstractions.1.1.1.nupkg.sha512"
     },
     "Microsoft.Extensions.Logging/1.1.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-LydGeNbeOBTLt3qYz8L3wpRl4TIE6sLBTROiWlU5uckJOaTBCtOTonTbUWrdYEvjOEDFlKySsKUI7HmS7sjrrA==",
+      "sha512": "sha512-b3BOmBEeclkFAthrEmA2KDPIjqe0fWrClYTmW5EFKowZu/zoKLyg1IIpk9XOLA//rKq6zV/UZS/KVGzTWnRRdQ==",
       "path": "microsoft.extensions.logging/1.1.2",
       "hashPath": "microsoft.extensions.logging.1.1.2.nupkg.sha512"
     },
     "Microsoft.Extensions.Logging.Abstractions/1.1.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-hbMEC7HYh2JJK0sSrMXFdOc0tjjRq8kDiSGzXh07AVbMnReLqWa6hA0QJx7umneMK7/9L3sKJnkB+RLGTagkOg==",
+      "sha512": "sha512-yIvmQaXhY8bUJRS6PS+tnZT8CrlpEdaPv4iPfKs/bmlqERlm6JTmMN99C6RZs6cg44o3il4VyJbXmcHXx7WT5w==",
       "path": "microsoft.extensions.logging.abstractions/1.1.2",
       "hashPath": "microsoft.extensions.logging.abstractions.1.1.2.nupkg.sha512"
     },
     "Microsoft.IdentityModel.Clients.ActiveDirectory/3.19.8": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-DC/k/yfpKvYVUtnnSQaTLFi4bJrWUM//TiWYqb0XC1wSgitZv0IK1PjPzd9Zk9BwwnlBteXKH39JX/Adc2S4ZA==",
+      "sha512": "sha512-iaIYYCzbbarjmDm4Zp98HYL0eeoayPoe/4y6eBMNH3zimKbmljkDzhBd5yWvA4D91mrnuArh2uXxLavTWRr7aw==",
       "path": "microsoft.identitymodel.clients.activedirectory/3.19.8",
       "hashPath": "microsoft.identitymodel.clients.activedirectory.3.19.8.nupkg.sha512"
     },
@@ -900,7 +918,7 @@
     "Microsoft.PowerShell.5.ReferenceAssemblies/1.1.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-EE87t3aUXlO0Rjq83Ti8z1g4wwsWnB4W+pOn84i3QWzUOOuP5gZg8n4Y8XTZ7GkxGcoSR6w/d/kBJTJbc3VZPQ==",
+      "sha512": "sha512-uOCntmxGwdTiBLQ5JX2+2tbixdw3H7I+5TjZRjpcqaw7ptuBJIlN4frXN6snywNDoqRl0Fs42Y+I6pB/CLBbgQ==",
       "path": "microsoft.powershell.5.referenceassemblies/1.1.0",
       "hashPath": "microsoft.powershell.5.referenceassemblies.1.1.0.nupkg.sha512"
     },
@@ -1162,6 +1180,11 @@
       "serviceable": false,
       "sha512": ""
     },
+    "Microsoft.RDInfra.Shared.Common.Data/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
     "Microsoft.RDInfra.Shared.Common.Enums/1.0.0": {
       "type": "project",
       "serviceable": false,
@@ -1172,22 +1195,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "System.ComponentModel.Composition/4.0.0.0": {
-      "type": "referenceassembly",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "System.Core/4.0.0.0": {
-      "type": "referenceassembly",
-      "serviceable": false,
-      "sha512": ""
-    },
     "System.Data/4.0.0.0": {
-      "type": "referenceassembly",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "System/4.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
@@ -1197,22 +1205,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "System.IO.Compression.Reference/4.0.0.0": {
-      "type": "referenceassembly",
-      "serviceable": false,
-      "sha512": ""
-    },
     "System.IO.Compression.FileSystem/4.0.0.0": {
-      "type": "referenceassembly",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "System.Net.Http.Reference/4.0.0.0": {
-      "type": "referenceassembly",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "System.Numerics/4.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
@@ -1232,17 +1225,47 @@
       "serviceable": false,
       "sha512": ""
     },
+    "mscorlib/4.0.0.0": {
+      "type": "referenceassembly",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.ComponentModel.Composition/4.0.0.0": {
+      "type": "referenceassembly",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.Core/4.0.0.0": {
+      "type": "referenceassembly",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System/4.0.0.0": {
+      "type": "referenceassembly",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.IO.Compression.Reference/4.0.0.0": {
+      "type": "referenceassembly",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.Net.Http.Reference/4.0.0.0": {
+      "type": "referenceassembly",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.Numerics/4.0.0.0": {
+      "type": "referenceassembly",
+      "serviceable": false,
+      "sha512": ""
+    },
     "System.Xml/4.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
     },
     "System.Xml.Linq/4.0.0.0": {
-      "type": "referenceassembly",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "mscorlib/4.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
