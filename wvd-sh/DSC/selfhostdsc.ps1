@@ -19,8 +19,6 @@ Configuration SelfhostConfig {
 	Node "localhost"
 	{
 
-
-
 #FSLogix Keys
 		Registry ProfileEnable
 		{
@@ -125,58 +123,53 @@ Configuration SelfhostConfig {
                         ValueType   = "DWORD"
 		}
                 
-
-
 # 5k resolution
-		Registry MaxMonitors
-		{
-			Ensure      = "Present"  # You can also set Ensure to "Absent"
-				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
-				ValueName   = "MaxMonitors"
-				ValueData   = 4
-		}
-		Registry MaxXResolution
-		{
-			Ensure      = "Present"  # You can also set Ensure to "Absent"
-				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
-				ValueName   = "MaxXResolution"
-				Hex         = $true
-				ValueData   = "00001400"
-		}
-		Registry MaxYResolution
-		{
-			Ensure      = "Present"  # You can also set Ensure to "Absent"
-				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
-				ValueName   = "MaxYResolution"
-				Hex         = $true
-				ValueData   = "00000b40"
-		}
-		Registry MaxMonitorsS
-		{
-			Ensure      = "Present"  # You can also set Ensure to "Absent"
-				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\rdp-sxs"
-				ValueName   = "MaxMonitors"
-				ValueData   = 4
-		}
-		Registry MaxXResolutionS
-		{
-			Ensure      = "Present"  # You can also set Ensure to "Absent"
-				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\rdp-sxs"
-				ValueName   = "MaxXResolution"
-				Hex         = $true
-				ValueData   = "00001400"
-		}
-		Registry MaxYResolutionS
-		{
-			Ensure      = "Present"  # You can also set Ensure to "Absent"
-				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\rdp-sxs"
-				ValueName   = "MaxYResolution"
-				Hex         = $true
-				ValueData   = "00000b40"
-		}
-
-
-
+#		Registry MaxMonitors
+#		{
+#			Ensure      = "Present"  # You can also set Ensure to "Absent"
+#				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
+#				ValueName   = "MaxMonitors"
+#				ValueData   = 4
+#		}
+#		Registry MaxXResolution
+#		{
+#			Ensure      = "Present"  # You can also set Ensure to "Absent"
+#				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
+#				ValueName   = "MaxXResolution"
+#				Hex         = $true
+#				ValueData   = "00001400"
+#		}
+#		Registry MaxYResolution
+#		{
+#			Ensure      = "Present"  # You can also set Ensure to "Absent"
+#				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
+#				ValueName   = "MaxYResolution"
+#				Hex         = $true
+#				ValueData   = "00000b40"
+#		}
+#		Registry MaxMonitorsS
+#		{
+#			Ensure      = "Present"  # You can also set Ensure to "Absent"
+#				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\rdp-sxs"
+#				ValueName   = "MaxMonitors"
+#				ValueData   = 4
+#		}
+#		Registry MaxXResolutionS
+#		{
+#			Ensure      = "Present"  # You can also set Ensure to "Absent"
+#				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\rdp-sxs"
+#				ValueName   = "MaxXResolution"
+#				Hex         = $true
+#				ValueData   = "00001400"
+#		}
+#		Registry MaxYResolutionS
+#		{
+#			Ensure      = "Present"  # You can also set Ensure to "Absent"
+#				Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\rdp-sxs"
+#				ValueName   = "MaxYResolution"
+#				Hex         = $true
+#				ValueData   = "00000b40"
+#		}
 # End of 5k Resolution
 
 
@@ -265,7 +258,7 @@ Configuration SelfhostConfig {
 
 					}
 
-				Start-Sleep -Seconds 5
+					Start-Sleep -Seconds 5
 
 					reg unload HKLM\TempDefault
 			}
@@ -300,18 +293,13 @@ Configuration SelfhostConfig {
 						}
 
 					}
-
-				Start-Sleep -Seconds 5
+					Start-Sleep -Seconds 5
 
 					reg unload HKLM\TempDefault
 
 					$result
 			}
-
 			GetScript = {@{Result="Ok"}}
 		}
-
-
 	}
-
 }
