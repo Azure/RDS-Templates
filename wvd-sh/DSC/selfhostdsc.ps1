@@ -35,14 +35,6 @@ Configuration SelfhostConfig {
                         ValueName   = "VHDLocations"
                         ValueData   = $Prof
 		}
-		Registry OfficeEnabled
-		{
-			Ensure      = "Present"
-                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\FSLogix\ODFC"
-                        ValueName   = "Enabled"
-                        ValueData   = 1
-                        ValueType   = "DWORD"
-		}
 		Registry OfficeLocation
 		{
 			Ensure      = "Present"
