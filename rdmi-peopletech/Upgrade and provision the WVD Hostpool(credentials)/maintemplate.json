@@ -202,7 +202,7 @@
                 "description": "The base URL for WVD info",
                 "artifactsBaseUrl": ""
             },
-            "defaultValue": "https://raw.githubusercontent.com/viswanadhamkudapu/Repository/master/TestPatchonexisting%20WVD%20Hostpool/"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/staging/rdmi-peopletech/Upgrade%20and%20provision%20the%20WVD%20Hostpool(credentials)/"
         }
     },
     "variables": {

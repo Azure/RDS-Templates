@@ -192,7 +192,7 @@
                 "description": "The base URL for WVD info",
                 "artifactsBaseUrl": ""
             },
-            "defaultValue": "https://raw.githubusercontent.com/viswanadhamkudapu/Repository/master/TestCreate%20and%20provision%20new%20RDmi%20Hostpool/"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/staging/rdmi-peopletech/Create%20and%20provision%20new%20WVD%20Hostpool(serviceprincipal)/"
         }
     },
     "variables": {
