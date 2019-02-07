@@ -101,7 +101,7 @@ function Write-Log {
   }
 }
 
-Write-Log -Message "Policy List: $log"
+
 
 function ActivateWin10
 {
@@ -376,7 +376,7 @@ try {
 
       }
       #add host vm to hostpool
-      [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$addRdsh = ([PsRdsSessionHost]::new($TenantName,$HostPoolName,$SessionHostName)).GetSessionHost()
+      [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$addRdsh = ([RdsSessionHost]::new($TenantName,$HostPoolName,$SessionHostName)).GetSessionHost()
       Write-Log -Message "host object content: `n$($addRdsh | Out-String)"
       $rdshName = $addRdsh.Name | Out-String -Stream
       $poolName = $addRdsh.HostPoolName | Out-String -Stream

@@ -89,7 +89,6 @@ function Write-Log {
   }
 }
 
-Write-Log -Message "Policy List: $log"
 
 function ActivateWin10
 {

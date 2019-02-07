@@ -67,7 +67,7 @@
             "metadata": {
                 "description": "The VM disk type for the VM: HDD or SSD."
             },
-            "defaultValue": "SSD"
+            "defaultValue": "HDD"
         },
         "rdshVmSize": {
             "type": "string",

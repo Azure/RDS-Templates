@@ -110,7 +110,7 @@ param(
 		  cscript c:\windows\system32\slmgr.vbs /ipk $ActivationKey
 		  dism /online /Enable-Feature /FeatureName:AppServerClient /NoRestart /Quiet
 		}
-    Write-Log -Message "Policy List: $log"
+    
 	$rdshIs1809OrLaterBool = ($rdshIs1809OrLater -eq "True")
 	Invoke-WebRequest -Uri $fileURI -OutFile "C:\DeployAgent.zip"
     Write-Log -Message "Downloaded DeployAgent.zip into this location C:\"
