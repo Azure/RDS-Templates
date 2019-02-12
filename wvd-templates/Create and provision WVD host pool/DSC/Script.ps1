@@ -46,7 +46,10 @@ param(
     [string]$AadTenantId,
 
     [Parameter(Mandatory = $true)]
-    [string]$EnablePersistentDesktop="False"
+    [string]$EnablePersistentDesktop="False",
+
+    [Parameter(Mandatory = $true)]
+    [string]$DefaultDesktopUsers
 )
 
 function Write-Log
@@ -77,6 +80,41 @@ function Write-Log
     { 
         Write-Error $_.Exception.Message 
     } 
+}
+
+function AddDefaultUsers($TenantName, $HostPoolName, $ApplicationGroupName, $DefaultUsers)
+{
+    # Checking for null parameters
+
+    if ([string]::IsNullOrEmpty($TenantName))
+    {
+        throw "Tenant name cannot be null or empty string"
+    }
+    elseif ([string]::IsNullOrEmpty($HostPoolName)) 
+    {
+        throw "Host pool name cannot be null or empty string"
+    }
+    elseif ([string]::IsNullOrEmpty($ApplicationGroupName)) 
+    {
+        throw "Application Group Name name cannot be null or empty string"
+    }
+
+    if (-not [string]::IsNullOrEmpty($DefaultUsers))
+    {
+        $UserList = $DefaultUsers.split($DefaultUsers,",")
+
+        foreach ($user in $UserList)
+        {
+            try
+            {
+                Add-RdsAppGroupUser -TenantName $TenantName -HostPoolName $HostPoolName -AppGroupName $ApplicationGroupName -UserPrincipalName $UserList    
+            }
+            catch
+            {
+                Write-Log "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
+            }
+        }
+    }
 }
 
 class PsRdsSessionHost
@@ -164,6 +202,7 @@ class PsRdsSessionHost
         }
     }
 }
+
 
 $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
 
@@ -351,5 +390,12 @@ else
     $rdshName = $rdsh.SessionHostName | Out-String -Stream
     $poolName = $rdsh.hostpoolname | Out-String -Stream
 
+    # Adding default users
+    if (not [string]::IsNullOrEmpty($DefaultDesktopUsers))
+    {
+        $ApplicationGroupName = "Desktop Application Group"
+        AddDefaultUsers($TenantName, $HostPoolName, $ApplicationGroupName, $DefaultUsers)
+    }
+   
     Write-Log -Message "Successfully added $rdshName VM to $poolName"
 }
