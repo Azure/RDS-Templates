@@ -1,0 +1,161 @@
+
+rdmi-peopletech/Create and provision new WVD Hostpool(credentials)/DSC/Configuration.zip
+rdmi-peopletech/Create and provision new WVD Hostpool(credentials)/mainTemplate.json
+rdmi-peopletech/Create and provision new WVD Hostpool(credentials)/nestedtemplates/managedDisks-customvhdvm.json
+rdmi-peopletech/Create and provision new WVD Hostpool(credentials)/nestedtemplates/managedDisks-galleryvm.json
+rdmi-peopletech/Create and provision new WVD Hostpool(credentials)/nestedtemplates/unmanagedDisks-customvhdvm.json
+rdmi-peopletech/Create and provision new WVD Hostpool(credentials)/nestedtemplates/unmanagedDisks-galleryvm.json
+rdmi-peopletech/Create and provision new WVD Hostpool(credentials)/README.md
+rdmi-peopletech/Create and provision new WVD Hostpool(credentials)/Scripts/DeployAgent.zip
+rdmi-peopletech/Create and provision new WVD Hostpool(credentials)/Scripts/Script.ps1
+rdmi-peopletech/Create and provision new WVD Hostpool(serviceprincipal)/DSC/Configuration.zip
+rdmi-peopletech/Create and provision new WVD Hostpool(serviceprincipal)/mainTemplate.json
+rdmi-peopletech/Create and provision new WVD Hostpool(serviceprincipal)/nestedtemplates/managedDisks-customvhdvm.json
+rdmi-peopletech/Create and provision new WVD Hostpool(serviceprincipal)/nestedtemplates/managedDisks-galleryvm.json
+rdmi-peopletech/Create and provision new WVD Hostpool(serviceprincipal)/nestedtemplates/unmanagedDisks-customvhdvm.json
+rdmi-peopletech/Create and provision new WVD Hostpool(serviceprincipal)/nestedtemplates/unmanagedDisks-galleryvm.json
+rdmi-peopletech/Create and provision new WVD Hostpool(serviceprincipal)/README.md
+rdmi-peopletech/Create and provision new WVD Hostpool(serviceprincipal)/Scripts/DeployAgent.zip
+rdmi-peopletech/Create and provision new WVD Hostpool(serviceprincipal)/Scripts/Script.ps1
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool-Merged/createUiDefinition.json
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool-Merged/DSC/Configuration.zip
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool-Merged/mainTemplate.json
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool-Merged/README.md
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool-Merged/Scripts/DeployAgent.zip
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool-Merged/Scripts/Script.ps1
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool/createUiDefinition.json
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool/DSC/Configuration.zip
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool/mainTemplate.json
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool/README.md
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool/Scripts/DeployAgent.zip
+rdmi-peopletech/legacy/Create and provision new RDmi hostpool/Scripts/Script.ps1
+rdmi-peopletech/legacy/Create new RDmi tenant/createUiDefinition.json
+rdmi-peopletech/legacy/Create new RDmi tenant/mainTemplate.json
+rdmi-peopletech/legacy/Create new RDmi tenant/README.md
+rdmi-peopletech/legacy/Create new RDmi tenant/Scripts/PSModules.zip
+rdmi-peopletech/legacy/Create new RDmi tenant/Scripts/Script.ps1
+rdmi-peopletech/legacy/msft-rdmi-saas-offering/azuredeploy.json
+rdmi-peopletech/legacy/msft-rdmi-saas-offering/README.md
+rdmi-peopletech/legacy/msft-rdmi-saas-offering/scripts/msft-rdmi-saas-offering.zip
+rdmi-peopletech/legacy/msft-rdmi-saas-offering/scripts/New-RdmiMgmtSetup.ps1
+rdmi-peopletech/legacy/msft-rdmi-saas-offering/scripts/readme.txt
+rdmi-peopletech/legacy/Patch an existing RDmi hostpool/createUiDefinition.json
+rdmi-peopletech/legacy/Patch an existing RDmi hostpool/DSC/Configuration.zip
+rdmi-peopletech/legacy/Patch an existing RDmi hostpool/mainTemplate.json
+rdmi-peopletech/legacy/Patch an existing RDmi hostpool/README.md
+rdmi-peopletech/legacy/Patch an existing RDmi hostpool/Scripts/DeployAgent.zip
+rdmi-peopletech/legacy/Patch an existing RDmi hostpool/Scripts/RemoveScript.ps1
+rdmi-peopletech/legacy/Patch an existing RDmi hostpool/Scripts/Script.ps1
+rdmi-peopletech/legacy/RDmi scaling script/basicScale.ps1
+rdmi-peopletech/legacy/RDmi scaling script/Config.xml
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.Extensions.Logging.Abstractions.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.Extensions.Logging.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.IdentityModel.Clients.ActiveDirectory.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.Diagnostics.Common.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.Diagnostics.Common.pdb
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.RDManagementData.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.RDManagementData.pdb
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.RDmiPowerShellProxy.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.RDmiPowerShellProxy.pdb
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.RDPowershell.deps.json
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.RDPowershell.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.RDPowershell.pdb
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.Shared.Common.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.Shared.Common.Enums.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.Shared.Common.Enums.pdb
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Microsoft.RDInfra.Shared.Common.pdb
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/Newtonsoft.Json.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/RdsPowershell.psd1
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/Microsoft.CSharp.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/mscorlib.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Collections.Concurrent.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Collections.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ComponentModel.Annotations.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ComponentModel.Composition.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ComponentModel.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ComponentModel.EventBasedAsync.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Core.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Data.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Diagnostics.Contracts.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Diagnostics.Debug.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Diagnostics.Tools.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Diagnostics.Tracing.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Drawing.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Dynamic.Runtime.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Globalization.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.IO.Compression.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.IO.Compression.FileSystem.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.IO.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Linq.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Linq.Expressions.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Linq.Parallel.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Linq.Queryable.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Net.Http.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Net.NetworkInformation.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Net.Primitives.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Net.Requests.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Numerics.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ObjectModel.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Reflection.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Reflection.Emit.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Reflection.Emit.ILGeneration.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Reflection.Emit.Lightweight.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Reflection.Extensions.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Reflection.Primitives.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Resources.ResourceManager.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.Extensions.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.InteropServices.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.InteropServices.RuntimeInformation.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.InteropServices.WindowsRuntime.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.Numerics.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.Serialization.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.Serialization.Json.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.Serialization.Primitives.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Runtime.Serialization.Xml.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Security.Principal.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ServiceModel.Duplex.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ServiceModel.Http.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ServiceModel.NetTcp.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ServiceModel.Primitives.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.ServiceModel.Security.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Text.Encoding.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Text.Encoding.Extensions.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Text.RegularExpressions.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Threading.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Threading.Tasks.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Threading.Tasks.Parallel.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Threading.Timer.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Xml.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Xml.Linq.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Xml.ReaderWriter.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Xml.XDocument.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/refs/System.Xml.XmlSerializer.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/runtimes/unix/lib/netstandard1.1/System.Runtime.InteropServices.RuntimeInformation.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/runtimes/win/lib/net45/System.Runtime.InteropServices.RuntimeInformation.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/System.Management.Automation.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/System.Net.Http.Formatting.dll
+rdmi-peopletech/legacy/RDmi scaling script/PowershellModules/System.Runtime.InteropServices.RuntimeInformation.dll
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/DSC/Configuration.zip
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/mainTemplate.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/nestedtemplates/managedDisks-customvhdvm.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/nestedtemplates/managedDisks-galleryvm.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/nestedtemplates/unmanagedDisks-customvhdvm.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/nestedtemplates/unmanagedDisks-galleryvm.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/README.md
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/Scripts/DeployAgent.zip
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/Scripts/RemoveScript.ps1
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(credentials)/Scripts/Script.ps1
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/DSC/Configuration.zip
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/mainTemplate.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/nestedtemplates/managedDisks-customvhdvm.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/nestedtemplates/managedDisks-galleryvm.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/nestedtemplates/unmanagedDisks-customvhdvm.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/nestedtemplates/unmanagedDisks-galleryvm.json
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/README.md
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/Scripts/DeployAgent.zip
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/Scripts/RemoveScript.ps1
+rdmi-peopletech/Upgrade and provision the WVD Hostpool(serviceprincipal)/Scripts/Script.ps1

@@ -52,22 +52,16 @@
                 "description": "Message that will be displayed to the user notifying them of the automatic logoff."
             }
         },
-        "ApplicationId": {
+        "tenantAdminUpn": {
             "type": "string",
             "metadata": {
-                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the WVD Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
+                "description": "The template will fail if you enter a user account that requires MFA. The UPN must be an RDS Owner in the WVD Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
             }
         },
-        "ApplicationSecret": {
+        "tenantAdminPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the tenant admin UPN."
-            }
-        },
-        "aadTenantId": {
-            "type": "string",
-            "metadata": {
-                "description": "(Required when login with serviceprincipal) This value identifies the Azure AD tenant of the service principal."
             }
         },
         "rdshImageSource": {
@@ -102,7 +96,7 @@
         "rdshIsWindowsServer": {
             "type": "bool",
             "metadata": {
-                "description": "If the VM is a Windows Server SKU (2016), enter true. If the VM is a Windows client SKU (Windows 10), enter false."
+                "description": "If the VM is a Windows Server SKU (2016, 2012R2, etc.), enter true. If the VM is a Windows client SKU (Windows 10)."
             },
             "defaultValue": false
         },
@@ -195,7 +189,7 @@
                 "description": "Specifies an organizational unit (OU) for the domain account. Example: OU=testOU;DC=domain;DC=Domain;DC=com"
             }
         },
-        "windows10ActivationKey": {
+        "windows10activationKey": {
             "type": "securestring",
             "defaultValue": "",
             "metadata": {
@@ -208,7 +202,7 @@
                 "description": "The base URL for WVD info",
                 "artifactsBaseUrl": ""
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/staging/rdmi-peopletech/Upgrade%20and%20provision%20the%20WVD%20Hostpool(serviceprincipal)/"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/staging/rdmi-peopletech/Upgrade%20and%20provision%20the%20WVD%20Hostpool(credentials)/"
         }
     },
     "variables": {
@@ -386,7 +380,7 @@
                     ]
                 },
                 "ProtectedSettings": {
-                    "commandToExecute": "[concat('powershell.exe -noninteractive -executionpolicy bypass -file RemoveScript.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantGroupName \"', parameters('ExistingTenantGroupName'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ',' -HostPoolName \"', parameters('ExistingHostPoolName'), '\"',' ',' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ',' -ApplicationId \"', parameters('ApplicationId'), '\"',' ',' -ApplicationSecret \"', parameters('ApplicationSecret'), '\"',' ',' -SubscriptionId \"', variables('subscriptionId'), '\"',' ',' -Fileuri \"', variables('deployAgentURI'), '\"',' ',' -deleteordeallocateVMs \"', parameters('ActionOnPreviousVirtualMachines'), '\"',' ',' -messageTitle \"', variables('messageTitle'), '\"',' ',' -userNotificationMessege \"', parameters('userNotificationMessege'), '\"',' ',' -userLogoffDelayInMinutes \"', parameters('userLogoffDelayInMinutes'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ',' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ',' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"','  ',' -aadTenantId \"', parameters('aadTenantId'), '\"',' ',' -ActivationKey \"', parameters('windows10ActivationKey'), '\"',' ',' -DomainName \"', variables('existingDomainName'), '\"')]"
+                    "commandToExecute": "[concat('powershell.exe -noninteractive -executionpolicy bypass -file RemoveScript.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantGroupName \"', parameters('ExistingTenantGroupName'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ',' -HostPoolName \"', parameters('ExistingHostPoolName'), '\"',' ',' -Hours \"', variables('RegistrationExpirationHours'), '\"',' ',' -TenantAdminUPN \"', parameters('tenantAdminUpn'), '\"',' ',' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -SubscriptionId \"', variables('subscriptionId'), '\"',' ',' -Fileuri \"', variables('deployAgentURI'), '\"',' ',' -deleteordeallocateVMs \"', parameters('ActionOnPreviousVirtualMachines'), '\"',' ',' -messageTitle \"', variables('messageTitle'), '\"',' ',' -userNotificationMessege \"', parameters('userNotificationMessege'), '\"',' ',' -userLogoffDelayInMinutes \"', parameters('userLogoffDelayInMinutes'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ',' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ',' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"',' ',' -ActivationKey \"', parameters('windows10activationKey'), '\"',' ',' -DomainName \"', variables('existingDomainName'), '\"')]"
                 }
             },
             "dependsOn": [
@@ -423,7 +417,7 @@
                     ]
                 },
                 "protectedSettings": {
-                    "commandToExecute": "[concat('powershell.exe -noninteractive -executionpolicy bypass -file Script.ps1',' -RdBrokerURL \"', parameters('rdBrokerURL'), '\"',' ', ' -TenantGroupName \"', parameters('existingTenantGroupName'), '\"',' ',' -TenantName \"', parameters('existingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('ExistingHostpoolName'), '\"',' ', ' -Hours \"', variables('registrationExpirationHours'), '\"',' ', ' -ApplicationId \"', parameters('ApplicationId'), '\"',' ', ' -ApplicationSecret \"', parameters('ApplicationSecret'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"',' ',' ', ' -aadTenantId \"', parameters('aadTenantId'), '\"', ' ', ' -ActivationKey \"', parameters('windows10ActivationKey'), '\"',' ', ' -FileURI \"', variables('deployAgentURI'), '\"')]"
+                    "commandToExecute": "[concat('powershell.exe -noninteractive -executionpolicy bypass -file Script.ps1',' -RdBrokerURL \"', parameters('rdBrokerURL'), '\"',' ', ' -TenantGroupName \"', parameters('existingTenantGroupName'), '\"',' ',' -TenantName \"', parameters('existingTenantName'), '\"',' ', ' -HostPoolName \"', parameters('ExistingHostpoolName'), '\"',' ', ' -Hours \"', variables('registrationExpirationHours'), '\"',' ', ' -TenantAdminUPN \"', parameters('tenantAdminUpn'), '\"',' ', ' -TenantAdminPassword \"', parameters('tenantAdminPassword'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ', ' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ', ' -rdshIs1809OrLater \"', parameters('rdshIs1809OrLater'), '\"',' ', ' -ActivationKey \"', parameters('windows10activationKey'), '\"',' ', ' -FileURI \"', variables('deployAgentURI'), '\"')]"
                 }
             }
         }
