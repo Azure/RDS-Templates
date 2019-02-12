@@ -219,7 +219,7 @@
             }
         },
         "_artifactsLocation": {
-            "defaultValue": "https://raw.githubusercontent.com/viswanadhamkudapu/Repository/master/Upgrade/",
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/staging/wvd-templates/Update%20existing%20WVD%20host%20pool/",
             "type": "String",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
