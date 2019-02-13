@@ -14,6 +14,18 @@
                 "description": "The storage account containing the custom VHD."
             }
         },
+		"storageAccountNew":{
+            "type": "string",
+            "metadata": {
+                "description": "Gallery Unmanaged Disk"
+            }
+         },
+        "newstorageAccountName":{
+            "type": "string",
+            "metadata": {
+                "description": "The storage account name"
+            }
+        },
         "rdshGalleryImageSKU": {
             "type": "string",
             "allowedValues": [
@@ -98,8 +110,12 @@
         "galleryPublisher": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'MicrosoftWindowsDesktop', 'MicrosoftwindowsServer')]",
         "galleryOffer": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'Windows-10', 'WindowsServer')]",
         "gallerySku": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'rs5-evd', parameters('rdshGalleryImageSKU'))]",
-        "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
-        "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]"
+        "resourcegroupnamenew": "[resourceGroup().name]",
+        "newstorageaccountrgname": "[if(equals(parameters('storageAccountNew'), 'GalleryUnmanagedDisk'), variables('resourcegroupnamenew'),parameters('storageAccountResourceGroupName'))]",
+        "storageAccountName": "[if(equals(parameters('storageAccountNew'), 'GalleryUnmanagedDisk'),parameters('newstorageAccountName'),split(split(parameters('VmImageVhdUri'),'/')[2], '.' )[0])]",
+        "storageaccountVhd": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts/',variables('storageAccountName')))]",
+        "storageaccountresourceid": "[concat(resourceId(variables('newstorageaccountrgname'),'Microsoft.Storage/storageAccounts/',variables('storageAccountName')))]",
+        "storageaccount": "[if(equals(parameters('VmImageVhdUri'),'empty'),variables('storageaccountVhd'),variables('storageaccountresourceid'))]"
     },
     "resources": [
         {

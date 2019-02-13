@@ -14,6 +14,18 @@
                 "description": "The storage account containing the custom VHD."
             }
         },
+		"storageAccountNew":{
+            "type": "string",
+            "metadata": {
+                "description": "Gallery Unmanaged Disk"
+            }
+         },
+        "newstorageAccountName":{
+            "type": "string",
+            "metadata": {
+                "description": "The storage account name"
+            }
+        },
         "rdshGalleryImageSKU": {
             "type": "string",
             "metadata": {
