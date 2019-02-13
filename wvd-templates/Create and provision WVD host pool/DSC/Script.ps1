@@ -82,36 +82,44 @@ function Write-Log
     } 
 }
 
-function AddDefaultUsers($TenantName, $HostPoolName, $ApplicationGroupName, $DefaultUsers)
+function AddDefaultUsers
 {
+    param
+    ( 
+        [Parameter(Mandatory = $true)] 
+        [string]$TenantName,
+
+        [Parameter(Mandatory = $true)] 
+        [string]$HostPoolName,
+
+        [Parameter(Mandatory = $true)] 
+        [string]$ApplicationGroupName,
+
+        [Parameter(Mandatory = $false)] 
+        [string]$DefaultUsers
+
+    ) 
+
     # Checking for null parameters
+    Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
 
-    if ([string]::IsNullOrEmpty($TenantName))
+    if (-not ([string]::IsNullOrEmpty($DefaultUsers)))
     {
-        throw "Tenant name cannot be null or empty string"
-    }
-    elseif ([string]::IsNullOrEmpty($HostPoolName)) 
-    {
-        throw "Host pool name cannot be null or empty string"
-    }
-    elseif ([string]::IsNullOrEmpty($ApplicationGroupName)) 
-    {
-        throw "Application Group Name name cannot be null or empty string"
-    }
-
-    if (-not [string]::IsNullOrEmpty($DefaultUsers))
-    {
-        $UserList = $DefaultUsers.split($DefaultUsers,",")
+        $UserList = $DefaultUsers.split(",")
 
         foreach ($user in $UserList)
         {
-            try
+            Add-RdsAppGroupUser -TenantName $TenantName -HostPoolName $HostPoolName -AppGroupName $ApplicationGroupName -UserPrincipalName $user -ErrorAction SilentlyContinue -ErrorVariable AddUserError
+
+            if ($AddUserError -eq $null)
             {
-                Add-RdsAppGroupUser -TenantName $TenantName -HostPoolName $HostPoolName -AppGroupName $ApplicationGroupName -UserPrincipalName $UserList    
+                Write-Log "Successfully assigned user $user to App Group: $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
             }
-            catch
+            else
             {
+                $ErrorMessage = $AddUserError.Exception | Out-String
                 Write-Log "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
+                Write-Log "Error details: $ErrorMessage"
             }
         }
     }
@@ -391,10 +399,10 @@ else
     $poolName = $rdsh.hostpoolname | Out-String -Stream
 
     # Adding default users
-    if (not [string]::IsNullOrEmpty($DefaultDesktopUsers))
+    if (-not ([string]::IsNullOrEmpty($DefaultDesktopUsers)))
     {
         $ApplicationGroupName = "Desktop Application Group"
-        AddDefaultUsers($TenantName, $HostPoolName, $ApplicationGroupName, $DefaultUsers)
+        AddDefaultUsers -TenantName $TenantName -HostPoolName $HostPoolName -ApplicationGroupName $ApplicationGroupName -DefaultUsers $DefaultDesktopUsers
     }
    
     Write-Log -Message "Successfully added $rdshName VM to $poolName"
