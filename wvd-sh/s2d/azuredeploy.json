@@ -124,7 +124,7 @@
       "metadata": {
         "description": "Location of resources that the script is dependent on such as linked templates and DSC modules"
       },
-      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/selfhostdsc/wvd-sh/s2d"
+      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/pmarques/wwindows2019s2d/wvd-sh/s2d"
     },
     "_artifactsLocationSasToken": {
       "type": "securestring",
