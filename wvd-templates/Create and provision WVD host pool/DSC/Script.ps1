@@ -105,7 +105,7 @@ function AddDefaultUsers
 
     if (-not ([string]::IsNullOrEmpty($DefaultUsers)))
     {
-        $UserList = $DefaultUsers.split(",")
+        $UserList = $DefaultUsers.split(",",[System.StringSplitOptions]::RemoveEmptyEntries)
 
         foreach ($user in $UserList)
         {
