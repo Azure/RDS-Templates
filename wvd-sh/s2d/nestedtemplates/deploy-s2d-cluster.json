@@ -89,21 +89,16 @@
         "description": "Name of shared data folder on clustered Scale-Out File Server role"
       }
     },
-    "imagePublisher": {
+    "vmImage": {
       "type": "string",
-      "defaultValue": "MicrosoftWindowsServer"
-    },
-    "imageOffer": {
-      "type": "string",
-      "defaultValue": "WindowsServer"
-    },
-    "imageSKU": {
-      "type": "string",
-      "defaultValue": "2016-Datacenter"
-    },
-    "imageVersion": {
-      "type": "string",
-      "defaultValue": "latest"
+      "defaultValue": "WindowsServer2016",
+      "allowedValues": [
+        "WindowsServer2016",
+        "WindowsServer2019"
+      ],
+      "metadata": {
+        "description": "VM Image."
+      }
     },
     "_artifactsLocation": {
       "type": "string"
@@ -120,6 +115,20 @@
     }
   },
   "variables": {
+    "vmImages": {
+      "WindowsServer2016":{
+        "publisher": "MicrosoftWindowsServer",
+        "offer": "WindowsServer",
+        "sku": "2016-Datacenter",
+        "version": "latest"
+      },
+      "WindowsServer2019":{
+        "publisher": "MicrosoftWindowsServer",
+        "offer": "WindowsServer",
+        "sku": "2019-Datacenter",
+        "version": "latest"
+      }
+    },
     "apiVersionStorage": "2016-01-01",
     "storageNamePrefix": "[concat(parameters('namePrefix'),uniqueString(resourceGroup().id),'vm')]",
     "witnessStorageName": "[concat(parameters('namePrefix'),uniqueString(resourceGroup().id),'cw')]",
@@ -244,16 +253,16 @@
             "value": "[parameters('_artifactsLocationSasToken')]"
           },
           "imagePublisher": {
-            "value": "[parameters('imagePublisher')]"
+            "value": "[variables('vmImages')[parameters('vmImage')].publisher]"
           },
           "imageOffer": {
-            "value": "[parameters('imageOffer')]"
+            "value": "[variables('vmImages')[parameters('vmImage')].offer]"
           },
           "imageSKU": {
-            "value": "[parameters('imageSKU')]"
+            "value": "[variables('vmImages')[parameters('vmImage')].sku]"
           },
           "imageVersion": {
-            "value": "[parameters('imageVersion')]"
+            "value": "[variables('vmImages')[parameters('vmImage')].version]"
           }
         }
       }

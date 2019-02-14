@@ -23,6 +23,17 @@
       },
       "defaultValue": "Premium_LRS"
     },
+    "vmImage": {
+      "type": "string",
+      "defaultValue": "WindowsServer2016",
+      "allowedValues": [
+        "WindowsServer2016",
+        "WindowsServer2019"
+      ],
+      "metadata": {
+        "description": "VM Image."
+      }
+    },
     "vmSize": {
       "type": "string",
       "metadata": {
@@ -158,6 +169,9 @@
           },
           "nicSubnetUri": {
             "value": "[variables('subnetRef')]"
+          },
+          "vmImage":{
+            "value":"[parameters('vmImage')]"
           },
           "vmSize": {
             "value": "[parameters('vmSize')]"
