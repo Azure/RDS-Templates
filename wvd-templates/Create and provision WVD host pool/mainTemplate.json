@@ -223,7 +223,7 @@
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
-        "hostPoolFriendlyName": "Hostpool",
+        "hostPoolFriendlyName": "[parameters('hostPoolName')]",
         "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
@@ -367,7 +367,7 @@
                         "isServicePrincipal":"[parameters('isServicePrincipal')]",
                         "AadTenantId":"[parameters('aadTenantId')]",
                         "EnablePersistentDesktop":"[parameters('enablePersistentDesktop')]",
-                        "defaultDesktopUsers":"[parameters('defaultDesktopUsers')]"
+                        "defaultDesktopUsers":"[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
                     }
                 },
                 "ProtectedSettings":{

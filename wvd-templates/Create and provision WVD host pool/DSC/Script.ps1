@@ -103,6 +103,9 @@ function AddDefaultUsers
     # Checking for null parameters
     Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
 
+    # Sanitizing DefaultUsers string
+    $DefaultUsers = $DefaultUsers.Replace("`"","").Replace("'","").Replace(" ","")
+
     if (-not ([string]::IsNullOrEmpty($DefaultUsers)))
     {
         $UserList = $DefaultUsers.split(",",[System.StringSplitOptions]::RemoveEmptyEntries)
@@ -399,6 +402,9 @@ else
     $poolName = $rdsh.hostpoolname | Out-String -Stream
 
     # Adding default users
+
+    # Sanitizing $DefaultDesktopUsers from ", ' or spaces
+    $DefaultDesktopUsers = $DefaultDesktopUsers.Replace("`"","").Replace("'","").Replace(" ","")
     if (-not ([string]::IsNullOrEmpty($DefaultDesktopUsers)))
     {
         $ApplicationGroupName = "Desktop Application Group"
