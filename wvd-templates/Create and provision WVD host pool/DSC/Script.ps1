@@ -48,8 +48,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$EnablePersistentDesktop="False",
 
-    [Parameter(Mandatory = $true)]
-    [string]$DefaultDesktopUsers
+    [Parameter(Mandatory = $false)]
+    [string]$DefaultDesktopUsers=""
 )
 
 function Write-Log
@@ -359,19 +359,20 @@ else
     {
         Write-Log -Message "Hostpool UseReverseConnect already enabled as true"
     }
-    
-    # Creating registration token
-    $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ErrorAction SilentlyContinue
+
+    # Random wait time to create or export registration info
+    Start-Sleep (5..15 | Get-Random)
+    $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours -ErrorAction SilentlyContinue
     if (!$Registered)
     {
-        $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
+        $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName 
         $obj =  $Registered | Out-String
-        Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $obj"
+        Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $obj"
     }
     else
     {
         $obj =  $Registered | Out-String
-        Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $obj"
+        Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $obj"
     }
 
     # Executing DeployAgent psl file in rdsh vm and add to hostpool
