@@ -88,6 +88,9 @@ Enter the following information to authenticate to Windows Virtual Desktop and r
 - **Tenant Admin Password**
 - **Is Service Principal**. If you select **True** for **Is Service Principal**, enter your Azure AD tenant ID for the **Aad Tenant Id** parameter to properly identify the directory of your service principal and successfully authenticate to Windows Virtual Desktop. Otherwise, leave the **Aad Tenant Id** parameter empty.
 
+### Default Desktop users
+If you want to assign default users to the "Desktop Application Group", please use the following parameter and provide a comma separated list of users you would like to assign to access the desktop for this host pool. Example: user1@contoso.com,user2@contoso.com,user3@contoso.com.
+- **defaultDesktopUsers**. Make sure you don't use spaces between the commas so it will not interfere with any tool you may be using to deploy this template.
 
 Click the button below to deploy:
 
