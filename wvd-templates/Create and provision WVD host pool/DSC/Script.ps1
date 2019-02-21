@@ -112,17 +112,15 @@ function AddDefaultUsers
 
         foreach ($user in $UserList)
         {
-            Add-RdsAppGroupUser -TenantName $TenantName -HostPoolName $HostPoolName -AppGroupName $ApplicationGroupName -UserPrincipalName $user -ErrorAction SilentlyContinue -ErrorVariable AddUserError
-
-            if ($AddUserError -eq $null)
+            try 
             {
-                Write-Log "Successfully assigned user $user to App Group: $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
+                Add-RdsAppGroupUser -TenantName $TenantName -HostPoolName $HostPoolName -AppGroupName $ApplicationGroupName -UserPrincipalName $user
+                Write-Log "Successfully assigned user $user to App Group: $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."  
             }
-            else
+            catch
             {
-                $ErrorMessage = $AddUserError.Exception | Out-String
                 Write-Log "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
-                Write-Log "Error details: $ErrorMessage"
+                Write-Log "Error details: $_"
             }
         }
     }
