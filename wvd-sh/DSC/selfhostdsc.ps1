@@ -86,6 +86,17 @@ Configuration SelfhostConfig {
                         ValueType   = "DWORD"
 		}
 
+# Configure Automatic Update set to Disabled
+
+		Registry DisableUA
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
+                        ValueName   = "NoAutoUpdate"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+
 # TermServ limits       
 
 		Registry MaxIdleTime
