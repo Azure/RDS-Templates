@@ -97,18 +97,6 @@ Configuration SelfhostConfig {
                         ValueType   = "DWORD"
 		}
 
-
-# Full crash dump
-
-		Registry FullCrashDump
-		{
-			Ensure      = "Present"
-                        Key         = "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\CrashControl"
-                        ValueName   = "CrashDumpEnabled"
-                        ValueData   = 1
-                        ValueType   = "DWORD"
-		}
-
 # TermServ limits       
 
 		Registry MaxIdleTime
