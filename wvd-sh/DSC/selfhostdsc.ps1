@@ -92,7 +92,7 @@ Configuration SelfhostConfig {
 		{
 			Ensure      = "Present"
                         Key         = "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\CrashControl"
-                        ValueName   = "CrashDumpEnabled t"
+                        ValueName   = "CrashDumpEnabled"
                         ValueData   = 1
                         ValueType   = "DWORD"
 		}
