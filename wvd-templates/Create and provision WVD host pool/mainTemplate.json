@@ -98,6 +98,13 @@
                 "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
             }
         },
+        "storageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The Name of the Storage Account(Unique Name) to store unamanged disks for unmanaged gallery VM"
+            },
+            "defaultValue": ""
+        },
         "storageAccountResourceGroupName": {
             "type": "string",
             "metadata": {
@@ -210,7 +217,7 @@
         }
     },
     "variables": {
-        "rdshManagedDisks": "[if(or(equals(parameters('rdshImageSource'), 'CustomVHD'),equals(parameters('rdshUseManagedDisks'),bool('false'))), parameters('rdshUseManagedDisks'), bool('true'))]",
+        "rdshManagedDisks": "[if(or(equals(parameters('rdshImageSource'), 'CustomVHD'),equals(parameters('rdshImageSource'),'Gallery')), parameters('rdshUseManagedDisks'), bool('true'))]",
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
@@ -221,9 +228,6 @@
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
-        "newstorageAccountName": "[concat(uniquestring(resourceGroup().id), 'stndrsa')]",
-        "rdshUnmanagedDisks": "[if(equals(variables('vmTemplateName'), 'unmanagedDisks-galleryvm'), 'GalleryUnmanagedDisk','empty')]",
-        "storageAccountName": "[if(equals(variables('vmTemplateName'), 'unmanagedDisks-galleryvm'), variables('newstorageAccountName'),'empty')]",
         "storageAccountType": "Standard_LRS"
     },
     "resources": [
@@ -246,7 +250,7 @@
                 "name": "[variables('storageAccountType')]"
             },
             "kind": "Storage",
-            "name": "[variables('storageAccountName')]",
+            "name": "[Parameters('storageAccountName')]",
             "apiVersion": "2017-06-01",
             "location": "[resourceGroup().location]",
             "condition": "[equals(variables('vmTemplateName'), 'unmanagedDisks-galleryvm')]"
@@ -292,11 +296,8 @@
                     "subnet-id": {
                         "value": "[variables('subnet-id')]"
                     },
-		    "storageAccountNew": {
-                        "value": "[variables('rdshUnmanagedDisks')]"
-                    },
-                    "newstorageAccountName": {
-                        "value": "[variables('storageAccountName')]"
+		            "storageAccountName": {
+                        "value": "[parameters('storageAccountName')]"
                     },
                     "vhds": {
                         "value": "[variables('vhds')]"
