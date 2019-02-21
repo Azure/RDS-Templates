@@ -407,6 +407,8 @@ else
     $DefaultDesktopUsers = $DefaultDesktopUsers.Replace("`"","").Replace("'","").Replace(" ","")
     if (-not ([string]::IsNullOrEmpty($DefaultDesktopUsers)))
     {
+        # Random wait time to start adding default users
+        Start-Sleep (20..60 | Get-Random)
         $ApplicationGroupName = "Desktop Application Group"
         AddDefaultUsers -TenantName $TenantName -HostPoolName $HostPoolName -ApplicationGroupName $ApplicationGroupName -DefaultUsers $DefaultDesktopUsers
     }
