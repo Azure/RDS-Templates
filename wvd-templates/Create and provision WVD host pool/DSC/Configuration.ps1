@@ -51,7 +51,6 @@ configuration SessionHost
     {
         if ($OSVersionInfo.InstallationType -ne $null)
         {
-            Write-Log -Message "OS Installation type: $($OSVersionInfo.InstallationType)"
             $rdshIsServer=@{$true = $true; $false = $false}[$OSVersionInfo.InstallationType -eq "Server"]
         }
     }
