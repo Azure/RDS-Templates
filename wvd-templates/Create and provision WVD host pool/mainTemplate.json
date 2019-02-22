@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/staging/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-alignments/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -176,7 +176,7 @@
             }
         },
         "enablePersistentDesktop": {
-            "type":"bool",
+            "type": "bool",
             "metadata": {
                 "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
             },
@@ -244,13 +244,13 @@
                 "name": "[variables('avSetSKU')]"
             }
         },
-		{
+        {
             "type": "Microsoft.Storage/storageAccounts",
             "sku": {
                 "name": "[variables('storageAccountType')]"
             },
             "kind": "Storage",
-            "name": "[Parameters('storageAccountName')]",
+            "name": "[toLower(Parameters('storageAccountName'))]",
             "apiVersion": "2017-06-01",
             "location": "[resourceGroup().location]",
             "condition": "[equals(variables('vmTemplateName'), 'unmanagedDisks-galleryvm')]"
@@ -296,7 +296,7 @@
                     "subnet-id": {
                         "value": "[variables('subnet-id')]"
                     },
-		            "storageAccountName": {
+                    "storageAccountName": {
                         "value": "[parameters('storageAccountName')]"
                     },
                     "vhds": {
@@ -364,30 +364,30 @@
                     "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
                     "configurationFunction": "Configuration.ps1\\SessionHost",
                     "properties": {
-                        "TenantAdminCredentials":{
-                            "userName":"[parameters('tenantAdminUpnOrApplicationId')]",
-                            "password":"PrivateSettingsRef:tenantAdminPassword"
+                        "TenantAdminCredentials": {
+                            "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
+                            "password": "PrivateSettingsRef:tenantAdminPassword"
                         },
-                        "ADAdminCredentials":{
-                            "userName":"[parameters('existingDomainUPN')]",
-                            "password":"PrivateSettingsRef:adAdminPassword"
+                        "ADAdminCredentials": {
+                            "userName": "[parameters('existingDomainUPN')]",
+                            "password": "PrivateSettingsRef:adAdminPassword"
                         },
-                        "RDBrokerURL":"[parameters('rdBrokerURL')]",
-                        "DefinedTenantGroupName":"[parameters('existingTenantGroupName')]",
-                        "TenantName":"[parameters('existingTenantName')]",
-                        "HostPoolName":"[parameters('hostPoolName')]",
-                        "Description":"[variables('hostPoolDescription')]",
-                        "FriendlyName":"[variables('hostPoolFriendlyName')]",
-                        "Hours":"[variables('registrationExpirationHours')]",
-                        "isServicePrincipal":"[parameters('isServicePrincipal')]",
-                        "AadTenantId":"[parameters('aadTenantId')]",
-                        "EnablePersistentDesktop":"[parameters('enablePersistentDesktop')]"
+                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
+                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
+                        "TenantName": "[parameters('existingTenantName')]",
+                        "HostPoolName": "[parameters('hostPoolName')]",
+                        "Description": "[variables('hostPoolDescription')]",
+                        "FriendlyName": "[variables('hostPoolFriendlyName')]",
+                        "Hours": "[variables('registrationExpirationHours')]",
+                        "isServicePrincipal": "[parameters('isServicePrincipal')]",
+                        "AadTenantId": "[parameters('aadTenantId')]",
+                        "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]"
                     }
                 },
-                "ProtectedSettings":{
-                    "items":{
-                        "tenantAdminPassword":"[parameters('tenantAdminPassword')]",
-                        "adAdminPassword":"[parameters('existingDomainPassword')]"
+                "ProtectedSettings": {
+                    "items": {
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]",
+                        "adAdminPassword": "[parameters('existingDomainPassword')]"
                     }
                 }
             }

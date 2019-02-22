@@ -14,7 +14,7 @@
                 "description": "The storage account containing the custom VHD."
             }
         },
-        "storageAccountName":{
+        "storageAccountName": {
             "type": "string",
             "metadata": {
                 "description": "The name of the storage account"
@@ -185,5 +185,5 @@
             }
         }
     ],
-    "outputs": { }
+    "outputs": {}
 }

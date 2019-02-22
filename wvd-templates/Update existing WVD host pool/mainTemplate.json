@@ -4,76 +4,76 @@
     "parameters": {
         "rdBrokerURL": {
             "defaultValue": "https://rdbroker.wvd.microsoft.com",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The Broker URL of the Windows Virtual Desktop deployment the session hosts will be connected to."
             }
         },
         "existingTenantGroupName": {
             "defaultValue": "Default Tenant Group",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The name of the tenant group in the Windows Virtual Desktop deployment"
             }
         },
         "existingTenantName": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The name of the tenant in the Windows Virtual Desktop deployment."
             }
         },
-        "ExistingHostpoolName": {
-            "type": "String",
+        "existingHostpoolName": {
+            "type": "string",
             "metadata": {
                 "description": "The name of the hostpool to be in the RDS Tenant."
             }
         },
-        "ActionOnPreviousVirtualMachines": {
+        "actionOnPreviousVirtualMachines": {
             "defaultValue": "Delete",
             "allowedValues": [
                 "Deallocate",
                 "Delete"
             ],
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "Action to be taken on the old Azure VM resources. If delete is selected, the associated network interfaces and vhd files in Azure blob storage will also be deleted."
             }
         },
         "userLogoffDelayInMinutes": {
-            "type": "Int",
+            "type": "int",
             "metadata": {
                 "description": "Delay before users are automatically logged off from the current VMs in the hostpool."
             }
         },
         "userNotificationMessege": {
             "defaultValue": "Scheduled maintenance, please save your work and logoff as soon as possible",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "Message that will be displayed to the user notifying them of the automatic logoff."
             }
         },
         "tenantAdminUpnOrApplicationId": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the WVD Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
             }
         },
         "tenantAdminPassword": {
-            "type": "SecureString",
+            "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the tenant admin UPN."
             }
         },
         "isServicePrincipal": {
             "defaultValue": false,
-            "type": "Bool",
+            "type": "bool",
             "metadata": {
                 "description": "The boolean value indicating if the credentials are for a service principal."
             }
         },
         "aadTenantId": {
             "defaultValue": "",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "(Required when isServicePrincipal = True) This value identifies the Azure AD tenant of the service principal."
             }
@@ -85,14 +85,14 @@
                 "CustomImage",
                 "Gallery"
             ],
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "Select the image source for the session host vms. VMs from a Gallery image will be created with Managed Disks."
             }
         },
         "vmImageVhdUri": {
             "defaultValue": "",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "(Required when rdshImageSource = CustomVHD) URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
             }
@@ -103,41 +103,34 @@
                 "Windows-10-Enterprise-multi-session",
                 "2016-Datacenter"
             ],
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "(Required when rdshImageSource = Gallery) Gallery image SKU."
             }
         },
-        "rdshIsWindowsServer": {
-            "defaultValue": false,
-            "type": "Bool",
-            "metadata": {
-                "description": "If the VM is a Windows Server SKU (2016, 2012R2, etc.), enter true. If the VM is a Windows client SKU (Windows 10)."
-            }
-        },
         "rdshCustomImageSourceName": {
             "defaultValue": "",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "(Required when rdshImageSource = CustomImage) Name of the managed disk."
             }
         },
         "rdshCustomImageSourceResourceGroup": {
             "defaultValue": "",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "(Required when rdshImageSource = CustomImage) Resource group name for the managed disk, if you choose to provide one."
             }
         },
         "rdshNamePrefix": {
             "defaultValue": "[take(toLower(resourceGroup().name),10)]",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "This prefix will be used in combination with the VM number to create the VM name. If using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
             }
         },
         "rdshNumberOfInstances": {
-            "type": "Int",
+            "type": "int",
             "metadata": {
                 "description": "Number of session hosts that will be created and added to the hostpool."
             }
@@ -148,93 +141,100 @@
                 "SSD",
                 "HDD"
             ],
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The VM disk type for the VM: HDD or SSD."
             }
         },
         "rdshVmSize": {
             "defaultValue": "Standard_D2s_v3",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The size of the session host VMs."
             }
         },
         "rdshUseManagedDisks": {
             "defaultValue": true,
-            "type": "Bool",
+            "type": "bool",
             "metadata": {
                 "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
             }
         },
         "storageAccountResourceGroupName": {
             "defaultValue": "",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "(Required when rdshUseManagedDisks = False) The resource group containing the storage account of the image vhd file."
             }
         },
+        "storageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The Name of the Storage Account(Unique Name) to store unamanged disks for unmanaged gallery VM"
+            },
+            "defaultValue": ""
+        },
         "domainToJoin": {
             "defaultValue": "contoso.com",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "FQDN of the AD domain controller to which sesion host VMs are going to be joined. For example, “contoso.com”."
             }
         },
         "existingDomainUPN": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, “user1@contoso.com”."
             }
         },
         "existingDomainPassword": {
-            "type": "SecureString",
+            "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
             }
         },
         "existingVnetName": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The name of the virtual network the VMs will be connected to."
             }
         },
         "existingSubnetName": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The subnet the VMs will be placed in."
             }
         },
         "virtualNetworkResourceGroupName": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The resource group containing the existing virtual network."
             }
         },
         "ouPath": {
             "defaultValue": "",
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "Specifies an organizational unit (OU) for the domain account. Example: OU=testOU;DC=domain;DC=Domain;DC=com"
             }
         },
         "_artifactsLocation": {
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/staging/wvd-templates/Update%20existing%20WVD%20host%20pool/",
-            "type": "String",
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-alignments/wvd-templates/Update%20existing%20WVD%20host%20pool",
+            "type": "string",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             }
         },
         "_artifactsLocationSasToken": {
             "defaultValue": "",
-            "type": "SecureString",
+            "type": "securestring",
             "metadata": {
                 "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
             }
         }
     },
     "variables": {
-        "rdshManagedDisks": "[if(or(equals(parameters('rdshImageSource'), 'CustomVHD'),equals(parameters('rdshUseManagedDisks'),bool('false'))), parameters('rdshUseManagedDisks'), bool('true'))]",
+        "rdshManagedDisks": "[if(or(equals(parameters('rdshImageSource'), 'CustomVHD'),equals(parameters('rdshImageSource'),'Gallery')), parameters('rdshUseManagedDisks'), bool('true'))]",
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
         "messageTitle": "Request for Logoff",
         "RegistrationExpirationHours": "48",
@@ -247,10 +247,7 @@
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json')]",
         "removeScriptURI": "[concat(parameters('_artifactsLocation'),'/Scripts/RemoveScript.ps1')]",
-        "deployAgentUri": "[concat(parameters('_artifactsLocation'),'/Scripts/WVDModules.zip')]",
-        "rdshUnmanagedDisks": "[if(equals(variables('vmTemplateName'), 'unmanagedDisks-galleryvm'), 'newStorageAccount','empty')]",
-        "newstorageAccountName": "[concat(uniquestring(resourceGroup().id), 'stndrsa')]",
-        "newstorageact": "[if(equals(variables('vmTemplateName'), 'unmanagedDisks-galleryvm'), variables('newstorageAccountName'),'empty')]",
+        "wvdModulesUri": "[concat(parameters('_artifactsLocation'),'/Scripts/WVDModules.zip')]",
         "storageAccountType": "Standard_LRS"
     },
     "resources": [
@@ -273,7 +270,7 @@
                 "name": "[variables('storageAccountType')]"
             },
             "kind": "Storage",
-            "name": "[variables('newstorageact')]",
+            "name": "[tolower(parameters('storageAccountName'))]",
             "apiVersion": "2017-06-01",
             "location": "[resourceGroup().location]",
             "condition": "[equals(variables('vmTemplateName'), 'unmanagedDisks-galleryvm')]"
@@ -319,11 +316,8 @@
                     "subnet-id": {
                         "value": "[variables('subnet-id')]"
                     },
-                    "storageAccountNameNew": {
-                        "value": "[variables('rdshUnmanagedDisks')]"
-                    },
-                    "newstorageAccountName": {
-                        "value": "[variables('newstorageact')]"
+                    "storageAccountName": {
+                        "value": "[parameters('storageAccountName')]"
                     },
                     "vhds": {
                         "value": "[variables('vhds')]"
@@ -382,7 +376,7 @@
                     ]
                 },
                 "ProtectedSettings": {
-                    "commandToExecute": "[concat('powershell.exe -noninteractive -executionpolicy bypass -file RemoveScript.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantGroupName \"', parameters('ExistingTenantGroupName'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ',' -HostPoolName \"', parameters('ExistingHostPoolName'), '\"',' ',' -TenantAdminUPN \"', parameters('tenantAdminUpnOrApplicationId'), '\"',' ',' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -SubscriptionId \"', variables('subscriptionId'), '\"',' ',' -Fileuri \"', variables('deployAgentURI'), '\"',' ',' -deleteordeallocateVMs \"', parameters('ActionOnPreviousVirtualMachines'), '\"',' ',' -messageTitle \"', variables('messageTitle'), '\"',' ',' -userNotificationMessege \"', parameters('userNotificationMessege'), '\"',' ',' -userLogoffDelayInMinutes \"', parameters('userLogoffDelayInMinutes'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ',' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ',' ',' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"','  ',' -aadTenantId \"', parameters('aadTenantId'), '\"',' ',' -DomainName \"', variables('existingDomainName'), '\"')]"
+                    "commandToExecute": "[concat('powershell.exe -noninteractive -executionpolicy bypass -file RemoveScript.ps1',' -RDBrokerURL \"', parameters('RDBrokerURL'), '\"',' ',' -TenantGroupName \"', parameters('ExistingTenantGroupName'), '\"',' ',' -TenantName \"', parameters('ExistingTenantName'), '\"',' ',' -HostPoolName \"', parameters('ExistingHostPoolName'), '\"',' ',' -TenantAdminUPN \"', parameters('tenantAdminUpnOrApplicationId'), '\"',' ',' -TenantAdminPassword \"', parameters('TenantAdminPassword'), '\"',' ',' -SubscriptionId \"', variables('subscriptionId'), '\"',' ',' -Fileuri \"', variables('wvdModulesUri'), '\"',' ',' -deleteordeallocateVMs \"', parameters('ActionOnPreviousVirtualMachines'), '\"',' ',' -messageTitle \"', variables('messageTitle'), '\"',' ',' -userNotificationMessege \"', parameters('userNotificationMessege'), '\"',' ',' -userLogoffDelayInMinutes \"', parameters('userLogoffDelayInMinutes'), '\"',' ',' -localAdminUsername \"', variables('existingDomainUsername'), '\"',' ',' -localAdminpassword \"', parameters('existingDomainPassword'), '\"',' ',' ',' -isServicePrincipal \"', parameters('isServicePrincipal'), '\"','  ',' -aadTenantId \"', parameters('aadTenantId'), '\"',' ',' -DomainName \"', variables('existingDomainName'), '\"')]"
                 }
             },
             "dependsOn": [

@@ -20,19 +20,11 @@
                 "description": "Gallery image SKU."
             }
         },
-		"storageAccountNameNew":{
+        "storageAccountName": {
             "type": "string",
             "metadata": {
-                "description": "The storage account name"
+                "description": "The name of the storage account"
             }
-            
-        },
-        "newstorageAccountName":{
-            "type": "string",
-            "metadata": {
-                "description": "The storage account name"
-            }
-
         },
         "rdshPrefix": {
             "type": "string",
@@ -175,5 +167,5 @@
             }
         }
     ],
-    "outputs": { }
+    "outputs": {}
 }
