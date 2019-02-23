@@ -37,6 +37,13 @@
       },
       "defaultValue": 2
     },
+    "enableAcceleratedNetwork": {
+      "type": "bool",
+      "metadata": {
+        "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
+      },
+      "defaultValue": false
+    },
     "vmDiskSize": {
       "type": "int",
       "minValue": 128,
@@ -150,6 +157,9 @@
           },
           "adminPassword": {
             "value": "[parameters('adminPassword')]"
+          },
+          "enableAccelaratedNetwork":{
+            "value": "[parameters('enableAcceleratedNetwork')]"
           },
           "nicSubnetUri": {
             "value": "[variables('subnetRef')]"

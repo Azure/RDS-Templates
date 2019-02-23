@@ -29,17 +29,12 @@
         "description": "Password for the Administrator account of the existing Active Directory Domain"
       }
     },
-    "storageAccountType": {
-      "type": "string",
-      "allowedValues": [
-        "Standard_LRS",
-        "Standard_GRS",
-        "Standard_RAGRS",
-        "Premium_LRS"
-      ],
+    "enableAcceleratedNetwork": {
+      "type": "bool",
       "metadata": {
-        "description": "Type of new Storage Accounts (Standard_LRS, Standard_GRS, Standard_RAGRS or Premium_LRS) to be created to store VM disks"
-      }
+        "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
+      },
+      "defaultValue": false
     },
     "nicSubnetUri": {
       "type": "string",
@@ -130,7 +125,6 @@
       }
     },
     "apiVersionStorage": "2016-01-01",
-    "storageNamePrefix": "[concat(parameters('namePrefix'),uniqueString(resourceGroup().id),'vm')]",
     "witnessStorageName": "[concat(parameters('namePrefix'),uniqueString(resourceGroup().id),'cw')]",
     "witnessStorageType": "Standard_LRS",
     "vmNamePrefix": "[concat(parameters('namePrefix'),'-s2d-')]",
@@ -162,7 +156,7 @@
       "apiVersion": "2016-01-01",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "Standard_LRS"
+        "name": "[variables('witnessStorageType')]"
       },
       "kind": "Storage"
     },
@@ -186,7 +180,8 @@
               }
             }
           }
-        ]
+        ],
+        "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetwork')]"
       }
     },
     {
