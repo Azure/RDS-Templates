@@ -162,21 +162,7 @@
       "apiVersion": "2016-01-01",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "[variables('witnessStorageType')]"
-      },
-      "kind": "Storage"
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[concat(variables('storageNamePrefix'),copyindex())]",
-      "apiVersion": "2016-01-01",
-      "copy": {
-        "name": "storageAccountLoop",
-        "count": "[parameters('vmCount')]"
-      },
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "[parameters('storageAccountType')]"
+        "name": "Standard_LRS"
       },
       "kind": "Storage"
     },
@@ -212,7 +198,6 @@
       },
       "name": "[concat(variables('vmNamePrefix'),copyindex(),'-newVM')]",
       "dependsOn": [
-        "storageAccountLoop",
         "nicLoop",
         "[resourceId('Microsoft.Compute/availabilitySets', variables('vmAvailabilitySetName'))]"
       ],
@@ -224,9 +209,6 @@
         "parameters": {
           "vmName": {
             "value": "[concat(variables('vmNamePrefix'), copyindex())]"
-          },
-          "storageAccountUri": {
-            "value": "[reference(concat('Microsoft.Storage/storageAccounts/',variables('StorageNamePrefix'),copyIndex()),variables('apiVersionStorage')).primaryEndpoints.blob]"
           },
           "vmAvailabilitySetName": {
             "value": "[variables('vmAvailabilitySetName')]"

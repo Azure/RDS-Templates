@@ -5,9 +5,6 @@
     "vmName": {
       "type": "string"
     },
-    "storageAccountUri": {
-      "type": "string"
-    },
     "vmAvailabilitySetName": {
       "type": "string"
     },
@@ -74,9 +71,6 @@
           },
           "diskCaching": {
             "value": "None"
-          },
-          "storageAccountUri": {
-            "value": "[parameters('storageAccountUri')]"
           },
           "diskNamingPrefix": {
             "value": "[concat(parameters('vmName'), '-data')]"
