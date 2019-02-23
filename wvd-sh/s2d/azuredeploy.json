@@ -158,7 +158,7 @@
           "adminPassword": {
             "value": "[parameters('adminPassword')]"
           },
-          "enableAccelaratedNetwork":{
+          "enableAcceleratedNetwork":{
             "value": "[parameters('enableAcceleratedNetwork')]"
           },
           "nicSubnetUri": {
