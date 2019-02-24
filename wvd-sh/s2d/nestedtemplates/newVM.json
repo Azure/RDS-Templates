@@ -50,34 +50,23 @@
     }
   },
   "variables": {
-    "diskSelectionTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/diskSelection.json',parameters('_artifactsLocationSasToken'))]"
-  },
-  "resources": [
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "name": "[concat(parameters('vmName'),'-diskSelection')]",
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('diskSelectionTemplateUri')]"
-        },
-        "parameters": {
-          "vmDiskCount": {
-            "value": "[parameters('vmDiskCount')]"
-          },
-          "vmDiskSize": {
-            "value": "[parameters('vmDiskSize')]"
-          },
-          "diskCaching": {
-            "value": "None"
-          },
-          "diskNamingPrefix": {
-            "value": "[concat(parameters('vmName'), '-data')]"
+    "storageDiskArray": {
+      "copy": [
+        {
+          "name": "items",
+          "count": "[parameters('vmDiskCount')]",
+          "input": {
+            "name": "[concat(parameters('vmName'), '-data-', copyIndex('items'))]",
+            "diskSizeGB": "[parameters('vmDiskSize')]",
+            "lun": "[copyIndex('items')]",
+            "createOption": "Empty",
+            "caching": "None"
           }
         }
-      }
-    },
+      ]
+    }
+  },
+  "resources": [
     {
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2017-03-30",
@@ -110,7 +99,7 @@
             "caching": "ReadWrite",
             "createOption": "FromImage"
           },
-          "dataDisks": "[reference(concat(parameters('vmName'),'-diskSelection')).outputs.dataDiskArray.value]"
+          "dataDisks": "[take(variables('storageDiskArray').items,parameters('vmDiskCount'))]"
         },
         "networkProfile": {
           "networkInterfaces": [
