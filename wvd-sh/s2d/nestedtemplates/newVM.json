@@ -72,9 +72,6 @@
       "apiVersion": "2017-03-30",
       "location": "[parameters('location')]",
       "name": "[parameters('vmName')]",
-      "dependsOn": [
-        "[concat('Microsoft.Resources/deployments/',parameters('vmName'),'-diskSelection')]"
-      ],
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
