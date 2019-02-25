@@ -120,16 +120,7 @@ configuration AdditionalSessionHosts
     
         [Parameter(mandatory = $true)]
         [string]$HostPoolName,
-    
-        [Parameter(mandatory = $false)]
-        [string]$Description,
-    
-        [Parameter(mandatory = $false)]
-        [string]$FriendlyName,
-    
-        [Parameter(mandatory = $true)]
-        [string]$Hours,
-    
+      
         [Parameter(mandatory = $true)]
         [PSCredential]$TenantAdminCredentials,
     
@@ -137,16 +128,10 @@ configuration AdditionalSessionHosts
         [PSCredential]$ADAdminCredentials,
     
         [Parameter(mandatory = $false)]
-        [string]$isServicePrincipal = "False",
+        [string]$IsServicePrincipal = "False",
     
         [Parameter(Mandatory = $false)]
-        [string]$AadTenantId,
-    
-        [Parameter(Mandatory = $true)]
-        [string]$EnablePersistentDesktop="False",
-
-        [Parameter(Mandatory = $true)]
-        [string]$DefaultDesktopUsers
+        [string]$AadTenantId
     )
 
     $rdshIsServer = $true
@@ -186,7 +171,7 @@ configuration AdditionalSessionHosts
                     return @{'Result' = ''}
                 }
                 SetScript = {
-                    & "$using:ScriptPath\Script-AdditionalRdshServers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName -FriendlyName $using:FriendlyName -Description $using:Description -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -EnablePersistentDesktop $using:EnablePersistentDesktop -DefaultDesktopUsers $using:DefaultDesktopUsers
+                    & "$using:ScriptPath\Script-AdditionalRdshServers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName  -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
                 }
                 TestScript = {
                     return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
@@ -202,7 +187,7 @@ configuration AdditionalSessionHosts
                     return @{'Result' = ''}
                 }
                 SetScript = {
-                    & "$using:ScriptPath\Script-AdditionalRdshServers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName -FriendlyName $using:FriendlyName -Description $using:Description -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -EnablePersistentDesktop $using:EnablePersistentDesktop -DefaultDesktopUsers $using:DefaultDesktopUsers
+                    & "$using:ScriptPath\Script-AdditionalRdshServers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
                 }
                 TestScript = {
                     return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")

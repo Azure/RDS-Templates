@@ -61,51 +61,14 @@ $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
 $ErrorActionPreference = "Stop"
 
 # Testing if it is a ServicePrincipal and validade that AadTenant ID in this case is not null or empty
-if ($isServicePrincipal -eq "True")
-{
-    if ([string]::IsNullOrEmpty($AadTenantId))
-    {
-        throw "When IsServicePrincipal = True, AadTenant ID is mandatory. Please provide a valid AadTenant ID."
-    }
-}
-
-# Setting to Tls12 due to Azure web app security requirements
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-$BlnEnablePersistentDesktop = [System.Convert]::ToBoolean($EnablePersistentDesktop)
-
-$DeployAgentLocation = "C:\DeployAgent"
+ValidateServicePrincipal -IsServicePrincipal $isServicePrincipal -AadTenantId $AadTenantId
 
 Write-Log -Message "Identifying if this VM is Build >= 1809"
-$rdshIs1809OrLaterBool = $false
-$OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-if ($OSVersionInfo -ne $null)
-{
-    if ($OSVersionInfo.ReleaseId -ne $null)
-    {
-        Write-Log -Message "Build: $($OSVersionInfo.ReleaseId)"
-        $rdshIs1809OrLaterBool=@{$true = $true; $false = $false}[$OSVersionInfo.ReleaseId -ge 1809]
-    }
-}
+$rdshIs1809OrLaterBool = Is1809OrLater
 
 Write-Log -Message "Creating a folder inside rdsh vm for extracting deployagent zip file"
-if (Test-Path $DeployAgentLocation)
-{
-    Remove-Item -Path $DeployAgentLocation -Force -Confirm:$false -Recurse
-}
-
-New-Item -Path "$DeployAgentLocation" -ItemType directory -Force 
-
-# Locating and extracting DeployAgent.zip
-Write-Log -Message "Locating DeployAgent.zip within Custom Script Extension folder structure: $ScriptPath"
-$DeployAgentFromRepo = (Get-ChildItem $ScriptPath\ -Filter DeployAgent.zip -Recurse | Select-Object).FullName
-if ((-not $DeployAgentFromRepo) -or (-not (Test-Path $DeployAgentFromRepo)))
-{
-    throw "DeployAgent.zip file not found at $ScriptPath"
-}
-
-Write-Log -Message "Extracting 'Deployagent.zip' file into '$DeployAgentLocation' folder inside VM"
-Expand-Archive $DeployAgentFromRepo -DestinationPath "$DeployAgentLocation" 
+$DeployAgentLocation = "C:\DeployAgent"
+ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $DeployAgentLocation
 
 Write-Log -Message "Changing current folder to Deployagent folder: $DeployAgentLocation"
 Set-Location "$DeployAgentLocation"
@@ -130,50 +93,10 @@ else
 
     # Getting fqdn of rdsh vm
     $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
-
     Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
-    # Authenticating to WVD
-    if ($isServicePrincipal -eq "True")
-    {
-        Write-Log  -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
-        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId 
-    }
-    else
-    {
-        Write-Log  -Message "Authenticating using user $($TenantAdminCredentials.username) "
-        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
-    }
-
-    Write-Log  -Message "Authentication object: $($authentication | Out-String)"
-    $obj = $authentication | Out-String
-
-    if ($authentication)
-    {
-        Write-Log -Message "RDMI Authentication successfully Done. Result:`n$obj"  
-    }
-    else
-    {
-        Write-Log -Error "RDMI Authentication Failed, Error:`n$obj"
-        throw "RDMI Authentication Failed, Error:`n$obj"
-    }
-
-    # Set context to the appropriate tenant group
-    Write-Log "Running switching to the $definedTenantGroupName context"
-    Set-RdsContext -TenantGroupName $definedTenantGroupName
-    try
-    {
-        $tenants = Get-RdsTenant -Name $TenantName
-        if(!$tenants)
-        {
-            Write-Log "No tenants exist or you do not have proper access."
-        }
-    }
-    catch
-    {
-        Write-Log -Message $_
-        throw $_
-    }
+    # Performing WVD Authentication and Setting Context
+    AuthenticateOnWvd -IsServicePrincipal $isServicePrincipal -TenantAdminCredentials $TenantAdminCredentials -AadTenantId $AadTenantId -RDBrokerURL $RDBrokerURL -DefinedTenantGroupName $DefinedTenantGroupName -TenantName $TenantName
 
     # Checking if host pool exists. If not, create a new one with the given HostPoolName
     Write-Log -Message "Checking Hostpool exists inside the Tenant"
