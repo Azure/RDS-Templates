@@ -91,6 +91,13 @@
             },
             "defaultValue": "Standard_D2s_v3"
         },
+        "enableAcceleratedNetworking": {
+            "type": "bool",
+            "metadata": {
+                "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
+            },
+            "defaultValue": false
+        },
         "rdshUseManagedDisks": {
             "type": "bool",
             "defaultValue": true,
@@ -169,13 +176,13 @@
             }
         },
         "enablePersistentDesktop": {
-            "type":"bool",
+            "type": "bool",
             "metadata": {
                 "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
             },
             "defaultValue": false
         },
-        "defaultDesktopUsers" : {
+        "defaultDesktopUsers": {
             "type": "string",
             "metadata": {
                 "description": "Provide a comma separated list of users you would like to assign to access the desktop for this host pool. Example: user1@contoso.com,user2@contoso.com,user3@contoso.com "
@@ -275,6 +282,9 @@
                     "rdshVmSize": {
                         "value": "[parameters('rdshVmSize')]"
                     },
+                    "enableAcceleratedNetworking": {
+                        "value": "[parameters('enableAcceleratedNetworking')]"
+                    },
                     "existingDomainusername": {
                         "value": "[variables('existingDomainUsername')]"
                     },
@@ -349,31 +359,31 @@
                     "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
                     "configurationFunction": "Configuration.ps1\\SessionHost",
                     "properties": {
-                        "TenantAdminCredentials":{
-                            "userName":"[parameters('tenantAdminUpnOrApplicationId')]",
-                            "password":"PrivateSettingsRef:tenantAdminPassword"
+                        "TenantAdminCredentials": {
+                            "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
+                            "password": "PrivateSettingsRef:tenantAdminPassword"
                         },
-                        "ADAdminCredentials":{
-                            "userName":"[parameters('existingDomainUPN')]",
-                            "password":"PrivateSettingsRef:adAdminPassword"
+                        "ADAdminCredentials": {
+                            "userName": "[parameters('existingDomainUPN')]",
+                            "password": "PrivateSettingsRef:adAdminPassword"
                         },
-                        "RDBrokerURL":"[parameters('rdBrokerURL')]",
-                        "DefinedTenantGroupName":"[parameters('existingTenantGroupName')]",
-                        "TenantName":"[parameters('existingTenantName')]",
-                        "HostPoolName":"[parameters('hostPoolName')]",
-                        "Description":"[variables('hostPoolDescription')]",
-                        "FriendlyName":"[variables('hostPoolFriendlyName')]",
-                        "Hours":"[variables('registrationExpirationHours')]",
-                        "isServicePrincipal":"[parameters('isServicePrincipal')]",
-                        "AadTenantId":"[parameters('aadTenantId')]",
-                        "EnablePersistentDesktop":"[parameters('enablePersistentDesktop')]",
-                        "defaultDesktopUsers":"[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
+                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
+                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
+                        "TenantName": "[parameters('existingTenantName')]",
+                        "HostPoolName": "[parameters('hostPoolName')]",
+                        "Description": "[variables('hostPoolDescription')]",
+                        "FriendlyName": "[variables('hostPoolFriendlyName')]",
+                        "Hours": "[variables('registrationExpirationHours')]",
+                        "isServicePrincipal": "[parameters('isServicePrincipal')]",
+                        "AadTenantId": "[parameters('aadTenantId')]",
+                        "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
+                        "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
                     }
                 },
-                "ProtectedSettings":{
-                    "items":{
-                        "tenantAdminPassword":"[parameters('tenantAdminPassword')]",
-                        "adAdminPassword":"[parameters('existingDomainPassword')]"
+                "ProtectedSettings": {
+                    "items": {
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]",
+                        "adAdminPassword": "[parameters('existingDomainPassword')]"
                     }
                 }
             }
