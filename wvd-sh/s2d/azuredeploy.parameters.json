@@ -23,7 +23,7 @@
     "existingSubnetName": {
       "value": "default"
     },
-    "enableAcceleratedNetwork": {
+    "enableAcceleratedNetworking": {
       "value": false
     }
   }
