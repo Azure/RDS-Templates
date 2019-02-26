@@ -8,8 +8,7 @@ Configuration SelfhostConfig {
 
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 
-	$defaultProf = @(  @{path="HKLM:\TempDefault\Software\Microsoft\Office\16.0\common\Logging "; name="EnableLogging"; value = 1},
-			@{path="HKLM:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="1"},
+	$defaultProf = @(@{path="HKLM:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="1"},
 			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="enable"; value = 1},
 			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
 			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
