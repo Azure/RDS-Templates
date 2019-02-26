@@ -1,0 +1,99 @@
+    {
+    "$schema":"http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion":"1.0.0.0",
+    "parameters":{  
+        "JobCollectionName":{
+            "type":"string",
+            "metadata": {
+                "description": "The name of the job collection"
+            }
+        },
+        "ActionURI":{
+            "type": "string",
+            "metadata": {
+                "description": "Action uri (Note: Url must start with a https:// or http:// and contains rest of the url.)"
+            }
+        },
+        "JobName":{
+            "type": "string",
+            "metadata": {
+                "description": "Job Name"
+            }     
+        },
+        "StartTime":
+        {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the start time of the job"
+            }
+        },
+        "EndTime" :{
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the end time of the job"
+            }
+        },
+        "RecurrenceInterval" :{
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the recurrence interval of the job in minutes"
+            }
+        },
+        "ActionSettingsBody":{
+            "type": "string",
+            "metadata": {
+                "description":"Specifies the body in Action settings ('Note': Input should be in json format)"
+            }
+        }
+    },
+    "resources":[
+        {
+        "apiVersion":"2016-03-01",
+        "name":"[parameters('JobCollectionName')]",
+        "type":"Microsoft.Scheduler/jobCollections",
+        "location": "[resourceGroup().location]",
+        "properties":{
+            "sku":{
+            "name":"Standard"
+            },
+            "quota":{
+            "maxJobCount":50,
+            "maxRecurrence":{
+                "frequency":"Minute",
+                "interval":"[parameters('RecurrenceInterval')]"
+            }
+            }
+        },
+        "resources":[
+            {
+            "apiVersion":"2016-03-01",
+            "name":"[parameters('JobName')]",
+            "type":"jobs",
+            "dependsOn":[
+                "[resourceId('Microsoft.Scheduler/jobCollections', parameters('JobCollectionName'))]"
+            ],
+            "properties":{
+                "startTime":"[parameters('StartTime')]",
+                "action":{
+                "request":{
+                    "uri":"[parameters('ActionURI')]",
+                    "method":"POST",
+                    "body": "[parameters('ActionSettingsBody')]",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    }
+                },
+                "type":"Http"
+                },
+                "state":"Enabled",
+                "recurrence":{
+                "frequency":"Minute",
+                "interval":"[parameters('RecurrenceInterval')]",
+                "endTime":"[parameters('EndTime')]"
+                }
+            }
+            }
+        ]
+        }
+    ]
+    }

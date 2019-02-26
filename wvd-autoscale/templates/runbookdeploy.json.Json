@@ -1,0 +1,68 @@
+{
+    "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
+    "contentVersion": "1.0",
+    "parameters": {
+        "existingAutomationAccountName": {
+            "type": "String",
+            "metadata": {
+                "description": "The name of the the existing automation accountname"
+            }
+        },  
+		"breadthfirst": {
+            "type": "bool",
+            "metadata": {
+                "description": "If the loadbalancing type is breadthfirst or depthfirst."
+            },
+			"defaultValue": true
+        },
+        "runbookName": {
+            "type": "String",
+            "metadata": {
+                "description": "The name of the the Runbook"
+            }
+        
+    }
+},
+    "variables": {
+        "baseURL": "https://raw.githubusercontent.com/viswanadhamkudapu/Repository/master/",
+        "BreadthfirstscriptUri": "[concat(variables('baseURL'),'/testscript3.ps1')]",
+		"DepthfirstscriptUri": "[concat(variables('baseURL'),'/testscript2.ps1')]",
+		"scriptUri": "[if(parameters('breadthfirst'),variables('BreadthfirstscriptUri'),variables('DepthfirstscriptUri'))]",
+        "sku": "Free"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Automation/automationAccounts",
+            "name": "[parameters('existingAutomationAccountName')]",
+            "apiVersion": "2015-01-01-preview",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "sku": {
+                    "name": "[variables('sku')]"
+                }
+            },
+            "resources":[
+            {
+            "type": "runbooks",
+            "name": "[Parameters('runbookName')]",
+            "apiVersion": "2015-01-01-preview",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "runbookType": "PowerShell",
+                "logProgress": "false",
+                "logVerbose": "false",
+                "publishContentLink": {
+                    "uri": "[variables('scriptUri')]",
+                    "version": "1.0.0.0"
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Automation/automationAccounts/', parameters('existingAutomationAccountName'))]"
+            ]
+        }
+    ]
+}
+    ]
+}
