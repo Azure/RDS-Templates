@@ -103,7 +103,7 @@ $JobCollectionName = "$TenantGroupNameValue" + "-" + "$TenantNamevalue" + "-" + 
 $BreadthFirstWebhook = "$TenantNamevalue" + "-" + "BreadthFirstWebhook"
 $DepthFirstWebhook = "$TenantNamevalue" + "-" + "DepthFirstWebhook"
 $LoadBalancingBool = ($BreadthFirst -eq "True")
-$fileURI = "https://raw.githubusercontent.com/Azure/RDS-Templates/Peopletech-AutoScale/rdmi-peopletech/Scale%20Script/Scripts/WVDModules.zip"
+$fileURI = "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/scripts/wvdmodules.zip"
 
 
 #Authenticate to AzureRm
@@ -237,7 +237,7 @@ if (!$getAutomationAccount) {
     New-AzureRmAutomationRunbook -Name "UpdateModuleRunbook" -Type PowerShell -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName
         
     #Importe powershell file to Runbooks
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Azure/RDS-Templates/Peopletech-AutoScale/rdmi-peopletech/Scale%20Script/Scripts/UpdateModules.ps1" -OutFile "c:\windows\temp\UpdateModules.ps1" 
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/scripts/updatemodules.ps1" -OutFile "c:\windows\temp\UpdateModules.ps1" 
     Import-AzureRmAutomationRunbook -Path "c:\windows\temp\UpdateModules.ps1" -Name "UpdateModuleRunbook" -Type PowerShell -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Force
         
     #Publishing Runbook
@@ -259,7 +259,7 @@ if (!$getAutomationAccount) {
 if ($LoadBalancingBool) {
     $runbookName = $BreadthFirstRunbook
             
-    $DeploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/Peopletech-AutoScale/rdmi-peopletech/Scale%20Script/Templates/RunbookCreationTemplate.Json" -DeploymentDebugLogLevel All -existingAutomationAccountName $AutomationAccountName -runbookName $runbookName -breadthfirst $LoadBalancingBool -Force -Verbose
+    $DeploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/templates/runbookdeploy.json" -DeploymentDebugLogLevel All -existingAutomationAccountName $AutomationAccountName -runbookName $runbookName -breadthfirst $LoadBalancingBool -Force -Verbose
     if ($DeploymentStatus.ProvisioningState -eq "Succeeded") {
         $BFVariable = Get-AzureRmAutomationVariable -Name "BFWebhookURI" -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
         if (!$BFVariable) {
@@ -273,7 +273,7 @@ if ($LoadBalancingBool) {
                         
         $requestBody = @{"RDBrokerURL" = $RDBrokerURL; "ResourceGroupName" = $ResourceGroupName; "Location" = $Location; "subscriptionid" = $subscriptionid; "TimeDifference" = $TimeDifference; "TenantGroupName" = $TenantGroupName; "fileURI" = $fileURI; "TenantName" = $TenantName; "HostPoolName" = $HostPoolName; "AADTenantId" = $AADTenantId; "AADApplicationId" = $AADApplicationId; "AADServicePrincipalSecret" = $AADServicePrincipalSecret; "BeginPeakTime" = $BeginPeakTime; "EndPeakTime" = $EndPeakTime; "MinimumNumberOfRDSH" = $MinimumNumberOfRDSH; "LimitSecondsToForceLogOffUser" = $LimitSecondsToForceLogOffUser; "LogOffMessageTitle" = $LogOffMessageTitle; "LogOffMessageBody" = $LogOffMessageBody; "SessionThresholdPerCPU" = $SessionThresholdPerCPU}
         $requestBodyJson = $requestBody | ConvertTo-Json
-        $SchedulerDeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/Peopletech-AutoScale/rdmi-peopletech/Scale%20Script/Templates/AzureSchedulerCreationTemplate.json" -JobCollectionName $JobCollectionName -ActionURI $BFVariable.Value -StartTime (get-date).ToUniversalTime()  -JobName $HostpoolName-Job -EndTime Never -RecurrenceInterval $RecurrenceInterval -ActionSettingsBody $requestBodyJson -DeploymentDebugLogLevel All -Verbose
+        $SchedulerDeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/templates/azureschedulerdeploy.json" -JobCollectionName $JobCollectionName -ActionURI $BFVariable.Value -StartTime (get-date).ToUniversalTime()  -JobName $HostpoolName-Job -EndTime Never -RecurrenceInterval $RecurrenceInterval -ActionSettingsBody $requestBodyJson -DeploymentDebugLogLevel All -Verbose
 
 
     }
@@ -283,7 +283,7 @@ else {
     $runbookName = $DepthFirstRunbook
     Write-Output $LoadBalancingBool
 
-    $DeploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/Peopletech-AutoScale/rdmi-peopletech/Scale%20Script/Templates/RunbookCreationTemplate.Json" -DeploymentDebugLogLevel All -existingAutomationAccountName $AutomationAccountName -runbookName $runbookName -breadthfirst $LoadBalancingBool -Force -Verbose
+    $DeploymentStatus = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/templates/runbookdeploy.json" -DeploymentDebugLogLevel All -existingAutomationAccountName $AutomationAccountName -runbookName $runbookName -breadthfirst $LoadBalancingBool -Force -Verbose
     if ($DeploymentStatus.ProvisioningState -eq "Succeeded") {
         $DFVariable = Get-AzureRmAutomationVariable -Name "DFWebhookURI" -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
         if (!$DFVariable) {
@@ -297,7 +297,7 @@ else {
            
         $requestBody = @{"RDBrokerURL" = $RDBrokerURL; "ResourceGroupName" = $ResourceGroupName; "Location" = $Location; "subscriptionid" = $subscriptionid; "TenantGroupName" = $TenantGroupName; "fileURI" = $fileURI; "TenantName" = $TenantName; "HostPoolName" = $HostPoolName; "AADTenantId" = $AADTenantId; "AADApplicationId" = $AADApplicationId; "AADServicePrincipalSecret" = $AADServicePrincipalSecret; "BeginPeakTime" = $BeginPeakTime; "EndPeakTime" = $EndPeakTime; "MinimumNumberOfRDSH" = $MinimumNumberOfRDSH; "LimitSecondsToForceLogOffUser" = $LimitSecondsToForceLogOffUser; "LogOffMessageTitle" = $LogOffMessageTitle; "LogOffMessageBody" = $LogOffMessageBody}
         $requestBodyJson = $requestBody | ConvertTo-Json
-        $SchedulerDeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/Peopletech-AutoScale/rdmi-peopletech/Scale%20Script/Templates/AzureSchedulerCreationTemplate.json" -JobCollectionName $JobCollectionName -ActionURI $DFVariable.Value -JobName $HostpoolName-Job -StartTime (get-date).ToUniversalTime() -EndTime Never -RecurrenceInterval $RecurrenceInterval -ActionSettingsBody $requestBodyJson -DeploymentDebugLogLevel All -Verbose
+        $SchedulerDeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/templates/azureschedulerdeploy.json" -JobCollectionName $JobCollectionName -ActionURI $DFVariable.Value -JobName $HostpoolName-Job -StartTime (get-date).ToUniversalTime() -EndTime Never -RecurrenceInterval $RecurrenceInterval -ActionSettingsBody $requestBodyJson -DeploymentDebugLogLevel All -Verbose
 
 
     }

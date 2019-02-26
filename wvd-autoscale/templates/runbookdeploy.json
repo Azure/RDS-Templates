@@ -7,27 +7,26 @@
             "metadata": {
                 "description": "The name of the the existing automation accountname"
             }
-        },  
-		"breadthfirst": {
+        },
+        "breadthfirst": {
             "type": "bool",
             "metadata": {
                 "description": "If the loadbalancing type is breadthfirst or depthfirst."
             },
-			"defaultValue": true
+            "defaultValue": true
         },
         "runbookName": {
             "type": "String",
             "metadata": {
                 "description": "The name of the the Runbook"
             }
-        
-    }
-},
+        }
+    },
     "variables": {
-        "baseURL": "https://raw.githubusercontent.com/viswanadhamkudapu/Repository/master/",
+        "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/scripts/",
         "BreadthfirstscriptUri": "[concat(variables('baseURL'),'/testscript3.ps1')]",
-		"DepthfirstscriptUri": "[concat(variables('baseURL'),'/testscript2.ps1')]",
-		"scriptUri": "[if(parameters('breadthfirst'),variables('BreadthfirstscriptUri'),variables('DepthfirstscriptUri'))]",
+        "DepthfirstscriptUri": "[concat(variables('baseURL'),'/testscript2.ps1')]",
+        "scriptUri": "[if(parameters('breadthfirst'),variables('BreadthfirstscriptUri'),variables('DepthfirstscriptUri'))]",
         "sku": "Free"
     },
     "resources": [
@@ -42,27 +41,27 @@
                     "name": "[variables('sku')]"
                 }
             },
-            "resources":[
-            {
-            "type": "runbooks",
-            "name": "[Parameters('runbookName')]",
-            "apiVersion": "2015-01-01-preview",
-            "location": "[resourceGroup().location]",
-            "tags": {},
-            "properties": {
-                "runbookType": "PowerShell",
-                "logProgress": "false",
-                "logVerbose": "false",
-                "publishContentLink": {
-                    "uri": "[variables('scriptUri')]",
-                    "version": "1.0.0.0"
+            "resources": [
+                {
+                    "type": "runbooks",
+                    "name": "[Parameters('runbookName')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {},
+                    "properties": {
+                        "runbookType": "PowerShell",
+                        "logProgress": "false",
+                        "logVerbose": "false",
+                        "publishContentLink": {
+                            "uri": "[variables('scriptUri')]",
+                            "version": "1.0.0.0"
+                        }
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', parameters('existingAutomationAccountName'))]"
+                    ]
                 }
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Automation/automationAccounts/', parameters('existingAutomationAccountName'))]"
             ]
         }
-    ]
-}
     ]
 }

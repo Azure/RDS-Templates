@@ -1,4 +1,4 @@
-# Windows Virtual Desktop Auto Scalling
+# Windows Virtual Desktop Auto Scaling
 Automatic Scaling of Session Hosts in Window Virtual Desktop. Reducing Costs of Desktop Hosting on Microsoft Azure Infrastructure Services. For deployment plese follow below steps.
 ### Prerequisites
 The environment to be used to execute the script must meet the following requirements.
@@ -12,8 +12,8 @@ The environment to be used to execute the script must meet the following require
 #### Follow below steps to Download the autoscaledeploy powershell script.
 - Launch your command-line interface. In Windows, open the Start menu, type cmd in the search box, and press Enter.
 - Copy this cURL statement
-    #### cURL -s AutoScaleDeployment.ps1 > "provide your local path with same name AutoScaleDeployment.ps1" and paste it at the command prompt.
-    Example: cURL -s AutoScaleDeployment.ps1 > "C:\windows\temp\AutoScaleDeployment.ps1"
+    #### cURL -s https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/autoscaledeploy.ps1 > "provide your local path with same name autoscaledeploy.ps1" and paste it at the command prompt.
+    Example: cURL -s https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/autoscaledeploy.ps1 > "C:\Windows\Temp\autoscaledeploy.ps1"
 
 - Press Enter to run the cURL statement
 - Open PowerShell Console or IDE in Administrator mode then execute downloaded autoscaledeploy script.
@@ -33,6 +33,3 @@ Note: When you deploy Depth First loadbalacning make sure you provide BreadthFir
 - SessionThresholdPerCPU
 
 Note1: This Script will create an automation account with runbooks(TenantName-BreadthfirstRunbook, TenantName-DepthFirstRunbook) and webhooks(TenantName-BreadthFirstWebhook, TenantName-DepthfirstWebhook) and azure scheduler job collections only once, so provide same automation account name and resource group name when deploy further instances. For each hostpool will create an azure scheduler job.
-
-
-

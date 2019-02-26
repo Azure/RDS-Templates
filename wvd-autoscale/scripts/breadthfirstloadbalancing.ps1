@@ -367,10 +367,7 @@ if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDa
         write-log -Message "$hostPoolName $totalRunningCores $numberOfRunningHost"
     }	
 }	
-    
-
-
-
+ 
 #Peak or not peak hour
 else {
     write-log -Message "It is Off-peak hours"
