@@ -51,6 +51,13 @@
             },
             "defaultValue": "Standard_A2"
         },
+        "enableAcceleratedNetworking": {
+            "type": "bool",
+            "metadata": {
+                "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
+            },
+            "defaultValue": false
+        },
         "existingDomainusername": {
             "type": "string",
             "metadata": {
@@ -101,18 +108,18 @@
             "name": "[variables('imageName')]",
             "location": "[resourceGroup().location]",
             "properties": {
-              "storageProfile": {
-                "osDisk": {
-                  "osType": "Windows",
-                  "osState": "Generalized",
-                  "blobUri": "[parameters('VmImageVhdUri')]",
-                  "storageAccountType": "[variables('storageAccountType')]"
+                "storageProfile": {
+                    "osDisk": {
+                        "osType": "Windows",
+                        "osState": "Generalized",
+                        "blobUri": "[parameters('VmImageVhdUri')]",
+                        "storageAccountType": "[variables('storageAccountType')]"
+                    }
                 }
-              }
             }
         },
         {
-            "apiVersion": "2015-06-15",
+            "apiVersion": "2016-09-01",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat(parameters('rdshPrefix'), copyindex(), '-nic')]",
             "location": "[resourceGroup().location]",
@@ -131,7 +138,8 @@
                             }
                         }
                     }
-                ]
+                ],
+                "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]"
             }
         },
         {
@@ -179,5 +187,5 @@
             }
         }
     ],
-    "outputs": { }
+    "outputs": {}
 }
