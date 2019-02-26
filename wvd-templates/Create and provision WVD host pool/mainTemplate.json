@@ -89,7 +89,7 @@
             "metadata": {
                 "description": "The size of the session host VMs."
             },
-            "defaultValue": "Standard_D2s_v3"
+            "defaultValue": "Standard_D4s_v3"
         },
         "enableAcceleratedNetworking": {
             "type": "bool",
