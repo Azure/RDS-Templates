@@ -252,10 +252,18 @@ function AuthenticateOnWvd
         [string]$TenantName
     ) 
 
+    Write-Log  -Message "AuthenticateOnWvd arguments:"
+    Write-Log  -Message "   isServicePrincipal......: $isServicePrincipal"
+    Write-Log  -Message "   AadTenantId.............: $AadTenantId"
+    Write-Log  -Message "   RDBrokerURL.............: $RDBrokerURL"
+    Write-Log  -Message "   DefinedTenantGroupName..: $DefinedTenantGroupName"
+    Write-Log  -Message "   TenantName..............: $TenantName"
+    Write-Log  -Message "   TenantAdminUsername.....: $($TenantAdminCredentials.username)"
+
     # Authenticating to WVD
     if ($isServicePrincipal -eq "True")
     {
-        Write-Log  -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
+        Write-Log  -Message "Authenticating using service principal $($TenantAdminCredentials.username) and Tenant id: $AadTenantId "
         $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId 
     }
     else
