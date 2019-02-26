@@ -110,7 +110,7 @@
         $AdminCredentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($localAdminUsername, $AdminSecurepass)
 
         #Setting RDS Context
-        $authentication=Set-RdsContext -DeploymentUrl $RDBrokerURL -Credential $Credentials
+        $authentication=Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $Credentials
         
         $obj = $authentication | Out-String
     
