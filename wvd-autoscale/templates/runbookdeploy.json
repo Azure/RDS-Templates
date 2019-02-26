@@ -24,8 +24,8 @@
     },
     "variables": {
         "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-autoscale/wvd-autoscale/scripts/",
-        "BreadthfirstscriptUri": "[concat(variables('baseURL'),'/testscript3.ps1')]",
-        "DepthfirstscriptUri": "[concat(variables('baseURL'),'/testscript2.ps1')]",
+        "BreadthfirstscriptUri": "[concat(variables('baseURL'),'/breadthfirstloadbalancing.ps1')]",
+        "DepthfirstscriptUri": "[concat(variables('baseURL'),'/depthfirstloadbalancing.ps1')]",
         "scriptUri": "[if(parameters('breadthfirst'),variables('BreadthfirstscriptUri'),variables('DepthfirstscriptUri'))]",
         "sku": "Free"
     },
