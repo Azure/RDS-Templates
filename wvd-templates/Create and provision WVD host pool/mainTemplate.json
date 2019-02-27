@@ -219,7 +219,7 @@
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Specifies an organizational unit (OU) for the domain account. Example: OU=testOU;DC=domain;DC=Domain;DC=com"
+                "description": "(Optional) Specifiy an organizational unit (OU) to place the new virtual machines when joining the domain. If you do not have a specific OU to place the virtual machines, leave it blank. Example OU: 'OU=testOU;DC=domain;DC=Domain;DC=com'"
             }
         }
     },
@@ -329,7 +329,7 @@
                 "settings": {
                     "name": "[parameters('domainToJoin')]",
                     "ouPath": "[parameters('ouPath')]",
-                    "user": "[concat(parameters('domainToJoin'),'\\', variables('existingDomainUsername'))]",
+                    "user": "[parameters('existingDomainUPN')]",
                     "restart": "true",
                     "options": "3"
                 },
