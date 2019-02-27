@@ -14,16 +14,10 @@
                 "description": "The storage account containing the custom VHD."
             }
         },
-		"storageAccountNew":{
+        "storageAccountName": {
             "type": "string",
             "metadata": {
-                "description": "Gallery Unmanaged Disk"
-            }
-         },
-        "newstorageAccountName":{
-            "type": "string",
-            "metadata": {
-                "description": "The storage account name"
+                "description": "The name of the storage account"
             }
         },
         "rdshGalleryImageSKU": {
@@ -113,14 +107,14 @@
             "name": "[variables('imageName')]",
             "location": "[resourceGroup().location]",
             "properties": {
-              "storageProfile": {
-                "osDisk": {
-                  "osType": "Windows",
-                  "osState": "Generalized",
-                  "blobUri": "[parameters('VmImageVhdUri')]",
-                  "storageAccountType": "[variables('storageAccountType')]"
+                "storageProfile": {
+                    "osDisk": {
+                        "osType": "Windows",
+                        "osState": "Generalized",
+                        "blobUri": "[parameters('VmImageVhdUri')]",
+                        "storageAccountType": "[variables('storageAccountType')]"
+                    }
                 }
-              }
             }
         },
         {
@@ -191,5 +185,5 @@
             }
         }
     ],
-    "outputs": { }
+    "outputs": {}
 }

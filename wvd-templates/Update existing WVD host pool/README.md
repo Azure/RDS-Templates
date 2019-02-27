@@ -40,9 +40,8 @@ By selecting azure gallery Image, provide below parameter values
 
 - **RDSHImageSource** as **Gallery**
 - **RdshGalleryImageSKU**
-- **RdshIsWindowsServer** Note that Windows 10 Enterprise multi-session is not considered Windows Server.
-- **RdshVMDiskType**
-- **RdshUseManagedDisks** Note if you are selected “false” it will automatically create new storage account and store the OSDisk into storage blob.
+- **Rdsh Use Managed Disks**
+- **Storage Account Name**. (Required when rdshImageSource = Gallery and RdshUseManagedDisks = False) The name of the storage account to store the unmanaged disks from an Azure Gallery image. If you decide to use unmanaged disks from a custom vhd, the disks will be stored in the same storage account as the image. 
 
 Ignore the following parameters:
 - **Vm Image Vhd Uri**
