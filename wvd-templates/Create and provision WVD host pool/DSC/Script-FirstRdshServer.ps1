@@ -96,7 +96,49 @@ else
     Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
     # Performing WVD Authentication and Setting Context
-    AuthenticateOnWvd -IsServicePrincipal $isServicePrincipal -TenantAdminCredentials $TenantAdminCredentials -AadTenantId $AadTenantId -RDBrokerURL $RDBrokerURL -DefinedTenantGroupName $DefinedTenantGroupName -TenantName $TenantName
+    #AuthenticateOnWvd -IsServicePrincipal $isServicePrincipal -TenantAdminCredentials $TenantAdminCredentials -AadTenantId $AadTenantId -RDBrokerURL $RDBrokerURL -DefinedTenantGroupName $DefinedTenantGroupName -TenantName $TenantName
+
+    # Authenticating to WVD
+    if ($isServicePrincipal -eq "True")
+    {
+        Write-Log  -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId 
+    }
+    else
+    {
+        Write-Log  -Message "Authenticating using user $($TenantAdminCredentials.username) "
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
+    }
+
+    Write-Log  -Message "Authentication object: $($authentication | Out-String)"
+    $obj = $authentication | Out-String
+
+    if ($authentication)
+    {
+        Write-Log -Message "RDMI Authentication successfully Done. Result:`n$obj"  
+    }
+    else
+    {
+        Write-Log -Error "RDMI Authentication Failed, Error:`n$obj"
+        throw "RDMI Authentication Failed, Error:`n$obj"
+    }
+
+    # Set context to the appropriate tenant group
+    Write-Log "Running switching to the $definedTenantGroupName context"
+    Set-RdsContext -TenantGroupName $definedTenantGroupName
+    try
+    {
+        $tenants = Get-RdsTenant -Name $TenantName
+        if(!$tenants)
+        {
+            Write-Log "No tenants exist or you do not have proper access."
+        }
+    }
+    catch
+    {
+        Write-Log -Message $_
+        throw $_
+    }
 
     # Checking if host pool exists. If not, create a new one with the given HostPoolName
     Write-Log -Message "Checking Hostpool exists inside the Tenant"
