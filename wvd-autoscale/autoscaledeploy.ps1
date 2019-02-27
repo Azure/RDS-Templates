@@ -73,7 +73,7 @@ param(
     [Parameter(Mandatory = $True)]
     $TimeDifference,
 
-    [Parameter(Mandatory = $True)]
+    [Parameter(Mandatory = $false)]
     $SessionThresholdPerCPU,
 
     [Parameter(Mandatory = $True)]
