@@ -20,12 +20,12 @@ Enter the appropriate parameters depending on the image option you choose.
 By selecting Azure Gallery, you can select up-to-date images provided by Microsoft and other publishers. Enter or select values for the following parameters:
 - **Rdsh Image Source**, select **Gallery**.
 - **Rdsh Gallery Image SKU**
-
+- **Rdsh Use Managed Disks**
+- **Storage Account Name**. (Required when rdshImageSource = Gallery and RdshUseManagedDisks = False) The name of the storage account to store the unmanaged disks from an Azure Gallery image. If you decide to use unmanaged disks from a custom vhd, the disks will be stored in the same storage account as the image. 
 Ignore the following parameters :
 - **Vm Image Vhd Uri**
 - **Rdsh Custom Image Source Name**
 - **Rdsh Custom Image Source Resource Group**
-- **Rdsh Use Managed Disks**
 - **Storage Account Resource Group Name**
 
 ### Custom VHD from blob storage

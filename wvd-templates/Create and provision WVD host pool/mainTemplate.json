@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/ptg-alignments/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/staging/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -101,7 +101,7 @@
         "storageAccountName": {
             "type": "string",
             "metadata": {
-                "description": "The Name of the Storage Account(Unique Name) to store unamanged disks for unmanaged gallery VM"
+                "description": "(Required when rdshImageSource = Gallery and RdshUseManagedDisks = False) The name of the storage account to store the unmanaged disks from an Azure Gallery image. If you decide to use unmanaged disks from a custom vhd, the disks will be stored in the same storage account as the image."
             },
             "defaultValue": ""
         },
