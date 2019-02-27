@@ -387,14 +387,14 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), copyindex(0),'/', 'dscextension')]",
+            "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'),'0/extensions/dscextension')]"
             ],
             "copy": {
                 "name": "additional-rdsh-dsc-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
+                "count": "[sub(parameters('rdshNumberOfInstances'),1)]"
             },
             "properties": {
                 "publisher": "Microsoft.Powershell",
@@ -417,8 +417,13 @@
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
                         "TenantName": "[parameters('existingTenantName')]",
                         "HostPoolName": "[parameters('hostPoolName')]",
+                        "Description": "[variables('hostPoolDescription')]",
+                        "FriendlyName": "[variables('hostPoolFriendlyName')]",
+                        "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
+                        "AadTenantId": "[parameters('aadTenantId')]",
+                        "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
+                        "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
                     }
                 },
                 "ProtectedSettings": {
