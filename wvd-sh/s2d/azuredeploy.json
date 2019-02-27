@@ -10,25 +10,23 @@
         "description": "Naming prefix for each new resource created. 3-char min, 8-char max, lowercase alphanumeric"
       }
     },
-    "storageAccountType": {
+    "vmImage": {
       "type": "string",
+      "defaultValue": "WindowsServer2016",
       "allowedValues": [
-        "Standard_LRS",
-        "Standard_GRS",
-        "Standard_RAGRS",
-        "Premium_LRS"
+        "WindowsServer2016",
+        "WindowsServer2019"
       ],
       "metadata": {
-        "description": "Type of new Storage Accounts (Standard_LRS, Standard_GRS, Standard_RAGRS or Premium_LRS) to be created to store VM disks"
-      },
-      "defaultValue": "Premium_LRS"
+        "description": "VM Image."
+      }
     },
     "vmSize": {
       "type": "string",
       "metadata": {
         "description": "Size of the S2D VMs to be created"
       },
-      "defaultValue": "Standard_DS1_v2"
+      "defaultValue": "Standard_D4s_v3"
     },
     "vmCount": {
       "type": "int",
@@ -38,6 +36,13 @@
         "description": "Number of S2D VMs to be created in cluster (Min=2, Max=3)"
       },
       "defaultValue": 2
+    },
+    "enableAcceleratedNetworking": {
+      "type": "bool",
+      "metadata": {
+        "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs. Defaults to true."
+      },
+      "defaultValue": true
     },
     "vmDiskSize": {
       "type": "int",
@@ -113,7 +118,7 @@
       "metadata": {
         "description": "Location of resources that the script is dependent on such as linked templates and DSC modules"
       },
-      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/selfhostdsc/wvd-sh/s2d"
+      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-sh/s2d"
     },
     "_artifactsLocationSasToken": {
       "type": "securestring",
@@ -153,11 +158,14 @@
           "adminPassword": {
             "value": "[parameters('adminPassword')]"
           },
-          "storageAccountType": {
-            "value": "[parameters('storageAccountType')]"
+          "enableAcceleratedNetworking":{
+            "value": "[parameters('enableAcceleratedNetworking')]"
           },
           "nicSubnetUri": {
             "value": "[variables('subnetRef')]"
+          },
+          "vmImage":{
+            "value":"[parameters('vmImage')]"
           },
           "vmSize": {
             "value": "[parameters('vmSize')]"
