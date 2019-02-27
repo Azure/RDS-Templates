@@ -26,7 +26,7 @@
       "metadata": {
         "description": "Size of the S2D VMs to be created"
       },
-      "defaultValue": "Standard_DS1_v2"
+      "defaultValue": "Standard_D4s_v3"
     },
     "vmCount": {
       "type": "int",
@@ -40,9 +40,9 @@
     "enableAcceleratedNetworking": {
       "type": "bool",
       "metadata": {
-        "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
+        "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs. Defaults to true."
       },
-      "defaultValue": false
+      "defaultValue": true
     },
     "vmDiskSize": {
       "type": "int",
