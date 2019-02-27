@@ -171,7 +171,7 @@ configuration AdditionalSessionHosts
                     return @{'Result' = ''}
                 }
                 SetScript = {
-                    & "$using:ScriptPath\Script-AdditionalRdshServers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName  -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
+                    & "$using:ScriptPath\Script-AdditionalRdshServers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName  -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
                 }
                 TestScript = {
                     return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
@@ -187,7 +187,7 @@ configuration AdditionalSessionHosts
                     return @{'Result' = ''}
                 }
                 SetScript = {
-                    & "$using:ScriptPath\Script-AdditionalRdshServers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
+                    & "$using:ScriptPath\Script-AdditionalRdshServers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -ADAdminCredentials $using:ADAdminCredentials -HostPoolName $using:HostPoolName -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
                 }
                 TestScript = {
                     return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")

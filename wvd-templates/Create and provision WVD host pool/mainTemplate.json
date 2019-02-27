@@ -417,13 +417,8 @@
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
                         "TenantName": "[parameters('existingTenantName')]",
                         "HostPoolName": "[parameters('hostPoolName')]",
-                        "Description": "[variables('hostPoolDescription')]",
-                        "FriendlyName": "[variables('hostPoolFriendlyName')]",
-                        "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]",
-                        "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
-                        "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
+                        "AadTenantId": "[parameters('aadTenantId')]"
                     }
                 },
                 "ProtectedSettings": {
