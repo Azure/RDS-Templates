@@ -63,7 +63,7 @@
         "rdshNamePrefix": {
             "type": "string",
             "metadata": {
-                "description": "This prefix will be used in combination with the VM number to create the VM name. If using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
+                "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
             },
             "defaultValue": "[take(toLower(resourceGroup().name),10)]"
         },
@@ -89,7 +89,14 @@
             "metadata": {
                 "description": "The size of the session host VMs."
             },
-            "defaultValue": "Standard_D2s_v3"
+            "defaultValue": "Standard_D4s_v3"
+        },
+        "enableAcceleratedNetworking": {
+            "type": "bool",
+            "metadata": {
+                "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
+            },
+            "defaultValue": false
         },
         "rdshUseManagedDisks": {
             "type": "bool",
@@ -115,14 +122,14 @@
         "domainToJoin": {
             "type": "string",
             "metadata": {
-                "description": "FQDN of the AD domain controller to which sesion host VMs are going to be joined. For example, “contoso.com”."
+                "description": "FQDN of the AD domain controller to which sesion host VMs are going to be joined. For example, 'contoso.com'."
             },
             "defaultValue": "contoso.com"
         },
         "existingDomainUPN": {
             "type": "string",
             "metadata": {
-                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, “user1@contoso.com”."
+                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'user1@contoso.com'."
             }
         },
         "existingDomainPassword": {
@@ -182,6 +189,13 @@
             },
             "defaultValue": false
         },
+        "defaultDesktopUsers": {
+            "type": "string",
+            "metadata": {
+                "description": "Provide a comma separated list of users you would like to assign to access the desktop for this host pool. Example: user1@contoso.com,user2@contoso.com,user3@contoso.com "
+            },
+            "defaultValue": ""
+        },
         "tenantAdminUpnOrApplicationId": {
             "type": "string",
             "metadata": {
@@ -212,7 +226,7 @@
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Specifies an organizational unit (OU) for the domain account. Example: OU=testOU;DC=domain;DC=Domain;DC=com"
+                "description": "(Optional) Specifiy an organizational unit (OU) to place the new virtual machines when joining the domain. If you do not have a specific OU to place the virtual machines, leave it blank. Example OU: 'OU=testOU;DC=domain;DC=Domain;DC=com'"
             }
         }
     },
@@ -223,7 +237,7 @@
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
-        "hostPoolFriendlyName": "Hostpool",
+        "hostPoolFriendlyName": "[parameters('hostPoolName')]",
         "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
@@ -287,6 +301,9 @@
                     "rdshVmSize": {
                         "value": "[parameters('rdshVmSize')]"
                     },
+                    "enableAcceleratedNetworking": {
+                        "value": "[parameters('enableAcceleratedNetworking')]"
+                    },
                     "existingDomainusername": {
                         "value": "[variables('existingDomainUsername')]"
                     },
@@ -334,7 +351,7 @@
                 "settings": {
                     "name": "[parameters('domainToJoin')]",
                     "ouPath": "[parameters('ouPath')]",
-                    "user": "[concat(parameters('domainToJoin'),'\\', variables('existingDomainUsername'))]",
+                    "user": "[parameters('existingDomainUPN')]",
                     "restart": "true",
                     "options": "3"
                 },
@@ -382,6 +399,8 @@
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]",
                         "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]"
+                        "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
+                        "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
                     }
                 },
                 "ProtectedSettings": {

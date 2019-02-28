@@ -46,7 +46,10 @@ param(
     [string]$AadTenantId,
 
     [Parameter(Mandatory = $true)]
-    [string]$EnablePersistentDesktop="False"
+    [string]$EnablePersistentDesktop="False",
+
+    [Parameter(Mandatory = $false)]
+    [string]$DefaultDesktopUsers=""
 )
 
 function Write-Log
@@ -77,6 +80,50 @@ function Write-Log
     { 
         Write-Error $_.Exception.Message 
     } 
+}
+
+function AddDefaultUsers
+{
+    param
+    ( 
+        [Parameter(Mandatory = $true)] 
+        [string]$TenantName,
+
+        [Parameter(Mandatory = $true)] 
+        [string]$HostPoolName,
+
+        [Parameter(Mandatory = $true)] 
+        [string]$ApplicationGroupName,
+
+        [Parameter(Mandatory = $false)] 
+        [string]$DefaultUsers
+
+    ) 
+
+    # Checking for null parameters
+    Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
+
+    # Sanitizing DefaultUsers string
+    $DefaultUsers = $DefaultUsers.Replace("`"","").Replace("'","").Replace(" ","")
+
+    if (-not ([string]::IsNullOrEmpty($DefaultUsers)))
+    {
+        $UserList = $DefaultUsers.split(",",[System.StringSplitOptions]::RemoveEmptyEntries)
+
+        foreach ($user in $UserList)
+        {
+            try 
+            {
+                Add-RdsAppGroupUser -TenantName $TenantName -HostPoolName $HostPoolName -AppGroupName $ApplicationGroupName -UserPrincipalName $user
+                Write-Log "Successfully assigned user $user to App Group: $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."  
+            }
+            catch
+            {
+                Write-Log "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
+                Write-Log "Error details: $_"
+            }
+        }
+    }
 }
 
 class PsRdsSessionHost
@@ -164,6 +211,7 @@ class PsRdsSessionHost
         }
     }
 }
+
 
 $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
 
@@ -311,19 +359,20 @@ else
     {
         Write-Log -Message "Hostpool UseReverseConnect already enabled as true"
     }
-    
-    # Creating registration token
-    $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ErrorAction SilentlyContinue
+
+    # Random wait time to create or export registration info
+    Start-Sleep (5..15 | Get-Random)
+    $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours -ErrorAction SilentlyContinue
     if (!$Registered)
     {
-        $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours
+        $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName 
         $obj =  $Registered | Out-String
-        Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $obj"
+        Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $obj"
     }
     else
     {
         $obj =  $Registered | Out-String
-        Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $obj"
+        Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $obj"
     }
 
     # Executing DeployAgent psl file in rdsh vm and add to hostpool
@@ -351,5 +400,17 @@ else
     $rdshName = $rdsh.SessionHostName | Out-String -Stream
     $poolName = $rdsh.hostpoolname | Out-String -Stream
 
+    # Adding default users
+
+    # Sanitizing $DefaultDesktopUsers from ", ' or spaces
+    $DefaultDesktopUsers = $DefaultDesktopUsers.Replace("`"","").Replace("'","").Replace(" ","")
+    if (-not ([string]::IsNullOrEmpty($DefaultDesktopUsers)))
+    {
+        # Random wait time to start adding default users
+        Start-Sleep (20..60 | Get-Random)
+        $ApplicationGroupName = "Desktop Application Group"
+        AddDefaultUsers -TenantName $TenantName -HostPoolName $HostPoolName -ApplicationGroupName $ApplicationGroupName -DefaultUsers $DefaultDesktopUsers
+    }
+   
     Write-Log -Message "Successfully added $rdshName VM to $poolName"
 }

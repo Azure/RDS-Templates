@@ -500,7 +500,7 @@ else
                         $isInstanceReady = $false
                         $numOfRetries = 0
 								
-                        while (!$isInstanceReady -and $num -le 3) {
+                        while (!$isInstanceReady -and $numOfRetries -le 3) {
                             $numOfRetries = $numOfRetries + 1
                             $instance = Get-AzureRmVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
                             if ($instance -ne $null -and $instance.ProvisioningState -eq "Succeeded") {

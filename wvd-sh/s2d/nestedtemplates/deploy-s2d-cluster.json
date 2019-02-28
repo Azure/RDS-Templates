@@ -29,17 +29,12 @@
         "description": "Password for the Administrator account of the existing Active Directory Domain"
       }
     },
-    "storageAccountType": {
-      "type": "string",
-      "allowedValues": [
-        "Standard_LRS",
-        "Standard_GRS",
-        "Standard_RAGRS",
-        "Premium_LRS"
-      ],
+    "enableAcceleratedNetworking": {
+      "type": "bool",
       "metadata": {
-        "description": "Type of new Storage Accounts (Standard_LRS, Standard_GRS, Standard_RAGRS or Premium_LRS) to be created to store VM disks"
-      }
+        "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
+      },
+      "defaultValue": false
     },
     "nicSubnetUri": {
       "type": "string",
@@ -89,21 +84,16 @@
         "description": "Name of shared data folder on clustered Scale-Out File Server role"
       }
     },
-    "imagePublisher": {
+    "vmImage": {
       "type": "string",
-      "defaultValue": "MicrosoftWindowsServer"
-    },
-    "imageOffer": {
-      "type": "string",
-      "defaultValue": "WindowsServer"
-    },
-    "imageSKU": {
-      "type": "string",
-      "defaultValue": "2016-Datacenter"
-    },
-    "imageVersion": {
-      "type": "string",
-      "defaultValue": "latest"
+      "defaultValue": "WindowsServer2016",
+      "allowedValues": [
+        "WindowsServer2016",
+        "WindowsServer2019"
+      ],
+      "metadata": {
+        "description": "VM Image."
+      }
     },
     "_artifactsLocation": {
       "type": "string"
@@ -120,8 +110,21 @@
     }
   },
   "variables": {
+    "vmImages": {
+      "WindowsServer2016":{
+        "publisher": "MicrosoftWindowsServer",
+        "offer": "WindowsServer",
+        "sku": "2016-Datacenter",
+        "version": "latest"
+      },
+      "WindowsServer2019":{
+        "publisher": "MicrosoftWindowsServer",
+        "offer": "WindowsServer",
+        "sku": "2019-Datacenter",
+        "version": "latest"
+      }
+    },
     "apiVersionStorage": "2016-01-01",
-    "storageNamePrefix": "[concat(parameters('namePrefix'),uniqueString(resourceGroup().id),'vm')]",
     "witnessStorageName": "[concat(parameters('namePrefix'),uniqueString(resourceGroup().id),'cw')]",
     "witnessStorageType": "Standard_LRS",
     "vmNamePrefix": "[concat(parameters('namePrefix'),'-s2d-')]",
@@ -158,24 +161,10 @@
       "kind": "Storage"
     },
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[concat(variables('storageNamePrefix'),copyindex())]",
-      "apiVersion": "2016-01-01",
-      "copy": {
-        "name": "storageAccountLoop",
-        "count": "[parameters('vmCount')]"
-      },
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "[parameters('storageAccountType')]"
-      },
-      "kind": "Storage"
-    },
-    {
       "name": "[concat(variables('vmNamePrefix'), copyindex(), '-nic')]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[parameters('location')]",
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2016-09-01",
       "copy": {
         "name": "nicLoop",
         "count": "[parameters('vmCount')]"
@@ -191,7 +180,8 @@
               }
             }
           }
-        ]
+        ],
+        "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]"
       }
     },
     {
@@ -203,7 +193,6 @@
       },
       "name": "[concat(variables('vmNamePrefix'),copyindex(),'-newVM')]",
       "dependsOn": [
-        "storageAccountLoop",
         "nicLoop",
         "[resourceId('Microsoft.Compute/availabilitySets', variables('vmAvailabilitySetName'))]"
       ],
@@ -215,9 +204,6 @@
         "parameters": {
           "vmName": {
             "value": "[concat(variables('vmNamePrefix'), copyindex())]"
-          },
-          "storageAccountUri": {
-            "value": "[reference(concat('Microsoft.Storage/storageAccounts/',variables('StorageNamePrefix'),copyIndex()),variables('apiVersionStorage')).primaryEndpoints.blob]"
           },
           "vmAvailabilitySetName": {
             "value": "[variables('vmAvailabilitySetName')]"
@@ -244,16 +230,16 @@
             "value": "[parameters('_artifactsLocationSasToken')]"
           },
           "imagePublisher": {
-            "value": "[parameters('imagePublisher')]"
+            "value": "[variables('vmImages')[parameters('vmImage')].publisher]"
           },
           "imageOffer": {
-            "value": "[parameters('imageOffer')]"
+            "value": "[variables('vmImages')[parameters('vmImage')].offer]"
           },
           "imageSKU": {
-            "value": "[parameters('imageSKU')]"
+            "value": "[variables('vmImages')[parameters('vmImage')].sku]"
           },
           "imageVersion": {
-            "value": "[parameters('imageVersion')]"
+            "value": "[variables('vmImages')[parameters('vmImage')].version]"
           }
         }
       }
