@@ -3,228 +3,228 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "_artifactsLocation": {
-            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool",
+            "type": "String",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
-            },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
+            }
         },
         "_artifactsLocationSasToken": {
-            "type": "securestring",
+            "defaultValue": "",
+            "type": "SecureString",
             "metadata": {
                 "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
-            },
-            "defaultValue": ""
+            }
         },
         "rdshImageSource": {
-            "type": "string",
-            "metadata": {
-                "description": "Select the image source for the session host vms. VMs from a Gallery image will be created with Managed Disks."
-            },
             "defaultValue": "Gallery",
             "allowedValues": [
                 "CustomVHD",
                 "CustomImage",
                 "Gallery"
-            ]
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "Select the image source for the session host vms. VMs from a Gallery image will be created with Managed Disks."
+            }
         },
         "vmImageVhdUri": {
-            "type": "string",
+            "defaultValue": "",
+            "type": "String",
             "metadata": {
                 "description": "(Required when rdshImageSource = CustomVHD) URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
-            },
-            "defaultValue": ""
+            }
         },
         "rdshGalleryImageSKU": {
-            "type": "string",
-            "metadata": {
-                "description": "(Required when rdshImageSource = Gallery) Gallery image SKU."
-            },
+            "defaultValue": "Windows-10-Enterprise-multi-session",
             "allowedValues": [
                 "Windows-10-Enterprise-multi-session",
                 "2016-Datacenter"
             ],
-            "defaultValue": "Windows-10-Enterprise-multi-session"
+            "type": "String",
+            "metadata": {
+                "description": "(Required when rdshImageSource = Gallery) Gallery image SKU."
+            }
         },
         "rdshCustomImageSourceName": {
-            "type": "string",
             "defaultValue": "",
+            "type": "String",
             "metadata": {
                 "description": "(Required when rdshImageSource = CustomImage) Name of the managed disk."
             }
         },
         "rdshCustomImageSourceResourceGroup": {
-            "type": "string",
             "defaultValue": "",
+            "type": "String",
             "metadata": {
                 "description": "(Required when rdshImageSource = CustomImage) Resource group name for the managed disk, if you choose to provide one."
             }
         },
         "rdshNamePrefix": {
-            "type": "string",
+            "defaultValue": "[take(toLower(resourceGroup().name),10)]",
+            "type": "String",
             "metadata": {
                 "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
-            },
-            "defaultValue": "[take(toLower(resourceGroup().name),10)]"
+            }
         },
         "rdshNumberOfInstances": {
-            "type": "int",
+            "type": "Int",
             "metadata": {
                 "description": "Number of session hosts that will be created and added to the hostpool."
             }
         },
         "rdshVMDiskType": {
-            "type": "string",
+            "defaultValue": "SSD",
             "allowedValues": [
                 "SSD",
                 "HDD"
             ],
+            "type": "String",
             "metadata": {
                 "description": "The VM disk type for the VM: HDD or SSD."
-            },
-            "defaultValue": "SSD"
+            }
         },
         "rdshVmSize": {
-            "type": "string",
+            "defaultValue": "Standard_D4s_v3",
+            "type": "String",
             "metadata": {
                 "description": "The size of the session host VMs."
-            },
-            "defaultValue": "Standard_D4s_v3"
+            }
         },
         "enableAcceleratedNetworking": {
-            "type": "bool",
+            "defaultValue": false,
+            "type": "Bool",
             "metadata": {
                 "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
-            },
-            "defaultValue": false
+            }
         },
         "rdshUseManagedDisks": {
-            "type": "bool",
             "defaultValue": true,
+            "type": "Bool",
             "metadata": {
                 "description": "True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
             }
         },
         "storageAccountName": {
-            "type": "string",
+            "defaultValue": "",
+            "type": "String",
             "metadata": {
                 "description": "(Required when rdshImageSource = Gallery and RdshUseManagedDisks = False) The name of the storage account to store the unmanaged disks from an Azure Gallery image. If you decide to use unmanaged disks from a custom vhd, the disks will be stored in the same storage account as the image."
-            },
-            "defaultValue": ""
+            }
         },
         "storageAccountResourceGroupName": {
-            "type": "string",
+            "defaultValue": "",
+            "type": "String",
             "metadata": {
                 "description": "(Required when rdshUseManagedDisks = False) The resource group containing the storage account of the image vhd file."
-            },
-            "defaultValue": ""
+            }
         },
         "domainToJoin": {
-            "type": "string",
+            "defaultValue": "contoso.com",
+            "type": "String",
             "metadata": {
                 "description": "FQDN of the AD domain controller to which sesion host VMs are going to be joined. For example, 'contoso.com'."
-            },
-            "defaultValue": "contoso.com"
+            }
         },
         "existingDomainUPN": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'user1@contoso.com'."
             }
         },
         "existingDomainPassword": {
-            "type": "securestring",
+            "type": "SecureString",
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
             }
         },
         "existingVnetName": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "The name of the virtual network the VMs will be connected to."
             }
         },
         "existingSubnetName": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "The subnet the VMs will be placed in."
             }
         },
         "virtualNetworkResourceGroupName": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "The resource group containing the existing virtual network."
             }
         },
         "rdBrokerURL": {
-            "type": "string",
+            "defaultValue": "https://rdbroker.wvd.microsoft.com",
+            "type": "String",
             "metadata": {
                 "description": "The Broker URL of the Windows Virtual Desktop deployment the session hosts will be connected to."
-            },
-            "defaultValue": "https://rdbroker.wvd.microsoft.com"
+            }
         },
         "existingTenantGroupName": {
-            "type": "string",
+            "defaultValue": "Default Tenant Group",
+            "type": "String",
             "metadata": {
                 "description": "The name of the tenant group in the Windows Virtual Desktop deployment"
-            },
-            "defaultValue": "Default Tenant Group"
+            }
         },
         "existingTenantName": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "The name of the tenant in the Windows Virtual Desktop deployment."
             }
         },
         "hostPoolName": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "The name of the hostpool to be created in the RDS Tenant."
             }
         },
         "enablePersistentDesktop": {
-            "type": "bool",
+            "defaultValue": false,
+            "type": "Bool",
             "metadata": {
                 "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
-            },
-            "defaultValue": false
+            }
         },
         "defaultDesktopUsers": {
-            "type": "string",
+            "defaultValue": "",
+            "type": "String",
             "metadata": {
                 "description": "Provide a comma separated list of users you would like to assign to access the desktop for this host pool. Example: user1@contoso.com,user2@contoso.com,user3@contoso.com "
-            },
-            "defaultValue": ""
+            }
         },
         "tenantAdminUpnOrApplicationId": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the WVD Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
             }
         },
         "tenantAdminPassword": {
-            "type": "securestring",
+            "type": "SecureString",
             "metadata": {
                 "description": "The password that corresponds to the tenant admin UPN."
             }
         },
         "isServicePrincipal": {
-            "type": "bool",
             "defaultValue": false,
+            "type": "Bool",
             "metadata": {
                 "description": "The boolean value indicating if the credentials are for a service principal."
             }
         },
         "aadTenantId": {
-            "type": "string",
             "defaultValue": "",
+            "type": "String",
             "metadata": {
                 "description": "(Required when isServicePrincipal = True) This value identifies the Azure AD tenant of the service principal."
             }
         },
         "ouPath": {
-            "type": "string",
             "defaultValue": "",
+            "type": "String",
             "metadata": {
                 "description": "(Optional) Specifiy an organizational unit (OU) to place the new virtual machines when joining the domain. If you do not have a specific OU to place the virtual machines, leave it blank. Example OU: 'OU=testOU;DC=domain;DC=Domain;DC=com'"
             }
@@ -242,20 +242,21 @@
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
-        "storageAccountType": "Standard_LRS"
+        "storageAccountType": "Standard_LRS",
+        "validStorageAccountName": "[if(not(parameters('rdshUseManagedDisks')), toLower(parameters('storageAccountName')), 'storageaccount')]"
     },
     "resources": [
         {
-            "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/availabilitySets",
+            "sku": {
+                "name": "[variables('avSetSKU')]"
+            },
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
+            "apiVersion": "2016-04-30-preview",
             "location": "[resourceGroup().location]",
             "properties": {
                 "platformUpdateDomainCount": 5,
                 "platformFaultDomainCount": 2
-            },
-            "sku": {
-                "name": "[variables('avSetSKU')]"
             }
         },
         {
@@ -264,15 +265,15 @@
                 "name": "[variables('storageAccountType')]"
             },
             "kind": "Storage",
-            "name": "[toLower(Parameters('storageAccountName'))]",
+            "name": "[variables('validStorageAccountName')]",
             "apiVersion": "2017-06-01",
             "location": "[resourceGroup().location]",
             "condition": "[equals(variables('vmTemplateName'), 'unmanagedDisks-galleryvm')]"
         },
         {
-            "apiVersion": "2017-05-10",
-            "name": "vmCreation-linkedTemplate",
             "type": "Microsoft.Resources/deployments",
+            "name": "vmCreation-linkedTemplate",
+            "apiVersion": "2017-05-10",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -314,7 +315,7 @@
                         "value": "[variables('subnet-id')]"
                     },
                     "storageAccountName": {
-                        "value": "[parameters('storageAccountName')]"
+                        "value": "[variables('validStorageAccountName')]"
                     },
                     "vhds": {
                         "value": "[variables('vhds')]"
@@ -328,17 +329,15 @@
                 }
             },
             "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
+                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]",
+                "[variables('validStorageAccountName')]"
             ]
         },
         {
-            "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
+            "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "vmCreation-linkedTemplate"
-            ],
             "copy": {
                 "name": "rdsh-domain-join-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
@@ -358,16 +357,16 @@
                 "protectedSettings": {
                     "password": "[parameters('existingDomainPassword')]"
                 }
-            }
+            },
+            "dependsOn": [
+                "vmCreation-linkedTemplate"
+            ]
         },
         {
-            "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'dscextension')]",
+            "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "rdsh-domain-join-loop"
-            ],
             "copy": {
                 "name": "rdsh-dsc-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
@@ -408,7 +407,10 @@
                         "adAdminPassword": "[parameters('existingDomainPassword')]"
                     }
                 }
-            }
+            },
+            "dependsOn": [
+                "rdsh-domain-join-loop"
+            ]
         }
     ]
 }
