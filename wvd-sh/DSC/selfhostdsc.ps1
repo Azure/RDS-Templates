@@ -70,7 +70,7 @@ Configuration SelfhostConfig {
 			Ensure      = "Present"
                         Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
                         ValueName   = "DisableRegistryLocalRedirect"
-                        ValueData   = 1
+                        ValueData   = 0
                         ValueType   = "DWORD"
 		}
 
