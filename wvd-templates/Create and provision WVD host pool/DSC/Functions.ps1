@@ -15,7 +15,7 @@ class PsRdsSessionHost
     [string]$TenantName = [string]::Empty
     [string]$HostPoolName = [string]::Empty
     [string]$SessionHostName = [string]::Empty
-    [int]$TimeoutInMin=900 
+    [int]$TimeoutInSec=900
 
     PsRdsSessionHost() {}
 
@@ -25,17 +25,17 @@ class PsRdsSessionHost
         $this.SessionHostName = $SessionHostName
     }
 
-    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName, [int]$TimeoutInMin) {
+    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName, [int]$TimeoutInSec) {
         
-        if ($TimeoutInMin -gt 1800)
+        if ($TimeoutInSec -gt 1800)
         {
-            throw "TimeoutInMin is too high, maximum value is 1800"
+            throw "TimeoutInSec is too high, maximum value is 1800"
         }
 
         $this.TenantName = $TenantName
         $this.HostPoolName = $HostPoolName
         $this.SessionHostName = $SessionHostName
-        $this.TimeoutInMin = $TimeoutInMin
+        $this.TimeoutInSec = $TimeoutInSec
     }
 
     hidden [object] _trySessionHost([string]$operation)
@@ -53,11 +53,11 @@ class PsRdsSessionHost
         $StartTime = Get-Date
         while ($sessionHost -eq $null)
         {
-            Start-Sleep (60..120 | Get-Random)
+            Start-Sleep -Seconds 10
             Write-Output "PsRdsSessionHost: Retrying Add SessionHost..."
             $sessionHost = (Invoke-Expression $commandToExecute)
     
-            if ((get-date).Subtract($StartTime).Minutes -gt $this.TimeoutInMin)
+            if ((get-date).Subtract($StartTime).Minutes -gt $this.TimeoutInSec)
             {
                 if ($sessionHost -eq $null)
                 {
