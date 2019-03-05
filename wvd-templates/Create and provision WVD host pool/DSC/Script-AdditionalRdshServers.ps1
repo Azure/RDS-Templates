@@ -35,7 +35,7 @@ param(
 
     [Parameter(Mandatory = $false)]
     [AllowEmptyString()]
-    [string]$AadTenantId
+    [string]$AadTenantId=""
 )
 
 $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)

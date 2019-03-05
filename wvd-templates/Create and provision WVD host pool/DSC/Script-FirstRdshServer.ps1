@@ -44,7 +44,7 @@ param(
 
     [Parameter(Mandatory = $false)]
     [AllowEmptyString()]
-    [string]$AadTenantId,
+    [string]$AadTenantId="",
 
     [Parameter(Mandatory = $true)]
     [string]$EnablePersistentDesktop="False",

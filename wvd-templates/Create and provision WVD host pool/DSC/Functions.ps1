@@ -177,8 +177,9 @@ function ValidateServicePrincipal
         [Parameter(Mandatory = $true)] 
         [string]$isServicePrincipal,
 
-        [Parameter(Mandatory = $true)] 
-        [string]$AadTenantId
+        [Parameter(Mandatory = $false)] 
+        [AllowEmptyString()]
+        [string]$AadTenantId=""
     ) 
 
     if ($isServicePrincipal -eq "True")
