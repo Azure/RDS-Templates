@@ -33,7 +33,7 @@ configuration FirstSessionHost
         [string]$isServicePrincipal = "False",
     
         [Parameter(Mandatory = $false)]
-        [AllowEmptyString]
+        [AllowEmptyString()]
         [string]$AadTenantId,
     
         [Parameter(Mandatory = $true)]

@@ -34,7 +34,7 @@ param(
     [string]$IsServicePrincipal = "False",
 
     [Parameter(Mandatory = $false)]
-    [AllowEmptyString]
+    [AllowEmptyString()]
     [string]$AadTenantId
 )
 
