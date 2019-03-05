@@ -109,7 +109,7 @@ function Write-Log
      
     try
     { 
-        $DateTime = Get-Date -Format "MM-dd-yy HH:mm:ss" 
+        $DateTime = Get-Date -Format "MM-dd-yy HH:mm:ss"
         $Invocation = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber)" 
         if ($Message)
         {
