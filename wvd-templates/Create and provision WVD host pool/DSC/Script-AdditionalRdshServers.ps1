@@ -34,7 +34,8 @@ param(
     [string]$IsServicePrincipal = "False",
 
     [Parameter(Mandatory = $false)]
-    [string]$AadTenantId=""
+    [AllowEmptyString]
+    [string]$AadTenantId
 )
 
 $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)

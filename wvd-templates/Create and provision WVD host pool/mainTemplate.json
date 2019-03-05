@@ -115,9 +115,8 @@
         "domainToJoin": {
             "type": "string",
             "metadata": {
-                "description": "FQDN of the AD domain controller to which sesion host VMs are going to be joined. For example, 'contoso.com'."
-            },
-            "defaultValue": "contoso.com"
+                "description": "FQDN of the AD Domain to which sesion host VMs are going to be joined. For example, 'contoso.com'."
+            }
         },
         "existingDomainUPN": {
             "type": "string",

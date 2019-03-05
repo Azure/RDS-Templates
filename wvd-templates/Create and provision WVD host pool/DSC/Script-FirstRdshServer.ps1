@@ -43,7 +43,8 @@ param(
     [string]$isServicePrincipal = "False",
 
     [Parameter(Mandatory = $false)]
-    [string]$AadTenantId="",
+    [AllowEmptyString]
+    [string]$AadTenantId,
 
     [Parameter(Mandatory = $true)]
     [string]$EnablePersistentDesktop="False",
