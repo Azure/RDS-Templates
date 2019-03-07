@@ -384,6 +384,7 @@
             }
         },
         {
+            "condition":"[greater(parameters('rdshNumberOfInstances'),1)]",
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
@@ -393,7 +394,7 @@
             ],
             "copy": {
                 "name": "additional-rdsh-dsc-loop",
-                "count": "[sub(parameters('rdshNumberOfInstances'),1)]"
+                "count": "[if(greater(parameters('rdshNumberOfInstances'),1),sub(parameters('rdshNumberOfInstances'),1),1)]"
             },
             "properties": {
                 "publisher": "Microsoft.Powershell",
