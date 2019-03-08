@@ -115,9 +115,8 @@
         "domainToJoin": {
             "type": "string",
             "metadata": {
-                "description": "FQDN of the AD domain controller to which sesion host VMs are going to be joined. For example, 'contoso.com'."
-            },
-            "defaultValue": "contoso.com"
+                "description": "FQDN of the AD Domain to which sesion host VMs are going to be joined. For example, 'contoso.com'."
+            }
         },
         "existingDomainUPN": {
             "type": "string",
@@ -129,6 +128,13 @@
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
+            }
+        },
+        "ouPath": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "(Optional) Specifiy an organizational unit (OU) to place the new virtual machines when joining the domain. If you do not have a specific OU to place the virtual machines, leave it blank. Example OU: 'OU=testOU;DC=domain;DC=Domain;DC=com'"
             }
         },
         "existingVnetName": {
@@ -213,13 +219,6 @@
             "defaultValue": "",
             "metadata": {
                 "description": "(Required when isServicePrincipal = True) This value identifies the Azure AD tenant of the service principal."
-            }
-        },
-        "ouPath": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "(Optional) Specifiy an organizational unit (OU) to place the new virtual machines when joining the domain. If you do not have a specific OU to place the virtual machines, leave it blank. Example OU: 'OU=testOU;DC=domain;DC=Domain;DC=com'"
             }
         }
     },
@@ -341,15 +340,11 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'dscextension')]",
+            "name": "[concat(variables('rdshPrefix'), '0/', 'dscextension')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "rdsh-domain-join-loop"
             ],
-            "copy": {
-                "name": "rdsh-dsc-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
             "properties": {
                 "publisher": "Microsoft.Powershell",
                 "type": "DSC",
@@ -357,7 +352,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\SessionHost",
+                    "configurationFunction": "Configuration.ps1\\FirstSessionHost",
                     "properties": {
                         "TenantAdminCredentials": {
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
@@ -378,6 +373,52 @@
                         "AadTenantId": "[parameters('aadTenantId')]",
                         "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
                         "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
+                    }
+                },
+                "ProtectedSettings": {
+                    "items": {
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]",
+                        "adAdminPassword": "[parameters('existingDomainPassword')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition":"[greater(parameters('rdshNumberOfInstances'),1)]",
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'),'0/extensions/dscextension')]"
+            ],
+            "copy": {
+                "name": "additional-rdsh-dsc-loop",
+                "count": "[if(greater(parameters('rdshNumberOfInstances'),1),sub(parameters('rdshNumberOfInstances'),1),1)]"
+            },
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.73",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
+                    "properties": {
+                        "TenantAdminCredentials": {
+                            "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
+                            "password": "PrivateSettingsRef:tenantAdminPassword"
+                        },
+                        "ADAdminCredentials": {
+                            "userName": "[parameters('existingDomainUPN')]",
+                            "password": "PrivateSettingsRef:adAdminPassword"
+                        },
+                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
+                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
+                        "TenantName": "[parameters('existingTenantName')]",
+                        "HostPoolName": "[parameters('hostPoolName')]",
+                        "isServicePrincipal": "[parameters('isServicePrincipal')]",
+                        "AadTenantId": "[parameters('aadTenantId')]"
                     }
                 },
                 "ProtectedSettings": {
