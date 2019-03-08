@@ -248,7 +248,6 @@
     },
     "resources": [
         {
-            "condition":false,
             "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
@@ -262,7 +261,6 @@
             }
         },
         {
-            "condition":false,
             "apiVersion": "2017-05-10",
             "name": "vmCreation-linkedTemplate",
             "type": "Microsoft.Resources/deployments",
@@ -322,7 +320,6 @@
             ]
         },
         {
-            "condition":false,
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
@@ -352,7 +349,6 @@
             }
         },
         {
-            "condition":false,
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), '0/', 'dscextension')]",
@@ -399,7 +395,7 @@
             }
         },
         {
-            "condition":false,
+            "condition":"[greater(parameters('rdshNumberOfInstances'),1)]",
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
