@@ -233,10 +233,22 @@
         "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
-        "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]"
+        "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
+        "rdshVmNamesOutput": {
+            "copy":[
+                {
+                    "name":"rdshVmNamesCopy",
+                    "count":"[parameters('rdshNumberOfInstances')]",
+                    "input": {
+                        "name":"[concat(variables('rdshPrefix'),copyIndex('rdshVmNamesCopy'))]"
+                    }
+                }
+            ]
+        }
     },
     "resources": [
         {
+            "condition":false,
             "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
@@ -250,6 +262,7 @@
             }
         },
         {
+            "condition":false,
             "apiVersion": "2017-05-10",
             "name": "vmCreation-linkedTemplate",
             "type": "Microsoft.Resources/deployments",
@@ -309,6 +322,7 @@
             ]
         },
         {
+            "condition":false,
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
@@ -338,6 +352,7 @@
             }
         },
         {
+            "condition":false,
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), '0/', 'dscextension')]",
@@ -384,7 +399,7 @@
             }
         },
         {
-            "condition":"[greater(parameters('rdshNumberOfInstances'),1)]",
+            "condition":false,
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
@@ -429,5 +444,11 @@
                 }
             }
         }
-    ]
+    ],
+    "outputs": {
+        "rdshVmNamesObject":{
+            "value":"[variables('rdshVmNamesOutput')]",
+            "type": "object"
+        }
+    }
 }
