@@ -1,19 +1,18 @@
 Configuration SelfhostConfig {
 
-        param(
-                        [parameter(Mandatory=$true)][string]$Prof,
-                        [parameter(Mandatory=$true)][string[]] $Admins,
-                        [parameter(Mandatory=$true)][string[]] $FSXLogPath
-             )
+    param(
+                    [parameter(Mandatory=$true)][string]$Prof,
+                    [parameter(Mandatory=$true)][string[]] $Admins,
+                    [parameter(Mandatory=$true)][string[]] $FSXLogPath
+            )
 
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 
-		$defaultProf = @(  @{path="HKLM:\TempDefault\Software\Microsoft\Office\16.0\common\Logging "; name="EnableLogging"; value = 1},
-				@{path="HKLM:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="1"},
-				@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="enable"; value = 1},
-				@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
-				@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
-				@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="syncwindowsetting"; value=1})
+	$defaultProf = @(@{path="HKLM:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="1"},
+			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="enable"; value = 1},
+			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
+			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
+			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="syncwindowsetting"; value=1})
 
 
 	Node "localhost"
@@ -35,20 +34,21 @@ Configuration SelfhostConfig {
                         ValueName   = "VHDLocations"
                         ValueData   = $Prof
 		}
-		Registry OfficeEnabled
+		Registry PreventLoginFailure
 		{
 			Ensure      = "Present"
-                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\FSLogix\ODFC"
-                        ValueName   = "Enabled"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
+                        ValueName   = "PreventLoginWithFailure"
                         ValueData   = 1
                         ValueType   = "DWORD"
 		}
-		Registry OfficeLocation
+		Registry PreventLoginWithTempProfile
 		{
 			Ensure      = "Present"
-                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\FSLogix\ODFC"
-                        ValueName   = "VHDLocations"
-                        ValueData   = $Prof
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
+                        ValueName   = "PreventLoginWithTempProfile"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
 		}
 		Registry LogPeriod
 		{
@@ -70,7 +70,7 @@ Configuration SelfhostConfig {
 			Ensure      = "Present"
                         Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
                         ValueName   = "DisableRegistryLocalRedirect"
-                        ValueData   = 1
+                        ValueData   = 0
                         ValueType   = "DWORD"
 		}
 
@@ -81,6 +81,17 @@ Configuration SelfhostConfig {
 			Ensure      = "Present"
                         Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HealthService\Parameters"
                         ValueName   = "Disable CDR Agent"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+
+# Configure Automatic Update set to Disabled
+
+		Registry DisableUA
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
+                        ValueName   = "NoAutoUpdate"
                         ValueData   = 1
                         ValueType   = "DWORD"
 		}
@@ -215,13 +226,12 @@ Configuration SelfhostConfig {
                         ValueData   = "<https://www.office.com/?auth=2&from=WVD>"
 		}
 
-
 		`
-			Group AddAdminGroups {
-				GroupName        = 'administrators'
-					Ensure           = 'Present'
-					MembersToInclude = $Admins
-			}
+		Group AddAdminGroups {
+			GroupName        = 'administrators'
+				Ensure           = 'Present'
+				MembersToInclude = $Admins
+		}
 
 # End Edge defaults
 
@@ -236,8 +246,6 @@ Configuration SelfhostConfig {
                         ValueType   = "DWORD"
 		}
 
-
-
 		Script OutlookCacheMode {
 
 			SetScript = {
@@ -245,7 +253,6 @@ Configuration SelfhostConfig {
 
 					foreach ($a in $defaultProf)
 					{
-
 						if(Test-Path $a.path)
 						{
 							New-ItemProperty -Path $a.path -Name $a.name -Value $a.value -Force
@@ -255,7 +262,6 @@ Configuration SelfhostConfig {
 							New-Item -Path $a.path -Force
 								New-ItemProperty -Path $a.path -Name $a.name -Value $a.value    
 						}
-
 					}
 
 					Start-Sleep -Seconds 5
@@ -270,7 +276,6 @@ Configuration SelfhostConfig {
 
 					foreach ($a in $defaultProf)
 					{
-
 						if(!(Test-Path $a.path))
 						{
 							Write-Information -message '$($s.path) not found'
@@ -278,7 +283,6 @@ Configuration SelfhostConfig {
 						}
 						else
 						{
-
 							$value = Get-ItemProperty -Path $a.path -Name $a.name  |Select-Object -ExpandProperty $a.name 
 								if($value -ne $a.value)
 								{ 
@@ -289,7 +293,6 @@ Configuration SelfhostConfig {
 								{
 									Write-Information -message 'Compliant:$($s.path) $($a.name):$value'
 								}
-
 						}
 
 					}
@@ -301,5 +304,19 @@ Configuration SelfhostConfig {
 			}
 			GetScript = {@{Result="Ok"}}
 		}
+
+                Script RestartFSLogix {
+                    SetScript = {
+                        Restart-Service -Name frxsvc
+                    }
+
+                    TestScript = {
+                        $result = $false
+                        Get-Service -Name frxsvc
+                        $result
+                    }
+                    GetScript = {@{Result="Ok"}}
+                    DependsOn = "[Registry]LogLocation"
+                } 
 	}
 }
