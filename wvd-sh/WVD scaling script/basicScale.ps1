@@ -226,7 +226,7 @@ if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDa
         }
         catch {
             Write-Log 1 "Failed to retrieve deployment information from Azure with error: $($_.exception.message)" "Error"
-            Exit 1
+            # Exit 1
         }			
 			
         #foreach ($roleInstance in $Deployment)
@@ -436,7 +436,7 @@ else
     }
     catch {
         Write-Log 1 "Failed to retrieve session hosts in hostPool: $($hostPoolName) with error: $($_.exception.message)" "Error"
-        Exit 1
+        # Exit 1
     }
 		
 		
