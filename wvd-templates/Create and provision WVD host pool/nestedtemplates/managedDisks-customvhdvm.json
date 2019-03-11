@@ -183,7 +183,8 @@
                     "bootDiagnostics": {
                         "enabled": false
                     }
-                }
+                },
+                "licenseType": "Windows_Client"
             }
         }
     ],
