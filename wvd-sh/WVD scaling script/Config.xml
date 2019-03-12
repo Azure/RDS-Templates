@@ -10,17 +10,19 @@
     <!--Azure subscription name -->
     <Variable Name="currentAzureSubscriptionName" Value="Microsoft Azure"/>
     <!-- WVD tenant name -->
-    <Variable Name="tenantName" Value="RdsIsmTenant1"/>
-	<!-- WVD host pool name -->
-    <Variable Name="hostPoolName" Value="WS2016-p"/>
+    <Variable Name="tenantName" Value=""/>
+    <!-- WVD tenant name -->
+    <Variable Name="tenantGroupName" Value="Default Tenant Group"/>
+    <!-- WVD host pool name -->
+    <Variable Name="hostPoolName" Value=""/>
   </Azure>
   <Deployment>
     <Variable Name="Rdbroker" Value="https://rdbroker.wvd.microsoft.com"/>
-    <Variable Name="Username" Value="74e98113-e2ca-48c8-963d-fe33ae70c756"/>
+    <Variable Name="Username" Value=""/>
     <!-- use Password filed for testing only, set via New-StoredCredential -->
     <Variable Name="Password" Value=""/> 
     <!-- accepted values True/False, True indicate service principal is being used to authenticate to WVD -->
-    <Variable Name="isServicePrincipal" Value="True" />
+    <Variable Name="isServicePrincipal" Value="False" />
   </Deployment>
   <RdmiScaleSettings>
     <!-- Begin of the peak usage time -->
