@@ -151,7 +151,7 @@ else
     else
     {
         $EnablePersistentDesktopOption=@{$true = "-Persistent"; $false = ""}[$BlnEnablePersistentDesktop -eq $true]
-        $HostPool = Invoke-Expression( "New-RdsHostPool -TenantName `$TenantName -Name `$HostPoolName -Description `$Description -FriendlyName `$FriendlyName $EnablePersistentDesktopOption")
+        $HostPool = Invoke-Expression( "New-RdsHostPool -TenantName `$TenantName -Name `$HostPoolName -Description `$Description -FriendlyName `$FriendlyName $EnablePersistentDesktopOption -ValidationEnv $false")
         $HName = $HostPool.name | Out-String -Stream
         Write-Log -Message "Successfully created new Hostpool: $HName"
     }
