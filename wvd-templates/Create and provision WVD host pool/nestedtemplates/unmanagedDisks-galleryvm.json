@@ -184,7 +184,8 @@
                         "enabled": "[equals(parameters('rdshVMDiskType'), 'HDD')]",
                         "storageUri": "[reference(variables('storageaccount'), '2016-01-01').primaryEndpoints.blob]"
                     }
-                }
+                },
+                "licenseType": "Windows_Client"
             }
         }
     ],
