@@ -220,6 +220,13 @@
             "metadata": {
                 "description": "(Required when isServicePrincipal = True) This value identifies the Azure AD tenant of the service principal."
             }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "(Required for Azure Marketplace.) Leave as is, unless you would like to not use a location that is different from the location of the resouce group."
+            }
         }
     },
     "variables": {
@@ -251,7 +258,7 @@
             "apiVersion": "2016-04-30-preview",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "properties": {
                 "platformUpdateDomainCount": 5,
                 "platformFaultDomainCount": 2
@@ -312,6 +319,9 @@
                     },
                     "rdshImageSourceName": {
                         "value": "[parameters('rdshCustomImageSourceName')]"
+                    },
+                    "location": {
+                        "value": "[parameters('location')]"
                     }
                 }
             },
@@ -323,7 +333,7 @@
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "vmCreation-linkedTemplate"
             ],
@@ -352,7 +362,7 @@
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), '0/', 'dscextension')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "rdsh-domain-join-loop"
             ],
@@ -399,7 +409,7 @@
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'),'0/extensions/dscextension')]"
             ],
