@@ -99,6 +99,13 @@
             "metadata": {
                 "description": "Name of the managed disk."
             }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Location for all resources to be created in."
+            }
         }
     },
     "variables": {
@@ -109,10 +116,10 @@
     },
     "resources": [
         {
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2018-11-01",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat(parameters('rdshPrefix'), copyindex(), '-nic')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "copy": {
                 "name": "rdsh-nic-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
@@ -133,10 +140,10 @@
             }
         },
         {
-            "apiVersion": "2018-06-01",
+            "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat(parameters('rdshPrefix'), copyindex())]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "copy": {
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
