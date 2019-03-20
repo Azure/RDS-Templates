@@ -167,7 +167,7 @@ configuration ConfigS2D
                     }
                     return $result
                 }
-                SetScript = "Set-ClusterQuorum -CloudWitness -AccountName ${witnessStorageName} -AccessKey $($witnessStorageKey.GetNetworkCredential().Password) -Endpoint ${witnessStorageEndpoint}"
+                SetScript = "Set-ClusterQuorum -CloudWitness -AccountName ${witnessStorageName} -AccessKey $($witnessStorageKey.GetNetworkCredential().Password)"
                 TestScript = {
                     $result = $false
                     $ClusterQuorum = Get-ClusterQuorum -ErrorAction SilentlyContinue
@@ -224,6 +224,21 @@ configuration ConfigS2D
                 PsDscRunAsCredential = $DomainFQDNCreds
             }
 
+            Script EnableSofs1809OrGt
+            {
+                GetScript = {
+                    return @{Ensure = if ((Get-ClusterS2D -ErrorAction SilentlyContinue) -ne $null) {'Present'} Else {'Absent'}}
+                }
+                SetScript = {
+                    Add-ClusterScaleOutFileServerRole -Name $using:SOFSName
+                }
+                TestScript = {
+                    return ((Get-ClusterS2D -ErrorAction SilentlyContinue) -ne $null)
+                }
+                DependsOn = "[Script]IncreaseClusterTimeouts1809OrGt"
+                PsDscRunAsCredential = $DomainFQDNCreds
+            }
+
             Script EnableS2D1809OrGt
             {
                 GetScript = {
@@ -254,24 +269,10 @@ configuration ConfigS2D
                     }
                     return $result
                 }
-                DependsOn = "[Script]IncreaseClusterTimeouts1809OrGt"
+                DependsOn = "[Script]EnableSofs1809OrGt"
                 PsDscRunAsCredential = $DomainFQDNCreds
             }
 
-            Script EnableSofs1809OrGt
-            {
-                GetScript = {
-                    return @{Ensure = if ((Get-ClusterS2D -ErrorAction SilentlyContinue) -ne $null) {'Present'} Else {'Absent'}}
-                }
-                SetScript = {
-                    Add-ClusterScaleOutFileServerRole -Name $using:SOFSName
-                }
-                TestScript = {
-                    return ((Get-ClusterS2D -ErrorAction SilentlyContinue) -ne $null)
-                }
-                DependsOn = "[Script]EnableS2D1809OrGt"
-                PsDscRunAsCredential = $DomainFQDNCreds
-            }
 
             Script CreateShare1809OrGt
             {
@@ -282,7 +283,7 @@ configuration ConfigS2D
                 TestScript = {
                     return ((Get-SmbShare -name $using:ShareName -ErrorAction SilentlyContinue) -ne $null)
                 }
-                DependsOn = "[Script]EnableSofs1809OrGt"
+                DependsOn = "[Script]EnableS2D1809OrGt"
                 PsDscRunAsCredential = $DomainFQDNCreds
             }
         }
