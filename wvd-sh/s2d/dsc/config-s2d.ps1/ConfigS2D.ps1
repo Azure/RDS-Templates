@@ -224,20 +224,7 @@ configuration ConfigS2D
                 PsDscRunAsCredential = $DomainFQDNCreds
             }
 
-            Script EnableSofs1809OrGt
-            {
-                GetScript = {
-                    return @{Ensure = if ((Get-ClusterS2D -ErrorAction SilentlyContinue) -ne $null) {'Present'} Else {'Absent'}}
-                }
-                SetScript = {
-                    Add-ClusterScaleOutFileServerRole -Name $using:SOFSName
-                }
-                TestScript = {
-                    return ((Get-ClusterS2D -ErrorAction SilentlyContinue) -ne $null)
-                }
-                DependsOn = "[Script]IncreaseClusterTimeouts1809OrGt"
-                PsDscRunAsCredential = $DomainFQDNCreds
-            }
+
 
             Script EnableS2D1809OrGt
             {
@@ -246,7 +233,7 @@ configuration ConfigS2D
                     $SharedVolume = Get-ClusterSharedVolume -ErrorAction SilentlyContinue
                     if ($SharedVolume -ne $null)
                     {
-                        if ($SharedVolume.ShareState -eq 'Online')
+                        if ($SharedVolume.State -eq 'Online')
                         {
                             $result = @{Ensure = 'Present'}
                         }
@@ -262,14 +249,29 @@ configuration ConfigS2D
                     $SharedVolume = Get-ClusterSharedVolume -ErrorAction SilentlyContinue
                     if ($SharedVolume -ne $null)
                     {
-                        if ($SharedVolume.ShareState -eq 'Online')
+                        if ($SharedVolume.State -eq 'Online')
                         {
                             $result = $true
                         }
                     }
                     return $result
                 }
-                DependsOn = "[Script]EnableSofs1809OrGt"
+                DependsOn = "[Script]IncreaseClusterTimeouts1809OrGt"
+                PsDscRunAsCredential = $DomainFQDNCreds
+            }
+
+            Script EnableSofs1809OrGt
+            {
+                GetScript = {
+                    return @{Ensure = if ((Get-ClusterS2D -ErrorAction SilentlyContinue) -ne $null) {'Present'} Else {'Absent'}}
+                }
+                SetScript = {
+                    Add-ClusterScaleOutFileServerRole -Name $using:SOFSName
+                }
+                TestScript = {
+                    return ((Get-ClusterS2D -ErrorAction SilentlyContinue) -ne $null)
+                }
+                DependsOn = "[Script]EnableS2D1809OrGt"
                 PsDscRunAsCredential = $DomainFQDNCreds
             }
 
