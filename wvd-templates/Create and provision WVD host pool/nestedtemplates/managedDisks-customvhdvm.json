@@ -126,7 +126,7 @@
             }
         },
         {
-            "apiVersion": "2018-10-01",
+            "apiVersion": "2018-11-01",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat(parameters('rdshPrefix'), copyindex(), '-nic')]",
             "location": "[parameters('location')]",

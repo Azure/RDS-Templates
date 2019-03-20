@@ -268,7 +268,7 @@
             }
         },
         {
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2018-05-01",
             "name": "vmCreation-linkedTemplate",
             "type": "Microsoft.Resources/deployments",
             "properties": {
