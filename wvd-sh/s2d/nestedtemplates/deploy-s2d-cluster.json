@@ -280,7 +280,6 @@
       }
     },
     {
-      "condition": false,
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(variables('vmNamePrefix'),'0/s2dConfig')]",
       "apiVersion": "2015-06-15",
