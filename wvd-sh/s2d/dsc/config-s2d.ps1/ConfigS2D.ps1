@@ -263,13 +263,13 @@ configuration ConfigS2D
             Script EnableSofs1809OrGt
             {
                 GetScript = {
-                    return @{Ensure = if ((Get-ClusterGroup -Name $using:SOFSName -ErroraAction SilentlyContinue) -ne $null) {'Present'} Else {'Absent'}}
+                    return @{Ensure = if ((Get-ClusterGroup -Name $using:SOFSName -ErrorAction SilentlyContinue) -ne $null) {'Present'} Else {'Absent'}}
                 }
                 SetScript = {
                     Add-ClusterScaleOutFileServerRole -Name $using:SOFSName
                 }
                 TestScript = {
-                    return ((Get-ClusterGroup -Name $using:SOFSName -ErroraAction SilentlyContinue) -ne $null)
+                    return ((Get-ClusterGroup -Name $using:SOFSName -ErrorAction SilentlyContinue) -ne $null)
                 }
                 DependsOn = "[Script]EnableS2D1809OrGt"
                 PsDscRunAsCredential = $DomainFQDNCreds
