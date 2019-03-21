@@ -5,7 +5,7 @@ $ResourceURL = Get-AutomationVariable -Name 'ResourceURL'
 $fileURI = Get-AutomationVariable -Name 'fileURI'
 $Username = Get-AutomationVariable -Name 'Username'
 $Password = Get-AutomationVariable -Name 'Password'
-$accountname = Get-AutomationVariable -Name 'accountName'
+$automationAccountName = Get-AutomationVariable -Name 'accountName'
 $WebApp = Get-AutomationVariable -Name 'webApp'
 $ApiApp = Get-AutomationVariable -Name 'apiApp'
 
@@ -209,7 +209,9 @@ Param(
     [Parameter(Mandatory=`$True)]
     [string] `$Password,
     [Parameter(Mandatory=`$True)]
-    [string] `$ResourceGroupName
+    [string] `$ResourceGroupName,
+    [Parameter(Mandatory=`$True)]
+    [string] `$automationAccountName
  
 )
 Import-Module AzureRM.profile
@@ -217,11 +219,10 @@ Import-Module AzureRM.Automation
 `$Securepass=ConvertTo-SecureString -String `$Password -AsPlainText -Force
 `$Azurecred=New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList(`$Username, `$Securepass)
 `$login=Login-AzureRmAccount -Credential `$Azurecred -SubscriptionId `$SubscriptionId
-Remove-AzureRmAutomationAccount -Name `$accountname -ResourceGroupName `$ResourceGroupName -Force 
+Remove-AzureRmAutomationAccount -Name `$automationAccountName -ResourceGroupName `$ResourceGroupName -Force 
 "@| Out-File -FilePath RemoveAccount:\RemoveAccount.ps1 -Force
 
     $runbookName='removewvdsaasacctbook'
-    $automationAccountName="$accountname"
     #Create a Run Book
     New-AzureRmAutomationRunbook -Name $runbookName -Type PowerShell -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName
 
@@ -239,5 +240,5 @@ Remove-AzureRmAutomationAccount -Name `$accountname -ResourceGroupName `$Resourc
     Publish-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName
 
     #Providing parameter values to powershell script file
-    $params=@{"UserName"=$UserName;"Password"=$Password;"ResourcegroupName"=$ResourcegroupName;"SubscriptionId"=$subsriptionid}
+    $params=@{"UserName"=$UserName;"Password"=$Password;"ResourcegroupName"=$ResourcegroupName;"SubscriptionId"=$subsriptionid;"automationAccountName"=$automationAccountName}
     Start-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName -Parameters $params
