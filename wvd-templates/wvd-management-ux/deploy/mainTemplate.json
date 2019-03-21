@@ -44,8 +44,8 @@
         "hostingPlanName": "[concat(parameters('ApplicationName'),'-SPlan')]",
         "serviceplansku":"S1",
         "workerSize": "0",
-        "baseURL": "https://raw.githubusercontent.com/people-tech-group/msft-rdmi-saas/master/deploy/scripts/",
-        "scriptUri": "https://raw.githubusercontent.com/people-tech-group/msft-rdmi-saas/master/deploy/scripts/New-RdmiMgmtSetup.ps1",
+        "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-mgmt-ux/wvd-templates/wvd-management-ux/deploy/scripts/",
+        "scriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-mgmt-ux/wvd-templates/wvd-management-ux/deploy/scripts/New-RdmiMgmtSetup.ps1",
         "fileURI": "[concat(variables('baseURL'),'/msft-rdmi-saas-offering.zip')]",
         "sku": "Free",
         "automationVariables": [
