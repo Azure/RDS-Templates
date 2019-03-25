@@ -81,9 +81,6 @@ else
     $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
     Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
-    # Performing WVD Authentication and Setting Context
-    #AuthenticateOnWvd -IsServicePrincipal $isServicePrincipal -TenantAdminCredentials $TenantAdminCredentials -AadTenantId $AadTenantId -RDBrokerURL $RDBrokerURL -DefinedTenantGroupName $DefinedTenantGroupName -TenantName $TenantName
-
     # Authenticating to WVD
     if ($isServicePrincipal -eq "True")
     {
@@ -115,7 +112,7 @@ else
     try
     {
         $tenants = Get-RdsTenant -Name $TenantName
-        if(!$tenants)
+        if (-Not $tenants)
         {
             Write-Log "No tenants exist or you do not have proper access."
         }
@@ -126,16 +123,19 @@ else
         throw $_
     }
 
-    # Export registration info
-    $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ErrorAction SilentlyContinue
-    if (!$Registered)
+    # Obtaining Registration Info
+    Start-Sleep (1..15 | Get-Random)
+    $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours -ErrorAction SilentlyContinue
+    if (-Not $Registered)
     {
+        $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName 
         $obj =  $Registered | Out-String
         Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $obj"
     }
     else
     {
-        Write-Log -Message "An error ocurred trying to export RegistrationInfo."
+        $obj =  $Registered | Out-String
+        Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $obj"
     }
 
     # Executing DeployAgent psl file in rdsh vm and add to hostpool

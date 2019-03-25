@@ -96,9 +96,6 @@ else
     $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
     Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
-    # Performing WVD Authentication and Setting Context
-    #AuthenticateOnWvd -IsServicePrincipal $isServicePrincipal -TenantAdminCredentials $TenantAdminCredentials -AadTenantId $AadTenantId -RDBrokerURL $RDBrokerURL -DefinedTenantGroupName $DefinedTenantGroupName -TenantName $TenantName
-
     # Authenticating to WVD
     if ($isServicePrincipal -eq "True")
     {
@@ -169,7 +166,7 @@ else
     }
 
     $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours -ErrorAction SilentlyContinue
-    if (!$Registered)
+    if (-Not $Registered)
     {
         $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName 
         $obj =  $Registered | Out-String
@@ -210,7 +207,7 @@ else
 
     # Sanitizing $DefaultDesktopUsers from ", ' or spaces
     $DefaultDesktopUsers = $DefaultDesktopUsers.Replace("`"","").Replace("'","").Replace(" ","")
-    if (-not ([string]::IsNullOrEmpty($DefaultDesktopUsers)))
+    if (-Not ([string]::IsNullOrEmpty($DefaultDesktopUsers)))
     {
         $ApplicationGroupName = "Desktop Application Group"
         AddDefaultUsers -TenantName $TenantName -HostPoolName $HostPoolName -ApplicationGroupName $ApplicationGroupName -DefaultUsers $DefaultDesktopUsers
