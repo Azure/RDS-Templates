@@ -17,6 +17,7 @@
         "rdshGalleryImageSKU": {
             "type": "string",
             "allowedValues": [
+                "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
                 "Windows-10-Enterprise-multi-session",
                 "2016-Datacenter"
             ],
@@ -109,9 +110,9 @@
         }
     },
     "variables": {
-        "galleryPublisher": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'MicrosoftWindowsDesktop', 'MicrosoftwindowsServer')]",
-        "galleryOffer": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'Windows-10', 'WindowsServer')]",
-        "gallerySku": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'rs5-evd', parameters('rdshGalleryImageSKU'))]",
+        "galleryPublisher": "[if( equals(contains('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'MicrosoftWindowsDesktop', 'MicrosoftwindowsServer')]",
+        "galleryOffer": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'Windows-10',  if(equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session-with-Office-365-ProPlus'), 'office-365', 'WindowsServer'))]",
+        "gallerySku": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'rs5-evd',   if(equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session-with-Office-365-ProPlus'), 'rs5-evd-o365pp', parameters('rdshGalleryImageSKU')))]",
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
         "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]"
     },
