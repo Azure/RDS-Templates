@@ -25,6 +25,9 @@ param(
     [string]$HostPoolName,
 
     [Parameter(mandatory = $true)]
+    [string]$Hours,
+
+    [Parameter(mandatory = $true)]
     [PSCredential]$TenantAdminCredentials,
 
     [Parameter(mandatory = $true)]
