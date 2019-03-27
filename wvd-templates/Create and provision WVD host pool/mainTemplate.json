@@ -438,6 +438,7 @@
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
                         "TenantName": "[parameters('existingTenantName')]",
                         "HostPoolName": "[parameters('hostPoolName')]",
+                        "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]"
                     }
