@@ -46,7 +46,7 @@ class PsRdsSessionHost
         }
 
         $specificToSet=@{$true = "-AllowNewSession `$true"; $false = ""}[$operation -eq "set"]
-        $commandToExecute="$operation-RdsSessionHost -TenantName `"`$this.TenantName`" -HostPoolName `"`$this.HostPoolName`" -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
+        $commandToExecute="$operation-RdsSessionHost -TenantName `"`$(`$this.TenantName)`" -HostPoolName `"`$(`$this.HostPoolName)`" -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
 
         $sessionHost = (Invoke-Expression $commandToExecute )
 
@@ -57,7 +57,7 @@ class PsRdsSessionHost
             Write-Output "PsRdsSessionHost: Retrying Add SessionHost..."
             $sessionHost = (Invoke-Expression $commandToExecute)
     
-            if ((get-date).Subtract($StartTime).Minutes -gt $this.TimeoutInSec)
+            if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec)
             {
                 if ($sessionHost -eq $null)
                 {
