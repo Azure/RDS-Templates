@@ -46,7 +46,7 @@
         "workerSize": "0",
         "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/scripts/",
         "scriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/scripts/New-WVDMgmtSetup.ps1",
-        "fileURI": "[concat(variables('baseURL'),'/msft-rdmi-saas-offering.zip')]",
+        "fileURI": "[concat(variables('baseURL'),'/msft-wvd-saas-offering.zip')]",
         "sku": "Free",
         "automationVariables": [
             {
