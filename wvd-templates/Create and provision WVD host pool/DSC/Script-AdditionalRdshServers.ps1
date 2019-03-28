@@ -30,9 +30,6 @@ param(
     [Parameter(mandatory = $true)]
     [PSCredential]$TenantAdminCredentials,
 
-    [Parameter(mandatory = $true)]
-    [PSCredential]$ADAdminCredentials,
-
     [Parameter(mandatory = $false)]
     [string]$IsServicePrincipal = "False",
 
@@ -114,7 +111,7 @@ else
     Set-RdsContext -TenantGroupName $definedTenantGroupName
     try
     {
-        $tenants = Get-RdsTenant -Name $TenantName
+        $tenants = Get-RdsTenant -Name "$TenantName"
         if (-Not $tenants)
         {
             Write-Log "No tenants exist or you do not have proper access."
@@ -128,10 +125,10 @@ else
 
     # Obtaining Registration Info
     Start-Sleep (1..15 | Get-Random)
-    $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours -ErrorAction SilentlyContinue
+    $Registered = New-RdsRegistrationInfo -TenantName "$TenantName" -HostPoolName "$HostPoolName" -ExpirationHours $Hours -ErrorAction SilentlyContinue
     if (-Not $Registered)
     {
-        $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName 
+        $Registered = Export-RdsRegistrationInfo -TenantName "$TenantName" -HostPoolName "$HostPoolName" 
         $obj =  $Registered | Out-String
         Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $obj"
     }
@@ -143,14 +140,10 @@ else
 
     # Executing DeployAgent psl file in rdsh vm and add to hostpool
     Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall, SxS is $DeployAgentLocation\RDInfraSxSStackInstall"
-    $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName `
-                                       -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
+    $DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
                                        -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
                                        -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" `
                                        -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" `
-                                       -AdminCredentials $ADAdminCredentials `
-                                       -TenantName $TenantName `
-                                       -PoolName $HostPoolName `
                                        -RegistrationToken $Registered.Token `
                                        -StartAgent $true `
                                        -rdshIs1809OrLater $rdshIs1809OrLaterBool
@@ -160,7 +153,7 @@ else
     # Get Session Host Info
     Write-Log -Message "Getting rdsh host $SessionHostName information"
 
-    [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = ([PsRdsSessionHost]::new($TenantName,$HostPoolName,$SessionHostName)).GetSessionHost()
+    [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = ([PsRdsSessionHost]::new("$TenantName","$HostPoolName",$SessionHostName)).GetSessionHost()
     Write-Log -Message "RDSH object content: `n$($rdsh | Out-String)"
 
     $rdshName = $rdsh.SessionHostName | Out-String -Stream
