@@ -240,7 +240,7 @@ Write-Log 1 "$hostPoolName hostpool loadbalancer type is $($hostpoolInfo.LoadBal
 
          if ($numberOfRunningHost -lt $MinimumNumberOfRDSH) {
           $hostsessions = $sessionHost.Sessions
-          if ($hostpoolMaxSessionLimit -ne $hostofsessions) {
+          if ($hostpoolMaxSessionLimit -ne $hostsessions) {
             if ($sessionhost.Status -eq "UnAvailable") {
               $sessionhostname = $sessionhost.sessionhostname
               ##### Check session host is in drain mode #####
