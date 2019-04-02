@@ -36,9 +36,6 @@ param(
     [Parameter(mandatory = $true)]
     [PSCredential]$TenantAdminCredentials,
 
-    [Parameter(mandatory = $true)]
-    [PSCredential]$ADAdminCredentials,
-
     [Parameter(mandatory = $false)]
     [string]$isServicePrincipal = "False",
 
@@ -126,7 +123,7 @@ else
     Set-RdsContext -TenantGroupName $definedTenantGroupName
     try
     {
-        $tenants = Get-RdsTenant -Name $TenantName
+        $tenants = Get-RdsTenant -Name "$TenantName"
         if(!$tenants)
         {
             Write-Log "No tenants exist or you do not have proper access."
@@ -140,7 +137,7 @@ else
 
     # Checking if host pool exists. If not, create a new one with the given HostPoolName
     Write-Log -Message "Checking Hostpool exists inside the Tenant"
-    $HostPool = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName -ErrorAction SilentlyContinue
+    $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
     if ($HostPool)
     {
         Write-log -Message "Hostpool exists inside tenant: $TenantName"
@@ -148,7 +145,7 @@ else
     else
     {
         $EnablePersistentDesktopOption=@{$true = "-Persistent"; $false = ""}[$BlnEnablePersistentDesktop -eq $true]
-        $HostPool = Invoke-Expression( "New-RdsHostPool -TenantName `$TenantName -Name `$HostPoolName -Description `$Description -FriendlyName `$FriendlyName $EnablePersistentDesktopOption -ValidationEnv `$false")
+        $HostPool = Invoke-Expression("New-RdsHostPool -TenantName `"`$TenantName`" -Name `"`$HostPoolName`" -Description `$Description -FriendlyName `$FriendlyName $EnablePersistentDesktopOption -ValidationEnv `$false")
         $HName = $HostPool.name | Out-String -Stream
         Write-Log -Message "Successfully created new Hostpool: $HName"
     }
@@ -158,17 +155,17 @@ else
     if ($HostPool.UseReverseConnect -eq $False)
     {
         Write-Log -Message "UseReverseConnect is false, it will be changed to true"
-        Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -UseReverseConnect $true
+        Set-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -UseReverseConnect $true
     }
     else
     {
         Write-Log -Message "Hostpool UseReverseConnect already enabled as true"
     }
 
-    $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours -ErrorAction SilentlyContinue
+    $Registered = New-RdsRegistrationInfo -TenantName "$TenantName" -HostPoolName "$HostPoolName" -ExpirationHours $Hours -ErrorAction SilentlyContinue
     if (-Not $Registered)
     {
-        $Registered = Export-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName 
+        $Registered = Export-RdsRegistrationInfo -TenantName "$TenantName" -HostPoolName "$HostPoolName" 
         $obj =  $Registered | Out-String
         Write-Log -Message "Exported Rds RegistrationInfo into variable 'Registered': $obj"
     }
@@ -180,14 +177,10 @@ else
 
     # Executing DeployAgent psl file in rdsh vm and add to hostpool
     Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall, SxS is $DeployAgentLocation\RDInfraSxSStackInstall"
-    $DAgentInstall = .\DeployAgent.ps1 -ComputerName $SessionHostName `
-                                       -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
+    $DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
                                        -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
                                        -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" `
                                        -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" `
-                                       -AdminCredentials $ADAdminCredentials `
-                                       -TenantName $TenantName `
-                                       -PoolName $HostPoolName `
                                        -RegistrationToken $Registered.Token `
                                        -StartAgent $true `
                                        -rdshIs1809OrLater $rdshIs1809OrLaterBool
@@ -197,7 +190,7 @@ else
     # Get Session Host Info
     Write-Log -Message "Getting rdsh host $SessionHostName information"
 
-    [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = ([PsRdsSessionHost]::new($TenantName,$HostPoolName,$SessionHostName)).GetSessionHost()
+    [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = ([PsRdsSessionHost]::new("$TenantName","$HostPoolName",$SessionHostName)).GetSessionHost()
     Write-Log -Message "RDSH object content: `n$($rdsh | Out-String)"
 
     $rdshName = $rdsh.SessionHostName | Out-String -Stream
@@ -210,7 +203,7 @@ else
     if (-Not ([string]::IsNullOrEmpty($DefaultDesktopUsers)))
     {
         $ApplicationGroupName = "Desktop Application Group"
-        AddDefaultUsers -TenantName $TenantName -HostPoolName $HostPoolName -ApplicationGroupName $ApplicationGroupName -DefaultUsers $DefaultDesktopUsers
+        AddDefaultUsers -TenantName "$TenantName" -HostPoolName "$HostPoolName" -ApplicationGroupName $ApplicationGroupName -DefaultUsers $DefaultDesktopUsers
     }
    
     Write-Log -Message "Successfully added $rdshName VM to $poolName"

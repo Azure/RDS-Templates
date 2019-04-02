@@ -41,10 +41,11 @@
                 "description": "(Required when rdshImageSource = Gallery) Gallery image SKU."
             },
             "allowedValues": [
+                "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
                 "Windows-10-Enterprise-multi-session",
                 "2016-Datacenter"
             ],
-            "defaultValue": "Windows-10-Enterprise-multi-session"
+            "defaultValue": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus"
         },
         "rdshCustomImageSourceName": {
             "type": "string",
@@ -236,7 +237,9 @@
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
-        "hostPoolFriendlyName": "[parameters('hostPoolName')]",
+        "existingTenantName": "[replace(parameters('existingTenantName'),'\"','')]",
+        "hostPoolName": "[replace(parameters('hostPoolName'),'\"','')]",
+        "hostPoolFriendlyName": "[variables('hostPoolName')]",
         "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
@@ -379,14 +382,10 @@
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
                             "password": "PrivateSettingsRef:tenantAdminPassword"
                         },
-                        "ADAdminCredentials": {
-                            "userName": "[parameters('existingDomainUPN')]",
-                            "password": "PrivateSettingsRef:adAdminPassword"
-                        },
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
-                        "TenantName": "[parameters('existingTenantName')]",
-                        "HostPoolName": "[parameters('hostPoolName')]",
+                        "TenantName": "[variables('existingTenantName')]",
+                        "HostPoolName": "[variables('hostPoolName')]",
                         "Description": "[variables('hostPoolDescription')]",
                         "FriendlyName": "[variables('hostPoolFriendlyName')]",
                         "Hours": "[variables('registrationExpirationHours')]",
@@ -398,8 +397,7 @@
                 },
                 "ProtectedSettings": {
                     "items": {
-                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]",
-                        "adAdminPassword": "[parameters('existingDomainPassword')]"
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
                     }
                 }
             }
@@ -430,14 +428,10 @@
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
                             "password": "PrivateSettingsRef:tenantAdminPassword"
                         },
-                        "ADAdminCredentials": {
-                            "userName": "[parameters('existingDomainUPN')]",
-                            "password": "PrivateSettingsRef:adAdminPassword"
-                        },
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
-                        "TenantName": "[parameters('existingTenantName')]",
-                        "HostPoolName": "[parameters('hostPoolName')]",
+                        "TenantName": "[variables('existingTenantName')]",
+                        "HostPoolName": "[variables('hostPoolName')]",
                         "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]"
@@ -445,8 +439,7 @@
                 },
                 "ProtectedSettings": {
                     "items": {
-                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]",
-                        "adAdminPassword": "[parameters('existingDomainPassword')]"
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
                     }
                 }
             }

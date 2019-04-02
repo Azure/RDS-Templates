@@ -46,7 +46,7 @@ class PsRdsSessionHost
         }
 
         $specificToSet=@{$true = "-AllowNewSession `$true"; $false = ""}[$operation -eq "set"]
-        $commandToExecute="$operation-RdsSessionHost -TenantName `$this.TenantName -HostPoolName `$this.HostPoolName -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
+        $commandToExecute="$operation-RdsSessionHost -TenantName `"`$(`$this.TenantName)`" -HostPoolName `"`$(`$this.HostPoolName)`" -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
 
         $sessionHost = (Invoke-Expression $commandToExecute )
 
@@ -57,7 +57,7 @@ class PsRdsSessionHost
             Write-Output "PsRdsSessionHost: Retrying Add SessionHost..."
             $sessionHost = (Invoke-Expression $commandToExecute)
     
-            if ((get-date).Subtract($StartTime).Minutes -gt $this.TimeoutInSec)
+            if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec)
             {
                 if ($sessionHost -eq $null)
                 {
@@ -158,7 +158,7 @@ function AddDefaultUsers
         {
             try 
             {
-                Add-RdsAppGroupUser -TenantName $TenantName -HostPoolName $HostPoolName -AppGroupName $ApplicationGroupName -UserPrincipalName $user
+                Add-RdsAppGroupUser -TenantName "$TenantName" -HostPoolName "$HostPoolName" -AppGroupName $ApplicationGroupName -UserPrincipalName $user
                 Write-Log "Successfully assigned user $user to App Group: $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."  
             }
             catch
