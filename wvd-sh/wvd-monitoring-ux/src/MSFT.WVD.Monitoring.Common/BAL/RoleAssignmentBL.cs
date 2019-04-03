@@ -1,4 +1,7 @@
-﻿using System;
+﻿using MSFT.WVD.Monitoring.Common.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
@@ -18,6 +21,32 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             {
                 return new HttpResponseMessage(System.Net.HttpStatusCode.RequestTimeout) { Content = new StringContent(ex.InnerException.Message.ToString(), System.Text.Encoding.UTF8, "application/json") };
             }
+        }
+
+        public string[] GetTenantGroups(string rdBrokerUrl,string accessToken,string upn)
+        {
+            //get roleassigment
+            //  HttpResponseMessage httpResponse = GetRoleAssignments(rdBrokerUrl, accessToken, upn);
+            // if (httpResponse.IsSuccessStatusCode)
+            // {
+
+            //Array arr = (JArray)JsonConvert.DeserializeObject(strJson);
+
+            // List<RoleAssignment> roles = Newtonsoft.Json.JsonConvert.DeserializeObject<List<RoleAssignment>>(arr.ToString());
+            //List<RoleAssignment> roleAssignments= new List<RoleAssignment>
+            //if (loginDetails.roleAssignments != null && loginDetails.roleAssignments.Count > 0)
+            //{
+            //    loginDetails.tenantGroups = new string[loginDetails.roleAssignments.Count];
+            //    for (int i = 0; i < loginDetails.roleAssignments.Count; i++)
+            //    {
+            //        loginDetails.tenantGroups[i] = loginDetails.roleAssignments[i]["scope"].ToString().Split('/').Length > 1 ? loginDetails.roleAssignments[i]["scope"].ToString().Split('/')[1].ToString() : Constants.tenantGroupName;
+            //    }
+            //}
+            // }
+            string[] groups = { "Default Tenant Group", "Ptg" };
+            return groups;
+
+            
         }
     }
 }

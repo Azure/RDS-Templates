@@ -17,12 +17,12 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public ConfigSettings(IConfiguration configuration)
         {
             config = configuration;
-            RDBrokerUrl = config.GetSection("configurations").GetSection("_RdBrokerUrl").Value;
-            ApplicationID = config.GetSection("configurations").GetSection("_ApplicationId").Value;
-            ResopurceUrl = config.GetSection("configurations").GetSection("_ResourceUrl").Value;
-            RedirectUrl = config.GetSection("configurations").GetSection("_RedirectUrl").Value;
-            TokenEndPoint = config.GetSection("configurations").GetSection("_TokenEndPoint").Value;
-            AuthorizeUrl = config.GetSection("configurations").GetSection("_AuthorizeUrl").Value; 
+            RDBrokerUrl = config.GetSection("configurations").GetSection("RDBROKER_URL").Value;
+            ApplicationID = config.GetSection("configurations").GetSection("APPLICATION_ID").Value;
+            ResopurceUrl = config.GetSection("configurations").GetSection("RESOURCE_URL").Value;
+            RedirectUrl = config.GetSection("configurations").GetSection("REDIRECT_URL").Value;
+           // TokenEndPoint = config.GetSection("configurations").GetSection("_TokenEndPoint").Value;
+            AuthorizeUrl = config.GetSection("configurations").GetSection("AAD_AUTH_URL").Value; 
         }
     }
 }
