@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace MSFT.WVD.Monitoring
+namespace MSFT.WVD.Monitoring.api
 {
     [Route("api/[controller]")]
-    public class ValuesController : ControllerBase
+    public class DiagnosticActivityController : Controller
     {
         // GET: api/<controller>
         [HttpGet]
@@ -22,7 +22,7 @@ namespace MSFT.WVD.Monitoring
         [HttpGet("{id}")]
         public string Get(int id)
         {
-            return "value"+id;
+            return "value";
         }
 
         // POST api/<controller>
