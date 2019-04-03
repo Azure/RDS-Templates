@@ -44,7 +44,7 @@
         "serviceplansku":"S1",
         "workerSize": "0",
         "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/scripts/",
-        "scriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/scripts/New-WVDMgmtSetup.ps1",
+        "scriptUri": "[concat(variables('baseURL'),'New-WVDMgmtSetup.ps1')]",
         "fileURI": "[concat(variables('baseURL'),'/msft-wvd-saas-offering.zip')]",
         "sku": "Free",
         "automationVariables": [
@@ -93,7 +93,7 @@
                 "value": "[concat('\"',variables('fileURI'),'\"')]"
             }
         ],
-        "uniqueBase": "[toLower(uniquestring(parameters('ApplicationName'), resourceGroup().id, deployment().name))]",
+        "uniqueBase": "[toLower(uniquestring(parameters('ApplicationName'), resourceGroup().name, resourceGroup().id, deployment().name))]",
         "newGuid": "[guid(variables('uniqueBase'))]"
     },
     "resources": [
@@ -104,7 +104,7 @@
                 "capacity": "[variables('workerSize')]"
             },
             "name": "[variables('hostingPlanName')]",
-            "apiVersion": "2015-08-01",
+            "apiVersion": "2016-03-01",
             "location": "[resourceGroup().location]",
             "properties": {
                 "name": "[variables('hostingPlanName')]"
@@ -114,7 +114,7 @@
             "type": "Microsoft.Web/sites",
             "name": "[parameters('ApplicationName')]",
             "kind": "app",
-            "apiVersion": "2015-08-01",
+            "apiVersion": "2016-03-01",
             "location": "[resourceGroup().location]",
             "properties": {
                 "serverFarmId": "[variables('hostingPlanName')]"
@@ -127,7 +127,7 @@
             "type": "Microsoft.Web/sites",
             "name": "[variables('webAPIAppName')]",
             "kind": "api",
-            "apiVersion": "2015-08-01",
+            "apiVersion": "2016-03-01",
             "location": "[resourceGroup().location]",
             "properties": {
                 "serverFarmId": "[variables('hostingPlanName')]"
@@ -161,6 +161,11 @@
             "apiVersion": "2015-01-01-preview",
             "location": "[resourceGroup().location]",
             "tags": {},
+			"dependsOn": [
+                "[resourceId('Microsoft.Web/Sites', parameters('ApplicationName'))]",
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+                "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
+            ],
             "properties": {
                 "sku": {
                     "name": "[variables('sku')]"
@@ -227,8 +232,7 @@
                         "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
                     ]
                 }
-            ],
-            "dependsOn": []
+            ]
         }
     ],
     "outputs": {}
