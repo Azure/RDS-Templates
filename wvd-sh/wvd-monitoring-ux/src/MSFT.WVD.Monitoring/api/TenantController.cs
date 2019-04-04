@@ -12,22 +12,26 @@ using MSFT.WVD.Monitoring.Common.Models;
 namespace MSFT.WVD.Monitoring.api
 {
     [Route("api/[controller]")]
-    public class DiagnosticActivityController : Controller
+    public class TenantController : Controller
     {
-        DiagnosticActivitityBL diagnosticActivitityBL = new DiagnosticActivitityBL();
+        TenantBL tenantBL = new TenantBL();
         ConfigSettings Configuration;
-        public DiagnosticActivityController(IConfiguration config)
+        public TenantController(IConfiguration config)
         {
             Configuration = new ConfigSettings(config);
         }
-
         // GET: api/<controller>
-        [HttpGet("GetActivityDetails")]
-        public IEnumerable<DiagnosticActivity> GetActivityDetails(string accessToken,string tenantGroup,string tenant,DateTime startDate,DateTime endDate,int activityType, Nullable<int> outcome)
+        [HttpGet]
+        public IEnumerable<Tenant> Get(string accessToken,string tenantGroup )
         {
-            return diagnosticActivitityBL.GetActivityDetails(Configuration.RDBrokerUrl, accessToken, tenantGroup, tenant, startDate, endDate, activityType, outcome);
+            return tenantBL.GetTenants(Configuration.RDBrokerUrl, accessToken, tenantGroup);
         }
 
        
+        
+
+       
+
+        
     }
 }

@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 
@@ -10,14 +11,23 @@ namespace MSFT.WVD.Monitoring.Common.BAL
 {
     public class DiagnosticActivitityBL
     {
-        public List<DiagnosticActivity> GetActivityDetails(string deploymentUrl, string accessToken, string tenantGroup,string tenant,DateTime startTime, DateTime endTime,int activityType,int outcome)
+        public IEnumerable<DiagnosticActivity> GetActivityDetails(string deploymentUrl, string accessToken, string tenantGroup,string tenant,DateTime startTime, DateTime endTime,int activityType, Nullable<int> outcome)
         {
             List<DiagnosticActivity> diagnosticActivities = new List<DiagnosticActivity>();
             try
             {
                 string startDatetime = startTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
                 string endDatetime = endTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
-                HttpResponseMessage httpResponseMessage= CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroup}/Tenants/{tenant}?StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
+                HttpResponseMessage httpResponseMessage;
+                if (outcome !=null)
+                {
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroup}/Tenants/{tenant}?StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
+                }
+                else
+                {
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroup}/Tenants/{tenant}?StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
+                }
+               
                 if(httpResponseMessage.IsSuccessStatusCode)
                 {
                     string strJson = httpResponseMessage.Content.ReadAsStringAsync().Result;
@@ -27,38 +37,31 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                         DiagnosticActivity diagnosticActivity = new DiagnosticActivity()
                         {
                             activityId = item["activityId"].ToString(),
-                            activityType = item["activityType"].ToString(),//Enum.GetName(typeof(ActivityType), item["activityType"].ToString()),
+                            activityType = item["activityType"].ToString(),
                             startTime = item["startTime"].ToString() != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
                             endTime = item["endTime"].ToString() != null ? Convert.ToDateTime(item["endTime"]) : (DateTime?)null,
                             userName = item["userName"].ToString(),
                             roleInstances = item["roleInstances"].ToString(),
-                            outcome = Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]), //Enum.GetName(typeof(ActivityOutcome), item["outcome"].ToString()),
+                            outcome = Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]), 
                             status =Convert.ToInt32(item["status"]),
                             lastHeartbeatTime= item["lastHeartbeatTime"].ToString() != null ? Convert.ToDateTime(item["lastHeartbeatTime"]) : (DateTime?)null,
                         };
-
-                        diagnosticActivities.Add(FillDetails(diagnosticActivity, item));
+                        diagnosticActivities.Add(FillActivityDetails(diagnosticActivity, item));
                         if (item["errors"]!=null )
                         {
-                            List<Error> errors = new List<Error>();
-                            foreach (var err in item["errors"])
+                            var data = JArray.FromObject(item["errors"]);
+                            diagnosticActivity.errors = (data).Select(err => new Error
                             {
-                                Error error = new Error()
-                                {
-                                    errorSource= Convert.ToInt32(err["errorSource"]),
-                                    errorOperation =Convert.ToInt32(err["errorOperation"]),
-                                    errorCode =Convert.ToInt32(err["errorCode"]),
-                                    errorCodeSymbolic = err["errorCodeSymbolic"].ToString(),
-                                    errorMessage = err["errorMessage"].ToString(),
-                                    errorInternal =Convert.ToBoolean( err["errorInternal"]),
-                                    reportedBy =Convert.ToInt32( err["reportedBy"]),
-                                    time =err["time"].ToString() != null ? Convert.ToDateTime(err["time"]) : (DateTime?)null,
-                                };
-                                errors.Add(error);
-                            }
-                            diagnosticActivity.errors = errors;
+                                errorSource = Convert.ToInt32(err["errorSource"]),
+                                errorOperation = Convert.ToInt32(err["errorOperation"]),
+                                errorCode = Convert.ToInt32(err["errorCode"]),
+                                errorCodeSymbolic = err["errorCodeSymbolic"].ToString(),
+                                errorMessage = err["errorMessage"].ToString(),
+                                errorInternal = Convert.ToBoolean(err["errorInternal"]),
+                                reportedBy = Convert.ToInt32(err["reportedBy"]),
+                                time = err["time"].ToString() != null ? Convert.ToDateTime(err["time"]) : (DateTime?)null,
+                            }).ToList();
                         }
-                       
                         diagnosticActivities.Add(diagnosticActivity);
                     }
                 }
@@ -71,15 +74,16 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             {
                 return null;
             }
-
             return diagnosticActivities;
         }
 
-        public DiagnosticActivity FillDetails( DiagnosticActivity diagnosticActivity,JToken item)
+        public DiagnosticActivity FillActivityDetails( DiagnosticActivity diagnosticActivity,JToken item)
         {
-            switch (diagnosticActivity.activityType)
+            ActivityType activitytype = (ActivityType)Enum.Parse(typeof(ActivityType), diagnosticActivity.activityType, true);
+            switch (activitytype)
             {
-                case "Connection":
+                
+                case ActivityType.Connection:
                     diagnosticActivity.connectionDetails = new ConnectionDetails()
                     {
                         ClientOS = (string)item["details"]["ClientOS"],
@@ -102,7 +106,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                         Tenants = (string)item["details"]["Tenants"],
                     };
                     break;
-                case "Management":
+                case ActivityType.Management:
                     diagnosticActivity.managementDetails = new ManagementDetails()
                     {
                         Object = (string)item["details"]["Object"],
@@ -115,7 +119,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                         Tenants = (string)item["details"]["Tenants"]
                     };
                     break;
-                case "Feed":
+                case ActivityType.Feed:
                     diagnosticActivity.feedDetails = new FeedDetails()
                     {
                         ClientOS = item["details"]["ClientOS"].ToString(),
