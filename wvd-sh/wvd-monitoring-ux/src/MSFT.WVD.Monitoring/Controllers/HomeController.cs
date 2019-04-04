@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Models;
 using Newtonsoft.Json.Linq;
 
@@ -22,24 +23,26 @@ namespace MSFT.WVD.Monitoring.Controllers
         {
             if (User.Identity.IsAuthenticated)
             {
+                string upn = User.Claims.First(claim => claim.Type.Contains("upn")).Value;
                 string accessToken = await HttpContext.GetTokenAsync("access_token");
                 string refresh_token = await HttpContext.GetTokenAsync("refresh_token");
                 string idToken = await HttpContext.GetTokenAsync("id_token");
-                JArray tenantGroups = null;
+                IEnumerable<RoleAssignment> tenantGroups = null;
                 using (var client = new HttpClient())
                 {
                     client.BaseAddress = new Uri("https://localhost:44393/api/");
                     //HTTP GET
-                    var responseTask = client.GetAsync("RoleAssignment/TenantGroups");
+                    var responseTask = client.GetAsync("RoleAssignment/TenantGroups?accessToken=" + accessToken + "&upn=" + upn );
                     responseTask.Wait();
-
+                    
                     var result = responseTask.Result;
                     if (result.IsSuccessStatusCode)
                     {
-                        var readTask = result.Content.ReadAsAsync<JArray>();
+                        //var readTask = result.Content.ReadAsAsync<JArray>();
+                        var readTask = result.Content.ReadAsAsync<IList<RoleAssignment>>();
                         readTask.Wait();
 
-                        tenantGroups = (JArray)readTask.Result;
+                        tenantGroups = (IEnumerable<RoleAssignment>)readTask.Result;
                     }
                     else //web api sent error response 
                     {
@@ -52,7 +55,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 }
                 //List<TenantGroup> lst = new List<TenantGroup>();
                 //lst.Add(tenantGroups);
-
+               
                 return View(tenantGroups);
             }
             else
@@ -139,7 +142,6 @@ namespace MSFT.WVD.Monitoring.Controllers
         //{
         //    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         //}
-
 
     }
 }

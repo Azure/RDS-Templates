@@ -1,5 +1,4 @@
-﻿@using Newtonsoft.Json.Linq
-@model JArray
+﻿@model IEnumerable<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>
 @{
     ViewData["Title"] = "Home Page";
     //Layout = "_Layout.cshtml";
@@ -7,22 +6,37 @@
 <div class="overlay">
     <div class="flyoutpanel">
 
-        @using (Html.BeginForm("Form", "Home", FormMethod.Get))
+        @using (Html.BeginForm("Form", "Home", FormMethod.Post))
         {
+        <div class="flyoutpanel-header">
             <h4>Please select a Tenant Group</h4>
+            <button class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
 
             @Html.Label("Tenantgroup", "Tenant Group")
-            @Html.DropDownList("TenantGroupDropDown",
-                                new SelectList(Model),
-                                "Select Tenant Group",
-                                new { @class = "form-control" })
+
+
+            @Html.DropDownList(
+    "ddlTenantGroup",
+    new SelectList(
+        Model.Select(x => new { Value = x.tenantGroupName, Text = x.tenantGroupName}),
+        "Value",
+        "Text"
+
+
+
+    )
+)
+        </div>
+           
             <div class="footer">
-                <button type="button" class="btn btn-default">Save</button>
-                <button type="button" class="btn btn-default">Cancel</button>
+                <input type="submit" value="Cancel" class="btn-secondary" />
+                <input type="submit" value="Save" class="btn-default" />
+
+
             </div>
-            
+
         }
     </div>
-</div>
+        </div>
 
 

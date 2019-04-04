@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@model IEnumerable<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -48,8 +49,8 @@
             <div class="pull-right">
                 <div class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                     <div class="user-details">
-                        <span>WVD Demo</span>
-                        <label>RDS Owner</label>
+                        <span> @Model.First().displayName</span>
+                        <label> @Model.First().roleDefinitionName</label>
                     </div>
                     <div class="user-initials">WD</div>
                 </div>
@@ -60,12 +61,12 @@
                     <li>
                         <div style="padding:5px 20px 0px 20px; color:#fff;">
                             <p style="margin-top:0px; margin-bottom:0px">
-                                <span style="font-weight:bold; font-size:15px;">WVD Demo</span><span>(RDS owner)</span>
+                                <span style="font-weight:bold; font-size:15px;">@Model.First().displayName</span><span>(@Model.First().roleDefinitionName)</span>
                             </p>
-                            <p><span>wvd.demo@PeopleTechCSP.onmicrosoft.com</span></p>
+                            <p><span> @Model.First().signInName</span></p>
 
                             <p style="border-bottom:1px solid #666666; margin:0px"></p>
-                            <p><span><b>Infrastructure Permission</b></span><br /><span>Default Tenant Group</span></p>
+                            <p><span><b>Infrastructure Permission</b></span><br /><span>@Model.First().tenantGroupName</span></p>
                             <p style="border-bottom:1px solid #666666; margin:0px"></p>
                         </div>
                     </li>

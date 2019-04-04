@@ -1,46 +1,51 @@
-﻿
+﻿@model Diagonize
+
 @{
     ViewData["Title"] = "Index";
 }
-@model Diagonize
 <div class="width-100">
-<br />
-    <div class="row form-group">
-        @Html.Label("UserUPN", "User UPN", new { @class = "control-label col-md-1 f-500" })
-        <div class="col-sm-2">
-            @Html.TextBox("myTextBox", "", new { @class = "form-control" })
+    <br />
+    @using (Html.BeginForm())
+    {
+        <div class="row form-group">
+            @Html.Label("UserUPN", "User UPN", new { @class = "control-label col-md-1 f-500" })
+            <div class="col-sm-2">
+                @Html.TextBox("myTextBox", "", new { @class = "form-control" })
+            </div>
         </div>
-    </div>
-    <div class="row form-group">
-        @Html.Label("interval", "Issue interval from :", new { @class = "control-label col-md-1 f-500" })
-        <div class="col-sm-2">
-            @Html.TextBox("date", null, "{0:yyyy-dd-MM}", new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+        <div class="row form-group">
+            @Html.Label("interval", "Issue interval from :", new { @class = "control-label col-md-1 f-500" })
+            <div class="col-sm-2">
+                @Html.TextBox("date", null, "{0:yyyy-dd-MM}", new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+            </div>
+            @Html.Label("to", "to", new { @class = "control-label col-sm-1 f-500" })
+            <div class="col-sm-2">
+                @Html.TextBox("date", null, "{0:yyyy-dd-MM}", new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+            </div>
         </div>
-        @Html.Label("to", "to", new { @class = "control-label col-sm-1 f-500" })
-        <div class="col-sm-2">
-            @Html.TextBox("date", null, "{0:yyyy-dd-MM}", new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+        <div class="row form-group">
+            @Html.Label("activityType", "Activity Type", new { @class = "control-label col-md-1 f-500" })
+            <div class="col-sm-2">
+                @Html.DropDownList("activityType",
+                     new SelectList(Enum.GetValues(typeof(activityType))),
+                     "Connection",
+                     new { @class = "form-control" })
+            </div>
+            @Html.Label("outcome", "outcome", new { @class = "control-label col-sm-1 f-500" })
+            <div class="col-sm-2">
+                @Html.DropDownList("outcome",
+                     new SelectList(Enum.GetValues(typeof(outcome))),
+                     "All",
+                     new { @class = "form-control" })
+            </div>
         </div>
-    </div>
-    <div class="row form-group">
-        @Html.Label("activityType", "Activity Type", new { @class = "control-label col-md-1 f-500" })
-        <div class="col-sm-2">
-            @Html.DropDownList("activityType",
-                 new SelectList(Enum.GetValues(typeof(activityType))),
-                 "Connection",
-                 new { @class = "form-control" })
+        <div class="row form-group">
+            <div class="col-sm-offset-1">
+                @*<input type="search" value="search" />*@
+                <button type="button" class="btn btn-default" style="margin-left:15px">search</button>
+            </div>
         </div>
-        @Html.Label("outcome", "outcome", new { @class = "control-label col-sm-1 f-500" })
-        <div class="col-sm-2">
-            @Html.DropDownList("outcome",
-                 new SelectList(Enum.GetValues(typeof(outcome))),
-                 "All",
-                 new { @class = "form-control" })
-        </div>
-    </div>
-    <div class="row form-group">
-        <div class="col-sm-offset-1">
-            <button type="button" class="btn btn-default" style="margin-left:15px">search</button>
-        </div>
-    </div>
+    }
+
 </div>
-    
+

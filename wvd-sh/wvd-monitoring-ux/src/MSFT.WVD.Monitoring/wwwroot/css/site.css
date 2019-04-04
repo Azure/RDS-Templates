@@ -226,27 +226,64 @@ body {
 .f-500{
     font-weight:500;
 }
-.flyoutpanel {
-    position: absolute;
-    right: 0;
-    height: 100%;
-    width: 400px;
-    background: white;
-}
-.overlay {
-    position: fixed;
-    z-index: 1;
-    width: 100%;
-    height: calc(100vh - 50px);
-    overflow-y: auto;
-    left: 0px;
-    background: rgba(82, 82, 86, 0.3);
-    top: 50px;
+.flyoutpanel { 
+    padding: 20px;
     box-sizing: border-box;
-    transition: width 0.5s;
+    background: #fff;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    width: 400px;
+    z-index: 9;
 }
+.flyoutpanel-header {
+    margin: 10px;
+    overflow: hidden;
+}
+.flyoutpanel-header label, .flyoutpanel-header select {
+    display: block;
+}
+.flyoutpanel-header label {
+    font-size: 11px;
+}
+.flyoutpanel-header h4 {
+    margin: 0 0 10px;
+    font-weight:500;
+    display:inline-block;
+}
+.flyoutpanel-header button{
+    color:#333;
+    opacity:1;
+}
+    .overlay {
+        position: fixed;
+        z-index: 1;
+        width: 100%;
+        height: calc(100vh - 50px);
+        overflow-y: auto;
+        left: 0px;
+        background: rgba(82, 82, 86, 0.3);
+        top: 50px;
+        box-sizing: border-box;
+        transition: width 0.5s;
+    }
 .footer {
-    bottom: 0;
+    bottom: 30px;
     position: absolute;
     right: 20px;
+}
+.btn-default {
+    border: none;
+    width: 100px;
+    height: 30px;
+    background: #a5a5a5;
+    cursor: pointer;
+    color: #fff;
+}
+.btn-secondary {
+    border: none;
+    width: 100px;
+    height: 30px;
+    background: #ccc;
 }
