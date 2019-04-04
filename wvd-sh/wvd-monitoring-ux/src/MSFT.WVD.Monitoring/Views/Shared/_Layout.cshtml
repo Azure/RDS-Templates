@@ -8,12 +8,14 @@
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
         <link rel="stylesheet" href="~/css/site.css" />
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
     </environment>
     <environment exclude="Development">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+       
     </environment>
 </head>
 <body>
@@ -35,27 +37,87 @@
                 </button>
                 <a class="navbar-brand title">Windows Virtual Desktop</a>
             </div>
+
             @*<div class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav">
-                        <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
-                        <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
-                        <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
-                    </ul>
-                </div>*@
+            <ul class="nav navbar-nav">
+                <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
+                <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
+            </ul>
+        </div>*@
+            <div class="pull-right">
+                <div class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                    <div class="user-details">
+                        <span>WVD Demo</span>
+                        <label>RDS Owner</label>
+                    </div>
+                    <div class="user-initials">WD</div>
+                </div>
+                <ul class="dropdown-menu dropdown" style="right:0;left: inherit;">
+                    <li style="padding:10px 20px 10px 20px;">
+                        <span class="user-initials">WD</span>
+                    </li>
+                    <li>
+                        <div style="padding:5px 20px 0px 20px; color:#fff;">
+                            <p style="margin-top:0px; margin-bottom:0px">
+                                <span style="font-weight:bold; font-size:15px;">WVD Demo</span><span>(RDS owner)</span>
+                            </p>
+                            <p><span>wvd.demo@PeopleTechCSP.onmicrosoft.com</span></p>
+
+                            <p style="border-bottom:1px solid #666666; margin:0px"></p>
+                            <p><span><b>Infrastructure Permission</b></span><br /><span>Default Tenant Group</span></p>
+                            <p style="border-bottom:1px solid #666666; margin:0px"></p>
+                        </div>
+                    </li>
+                  
+                    <li>
+                        <form>
+                            <button type="submit" class="btn btn-link btn-logout">Sign out</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+           
         </div>
+     
     </nav>
    
-    <div class="vertical-menu">
 
-        <a asp-area="" asp-controller="Home" asp-action="Index">Diagnose Issues</a>
-        <a asp-area="" asp-controller="Home" asp-action="About">Deployment Health</a>
-        <a asp-area="" asp-controller="Home" asp-action="Contact">Application View</a>
-        <a asp-area="" asp-controller="Home" asp-action="Contact">User Report</a>
-    </div>
     <partial name="_CookieConsentPartial" />
 
-    <div class="container body-content">
-        @RenderBody()
+    <div class="body-content">
+        <div class="vertical-menu">
+            <ul>
+                <li>
+                    <a asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fa fa-home"></i>
+                        <span>Diagnose Issues</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="Home" asp-action="About">
+                        <i class="fa fa-home"></i>
+                        <span>Deployment Health</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="Home" asp-action="Contact">
+                        <i class="fa fa-home"></i>
+                        <span>Application View</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="Home" asp-action="Contact">
+                        <i class="fa fa-home"></i>
+                        <span>User Report</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+            @RenderBody()
+      
+        
         @*<hr />*@
         @*<footer>
             <p>&copy; 2019 - MSFT.WVD.Monitoring</p>

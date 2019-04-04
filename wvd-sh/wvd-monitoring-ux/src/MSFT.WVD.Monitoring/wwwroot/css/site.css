@@ -1,15 +1,30 @@
 ﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
 for details on configuring this project to bundle and minify static web assets. */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
 body {
     padding-top: 50px;
-    padding-bottom: 20px;
+    /*padding-bottom: 20px;*/
 }
 
 /* Wrapping element */
 /* Set some basic padding to keep content from hitting the edges */
 .body-content {
-    padding-left: 15px;
-    padding-right: 15px;
+    /*padding-left: 15px;
+    padding-right: 15px;*/
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-flow: row nowrap;
+    flex-flow: row nowrap;
+    height: 100%;
 }
 
 /* Carousel */
@@ -41,16 +56,72 @@ body {
 }
 .container{
     margin-left:0px;
+    width:100%;
 }
-.vertical-menu {
+.dropdown-toggle {
+    color: #fff;
+    text-align: right;
+    margin-top: 5px;
+    display: flex;
+    flex-flow: row nowrap;
+    line-height: 16px;
+    align-items: center;
+}
+
+    .dropdown-toggle .user-details {
+        margin-right: 10px;
+    }
+
+    .dropdown-toggle .user-details span {
+        display: block;
+    }
+
+    .dropdown-toggle .user-details label {
+        font-size: 12px;
+        font-weight: 500;
+        margin-bottom: 0;
+    }
+.user-initials {
+    border-radius: 50px;
+    width: 40px;
+    height: 40px;
+    background-color: #00a3ec;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    text-align: center;
+    display: inline-block;
+}
+.dropdown {
+    background-color: rgb(72, 72, 72);
+    width: 350px;
+    position: fixed;
+    top: 48px;
+    right: 0px;
+    float: right;
+    transform: translateY(0px);
+    border-radius: 0;
+    min-height: 200px;
+}
+.btn-logout {
+    text-align: right;
+    cursor: pointer;
+    margin-top: 10px;
+    color: #fff;
+    padding-right: 20px;
+    padding: 0px 30px;
+    font-size: 16px;
+    float: right;
+}
+/*.vertical-menu {
     background-color: #EBEBEB !important;
     width: 200px;
     height: 100%;
     position: absolute;
 }
 
-    .vertical-menu a {
-        /*background-color: #eee;*/
+   .vertical-menu a {
+        background-color: #eee;
         color: black;
         display: block;
         padding: 12px;
@@ -64,12 +135,94 @@ body {
         .vertical-menu a.active {
             background-color: #4CAF50;
             color: white;
+        }*/
+.vertical-menu {
+    background: #EBEBEB;
+    height: 100%;
+    -webkit-box-flex: 60px;
+    -ms-flex: 60px 0 0px;
+    flex: 60px 0 0;
+    overflow: hidden;
+    -webkit-transition: flex-basis 500ms ease-in-out;
+    -webkit-transition: -webkit-flex-basis 500ms ease-in-out;
+    transition: -webkit-flex-basis 500ms ease-in-out;
+    transition: flex-basis 500ms ease-in-out;
+    transition: flex-basis 500ms ease-in-out, -webkit-flex-basis 500ms ease-in-out, -ms-flex-preferred-size 500ms ease-in-out;
+    -webkit-transform: translateZ(0) scale(1, 1);
+    z-index: 1000;
+    margin-right: 10px;
+}
+
+    .vertical-menu:hover {
+        -webkit-box-flex: 250px;
+        -ms-flex: 250px 0 0px;
+        flex: 250px 0 0;
+        overflow: visible;
+    }
+
+    .vertical-menu ul {
+        margin: 7px 0;
+        padding: 0;
+    }
+
+        .vertical-menu ul li {
+            position: relative;
+            display: block;
+            width: 250px;
         }
+
+            .vertical-menu ul li:hover a, .vertical-menu ul li .active a {
+                color: #fff;
+                background-color: #5fa2db;
+            }
+
+            .vertical-menu ul li a {
+                position: relative;
+                display: table;
+                border-collapse: collapse;
+                border-spacing: 0;
+                color: #000;
+                font-family: arial;
+                font-size: 14px;
+                text-decoration: none;
+                -webkit-transform: translateZ(0) scale(1, 1);
+                -webkit-transition: all .1s linear;
+                transition: all .1s linear;
+            }
+
+                .vertical-menu ul li a:hover, .vertical-menu ul li a:focus {
+                    color: #fff;
+                    background-color: #73a3da;
+                }
+
+                .vertical-menu ul li a .fa {
+                    position: relative;
+                    display: table-cell;
+                    width: 60px;
+                    height: 36px;
+                    text-align: center;
+                    vertical-align: middle;
+                    font-size: 20px;
+                }
+
+                .vertical-menu ul li a span {
+                    position: relative;
+                    display: table-cell;
+                    vertical-align: middle;
+                    width: 190px;
+                    font-family: 'Titillium Web', sans-serif;
+                }
 .marginleft{
-    margin-left:200px;
+    margin-left:60px;
+}
+.width-100 {
+    width: 100%;
 }
 .title {
     font-size: 15px;
     line-height: 20px;
     color: white !important;
+}
+.f-500{
+    font-weight:500;
 }
