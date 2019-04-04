@@ -8,16 +8,16 @@ namespace MSFT.WVD.Monitoring.Common.Models
     {
         public string activityId { get; set; }
         public string activityType { get; set; }
-        public DateTime startTime { get; set; }
-        public DateTime endTime { get; set; }
+        public Nullable<DateTime> startTime { get; set; }
+        public Nullable<DateTime> endTime { get; set; }
         public string userName { get; set; }
         public string roleInstances { get; set; }
-        public int outcome { get; set; }
-        public int status { get; set; }
+        public string outcome { get; set; }
+        public Nullable<int> status { get; set; }
         public ConnectionDetails connectionDetails { get; set; }
         public ManagementDetails managementDetails { get; set; }
         public FeedDetails feedDetails { get; set; }
-        public DateTime lastHeartbeatTime { get; set; }
+        public Nullable<DateTime> lastHeartbeatTime { get; set; }
         public List<Checkpoint> checkpoints { get; set; }
         public List<Error> errors { get; set; }
     }
@@ -98,8 +98,21 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string errorMessage { get; set; }
         public bool errorInternal { get; set; }
         public int reportedBy { get; set; }
-        public DateTime time { get; set; }
+        public Nullable<DateTime> time { get; set; }
     }
 
 
+    public enum ActivityType
+    {
+        Connection=0,
+        Management =1,
+        Feed=2
+    }
+
+
+    public enum ActivityOutcome
+    {
+        Success=0,
+        Failure = 1
+    }
 }
