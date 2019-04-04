@@ -48,15 +48,15 @@ namespace MSFT.WVD.Monitoring
                 options.ResponseType = OpenIdConnectResponseType.Code;
                 options.SaveTokens = true;
             });
-            services.AddMvc(options =>
-        {
-            var policy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-            options.Filters.Add(new AuthorizeFilter(policy));
-        }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            //    services.AddMvc(options =>
+            //{
+            //    var policy = new AuthorizationPolicyBuilder()
+            //        .RequireAuthenticatedUser()
+            //        .Build();
+            //    options.Filters.Add(new AuthorizeFilter(policy));
+            //}).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-
+            services.AddMvc();
 
 
 
@@ -76,18 +76,18 @@ namespace MSFT.WVD.Monitoring
             }
 
             app.UseHttpsRedirection();
-            //app.UseStaticFiles();
-           // app.UseCookiePolicy();
+            app.UseStaticFiles();
+            //app.UseCookiePolicy();
             app.UseAuthentication();
 
-            //app.UseMvcWithDefaultRoute();
+            app.UseMvcWithDefaultRoute();
 
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
+            //app.UseMvc(routes =>
+            //{
+            //    routes.MapRoute(
+            //        name: "default",
+            //        template: "{controller=Home}/{action=Index}/{id?}");
+            //});
         }
     }
 }

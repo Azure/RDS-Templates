@@ -14,6 +14,15 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string roleDefinitionId { get; set; }
         public string objectId { get; set; }
         public string objectType { get; set; }
+        public string tenantGroupName { get; set; }
+       
     }
+
+    //public class RoleAssignmentDetails
+    //{
+    //    public List<RoleAssignment> roleAssignments { get; set; }
+
+    //    public string[] tenantGroups { get; set; }
+    //}
     
 }

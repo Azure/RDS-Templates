@@ -14,8 +14,8 @@ using MSFT.WVD.Monitoring.Common.Models;
 
 namespace MSFT.WVD.Monitoring.api
 {
-    [Route("api/[controller]")]
-    public class RoleAssignmentController : Controller
+    [Route("api/RoleAssignment")]
+    public class RoleAssignmentController : ControllerBase
     {
         RoleAssignmentBL roleAssignmentBL = new RoleAssignmentBL();
         ConfigSettings Configuration;
@@ -25,20 +25,9 @@ namespace MSFT.WVD.Monitoring.api
         }
         // GET: api/<controller>
         [HttpGet("TenantGroups")]
-        public IActionResult TenantGroups()
+        public IEnumerable<RoleAssignment> TenantGroups(string accessToken,string upn)
         {
-            //return new string[] { "value1", "value2" };
-            string accessToken = "dsdfdg";
-            string upn = "wvd.demo@peopletechcsp.onmicrosoft.com";
-            string[] tenantGroups = roleAssignmentBL.GetTenantGroups(Configuration.RDBrokerUrl, accessToken, upn);
-            return Ok(tenantGroups);
+           return roleAssignmentBL.GetTenantGroups(Configuration.RDBrokerUrl, accessToken, upn);
         }
-
-        [HttpGet("GetTest")]
-        public string GetTest()
-        {
-            return "value";
-        }
-      
     }
 }
