@@ -226,3 +226,27 @@ body {
 .f-500{
     font-weight:500;
 }
+.flyoutpanel {
+    position: absolute;
+    right: 0;
+    height: 100%;
+    width: 400px;
+    background: white;
+}
+.overlay {
+    position: fixed;
+    z-index: 1;
+    width: 100%;
+    height: calc(100vh - 50px);
+    overflow-y: auto;
+    left: 0px;
+    background: rgba(82, 82, 86, 0.3);
+    top: 50px;
+    box-sizing: border-box;
+    transition: width 0.5s;
+}
+.footer {
+    bottom: 0;
+    position: absolute;
+    right: 20px;
+}

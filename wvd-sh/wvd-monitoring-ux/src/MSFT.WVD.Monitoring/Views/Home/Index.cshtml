@@ -1,21 +1,28 @@
-﻿@{
+﻿@using Newtonsoft.Json.Linq
+@model JArray
+@{
     ViewData["Title"] = "Home Page";
+    //Layout = "_Layout.cshtml";
 }
+<div class="overlay">
+    <div class="flyoutpanel">
 
-<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-<script src="//code.jquery.com/jquery-1.10.2.js"></script>
-<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-<script>
+        @using (Html.BeginForm("Form", "Home", FormMethod.Get))
+        {
+            <h4>Please select a Tenant Group</h4>
 
-    $(document).ready(function () {
-        $(".EnterDate").datepicker();
-    });
-</script>
-
-<div class="marginleft">
-
-
-<div>home page..</div>
-
-
+            @Html.Label("Tenantgroup", "Tenant Group")
+            @Html.DropDownList("TenantGroupDropDown",
+                                new SelectList(Model),
+                                "Select Tenant Group",
+                                new { @class = "form-control" })
+            <div class="footer">
+                <button type="button" class="btn btn-default">Save</button>
+                <button type="button" class="btn btn-default">Cancel</button>
+            </div>
+            
+        }
+    </div>
 </div>
+
+
