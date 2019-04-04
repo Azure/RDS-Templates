@@ -21,7 +21,7 @@ namespace MSFT.WVD.Monitoring
 {
     public class Startup
     {
-       public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
@@ -31,11 +31,11 @@ namespace MSFT.WVD.Monitoring
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.Configure<CookiePolicyOptions>(options =>
+            //services.configure<cookiepolicyoptions>(options =>
             //{
-            //    // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-            //    options.CheckConsentNeeded = context => true;
-            //    options.MinimumSameSitePolicy = SameSiteMode.None;
+            //    // this lambda determines whether user consent for non-essential cookies is needed for a given request.
+            //    options.checkconsentneeded = context => true;
+            //    options.minimumsamesitepolicy = samesitemode.none;
             //});
 
             services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
@@ -43,20 +43,20 @@ namespace MSFT.WVD.Monitoring
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
             {
                 options.Authority = options.Authority;//+ "/v2.0/"
-                    options.Resource = Configuration.GetSection("configurations").GetSection("RESOURCE_URL").Value;
+                options.Resource = Configuration.GetSection("configurations").GetSection("RESOURCE_URL").Value;
                 options.TokenValidationParameters.ValidateIssuer = false;
                 options.ResponseType = OpenIdConnectResponseType.Code;
                 options.SaveTokens = true;
             });
-            services.AddMvc(options =>
-        {
-            var policy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-            options.Filters.Add(new AuthorizeFilter(policy));
-        }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            //    services.AddMvc(options =>
+            //{
+            //    var policy = new AuthorizationPolicyBuilder()
+            //        .RequireAuthenticatedUser()
+            //        .Build();
+            //    options.Filters.Add(new AuthorizeFilter(policy));
+            //}).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-
+            services.AddMvc();
 
 
 
@@ -76,8 +76,8 @@ namespace MSFT.WVD.Monitoring
             }
 
             app.UseHttpsRedirection();
-            //app.UseStaticFiles();
-           // app.UseCookiePolicy();
+            app.UseStaticFiles();
+            //app.UseCookiePolicy();
             app.UseAuthentication();
 
             //app.UseMvcWithDefaultRoute();

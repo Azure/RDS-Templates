@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.AzureAD.UI;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MSFT.WVD.Monitoring.Models;
+using Newtonsoft.Json.Linq;
 
 namespace MSFT.WVD.Monitoring.Controllers
 {
@@ -23,7 +25,35 @@ namespace MSFT.WVD.Monitoring.Controllers
                 string accessToken = await HttpContext.GetTokenAsync("access_token");
                 string refresh_token = await HttpContext.GetTokenAsync("refresh_token");
                 string idToken = await HttpContext.GetTokenAsync("id_token");
-                return View();
+                JArray tenantGroups = null;
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("https://localhost:44393/api/");
+                    //HTTP GET
+                    var responseTask = client.GetAsync("RoleAssignment/TenantGroups");
+                    responseTask.Wait();
+
+                    var result = responseTask.Result;
+                    if (result.IsSuccessStatusCode)
+                    {
+                        var readTask = result.Content.ReadAsAsync<JArray>();
+                        readTask.Wait();
+
+                        tenantGroups = (JArray)readTask.Result;
+                    }
+                    else //web api sent error response 
+                    {
+                        //log response status here..
+
+                        //tenantGroups = Enumerable.Empty<TenantGroup>();
+
+                        ModelState.AddModelError(string.Empty, "Server error. Please contact administrator.");
+                    }
+                }
+                //List<TenantGroup> lst = new List<TenantGroup>();
+                //lst.Add(tenantGroups);
+
+                return View(tenantGroups);
             }
             else
             {
@@ -36,7 +66,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             return Challenge(new AuthenticationProperties { RedirectUri = "/" });
         }
 
-        public IActionResult  LoginCallback()
+        public IActionResult LoginCallback()
         {
             return Challenge(new AuthenticationProperties { RedirectUri = "/" });
         }
@@ -59,7 +89,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         {
             await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
             await HttpContext.SignOutAsync(AzureADDefaults.AuthenticationScheme);
-            return RedirectToAction("Login","Home");
+            return RedirectToAction("Login", "Home");
         }
 
         //public IActionResult SignOut()
