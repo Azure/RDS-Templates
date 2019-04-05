@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>
+﻿@model HomePageViewModel
 <!DOCTYPE html>
 <html>
 <head>
@@ -49,8 +49,8 @@
             <div class="pull-right">
                 <div class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                     <div class="user-details">
-                        <span> @Model.First().displayName</span>
-                        <label> @Model.First().roleDefinitionName</label>
+                        <span> @Model.selectedRole.displayName</span>
+                        <label> @Model.selectedRole.roleDefinitionName</label>
                     </div>
                     <div class="user-initials">WD</div>
                 </div>
@@ -90,7 +90,7 @@
         <div class="vertical-menu">
             <ul>
                 <li>
-                    <a asp-area="" asp-controller="Home" asp-action="Index">
+                    <a asp-area="" asp-controller="DiagonizeIssues" asp-action="Index">
                         <i class="fa fa-home"></i>
                         <span>Diagnose Issues</span>
                     </a>

@@ -18,7 +18,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         }
 
 
-[HttpPost]
+        [HttpPost]
         public async Task<ActionResult> SearchActivity()
         {
             if (User.Identity.IsAuthenticated)
@@ -59,3 +59,4 @@ namespace MSFT.WVD.Monitoring.Controllers
             }
         }
     }
+}
