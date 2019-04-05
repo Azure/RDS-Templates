@@ -9,7 +9,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Web;
 
-namespace MSFT.WVD.Monitoring.Common
+namespace MSFT.WVD.Monitoring.Common.BAL
 {
     public class CommonBL
     {
@@ -38,6 +38,8 @@ namespace MSFT.WVD.Monitoring.Common
             }
            
         }
+
+
 
         public static HttpClient InitializeHttpClient(string deploymentUrl, string accessToken)
         {

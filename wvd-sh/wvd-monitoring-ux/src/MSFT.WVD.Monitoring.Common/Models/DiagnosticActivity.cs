@@ -104,15 +104,69 @@ namespace MSFT.WVD.Monitoring.Common.Models
 
     public enum ActivityType
     {
-        Connection=0,
-        Management =1,
-        Feed=2
+        Connection = 0,
+        Management = 1,
+        Feed = 2
     }
 
 
     public enum ActivityOutcome
     {
-        Success =0,
+        Success = 0,
         Failure = 1
+    }
+
+
+    /***Activity class for each activity*****/
+     
+    public class ConnectionActivity
+    {
+        public string activityId { get; set; }
+        public string activityType { get; set; }
+       
+        public Nullable<DateTime> startTime { get; set; }
+        public Nullable<DateTime> endTime { get; set; }
+        public string userName { get; set; }
+        public string outcome { get; set; }
+        public string Tenants { get; set; }
+        public string SessionHostName { get; set; }
+        public string isInternalError { get; set; }
+        public string errorMessage { get; set; }
+        public string ClientIPAddress { get; set; }
+        public string ClientOS { get; set; }
+    }
+
+    public class ManagementActivity
+    {
+        public string activityId { get; set; }
+        public string activityType { get; set; }
+        public Nullable<DateTime> startTime { get; set; }
+        public Nullable<DateTime> endTime { get; set; }
+        public string userName { get; set; }
+        public string outcome { get; set; }
+        public string isInternalError { get; set; }
+        public string errorMessage { get; set; }
+        public string Tenants { get; set; }
+        public string Object { get; set; }
+        public string Method { get; set; }
+        public string Route { get; set; }
+        public int ObjectsFetched { get; set; }
+        public int ObjectsCreated { get; set; }
+        public int ObjectsUpdated { get; set; }
+        public int ObjectsDeleted { get; set; }
+    }
+
+    public class FeedActivity
+    {
+        public string activityId { get; set; }
+        public string activityType { get; set; }
+        public Nullable<DateTime> startTime { get; set; }
+        public Nullable<DateTime> endTime { get; set; }
+        public string userName { get; set; }
+        public string outcome { get; set; }
+        public string isInternalError { get; set; }
+        public string errorMessage { get; set; }
+        public object ClientIPAddress { get; set; }
+        public string ClientOS { get; set; }
     }
 }

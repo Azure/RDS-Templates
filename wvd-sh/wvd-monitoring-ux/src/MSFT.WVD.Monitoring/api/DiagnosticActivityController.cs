@@ -21,13 +21,23 @@ namespace MSFT.WVD.Monitoring.api
             Configuration = new ConfigSettings(config);
         }
 
-        // GET: api/<controller>
-        [HttpGet("GetActivityDetails")]
-        public IEnumerable<DiagnosticActivity> GetActivityDetails(string accessToken,string tenantGroup,string tenant,DateTime startDate,DateTime endDate,int activityType, Nullable<int> outcome)
+        [HttpGet("GetConnectionActivities")]
+        public IEnumerable<ConnectionActivity> GetConnectionActivities(string accessToken, string upn, string tenantGroup, string tenant, DateTime startDate, DateTime endDate,  Nullable<int> outcome)
         {
-            return diagnosticActivitityBL.GetActivityDetails(Configuration.RDBrokerUrl, accessToken, tenantGroup, tenant, startDate, endDate, activityType, outcome);
+            return diagnosticActivitityBL.GetConnectionActivities(Configuration.RDBrokerUrl, accessToken, upn, tenantGroup, tenant, startDate, endDate, outcome);
         }
 
-       
+
+        [HttpGet("GetManagementActivities")]
+        public IEnumerable<ManagementActivity> GetManagementActivities(string accessToken, string upn, string tenantGroup, string tenant, DateTime startDate, DateTime endDate,  Nullable<int> outcome)
+        {
+            return diagnosticActivitityBL.GetManagementActivities(Configuration.RDBrokerUrl, accessToken, upn, tenantGroup, tenant, startDate, endDate,  outcome);
+        }
+
+        [HttpGet("GetFeedActivities")]
+        public IEnumerable<FeedActivity> GetFeedActivities(string accessToken, string upn, string tenantGroup, string tenant, DateTime startDate, DateTime endDate,  Nullable<int> outcome)
+        {
+            return diagnosticActivitityBL.GetFeedActivities(Configuration.RDBrokerUrl, accessToken, upn, tenantGroup, tenant, startDate, endDate,  outcome);
+        }
     }
 }

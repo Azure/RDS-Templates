@@ -68,9 +68,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             }
             ]
             ";
-            //List<RoleAssignment> roles= new List<RoleAssignment>();
             var arr = (JArray)JsonConvert.DeserializeObject(strJson);
-
             List<RoleAssignment> roles = ((JArray)arr).Select(item => new RoleAssignment
             {
                 roleAssignmentId = (string)item["roleAssignmentId"],
@@ -83,9 +81,6 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 objectType = (string)item["objectType"],
                 tenantGroupName = item["scope"].ToString().Split('/').Length > 1 ? item["scope"].ToString().Split('/')[1].ToString() : Constants.tenantGroupName
             }).GroupBy(i => i.tenantGroupName).Select(g => g.First()).ToList();
-
-           
-            //roles = roles.GroupBy(i => i.tenantGroupName).Select(g => g.First()).ToList();
             return roles;
         }
     }
