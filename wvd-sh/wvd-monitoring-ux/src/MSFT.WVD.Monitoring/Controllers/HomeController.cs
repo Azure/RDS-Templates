@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Models;
@@ -19,48 +20,42 @@ namespace MSFT.WVD.Monitoring.Controllers
     [Authorize]
     public class HomeController : Controller
     {
+
         public async Task<IActionResult> Index()
         {
-            if (User.Identity.IsAuthenticated)
+            var role = new RoleAssignment();
+            if (HttpContext.Session.Get<RoleAssignment>("selectedRole") == null)
             {
-                string upn = User.Claims.First(claim => claim.Type.Contains("upn")).Value;
-                string accessToken = await HttpContext.GetTokenAsync("access_token");
-                string refresh_token = await HttpContext.GetTokenAsync("refresh_token");
-                string idToken = await HttpContext.GetTokenAsync("id_token");
-                IEnumerable<RoleAssignment> tenantGroups = null;
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri("https://localhost:44393/api/");
-                    //HTTP GET
-                    var responseTask = client.GetAsync("RoleAssignment/TenantGroups?accessToken=" + accessToken + "&upn=" + upn );
-                    responseTask.Wait();
-                    
-                    var result = responseTask.Result;
-                    if (result.IsSuccessStatusCode)
-                    {
-                        //var readTask = result.Content.ReadAsAsync<JArray>();
-                        var readTask = result.Content.ReadAsAsync<IList<RoleAssignment>>();
-                        readTask.Wait();
-
-                        tenantGroups = (IEnumerable<RoleAssignment>)readTask.Result;
-                    }
-                    else //web api sent error response 
-                    {
-                        //log response status here..
-
-                        //tenantGroups = Enumerable.Empty<TenantGroup>();
-
-                        ModelState.AddModelError(string.Empty, "Server error. Please contact administrator.");
-                    }
-                }
-                //List<TenantGroup> lst = new List<TenantGroup>();
-                //lst.Add(tenantGroups);
-               
-                return View(tenantGroups);
+                InitialzeRoleInfomation();
             }
-            else
+            role = HttpContext.Session.Get<RoleAssignment>("selectedRole");
+            //var tenantGroups = HttpContext.Session.Get<IEnumerable<string>>("tenantGroups")
+            return View(new HomePageViewModel()
             {
-                return null;
+                selectedRole = role
+            });
+        }
+
+        private async void InitialzeRoleInfomation()
+        {
+            string upn = User.Claims.First(claim => claim.Type.Contains("upn")).Value;
+            string accessToken = await HttpContext.GetTokenAsync("access_token");
+            IEnumerable<RoleAssignment> roleAssignments = null;
+            HttpContext.Session.SetString("upn", upn);
+            HttpContext.Session.SetString("accessToken", accessToken);
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("/api/");
+                client.Timeout = TimeSpan.FromMinutes(30);
+                //HTTP GET
+                var response = await client.GetAsync("RoleAssignment/TenantGroups?accessToken=" + accessToken + "&upn=" + upn);
+                if (response.IsSuccessStatusCode)
+                {
+                    roleAssignments = await response.Content.ReadAsAsync<IEnumerable<RoleAssignment>>();
+                    HttpContext.Session.Set<IEnumerable<RoleAssignment>>("WVDRoles", roleAssignments);
+                    HttpContext.Session.Set<IEnumerable<string>>("tenantGroups", roleAssignments.Select(x => x.tenantGroupName));
+                }
             }
         }
 
@@ -73,75 +68,25 @@ namespace MSFT.WVD.Monitoring.Controllers
         {
             return Challenge(new AuthenticationProperties { RedirectUri = "/" });
         }
-        //[HttpPost]
-        //public SignOutResult  Logout()
-        //{
-        //    // await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        //    //  await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
-        //    //  await HttpContext.SignOutAsync(AzureADDefaults.AuthenticationScheme);
-        //    return SignOut(
-        //      new AuthenticationProperties { RedirectUri = "/" },
-        //    //  CookieAuthenticationDefaults.AuthenticationScheme,
-        //    //OpenIdConnectDefaults.AuthenticationScheme,
-        //      AzureADDefaults.AuthenticationScheme);
-
-        //}
 
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
+            HttpContext.Session.Clear();
             await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
             await HttpContext.SignOutAsync(AzureADDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Home");
         }
 
-        //public IActionResult SignOut()
-        //{
-        //    var callbackUrl = Url.Action("SignedOut", "Home", values: null, protocol: Request.Scheme);
-        //    return SignOut(new AuthenticationProperties { RedirectUri = callbackUrl },
-        //        AzureADDefaults.AuthenticationScheme);
-        //}
-
-        //public async Task EndSession()
-        //{
-        //    // If AAD sends a single sign-out message to the app, end the user's session, but don't redirect to AAD for sign out.
-        //    await HttpContext.Authentication.SignOutAsync(AzureADDefaults.AuthenticationScheme);
-        //}
-
-        //public async Task<IActionResult> SignedOut()
-        //{
-        //    if (HttpContext.User.Identity.IsAuthenticated)
-        //    {
-        //        await EndSession();
-        //    }
-
-        //    return View();
-        //}
-
-        //public IActionResult About()
-        //{
-        //    ViewData["Message"] = "Your application description page.";
-
-        //    return View();
-        //}
-
-        //public IActionResult Contact()
-        //{
-        //    ViewData["Message"] = "Your contact page.";
-
-        //    return View();
-        //}
-
-        //public IActionResult Privacy()
-        //{
-        //    return View();
-        //}
-
-        //[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        //public IActionResult Error()
-        //{
-        //    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        //}
+        [HttpPost]
+        public IActionResult Save([FromBody] HomePageSubmitModel data)
+        {
+            HttpContext.Session.SetString("selectedTenantGroupName", data.tenantGroupName);
+            HttpContext.Session.SetString("selectedTenantName", data.tenantName);
+            var roles =  HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
+            HttpContext.Session.Set<RoleAssignment>("selectedRole", roles.SingleOrDefault(x => x.tenantGroupName == data.tenantGroupName));
+            return RedirectToAction("Index", "Home");
+        }
 
     }
 }
