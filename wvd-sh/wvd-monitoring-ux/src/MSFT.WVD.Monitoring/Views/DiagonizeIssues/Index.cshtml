@@ -1,40 +1,44 @@
-﻿@model Diagonize
+﻿@model DaigonisepageModel
 
 @{
     ViewData["Title"] = "Index";
 }
 <div class="width-100">
     <br />
-    @using (Html.BeginForm())
+    @using (Html.BeginForm("SearchActivity", "DiagonizeIssuesController", FormMethod.Post))
     {
         <div class="row form-group">
             @Html.Label("UserUPN", "User UPN", new { @class = "control-label col-md-1 f-500" })
             <div class="col-sm-2">
-                @Html.TextBox("myTextBox", "", new { @class = "form-control" })
+                @Html.TextBoxFor(m => m.upn, new { @Value = "Enter upn", @class = "form-control" })
             </div>
         </div>
         <div class="row form-group">
-            @Html.Label("interval", "Issue interval from :", new { @class = "control-label col-md-1 f-500" })
+            @Html.Label("interval", "Issue interval from :",
+           new { @class = "control-label col-md-1 f-500" })
             <div class="col-sm-2">
-                @Html.TextBox("date", null, "{0:yyyy-dd-MM}", new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+                @Html.TextBoxFor(m => m.startdate, "{0:yyyy-dd-MM}",
+               new { @style = "line-height:inherit", type = "date", @class = "form-control" })
             </div>
             @Html.Label("to", "to", new { @class = "control-label col-sm-1 f-500" })
             <div class="col-sm-2">
-                @Html.TextBox("date", null, "{0:yyyy-dd-MM}", new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+                @Html.TextBoxFor(m => m.enddate, "{0:yyyy-dd-MM}",
+               new { @style = "line-height:inherit", type = "date", @class = "form-control" })
             </div>
         </div>
         <div class="row form-group">
             @Html.Label("activityType", "Activity Type", new { @class = "control-label col-md-1 f-500" })
             <div class="col-sm-2">
                 @Html.DropDownList("activityType",
-                     new SelectList(Enum.GetValues(typeof(activityType))),
+                     new SelectList(Enum.GetValues(typeof(ActivityType))),
                      "Connection",
                      new { @class = "form-control" })
+               
             </div>
             @Html.Label("outcome", "outcome", new { @class = "control-label col-sm-1 f-500" })
             <div class="col-sm-2">
                 @Html.DropDownList("outcome",
-                     new SelectList(Enum.GetValues(typeof(outcome))),
+                     new SelectList(Enum.GetValues(typeof(ActivityOutcome))),
                      "All",
                      new { @class = "form-control" })
             </div>
