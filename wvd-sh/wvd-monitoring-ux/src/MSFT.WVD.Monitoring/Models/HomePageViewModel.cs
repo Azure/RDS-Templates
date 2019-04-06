@@ -10,6 +10,8 @@ namespace MSFT.WVD.Monitoring.Models
     {
         public RoleAssignment selectedRole { get; set; }
         public string selectedTenantGroupName { get; set; }
+        public string tenantGroupName { get; set; }
+        public string tenantName { get; set; }
     }
 
     public class HomePageSubmitModel

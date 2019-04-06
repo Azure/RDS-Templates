@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.AzureAD.UI;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace MSFT.WVD.Monitoring.Controllers
 {
@@ -26,9 +25,17 @@ namespace MSFT.WVD.Monitoring.Controllers
             var role = new RoleAssignment();
             if (HttpContext.Session.Get<RoleAssignment>("selectedRole") == null)
             {
-                InitialzeRoleInfomation();
+                var response = await InitialzeRoleInfomation();
+                if (response.IsSuccessStatusCode)
+                {
+                    var strRoleAssignments = response.Content.ReadAsStringAsync().Result;
+                    var roleAssignments = JsonConvert.DeserializeObject(strRoleAssignments);
+                    HttpContext.Session.Set("WVDRoles", roleAssignments);
+                    //HttpContext.Session.Set("WVDRoles", roleAssignments);
+                    //HttpContext.Session.Set("tenantGroups", roleAssignments.Select(x => x.tenantGroupName));
+                }
             }
-            role = HttpContext.Session.Get<RoleAssignment>("selectedRole");
+            role = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles").FirstOrDefault();
             //var tenantGroups = HttpContext.Session.Get<IEnumerable<string>>("tenantGroups")
             return View(new HomePageViewModel()
             {
@@ -36,27 +43,30 @@ namespace MSFT.WVD.Monitoring.Controllers
             });
         }
 
-        private async void InitialzeRoleInfomation()
+        private async Task<HttpResponseMessage> InitialzeRoleInfomation()
         {
             string upn = User.Claims.First(claim => claim.Type.Contains("upn")).Value;
             string accessToken = await HttpContext.GetTokenAsync("access_token");
-            IEnumerable<RoleAssignment> roleAssignments = null;
+            string roleAssignments = null;
             HttpContext.Session.SetString("upn", upn);
             HttpContext.Session.SetString("accessToken", accessToken);
 
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("/api/");
+                client.BaseAddress = new Uri("https://localhost:44393/api/");
                 client.Timeout = TimeSpan.FromMinutes(30);
                 //HTTP GET
-                var response = await client.GetAsync("RoleAssignment/TenantGroups?accessToken=" + accessToken + "&upn=" + upn);
-                if (response.IsSuccessStatusCode)
-                {
-                    roleAssignments = await response.Content.ReadAsAsync<IEnumerable<RoleAssignment>>();
-                    HttpContext.Session.Set<IEnumerable<RoleAssignment>>("WVDRoles", roleAssignments);
-                    HttpContext.Session.Set<IEnumerable<string>>("tenantGroups", roleAssignments.Select(x => x.tenantGroupName));
-                }
+                return await client.GetAsync("RoleAssignment/TenantGroups?accessToken=" + accessToken + "&upn=" + upn);
+                //if (response.IsSuccessStatusCode)
+                //{
+                //    roleAssignments = response.Content.ReadAsStringAsync().Result;
+                //    this.HttpContext.Session.Set("asd", roleAssignments);
+                //    //HttpContext.Session.Set("WVDRoles", roleAssignments);
+                //    //HttpContext.Session.Set("tenantGroups", roleAssignments.Select(x => x.tenantGroupName));
+                //}
             }
+            //HttpContext.Session.Set<JArray>("WVDRoles", roleAssignments);
+            
         }
 
         public IActionResult Login()
@@ -79,12 +89,12 @@ namespace MSFT.WVD.Monitoring.Controllers
         }
 
         [HttpPost]
-        public IActionResult Save([FromBody] HomePageSubmitModel data)
+        public IActionResult Save(HomePageViewModel data)
         {
-            HttpContext.Session.SetString("selectedTenantGroupName", data.tenantGroupName);
-            HttpContext.Session.SetString("selectedTenantName", data.tenantName);
-            var roles =  HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
-            HttpContext.Session.Set<RoleAssignment>("selectedRole", roles.SingleOrDefault(x => x.tenantGroupName == data.tenantGroupName));
+          HttpContext.Session.SetComplexData("selectedTenantGroupName", data.tenantGroupName);
+           HttpContext.Session.SetComplexData("selectedTenantName", data.tenantName);
+           var roles = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
+         HttpContext.Session.Set<RoleAssignment>("selectedRole", roles.SingleOrDefault(x => x.tenantGroupName == data.tenantGroupName));
             return RedirectToAction("Index", "Home");
         }
 

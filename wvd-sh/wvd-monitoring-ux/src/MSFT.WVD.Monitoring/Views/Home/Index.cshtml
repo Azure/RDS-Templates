@@ -1,4 +1,5 @@
-﻿@model IEnumerable<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>
+﻿@*@model IEnumerable<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>*@
+@model MSFT.WVD.Monitoring.Models.HomePageViewModel
 @{
     ViewData["Title"] = "Home Page";
     //Layout = "_Layout.cshtml";
@@ -6,36 +7,32 @@
 <div class="overlay">
     <div class="flyoutpanel">
 
-        @using (Html.BeginForm("Form", "Home", FormMethod.Post))
+        @using (Html.BeginForm("Save", "Home", FormMethod.Post))
         {
-        <div class="flyoutpanel-header">
-            <h4>Please select a Tenant Group</h4>
-            <button class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
+            <div class="flyoutpanel-header">
+            <h4>please select a tenant group</h4>
+            <button class="close" href="" id="btnslideclose"><i class="fa fa-times"></i></button>
+            <div>
 
-            @Html.Label("Tenantgroup", "Tenant Group")
+               @Html.Label("tenantGroupName", "Tenant Group Name")
+                @Html.TextBoxFor(m => m.tenantGroupName, new { @Value = "Enter Name", @class = "red" })
+            </div>
+            <div>
+                @Html.Label("tenantName", "Tenant Name")
+                @Html.TextBoxFor(m => m.tenantName, new { @Value = "Enter Name", @class = "red" })
+            </div>
 
-
-            @Html.DropDownList(
-    "ddlTenantGroup",
-    new SelectList(
-        Model.Select(x => new { Value = x.tenantGroupName, Text = x.tenantGroupName}),
-        "Value",
-        "Text"
-
-
-
-    )
-)
-        </div>
+          
+            </div>
            
             <div class="footer">
                 <input type="submit" value="Cancel" class="btn-secondary" />
                 <input type="submit" value="Save" class="btn-default" />
 
-
             </div>
 
         }
+      
     </div>
         </div>
 

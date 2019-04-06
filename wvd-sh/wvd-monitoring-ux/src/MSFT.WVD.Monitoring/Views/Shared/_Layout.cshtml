@@ -46,7 +46,7 @@
                 <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
             </ul>
         </div>*@
-            <div class="pull-right">
+            @*<div class="pull-right">
                 <div class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                     <div class="user-details">
                         <span> @Model.selectedRole.displayName</span>
@@ -61,12 +61,12 @@
                     <li>
                         <div style="padding:5px 20px 0px 20px; color:#fff;">
                             <p style="margin-top:0px; margin-bottom:0px">
-                                <span style="font-weight:bold; font-size:15px;">@Model.First().displayName</span><span>(@Model.First().roleDefinitionName)</span>
+                                <span style="font-weight:bold; font-size:15px;">@Model.selectedRole.displayName</span><span>(@Model.selectedRole.roleDefinitionName)</span>
                             </p>
-                            <p><span> @Model.First().signInName</span></p>
+                            <p><span> @Model.selectedRole.signInName</span></p>
 
                             <p style="border-bottom:1px solid #666666; margin:0px"></p>
-                            <p><span><b>Infrastructure Permission</b></span><br /><span>@Model.First().tenantGroupName</span></p>
+                            <p><span><b>Infrastructure Permission</b></span><br /><span>@Model.selectedRole.tenantGroupName</span></p>
                             <p style="border-bottom:1px solid #666666; margin:0px"></p>
                         </div>
                     </li>
@@ -77,7 +77,7 @@
                         </form>
                     </li>
                 </ul>
-            </div>
+            </div>*@
            
         </div>
      

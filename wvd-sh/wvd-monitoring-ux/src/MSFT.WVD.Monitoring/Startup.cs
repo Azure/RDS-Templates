@@ -38,6 +38,13 @@ namespace MSFT.WVD.Monitoring
             //    options.minimumsamesitepolicy = samesitemode.none;
             //});
 
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+                options.CheckConsentNeeded = context => false;
+                options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
+
             services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
               .AddAzureAD(options => Configuration.Bind("AzureAd", options)).AddCookie(OpenIdConnectDefaults.AuthenticationScheme);
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
@@ -55,8 +62,12 @@ namespace MSFT.WVD.Monitoring
             //        .Build();
             //    options.Filters.Add(new AuthorizeFilter(policy));
             //}).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-
+            services.AddDistributedMemoryCache();
             services.AddMvc();
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(1);
+            });
 
 
 
@@ -80,6 +91,7 @@ namespace MSFT.WVD.Monitoring
             //app.UseCookiePolicy();
             app.UseAuthentication();
 
+            app.UseSession();
             app.UseMvcWithDefaultRoute();
 
             //app.UseMvc(routes =>
