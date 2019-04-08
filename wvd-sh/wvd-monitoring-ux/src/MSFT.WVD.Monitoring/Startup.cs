@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using MSFT.WVD.Monitoring.Common.Models;
 
 namespace MSFT.WVD.Monitoring
 {
@@ -24,6 +25,9 @@ namespace MSFT.WVD.Monitoring
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            //var list = new List<RoleAssignment>();
+            //list.Add(new RoleAssignment());
+            //HttpContext.Session.Set<IEnumerable<RoleAssignment>>("WVDRoles", list);
         }
 
         public IConfiguration Configuration { get; }

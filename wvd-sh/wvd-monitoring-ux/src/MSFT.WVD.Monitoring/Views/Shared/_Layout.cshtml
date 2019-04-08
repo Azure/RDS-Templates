@@ -1,10 +1,10 @@
-﻿@model HomePageViewModel
+﻿@model IPageViewModel
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MSFT.WVD.Monitoring</title>
+    <title>@ViewData["Title"] WVD Monitoring</title>
 
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -16,7 +16,7 @@
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
-       
+
     </environment>
 </head>
 <body>
@@ -40,18 +40,23 @@
             </div>
 
             @*<div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
-                <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
-                <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
-            </ul>
-        </div>*@
+                    <ul class="nav navbar-nav">
+                        <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
+                        <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
+                    </ul>
+                </div>*@
             <div class="pull-right">
+                <div>
+                    <a asp-area="" asp-controller="Home" asp-action="Index" >
+                        <i class="fa fa-address-book"></i>
+                    </a>
+                </div>
                 <div class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                     <div class="user-details">
                         <span> @Html.DisplayFor(m => m.SelectedRole.displayName)</span>
                         <label> @Html.DisplayFor(m => m.SelectedRole.roleDefinitionName)</label>
-                       
+
                     </div>
                     <div class="user-initials">wd</div>
                 </div>
@@ -71,7 +76,7 @@
                             <p style="border-bottom:1px solid #666666; margin:0px"></p>
                         </div>
                     </li>
-                  
+
                     <li>
                         <form>
                             <button type="submit" class="btn btn-link btn-logout">sign out</button>
@@ -79,11 +84,11 @@
                     </li>
                 </ul>
             </div>
-           
+
         </div>
-     
+
     </nav>
-   
+
 
     <partial name="_CookieConsentPartial" />
 
@@ -91,39 +96,45 @@
         <div class="vertical-menu">
             <ul>
                 <li>
-                    <a asp-area="" asp-controller="DiagonizeIssues" asp-action="Index">
+                    <a asp-area="" asp-controller="Home" asp-action="Index">
                         <i class="fa fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="DiagonizeIssues" asp-action="Index">
+                        <i class="fa fa-exclamation-triangle"></i>
                         <span>Diagnose Issues</span>
                     </a>
                 </li>
                 <li>
                     <a asp-area="" asp-controller="Home" asp-action="About">
-                        <i class="fa fa-home"></i>
+                        <i class="fa fa-laptop-medical"></i>
                         <span>Deployment Health</span>
                     </a>
                 </li>
                 <li>
-                    <a asp-area="" asp-controller="Home" asp-action="Contact">
+                    <a asp-area="" asp-controller="Home" asp-action="Index">
                         <i class="fa fa-home"></i>
                         <span>Application View</span>
                     </a>
                 </li>
                 <li>
-                    <a asp-area="" asp-controller="Home" asp-action="Contact">
-                        <i class="fa fa-home"></i>
+                    <a asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fa fa-calendar-check"></i>
                         <span>User Report</span>
                     </a>
                 </li>
             </ul>
         </div>
 
-            @RenderBody()
-      
-        
+        @RenderBody()
+
+
         @*<hr />*@
         @*<footer>
-            <p>&copy; 2019 - MSFT.WVD.Monitoring</p>
-        </footer>*@
+                <p>&copy; 2019 - MSFT.WVD.Monitoring</p>
+            </footer>*@
     </div>
 
     <environment include="Development">

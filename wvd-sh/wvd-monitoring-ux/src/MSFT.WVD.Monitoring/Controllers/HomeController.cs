@@ -39,7 +39,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             return View(new HomePageViewModel()
             {
                 SelectedRole = role,
-                ShowDialog = HttpContext.Session.GetString("tenantGroupName") == null
+                ShowDialog = HttpContext.Session.GetString("SelectedTenantGroupName") == null
 
             });
         }
@@ -67,7 +67,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 //}
             }
             //HttpContext.Session.Set<JArray>("WVDRoles", roleAssignments);
-            
+
         }
 
         public IActionResult Login()
@@ -90,12 +90,14 @@ namespace MSFT.WVD.Monitoring.Controllers
         }
 
         [HttpPost]
-        public IActionResult Save(HomePageSubmitModel data)
+        [Authorize]
+        public IActionResult Save(HomePageViewModel data)
         {
-          HttpContext.Session.SetString("selectedTenantGroupName", data.TenantGroupName);
-           HttpContext.Session.SetString("selectedTenantName", data.TenantName);
-           var roles = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
-           HttpContext.Session.Set<RoleAssignment>("selectedRole", roles.SingleOrDefault(x => x.tenantGroupName == data.TenantGroupName));
+            var submittedData = data.SubmitData;
+            HttpContext.Session.Set<string>("SelectedTenantGroupName", submittedData.TenantGroupName);
+            HttpContext.Session.Set<string>("SelectedTenantName", submittedData.TenantName);
+            var roles = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
+            HttpContext.Session.Set<RoleAssignment>("selectedRole", roles?.SingleOrDefault(x => x.tenantGroupName == submittedData.TenantGroupName));
             return RedirectToAction("Index", "Home");
         }
 

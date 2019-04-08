@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace MSFT.WVD.Monitoring.Models
 {
-    public class HomePageViewModel
+    public class HomePageViewModel :IPageViewModel
     {
         public RoleAssignment SelectedRole { get; set; }
         public string SelectedTenantGroupName { get; set; }
         public bool ShowDialog { get; set; }
+        public HomePageSubmitModel SubmitData { get; set; }
     }
 
     public class HomePageSubmitModel
