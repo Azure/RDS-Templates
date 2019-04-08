@@ -8,7 +8,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
     {
         public string roleAssignmentId { get; set; }
         public string scope { get; set; }
-        public object displayName { get; set; }
+        public string displayName { get; set; }
         public string signInName { get; set; }
         public string roleDefinitionName { get; set; }
         public string roleDefinitionId { get; set; }
