@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 
 namespace MSFT.WVD.Monitoring.Models
 {
-    public class DaigonisepageModel
+    public class DaigonizePageViewModel
     {
         public string upn { get; set; }
-        public DateTime startdate { get; set; }
-        public DateTime enddate { get; set; }
-        public string activitytype { get; set; }
-        public string outcome { get; set; }
+        public DateTime startDate { get; set; }
+        public DateTime endDate { get; set; }
         public List<ManagementActivity> managementActivity { get; set; }
         public List<ConnectionActivity> connectionActivity { get; set; }
         public List<FeedActivity> feedActivity { get; set; }

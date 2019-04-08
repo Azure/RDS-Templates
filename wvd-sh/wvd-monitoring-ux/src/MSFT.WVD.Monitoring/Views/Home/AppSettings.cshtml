@@ -1,0 +1,27 @@
+﻿@model MSFT.WVD.Monitoring.Models.HomePageSubmitModel
+
+<div class="overlay" >
+    <div class="flyoutpanel">
+        @using (Html.BeginForm("Save", "Home", FormMethod.Post))
+        {
+            <div class="flyoutpanel-header">
+                <h4>please select a tenant group</h4>
+                <button class="close" href="" id="btnslideclose"><i class="fa fa-times"></i></button>
+                <div>
+                    @Html.Label("tenantGroupName", "Tenant Group Name")
+                    @Html.TextBoxFor(m => m.TenantGroupName,
+                   new { @Value = "Enter TenantGroupName", @class = "form-control" })
+                </div>
+                <div>
+                    @Html.Label("tenantName", "Tenant Name")
+                    @Html.TextBoxFor(m => m.TenantName,
+                   new { @Value = "Enter Tenant Name", @class = "form-control" })
+                </div>
+            </div>
+            <div class="footer">
+                <input type="submit" value="Cancel" class="btn-secondary" />
+                <input type="submit" value="Save" class="btn-default" />
+            </div>
+        }
+    </div>
+</div>

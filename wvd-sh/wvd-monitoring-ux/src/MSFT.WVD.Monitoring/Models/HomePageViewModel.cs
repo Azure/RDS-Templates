@@ -8,15 +8,14 @@ namespace MSFT.WVD.Monitoring.Models
 {
     public class HomePageViewModel
     {
-        public RoleAssignment selectedRole { get; set; }
-        public string selectedTenantGroupName { get; set; }
-        public string tenantGroupName { get; set; }
-        public string tenantName { get; set; }
+        public RoleAssignment SelectedRole { get; set; }
+        public string SelectedTenantGroupName { get; set; }
+        public bool ShowDialog { get; set; }
     }
 
     public class HomePageSubmitModel
     {
-        public string tenantGroupName { get; set; }
-        public string tenantName { get; set; }
+        public string TenantGroupName { get; set; }
+        public string TenantName { get; set; }
     }
 }

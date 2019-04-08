@@ -46,38 +46,39 @@
                 <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
             </ul>
         </div>*@
-            @*<div class="pull-right">
+            <div class="pull-right">
                 <div class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                     <div class="user-details">
-                        <span> @Model.selectedRole.displayName</span>
-                        <label> @Model.selectedRole.roleDefinitionName</label>
+                        <span> @Html.DisplayFor(m => m.SelectedRole.displayName)</span>
+                        <label> @Html.DisplayFor(m => m.SelectedRole.roleDefinitionName)</label>
+                       
                     </div>
-                    <div class="user-initials">WD</div>
+                    <div class="user-initials">wd</div>
                 </div>
                 <ul class="dropdown-menu dropdown" style="right:0;left: inherit;">
                     <li style="padding:10px 20px 10px 20px;">
-                        <span class="user-initials">WD</span>
+                        <span class="user-initials">wd</span>
                     </li>
                     <li>
                         <div style="padding:5px 20px 0px 20px; color:#fff;">
                             <p style="margin-top:0px; margin-bottom:0px">
-                                <span style="font-weight:bold; font-size:15px;">@Model.selectedRole.displayName</span><span>(@Model.selectedRole.roleDefinitionName)</span>
+                                <span style="font-weight:bold; font-size:15px;"> @Html.DisplayFor(m => m.SelectedRole.displayName)</span><span>@Html.DisplayFor(m => m.SelectedRole.roleDefinitionName)</span>
                             </p>
-                            <p><span> @Model.selectedRole.signInName</span></p>
+                            <p><span> @Html.DisplayFor(m => m.SelectedRole.signInName)</span></p>
 
                             <p style="border-bottom:1px solid #666666; margin:0px"></p>
-                            <p><span><b>Infrastructure Permission</b></span><br /><span>@Model.selectedRole.tenantGroupName</span></p>
+                            <p><span><b>infrastructure permission</b></span><br /><span>@Html.DisplayFor(m => m.SelectedRole.tenantGroupName)</span></p>
                             <p style="border-bottom:1px solid #666666; margin:0px"></p>
                         </div>
                     </li>
                   
                     <li>
                         <form>
-                            <button type="submit" class="btn btn-link btn-logout">Sign out</button>
+                            <button type="submit" class="btn btn-link btn-logout">sign out</button>
                         </form>
                     </li>
                 </ul>
-            </div>*@
+            </div>
            
         </div>
      

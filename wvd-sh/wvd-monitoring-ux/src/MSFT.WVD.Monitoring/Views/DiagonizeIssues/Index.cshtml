@@ -1,7 +1,7 @@
-﻿@model DaigonisepageModel
+﻿@model MSFT.WVD.Monitoring.Models.DaigonizePageViewModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Diagonize Issues";
 }
 <div class="width-100">
     <br />
@@ -17,22 +17,18 @@
             @Html.Label("interval", "Issue interval from :",
            new { @class = "control-label col-md-1 f-500" })
             <div class="col-sm-2">
-                @Html.TextBoxFor(m => m.startdate, "{0:yyyy-dd-MM}",
+                @Html.TextBoxFor(m => m.startDate, "{0:yyyy-dd-MM}",
                new { @style = "line-height:inherit", type = "date", @class = "form-control" })
             </div>
             @Html.Label("to", "to", new { @class = "control-label col-sm-1 f-500" })
             <div class="col-sm-2">
-                @Html.TextBoxFor(m => m.enddate, "{0:yyyy-dd-MM}",
+                @Html.TextBoxFor(m => m.endDate, "{0:yyyy-dd-MM}",
                new { @style = "line-height:inherit", type = "date", @class = "form-control" })
             </div>
         </div>
         <div class="row form-group">
             @Html.Label("activityType", "Activity Type", new { @class = "control-label col-md-1 f-500" })
             <div class="col-sm-2">
-                @*@Html.DropDownListFor(model=>model.activityType,
-        new SelectList(Enum.GetValues(Model.activityType.GetType())),
-        "ActivityTypes",
-        new { @class = "form-control" })*@
                 @Html.DropDownListFor(model => model.activityType,
         new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityType))),
         new { @class = "form-control" })
@@ -40,12 +36,7 @@
             </div>
             @Html.Label("outcome", "outcome", new { @class = "control-label col-sm-1 f-500" })
             <div class="col-sm-2">
-                @*@Html.DropDownListFor(model => model.activityOutcome, Enum.GetNames(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityOutcome)).Select(e => new SelectListItem { Text = e }))*@
-                @*@Html.DropDownList("outcome",
-        new SelectList(Enum.GetValues(typeof(ActivityOutcome))),
-        "All",
-        new { @class = "form-control" })*@
-                @Html.DropDownListFor(model => model.outcome,
+                @Html.DropDownListFor(model => model.activityOutcome,
      new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityOutcome))),
      "All",
      new { @class = "form-control" })
@@ -53,95 +44,129 @@
         </div>
         <div class="row form-group">
             <div class="col-sm-offset-1">
-                @*<input type="search" value="Search" class="btn btn-default" />*@
                 <input type="submit" value="Search" class="btn-default" />
-                @*<button type="button" class="btn btn-default" style="margin-left:15px">search</button>*@
+                
             </div>
         </div>
     }
-    <table class="table table-bordered table-responsive">
-       
-        <tr>
-            <th>
-                Activity ID
-            </th>
-            <th>
-                Type
-            </th>
-            <th>
-                Outcome
-            </th>
-            <th>
-                Error Type
-            <th>
-                Error
-            <th>
-                Tenant
-            </th>
-            <th>
-                UserName
-            </th>
-            <th>
-                start time
-            </th>
-            <th>
-                End time
-            </th>
-            <th>
-                client
-            </th>
-            <th>
-                client Ip
-            </th>
-            <th>
-                session Host
-            </th>
-            <th>
-               SH Health
-            </th>
+        @*<div>
+            @if (Model.activityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection)
+            {
+                <table class="table table-bordered table-responsive table-hover">
+                    <tr>
+                        <th> Activity ID</th>
+                        <th>Type</th>
+                        <th>Outcome</th>
+                        <th>Error Type</th>
+                        <th>Error</th>
+                        <th>Tenant</th>
+                        <th>UserName</th>
+                        <th>start time</th>
+                        <th>End time</th>
+                        <th>client</th>
+                        <th>client Ip</th>
+                        <th>session Host</th>
 
-        </tr>
-        <tr>
-            <td>
-                fhgdsjfd
-            </td>
-            <td>
-                dfgf
-            </td>
-            <td>
-                ffgf
-            </td>
-            <td>
-                ffg
-            </td>
-            <td>
-                fgfgfg
-            </td>
-            <td>
-                ffgfg
-            </td>
-            <td>
-                fhgdsjfd
-            </td>
-            <td>
-                dfgf
-            </td>
-            <td>
-                ffgf
-            </td>
-            <td>
-                ffg
-            </td>
-            <td>
-                fgfgfg
-            </td>
-            <td>
-                ffgfg
-            </td>
-            <td>
-                ffgfg
-            </td>
-        </tr>
-    </table>
+                    </tr>
+                    @foreach (var d in Model.connectionActivity)
+                    {
+                        <tr>
+                            <td>@d.activityId</td>
+                            <td>@d.activityType</td>
+                            <td>@d.outcome</td>
+                            <td>@d.errorMessage</td>
+                            <td>@d.errorMessage</td>
+                            <td>@d.Tenants</td>
+                            <td>@d.userName</td>
+                            <td>@d.startTime</td>
+                            <td>@d.endTime</td>
+                            <td>@d.ClientOS</td>
+                            <td>@d.ClientIPAddress</td>
+                            <td>@d.SessionHostName</td>
+
+
+                        </tr>
+                    }
+                </table>
+            }
+            else if (Model.activityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Management)
+            {
+                <table class="table table-bordered table-responsive table-hover">
+                    <tr>
+                        <th> Activity ID</th>
+                        <th>Type</th>
+                        <th>Outcome</th>
+                        <th>Error Type</th>
+                        <th>Error</th>
+                        <th>Tenant</th>
+                        <th>UserName</th>
+                        <th>start time</th>
+                        <th>End time</th>
+                       
+
+                    </tr>
+                    @foreach (var d in Model.managementActivity)
+                    {
+                        <tr>
+                            <td>@d.activityId</td>
+                            <td>@d.activityType</td>
+                            <td>@d.outcome</td>
+                            <td>@d.errorMessage</td>
+                            <td>@d.errorMessage</td>
+                            <td>@d.Tenants</td>
+                            <td>@d.userName</td>
+                            <td>@d.startTime</td>
+                            <td>@d.endTime</td>
+                            
+
+
+                        </tr>
+                    }
+                </table>
+            }
+            else if (Model.activityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
+            {
+                <table class="table table-bordered table-responsive table-hover">
+                    <tr>
+                        <th> Activity ID</th>
+                        <th>Type</th>
+                        <th>Outcome</th>
+                        <th>Error Type</th>
+                        <th>Error</th>
+                      
+                        <th>UserName</th>
+                        <th>start time</th>
+                        <th>End time</th>
+                        <th>client</th>
+                        <th>client Ip</th>
+                        
+
+                    </tr>
+                    @foreach (var d in Model.feedActivity)
+                    {
+                        <tr>
+                            <td>@d.activityId</td>
+                            <td>@d.activityType</td>
+                            <td>@d.outcome</td>
+                            <td>@d.errorMessage</td>
+                            <td>@d.errorMessage</td>
+                           
+                            <td>@d.userName</td>
+                            <td>@d.startTime</td>
+                            <td>@d.endTime</td>
+                            <td>@d.ClientOS</td>
+                            <td>@d.ClientIPAddress</td>
+                            
+
+
+                        </tr>
+                    }
+                </table>
+            }
+        </div>*@
+   
+
+
+
 </div>
 
