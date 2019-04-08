@@ -25,12 +25,7 @@ namespace MSFT.WVD.Monitoring.Models
         public string upn { get; set; }
 
         public DateTime startDate { get; set; }
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:MM-dd-yyyy}"
-            , ApplyFormatInEditMode = true)]
-       // [ValidIntervalDate(ErrorMessage =
-        //    "Join Date can not be greater than current date")]
-      
+        
         public DateTime endDate { get; set; }
         public ActivityType activityType { get; set; }
         public ActivityOutcome activityOutcome { get; set; }

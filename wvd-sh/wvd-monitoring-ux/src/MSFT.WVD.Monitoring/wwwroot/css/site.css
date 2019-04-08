@@ -287,3 +287,6 @@ body {
     height: 30px;
     background: #ccc;
 }
+.redText {
+    color: red;
+}
