@@ -12,7 +12,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
     public class DiagnosticActivitityBL
     {
 
-        public IEnumerable<ConnectionActivity> GetConnectionActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, Nullable<int> outcome)
+        public IEnumerable<ConnectionActivity> GetConnectionActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome=null)
         {
             List<ConnectionActivity> diagnosticActivities;
             try
@@ -21,7 +21,8 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 int activityType = (int)ActivityType.Connection;
                 if (outcome != null)
                 {
-                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
+                    int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true").Result;
                 }
                 else
                 {
@@ -37,9 +38,9 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                         activityId = (string)item["activityId"],
                         activityType = (string)item["activityType"],
                         startTime = item["startTime"].ToString() != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
-                        endTime = item["endTime"].ToString() != null ? Convert.ToDateTime(item["endTime"]) : (DateTime?)null,
+                        endTime = (string)item["endTime"] == null || (string)item["endTime"]=="" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                         userName = item["userName"].ToString(),
-                        outcome = Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
+                        outcome = (string)item["outcome"] == null || (string)item["outcome"] ==""? "": Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
                         isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
                         errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
                         ClientOS = (string)item["details"]["ClientOS"],
@@ -60,16 +61,18 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             }
         }
 
-        public IEnumerable<ManagementActivity> GetManagementActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, Nullable<int> outcome)
+        public IEnumerable<ManagementActivity> GetManagementActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome=null)
         {
             List<ManagementActivity> diagnosticActivities;
             try
             {
                 HttpResponseMessage httpResponseMessage;
                 int activityType = (int)ActivityType.Management;
+
                 if (outcome != null)
                 {
-                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
+                    int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true").Result;
                 }
                 else
                 {
@@ -84,10 +87,10 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                     {
                         activityId = (string)item["activityId"],
                         activityType = (string)item["activityType"],
-                        startTime = (string)item["startTime"] != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
-                        endTime = (string)item["endTime"] != null ? Convert.ToDateTime(item["endTime"]) : (DateTime?)null,
+                        startTime = item["startTime"].ToString() != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
+                        endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                         userName = (string)item["userName"],
-                        outcome = Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
+                        outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
                         isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
                         errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
                         ObjectsCreated = (int)item["ObjectsCreated"],
@@ -108,7 +111,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             }
         }
 
-        public IEnumerable<FeedActivity> GetFeedActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, Nullable<int> outcome)
+        public IEnumerable<FeedActivity> GetFeedActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome=null)
         {
             List<FeedActivity> diagnosticActivities;
             try
@@ -117,7 +120,8 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 HttpResponseMessage httpResponseMessage;
                 if (outcome != null)
                 {
-                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
+                    int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true").Result;
                 }
                 else
                 {
@@ -131,10 +135,10 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                     {
                         activityId = (string)item["activityId"],
                         activityType = (string)item["activityType"],
-                        startTime = (string)item["startTime"] != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
-                        endTime = (string)item["endTime"] != null ? Convert.ToDateTime(item["endTime"]) : (DateTime?)null,
+                        startTime = item["startTime"].ToString() != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
+                        endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                         userName = (string)item["userName"],
-                        outcome = Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
+                        outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
                         isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
                         errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
                         ClientOS = (string)item["details"]["ClientOS"],

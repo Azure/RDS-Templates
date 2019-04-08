@@ -24,7 +24,7 @@ namespace MSFT.WVD.Monitoring.api
         }
 
         [HttpGet("GetConnectionActivities")]
-        public IEnumerable<ConnectionActivity> GetConnectionActivities( string upn, string tenantGroupName, string tenant, string startDate, string endDate, Nullable<int> outcome)
+        public IEnumerable<ConnectionActivity> GetConnectionActivities( string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome=null)
         {
             string token = Request.Headers["Authorization"];
             return diagnosticActivitityBL.GetConnectionActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
@@ -32,14 +32,14 @@ namespace MSFT.WVD.Monitoring.api
 
 
         [HttpGet("GetManagementActivities")]
-        public IEnumerable<ManagementActivity> GetManagementActivities( string upn, string tenantGroupName, string tenant, string startDate, string endDate,  Nullable<int> outcome)
+        public IEnumerable<ManagementActivity> GetManagementActivities( string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome=null)
         {
             string token = Request.Headers["Authorization"];
             return diagnosticActivitityBL.GetManagementActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate,  outcome);
         }
 
         [HttpGet("GetFeedActivities")]
-        public IEnumerable<FeedActivity> GetFeedActivities( string upn, string tenantGroupName, string tenant, string startDate, string endDate,  Nullable<int> outcome)
+        public IEnumerable<FeedActivity> GetFeedActivities( string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome=null)
         {
             string token = Request.Headers["Authorization"];
             return diagnosticActivitityBL.GetFeedActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate,  outcome);
