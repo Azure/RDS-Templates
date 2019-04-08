@@ -3,26 +3,30 @@
     ViewData["Title"] = "Diagonize Issues";
 }
 <div class="width-100">
+   
     <br />
     @using (Html.BeginForm("SearchActivity", "DiagonizeIssues", FormMethod.Post))
     {
-        <div class="row form-group">
-            @Html.Label("UserUPN", "User UPN", new { @class = "control-label col-md-1 f-500" })
-            <div class="col-sm-2">
-                @Html.TextBoxFor(m => m.DiagonizeQuery.upn, new { @Value = "Enter upn", @class = "form-control" })
-            </div>
+    <div class="row form-group">
+        @Html.Label("UserUPN", "User UPN", new { @class = "control-label col-md-1 f-500" })
+        <div class="col-sm-2">
+            @Html.TextBoxFor(m => m.DiagonizeQuery.upn, new { @Value = "Enter upn", @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.DiagonizeQuery.upn)
         </div>
+    </div>
         <div class="row form-group">
             @Html.Label("interval", "Issue interval from :",
            new { @class = "control-label col-md-1 f-500" })
             <div class="col-sm-2">
                 @Html.EditorFor(m => m.DiagonizeQuery.startDate, "{0:mm/dd/yyyy}",
                new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.DiagonizeQuery.startDate)
             </div>
             @Html.Label("to", "to", new { @class = "control-label col-sm-1 f-500" })
             <div class="col-sm-2">
                 @Html.EditorFor(m => m.DiagonizeQuery.endDate, "{0:mm/dd/yyyy}",
                new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+               
             </div>
         </div>
         <div class="row form-group">
@@ -49,7 +53,7 @@
         </div>
     }
     <div>
-        @if (Model.activityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.connectionActivity!= null)
+        @if (Model.activityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.connectionActivity != null)
         {
             <table class="table table-bordered table-responsive table-hover">
                 <tr>
