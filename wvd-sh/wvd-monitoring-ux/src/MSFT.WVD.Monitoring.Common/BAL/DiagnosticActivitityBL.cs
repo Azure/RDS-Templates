@@ -93,10 +93,10 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                         outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
                         isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
                         errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
-                        ObjectsCreated = (int)item["ObjectsCreated"],
-                        ObjectsDeleted = (int)item["ObjectsDeleted"],
-                        ObjectsFetched = (int)item["ObjectsFetched"],
-                        ObjectsUpdated = (int)item["ObjectsUpdated"]
+                        ObjectsCreated = (string)item["ObjectsCreated"]==null || (string)item["ObjectsCreated"]==""?0:(int)item["ObjectsCreated"],
+                        ObjectsDeleted = (string)item["ObjectsDeleted"] == null || (string)item["ObjectsDeleted"] == "" ? 0 : (int)item["ObjectsDeleted"],
+                        ObjectsFetched = (string)item["ObjectsFetched"] == null || (string)item["ObjectsFetched"] == "" ? 0 : (int)item["ObjectsFetched"],
+                        ObjectsUpdated = (string)item["ObjectsUpdated"] == null || (string)item["ObjectsUpdated"] == "" ? 0 : (int)item["ObjectsUpdated"]
                     }).ToList();
                     return diagnosticActivities;
                 }

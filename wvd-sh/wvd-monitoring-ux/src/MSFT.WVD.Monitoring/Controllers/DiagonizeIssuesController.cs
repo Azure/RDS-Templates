@@ -47,7 +47,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 {
 
                     client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
-                    //client.Timeout = TimeSpan.FromMinutes(30);
+                    client.Timeout = TimeSpan.FromMinutes(30);
                     if (data.DiagonizeQuery.activityType == ActivityType.Management)
                     {
                         client.DefaultRequestHeaders.Add("Authorization", accessToken);
