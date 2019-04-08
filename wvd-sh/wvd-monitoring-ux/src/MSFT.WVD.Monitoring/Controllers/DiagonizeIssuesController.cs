@@ -35,68 +35,53 @@ namespace MSFT.WVD.Monitoring.Controllers
         [HttpPost]
         public async Task<IActionResult> SearchActivity(DaigonizePageViewModel data)
         {
+            //Nullable<int> outcome = (int)data.DiagonizeQuery.activityOutcome;
+            string accessToken = await HttpContext.GetTokenAsync("access_token");
+            string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+            string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             var viewData = new DaigonizePageViewModel();
-
-            if (ModelState.IsValid)
+            using (var client = new HttpClient())
             {
 
-                Nullable<int> outcome = (int)data.DiagonizeQuery.activityOutcome;
-                string accessToken = await HttpContext.GetTokenAsync("access_token");
-                string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
-                string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-                using (var client = new HttpClient())
+                client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
+                //client.Timeout = TimeSpan.FromMinutes(30);
+                if (data.DiagonizeQuery.activityType == ActivityType.Management)
                 {
-
-                    client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
-                    //client.Timeout = TimeSpan.FromMinutes(30);
-                    if (data.DiagonizeQuery.activityType == ActivityType.Management)
+                    client.DefaultRequestHeaders.Add("Authorization", accessToken);
+                    var response = await client.GetAsync($"DiagnosticActivity/GetManagementActivities/?upn=" + data.DiagonizeQuery.upn + "&tenantGroupName=" + tenantGroupName + "&tenant=" + tenant + "&startDate=" + data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&endDate=" + data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&outcome=" + data.DiagonizeQuery.activityOutcome);
+                    if (response.IsSuccessStatusCode)
                     {
-                        client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                        var response = await client.GetAsync("DiagnosticActivity/GetManagementActivities/?&upn=" + data.DiagonizeQuery.upn + "&tenantGroupName=" + tenantGroupName + "&tenant=" + tenant + "&startDate=" + data.DiagonizeQuery.startDate.ToString("yyyy-MM-ddTHH:mm:ssZ") + "&endDate=" + data.DiagonizeQuery.endDate.ToString("yyyy-MM-ddTHH:mm:ssZ") + "&outcome = " + outcome);
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var strconnectiondetails = await response.Content.ReadAsStringAsync();
-                            viewData.managementActivity = JsonConvert.DeserializeObject<List<ManagementActivity>>(strconnectiondetails);
-                            viewData.DiagonizeQuery.activityType = viewData.managementActivity.Count > 0 ? ActivityType.Management : ActivityType.None;
-
-                        };
-
-                    }
-                    else if (data.DiagonizeQuery.activityType == ActivityType.Connection)
+                        var strconnectiondetails = await response.Content.ReadAsStringAsync();
+                        viewData.managementActivity = JsonConvert.DeserializeObject<List<ManagementActivity>>(strconnectiondetails);
+                        viewData.activityType = viewData.managementActivity!=null &&  viewData.managementActivity.Count > 0 ? ActivityType.Management :ActivityType.None  ;
+                    };
+                    
+                }
+                else if (data.DiagonizeQuery.activityType == ActivityType.Connection)
+                {
+                    client.DefaultRequestHeaders.Add("Authorization", accessToken);
+                    var response = await client.GetAsync($"DiagnosticActivity/GetConnectionActivities/?upn=" + data.DiagonizeQuery.upn + "&tenantGroupName=" + tenantGroupName + "&tenant=" + tenant + "&startDate=" + data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&endDate=" + data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&outcome=" + data.DiagonizeQuery.activityOutcome);
+                    if (response.IsSuccessStatusCode)
                     {
-                        client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                        var response = await client.GetAsync("DiagnosticActivity/GetConnectionActivities/?&upn=" + data.DiagonizeQuery.upn + "&tenantGroupName=" + tenantGroupName + "&tenant=" + tenant + "&startDate=" + data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&endDate=" + data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&outcome = " + outcome);
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
-                            viewData.connectionActivity = JsonConvert.DeserializeObject<List<ConnectionActivity>>(strconnectiondetails);
-                            viewData.activityType = viewData.connectionActivity.Count > 0 ? ActivityType.Connection : ActivityType.None;
-
-                        }
-                    }
-                    else if (data.DiagonizeQuery.activityType == ActivityType.Feed)
-                    {
-                        client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                        var response = await client.GetAsync("DiagnosticActivity/GetFeedActivities/?&upn=" + data.DiagonizeQuery.upn + "&tenantGroupName=" + tenantGroupName + "&tenant=" + tenant + "&startDate=" + data.DiagonizeQuery.startDate.ToString("yyyy-MM-ddTHH:mm:ssZ") + "&endDate=" + data.DiagonizeQuery.endDate.ToString("yyyy-MM-ddTHH:mm:ssZ") + "&outcome = " + outcome);
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
-                            feedActivities = JsonConvert.DeserializeObject<List<FeedActivity>>(strconnectiondetails);
-                            viewData.feedActivity = JsonConvert.DeserializeObject<List<FeedActivity>>(strconnectiondetails);
-                            viewData.DiagonizeQuery.activityType = viewData.feedActivity.Count > 0 ? ActivityType.Management : ActivityType.None;
-
-                        }
+                        var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
+                        viewData.connectionActivity = JsonConvert.DeserializeObject<List<ConnectionActivity>>(strconnectiondetails);
+                        viewData.activityType = viewData.connectionActivity!=null && viewData.connectionActivity.Count >0? ActivityType.Connection: ActivityType.None  ;
                     }
                 }
-                //return View(viewData);
-                return View("Index", viewData);
-
+                else if (data.DiagonizeQuery.activityType == ActivityType.Feed)
+                {
+                    client.DefaultRequestHeaders.Add("Authorization", accessToken);
+                    var response = await client.GetAsync($"DiagnosticActivity/GetFeedActivities/?upn=" + data.DiagonizeQuery.upn + "&tenantGroupName=" + tenantGroupName + "&tenant=" + tenant + "&startDate=" + data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&endDate=" + data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&outcome=" + data.DiagonizeQuery.activityOutcome);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
+                       // feedActivities = JsonConvert.DeserializeObject<List<FeedActivity>>(strconnectiondetails);
+                        viewData.feedActivity = JsonConvert.DeserializeObject<List<FeedActivity>>(strconnectiondetails);
+                        viewData.activityType = viewData.feedActivity!= null && viewData.feedActivity.Count > 0 ? ActivityType.Feed : ActivityType.None;
+                    }
+                }
             }
-            else
-            {
-                return View("Index", viewData);
-            }
+            return View("Index", viewData);
         }
 
     }

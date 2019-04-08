@@ -104,16 +104,17 @@ namespace MSFT.WVD.Monitoring.Common.Models
 
     public enum ActivityType
     {
-        All = 0,
-        Connection = 1,
-        Management = 2,
-        Feed = 3,
-        None = 4
+       
+        Connection = 0,
+        Management = 1,
+        Feed = 2,
+        None = 3
     }
 
 
     public enum ActivityOutcome
     {
+       
         Success = 0,
         Failure = 1
     }
