@@ -5,7 +5,7 @@
 }
 <div class="width-100">
     <br />
-    @using (Html.BeginForm("SearchActivity", "DiagonizeIssuesController", FormMethod.Post))
+    @using (Html.BeginForm("SearchActivity", "DiagonizeIssues", FormMethod.Post))
     {
         <div class="row form-group">
             @Html.Label("UserUPN", "User UPN", new { @class = "control-label col-md-1 f-500" })
@@ -29,23 +29,32 @@
         <div class="row form-group">
             @Html.Label("activityType", "Activity Type", new { @class = "control-label col-md-1 f-500" })
             <div class="col-sm-2">
-                @Html.DropDownList("activityType",
-                     new SelectList(Enum.GetValues(typeof(ActivityType))),
-                     "Connection",
-                     new { @class = "form-control" })
-               
+                @*@Html.DropDownListFor(model=>model.activityType,
+        new SelectList(Enum.GetValues(Model.activityType.GetType())),
+        "ActivityTypes",
+        new { @class = "form-control" })*@
+                @Html.DropDownListFor(model => model.activityType,
+        new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityType))),
+        new { @class = "form-control" })
+
             </div>
             @Html.Label("outcome", "outcome", new { @class = "control-label col-sm-1 f-500" })
             <div class="col-sm-2">
-                @Html.DropDownList("outcome",
-                     new SelectList(Enum.GetValues(typeof(ActivityOutcome))),
-                     "All",
-                     new { @class = "form-control" })
+                @*@Html.DropDownListFor(model => model.activityOutcome, Enum.GetNames(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityOutcome)).Select(e => new SelectListItem { Text = e }))*@
+                @*@Html.DropDownList("outcome",
+        new SelectList(Enum.GetValues(typeof(ActivityOutcome))),
+        "All",
+        new { @class = "form-control" })*@
+                @Html.DropDownListFor(model => model.outcome,
+     new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityOutcome))),
+     "All",
+     new { @class = "form-control" })
             </div>
         </div>
         <div class="row form-group">
             <div class="col-sm-offset-1">
-                <input type="search" value="Search" class="btn btn-default" />
+                @*<input type="search" value="Search" class="btn btn-default" />*@
+                <input type="submit" value="Search" class="btn-default" />
                 @*<button type="button" class="btn btn-default" style="margin-left:15px">search</button>*@
             </div>
         </div>

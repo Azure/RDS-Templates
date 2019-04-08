@@ -20,4 +20,6 @@ namespace MSFT.WVD.Monitoring.Models
         public ActivityOutcome activityOutcome { get; set; }
     }
 
+
+   
 }

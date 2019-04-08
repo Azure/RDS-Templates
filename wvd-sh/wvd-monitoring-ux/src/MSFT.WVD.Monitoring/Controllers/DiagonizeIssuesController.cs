@@ -22,9 +22,16 @@ namespace MSFT.WVD.Monitoring.Controllers
             return View();
 
         }
-
-        public async Task<IActionResult> SearchActivity([FromBody] DaigonisepageModel data)
+        [HttpPost]
+        public async Task<IActionResult> SearchActivity( DaigonisepageModel data)
         {
+
+            ActivityType activitype = data.activityType;
+            int activiTypeValue = (int)activitype;
+
+            
+            ActivityOutcome activityOutcome = data.activityOutcome;
+            int activityOutcomeValue = (int)activityOutcome;
 
             string upn = User.Claims.First(claim => claim.Type.Contains("upn")).Value;
             string accessToken = await HttpContext.GetTokenAsync("access_token");
@@ -35,9 +42,9 @@ namespace MSFT.WVD.Monitoring.Controllers
                 client.BaseAddress = new Uri("https://localhost:44393/api/");
                 client.Timeout = TimeSpan.FromMinutes(30);
                 //HTTP GET
-                if (data.activitytype == "Management")
+                if (data.activityType == ActivityType.Management)
                 {
-                    var response = await client.GetAsync("DiagnosticActivity/GetManagementActivities/?accessToken=" + accessToken + "&tenantGroup=" + tenantGroupname + "&tenant=" + tenantname + "&startDate=" + data.startdate + "&endDate=" + data.enddate + "&activityType=" + data.activitytype + "&outcome = null");
+                    var response = await client.GetAsync("DiagnosticActivity/GetManagementActivities//?accessToken=" + accessToken + "&upn=" + data.upn + "&tenantGroupName=" + tenantGroupname + "&tenant=" + tenantname + "&startDate=" + data.startdate + "&endDate=" + data.enddate + "&activityType=" + activiTypeValue + "&outcome = " + activityOutcomeValue);
                     if (response.IsSuccessStatusCode)
                     {
                         var strmanagementdetails = response.Content.ReadAsStringAsync().Result;
@@ -48,9 +55,9 @@ namespace MSFT.WVD.Monitoring.Controllers
                         });
                     }
                 }
-                else if (data.activitytype == "Connection")
+                else if (data.activityType == ActivityType.Connection)
                 {
-                    var response = await client.GetAsync("DiagnosticActivity/GetConnectionActivities/?accessToken=" + accessToken + "&tenantGroup=" + tenantGroupname + "&tenant=" + tenantname + "&startDate=" + data.startdate + "&endDate=" + data.enddate + "&activityType=" + data.activitytype + "&outcome = null");
+                    var response = await client.GetAsync($"DiagnosticActivity/GetConnectionActivities/?accessToken=" + accessToken + "&upn=" + data.upn + "&tenantGroupName="+tenantGroupname + "&tenant=" + tenantname + "&startDate=" + data.startdate + "&endDate=" + data.enddate + "&activityType=" + activiTypeValue + "&outcome = "+ activityOutcomeValue);
                     if (response.IsSuccessStatusCode)
                     {
                         var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
@@ -62,9 +69,9 @@ namespace MSFT.WVD.Monitoring.Controllers
                         });
                     }
                 }
-                else if (data.activitytype == "Feed")
+                else if (data.activityType == ActivityType.Feed)
                 {
-                    var response = await client.GetAsync("DiagnosticActivity/GetFeedActivities/?accessToken=" + accessToken + "&tenantGroup=" + tenantGroupname + "&tenant=" + tenantname + "&startDate=" + data.startdate + "&endDate=" + data.enddate + "&activityType=" + data.activitytype + "&outcome = null");
+                    var response = await client.GetAsync($"DiagnosticActivity/GetFeedActivities/?accessToken=" + accessToken + "&upn=" + data.upn + "&tenantGroupName=" + tenantGroupname + "&tenant=" + tenantname + "&startDate=" + data.startdate + "&endDate=" + data.enddate + "&activityType=" + activiTypeValue + "&outcome = " + activityOutcomeValue);
                     if (response.IsSuccessStatusCode)
                     {
                         var strfeeddetails = response.Content.ReadAsStringAsync().Result;

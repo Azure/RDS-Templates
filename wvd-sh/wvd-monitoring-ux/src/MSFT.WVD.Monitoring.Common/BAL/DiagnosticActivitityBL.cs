@@ -12,7 +12,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
     public class DiagnosticActivitityBL
     {
       
-        public IEnumerable<ConnectionActivity> GetConnectionActivities(string deploymentUrl, string accessToken, string upn, string tenantGroup, string tenant, DateTime startTime, DateTime endTime,  Nullable<int> outcome)
+        public IEnumerable<ConnectionActivity> GetConnectionActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, DateTime startTime, DateTime endTime,  Nullable<int> outcome)
         {
             List<ConnectionActivity> diagnosticActivities;
             try
@@ -23,11 +23,11 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 int activityType = (int)ActivityType.Connection;
                 if (outcome != null)
                 {
-                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroup}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
                 }
                 else
                 {
-                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroup}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
                 }
 
                 if (httpResponseMessage.IsSuccessStatusCode)
@@ -62,7 +62,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             }
         }
 
-        public IEnumerable<ManagementActivity> GetManagementActivities(string deploymentUrl, string accessToken, string upn, string tenantGroup, string tenant, DateTime startTime, DateTime endTime,  Nullable<int> outcome)
+        public IEnumerable<ManagementActivity> GetManagementActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, DateTime startTime, DateTime endTime,  Nullable<int> outcome)
         {
             List<ManagementActivity> diagnosticActivities;
             try
@@ -73,11 +73,11 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 int activityType = (int)ActivityType.Management;
                 if (outcome != null)
                 {
-                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroup}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
                 }
                 else
                 {
-                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroup}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
                 }
 
                 if (httpResponseMessage.IsSuccessStatusCode)
@@ -112,7 +112,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             }
         }
 
-        public IEnumerable<FeedActivity> GetFeedActivities(string deploymentUrl, string accessToken, string upn, string tenantGroup, string tenant, DateTime startTime, DateTime endTime,  Nullable<int> outcome)
+        public IEnumerable<FeedActivity> GetFeedActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, DateTime startTime, DateTime endTime,  Nullable<int> outcome)
         {
             List<FeedActivity> diagnosticActivities;
             try
@@ -123,11 +123,11 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 HttpResponseMessage httpResponseMessage;
                 if (outcome != null)
                 {
-                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroup}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcome}&Detailed=true").Result;
                 }
                 else
                 {
-                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroup}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
+                    httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
                 }
                 if (httpResponseMessage.IsSuccessStatusCode)
                 {

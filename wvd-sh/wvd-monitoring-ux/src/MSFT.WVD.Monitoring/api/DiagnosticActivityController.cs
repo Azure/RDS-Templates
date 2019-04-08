@@ -22,22 +22,22 @@ namespace MSFT.WVD.Monitoring.api
         }
 
         [HttpGet("GetConnectionActivities")]
-        public IEnumerable<ConnectionActivity> GetConnectionActivities(string accessToken, string upn, string tenantGroup, string tenant, DateTime startDate, DateTime endDate,  Nullable<int> outcome)
+        public IEnumerable<ConnectionActivity> GetConnectionActivities(string accessToken, string upn, string tenantGroupName, string tenant, DateTime startDate, DateTime endDate,  Nullable<int> outcome)
         {
-            return diagnosticActivitityBL.GetConnectionActivities(Configuration.RDBrokerUrl, accessToken, upn, tenantGroup, tenant, startDate, endDate, outcome);
+            return diagnosticActivitityBL.GetConnectionActivities(Configuration.RDBrokerUrl, accessToken, upn, tenantGroupName, tenant, startDate, endDate, outcome);
         }
 
 
         [HttpGet("GetManagementActivities")]
-        public IEnumerable<ManagementActivity> GetManagementActivities(string accessToken, string upn, string tenantGroup, string tenant, DateTime startDate, DateTime endDate,  Nullable<int> outcome)
+        public IEnumerable<ManagementActivity> GetManagementActivities(string accessToken, string upn, string tenantGroupName, string tenant, DateTime startDate, DateTime endDate,  Nullable<int> outcome)
         {
-            return diagnosticActivitityBL.GetManagementActivities(Configuration.RDBrokerUrl, accessToken, upn, tenantGroup, tenant, startDate, endDate,  outcome);
+            return diagnosticActivitityBL.GetManagementActivities(Configuration.RDBrokerUrl, accessToken, upn, tenantGroupName, tenant, startDate, endDate,  outcome);
         }
 
         [HttpGet("GetFeedActivities")]
-        public IEnumerable<FeedActivity> GetFeedActivities(string accessToken, string upn, string tenantGroup, string tenant, DateTime startDate, DateTime endDate,  Nullable<int> outcome)
+        public IEnumerable<FeedActivity> GetFeedActivities(string accessToken, string upn, string tenantGroupName, string tenant, DateTime startDate, DateTime endDate,  Nullable<int> outcome)
         {
-            return diagnosticActivitityBL.GetFeedActivities(Configuration.RDBrokerUrl, accessToken, upn, tenantGroup, tenant, startDate, endDate,  outcome);
+            return diagnosticActivitityBL.GetFeedActivities(Configuration.RDBrokerUrl, accessToken, upn, tenantGroupName, tenant, startDate, endDate,  outcome);
         }
     }
 }
