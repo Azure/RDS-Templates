@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Models;
 using Newtonsoft.Json;
@@ -24,11 +25,12 @@ namespace MSFT.WVD.Monitoring.Controllers
                 DiagonizeQuery = new DiagonizeQuery()
                 {
                     startDate = DateTime.Now.AddDays(-2),
-                    endDate = DateTime.Now
+                    endDate = DateTime.Now,
+                   
                 }
             });
-
         }
+
         [HttpPost]
         public async Task<IActionResult> SearchActivity(DaigonizePageViewModel data)
         {
@@ -36,7 +38,6 @@ namespace MSFT.WVD.Monitoring.Controllers
 
             if (ModelState.IsValid)
             {
-                //Nullable<int> outcome = (int)data.DiagonizeQuery.activityOutcome;
                 string accessToken = await HttpContext.GetTokenAsync("access_token");
                 string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
@@ -48,7 +49,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     if (data.DiagonizeQuery.activityType == ActivityType.Management)
                     {
                         client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                        var response = await client.GetAsync($"DiagnosticActivity/GetManagementActivities/?upn=" + data.DiagonizeQuery.upn + "&tenantGroupName=" + tenantGroupName + "&tenant=" + tenant + "&startDate=" + data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&endDate=" + data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&outcome=" + data.DiagonizeQuery.activityOutcome);
+                        var response = await client.GetAsync($"DiagnosticActivity/GetManagementActivities/?upn={data.DiagonizeQuery.upn}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.activityOutcome}");
                         if (response.IsSuccessStatusCode)
                         {
                             var strconnectiondetails = await response.Content.ReadAsStringAsync();
@@ -60,7 +61,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     else if (data.DiagonizeQuery.activityType == ActivityType.Connection)
                     {
                         client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                        var response = await client.GetAsync($"DiagnosticActivity/GetConnectionActivities/?upn=" + data.DiagonizeQuery.upn + "&tenantGroupName=" + tenantGroupName + "&tenant=" + tenant + "&startDate=" + data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&endDate=" + data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&outcome=" + data.DiagonizeQuery.activityOutcome);
+                        var response = await client.GetAsync($"DiagnosticActivity/GetConnectionActivities/?upn={data.DiagonizeQuery.upn}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.activityOutcome}");
                         if (response.IsSuccessStatusCode)
                         {
                             var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
@@ -71,7 +72,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     else if (data.DiagonizeQuery.activityType == ActivityType.Feed)
                     {
                         client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                        var response = await client.GetAsync($"DiagnosticActivity/GetFeedActivities/?upn=" + data.DiagonizeQuery.upn + "&tenantGroupName=" + tenantGroupName + "&tenant=" + tenant + "&startDate=" + data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&endDate=" + data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&outcome=" + data.DiagonizeQuery.activityOutcome);
+                        var response = await client.GetAsync($"DiagnosticActivity/GetFeedActivities/?upn={data.DiagonizeQuery.upn}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.activityOutcome}");
                         if (response.IsSuccessStatusCode)
                         {
                             var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
