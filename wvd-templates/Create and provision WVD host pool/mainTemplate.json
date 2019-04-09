@@ -138,6 +138,16 @@
                 "description": "(Optional) Specifiy an organizational unit (OU) to place the new virtual machines when joining the domain. If you do not have a specific OU to place the virtual machines, leave it blank. Example OU: 'OU=testOU;DC=domain;DC=Domain;DC=com'"
             }
         },
+        "newOrExistingVnet": {
+            "type": "string",
+            "defaultValue": "existing",
+            "allowedValues": [
+                "existing"
+            ],
+            "metadata": {
+                "description": "Only existing vnets are allowed. This parameter ensures validation for Azure Marketplace offering."
+            }
+        },
         "existingVnetName": {
             "type": "string",
             "metadata": {
@@ -236,7 +246,7 @@
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
-        "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
+        "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName')]",
         "existingTenantName": "[replace(parameters('existingTenantName'),'\"','')]",
         "hostPoolName": "[replace(parameters('hostPoolName'),'\"','')]",
         "hostPoolFriendlyName": "[variables('hostPoolName')]",
@@ -274,6 +284,9 @@
             "apiVersion": "2018-05-01",
             "name": "vmCreation-linkedTemplate",
             "type": "Microsoft.Resources/deployments",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -327,10 +340,7 @@
                         "value": "[parameters('location')]"
                     }
                 }
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
-            ]
+            }
         },
         {
             "apiVersion": "2018-10-01",
