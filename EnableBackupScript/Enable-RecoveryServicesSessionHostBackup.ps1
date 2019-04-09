@@ -83,7 +83,7 @@ foreach ($SessionHost in (Get-rdssessionhost -TenantName $TenantName -HostPoolNa
     
     try
     {
-        Enable-AzRecoveryServicesBackupProtection -ResourceGroupName $SessionHostsResourceGroup -Name $VmName -Policy $Policy
+        Enable-AzRecoveryServicesBackupProtection -ResourceGroupName $SessionHostsResourceGroup -Name $VmName -Policy $Policy -VaultId $RecoveryVault.ID
     }
     catch 
     {
