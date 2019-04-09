@@ -104,7 +104,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
 
     public enum ActivityType
     {
-       
+
         Connection = 0,
         Management = 1,
         Feed = 2,
@@ -114,19 +114,19 @@ namespace MSFT.WVD.Monitoring.Common.Models
 
     public enum ActivityOutcome
     {
-       
+        All = -1,
         Success = 0,
         Failure = 1
     }
 
 
     /***Activity class for each activity*****/
-     
+
     public class ConnectionActivity
     {
         public string activityId { get; set; }
         public string activityType { get; set; }
-       
+
         public Nullable<DateTime> startTime { get; set; }
         public Nullable<DateTime> endTime { get; set; }
         public string userName { get; set; }

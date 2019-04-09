@@ -19,6 +19,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             {
                 HttpResponseMessage httpResponseMessage;
                 int activityType = (int)ActivityType.Connection;
+                outcome = outcome == ActivityOutcome.All.ToString() ? null : outcome;
                 if (outcome != null)
                 {
                     int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
@@ -68,7 +69,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             {
                 HttpResponseMessage httpResponseMessage;
                 int activityType = (int)ActivityType.Management;
-
+                outcome = outcome == ActivityOutcome.All.ToString() ? null : outcome;
                 if (outcome != null)
                 {
                     int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
@@ -118,6 +119,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             {
                 int activityType = (int)ActivityType.Feed;
                 HttpResponseMessage httpResponseMessage;
+                outcome = outcome == ActivityOutcome.All.ToString() ? null : outcome;
                 if (outcome != null)
                 {
                     int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
