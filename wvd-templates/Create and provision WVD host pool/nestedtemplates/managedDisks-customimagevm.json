@@ -105,7 +105,8 @@
         }
     },
     "variables": {
-        "imageResourceId": "[resourceId(parameters('rdshImageSourceResourceGroup'), 'Microsoft.Compute/images', parameters('rdshImageSourceName'))]"
+        "imageResourceId": "[resourceId(parameters('rdshImageSourceResourceGroup'), 'Microsoft.Compute/images', parameters('rdshImageSourceName'))]",
+        "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'HDD'), 'Standard_LRS', 'Premium_LRS')]"
     },
     "resources": [
         {
@@ -157,6 +158,12 @@
                     "adminPassword": "[parameters('existingDomainPassword')]"
                 },
                 "storageProfile": {
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[variables('storageAccountType')]"
+                        }
+                    },
                     "imageReference": {
                         "id": "[variables('imageResourceId')]"
                     }
