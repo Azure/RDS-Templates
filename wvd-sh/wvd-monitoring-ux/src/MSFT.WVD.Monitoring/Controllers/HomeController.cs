@@ -36,11 +36,15 @@ namespace MSFT.WVD.Monitoring.Controllers
                 //}
 
                 /****following code is for temporary***/
-                var roles = new List<RoleAssignment> { new RoleAssignment {
-                    
-                signInName=User.Claims.First(claim => claim.Type.Contains("upn")).Value,
-                displayName=User.Claims.First(claim => claim.Type.Contains("name")).Value
-                } };
+                var roleassignment = new RoleAssignment
+                {
+
+                    signInName = User.Claims.First(claim => claim.Type.Contains("upn")).Value,
+                    displayName = User.Claims.First(claim => claim.Type == "name").Value
+                };
+                var roles = new List<RoleAssignment>();
+                roles.Add(roleassignment);
+                HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleassignment);
                 HttpContext.Session.Set("WVDRoles", roles);
             }
             role = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles").FirstOrDefault();
@@ -89,20 +93,27 @@ namespace MSFT.WVD.Monitoring.Controllers
             return Challenge(new AuthenticationProperties { RedirectUri = "/" });
         }
 
+        // [HttpPost]
+        // public IActionResult Logout()
+        // {
+        //     //HttpContext.Session.Clear();
+        //     //await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
+        //     //await HttpContext.SignOutAsync(AzureADDefaults.AuthenticationScheme);
+        //     //await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        //     //return RedirectToAction("Login", "Home");
+
+        //     return SignOut(
+        //new AuthenticationProperties { RedirectUri = "/" },
+        //AzureADDefaults.AuthenticationScheme,
+        //OpenIdConnectDefaults.AuthenticationScheme);
+
+        // }
+
         [HttpPost]
-        public IActionResult Logout()
+        public async Task Logout()
         {
-            //HttpContext.Session.Clear();
-            //await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
-            //await HttpContext.SignOutAsync(AzureADDefaults.AuthenticationScheme);
-            //await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            //return RedirectToAction("Login", "Home");
-
-            return SignOut(
-       new AuthenticationProperties { RedirectUri = "/" },
-       AzureADDefaults.AuthenticationScheme,
-       OpenIdConnectDefaults.AuthenticationScheme);
-
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
         }
 
         [HttpPost]
@@ -118,15 +129,16 @@ namespace MSFT.WVD.Monitoring.Controllers
             //var roles = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
 
             //temporary code
-            var roleAssignment =  new RoleAssignment {
-                tenantGroupName= submittedData.TenantGroupName,
-                signInName=User.Claims.First(claim => claim.Type.Contains("upn")).Value,
-                displayName=User.Claims.First(claim => claim.Type.Contains("name")).Value
-            } ;
+            var roleAssignment = new RoleAssignment
+            {
+                tenantGroupName = submittedData.TenantGroupName,
+                signInName = User.Claims.First(claim => claim.Type.Contains("upn")).Value,
+                displayName = User.Claims.First(claim => claim.Type == "name").Value
+            };
             var roles = new List<RoleAssignment> { new RoleAssignment {
                 tenantGroupName= submittedData.TenantGroupName,
                 signInName=User.Claims.First(claim => claim.Type.Contains("upn")).Value,
-                displayName=User.Claims.First(claim => claim.Type.Contains("name")).Value
+                displayName=User.Claims.First(claim => claim.Type=="name").Value
                 } };
             HttpContext.Session.Set("WVDRoles", roles);
             HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleAssignment);
