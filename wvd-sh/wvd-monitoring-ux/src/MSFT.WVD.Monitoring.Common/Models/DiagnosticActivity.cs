@@ -114,9 +114,9 @@ namespace MSFT.WVD.Monitoring.Common.Models
 
     public enum ActivityOutcome
     {
-        All = -1,
         Success = 0,
-        Failure = 1
+        Failure = 1,
+        All = -1,
     }
 
 

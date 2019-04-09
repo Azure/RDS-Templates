@@ -22,12 +22,17 @@ namespace MSFT.WVD.Monitoring.Models
     public class DiagonizeQuery : IValidatableObject
     {
         [Required]
-        public string Upn { get; set; }
+        public string UPN { get; set; }
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString =
+            "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime StartDate { get; set; }
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString =
+            "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime EndDate { get; set; }
         public ActivityType ActivityType { get; set; }
         public ActivityOutcome ActivityOutcome { get; set; }
-
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
 

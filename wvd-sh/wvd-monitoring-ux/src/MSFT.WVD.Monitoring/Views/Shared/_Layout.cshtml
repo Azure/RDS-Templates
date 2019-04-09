@@ -1,6 +1,7 @@
 ﻿@*@model IPageViewModel*@
 @using Microsoft.AspNetCore.Http
-@{ var roleAssignment = Context.Session.Get<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>("SelectedRole");}
+@{ var roleAssignment = Context.Session.Get<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>("SelectedRole");
+    var initial = roleAssignment!=null && roleAssignment.displayName!=null && roleAssignment.displayName.Split(" ").Length > 1 ? roleAssignment.displayName.Split(" ")[0].Substring(0, 1) + roleAssignment.displayName.Split(" ")[1].Substring(0, 1) : roleAssignment.displayName.Split(" ")[0].Substring(0, 2).ToUpper();}
 
 <!DOCTYPE html>
 <html>
@@ -18,8 +19,8 @@
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
-        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
-
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     </environment>
 </head>
 <body>
@@ -60,11 +61,11 @@
                         <span>   @roleAssignment.displayName</span>
                         <label>  @roleAssignment.roleDefinitionName</label>
                     </div>
-                    <div class="user-initials">wd</div>
+                    <div class="user-initials">@initial</div>
                 </div>
                 <ul class="dropdown-menu dropdown" style="right:0;left: inherit;">
                     <li style="padding:10px 20px 10px 20px;">
-                        <span class="user-initials">wd</span>
+                        <span class="user-initials">@initial</span>
                     </li>
                     <li>
                         <div style="padding:5px 20px 0px 20px; color:#fff;">
@@ -82,7 +83,7 @@
                     <li>
                         @using (Html.BeginForm("Logout", "Home", FormMethod.Post))
                         {
-                            <button type="submit" class="btn btn-link btn-logout">sign out</button>
+                            <button type="submit" class="btn btn-link btn-logout">Signout</button>
                         }
                     </li>
                 </ul>

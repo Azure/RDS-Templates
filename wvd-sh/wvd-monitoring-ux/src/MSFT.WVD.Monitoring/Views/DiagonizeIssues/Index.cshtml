@@ -3,25 +3,25 @@
     ViewData["Title"] = "Diagonize Issues";
 }
 <div class="width-100">
-   
+
     <br />
     @using (Html.BeginForm("SearchActivity", "DiagonizeIssues", FormMethod.Post))
     {
-    <div class="row form-group">
-        @Html.Label("UserUPN", "User UPN", new { @class = "control-label col-md-1 f-500" })
-        <div class="col-sm-3">
-            @Html.TextBoxFor(m => m.DiagonizeQuery.Upn, new { @Value = "Enter upn", @class = "form-control" })
-            @Html.ValidationMessageFor(m => m.DiagonizeQuery.Upn, "",
-        new { @class = "text-danger" })
+        <div class="row form-group required">
+            @Html.Label("UserUPN", "User UPN", new { @class = "control-label col-md-1 f-500" })
+            <div class="col-sm-3">
+                @Html.TextBoxFor(m => m.DiagonizeQuery.UPN, new { @Value = "Enter upn", @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.DiagonizeQuery.UPN, "",
+            new { @class = "text-danger" })
+            </div>
         </div>
-    </div>
         <div class="row form-group">
             @Html.Label("interval", "Issue interval from :",
            new { @class = "control-label col-md-1 f-500" })
-            <div class="col-sm-3" >
+            <div class="col-sm-3">
                 @Html.EditorFor(m => m.DiagonizeQuery.StartDate, "{mm/dd/yyyy}", new { @class = "form-control", type = "date" })
                 @*@Html.ValidationMessageFor(m => m.DiagonizeQuery.startDate, "",
-        new { @class = "text-danger" })*@
+                    new { @class = "text-danger" })*@
             </div>
             @Html.Label("to", "To", new { @class = "control-label col-sm-1 f-500 mrgnlft" })
             <div class="col-sm-3" style="margin-left:1px;">
@@ -39,117 +39,120 @@
         new { @class = "form-control" })
 
             </div>
-           
+
             @Html.Label("outcome", "Outcome", new { @class = "control-label col-sm-1 f-500" })
             <div class="col-sm-3">
                 @Html.DropDownListFor(model => model.DiagonizeQuery.ActivityOutcome,
-     new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityOutcome)))
-     ,"All",
+     new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityOutcome))),
+
      new { @class = "form-control" })
             </div>
         </div>
         <div class="row form-group">
-            <div class="searchbtn" style="margin-left: 173px;">              
-                <input type="submit" value="Search" class="btn-primary"  />
+            <div class="searchbtn">
+                <input type="submit" value="Search" class="btn btn-primary" />
+            </div>
+            <div class="resetbtn">
+                <input type="reset" value="Clear" class="btn btn-danger" style="width: 95px" />
             </div>
         </div>
     }
-        <div style="padding-right: 12px;">
-            @if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.ConnectionActivity != null)
-            {
-                <table class="table table-bordered table-responsive table-hover table-striped">
-                    <tr>
-                        <th> Activity ID</th>
-                        <th>Type</th>
-                        <th>Outcome</th>
-                        <th>Error Type</th>
-                        <th>Error</th>
-                        <th>Tenant</th>
-                        <th>UserName</th>
-                        <th>Start Time</th>
-                        <th>End Time</th>
-                        <th>Client</th>
-                        <th>Client Ip</th>
-                        <th>Session Host</th>
+    <div class="activitytable">
+        @if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.ConnectionActivity != null)
+        {
+            <table class="table table-bordered table-responsive table-hover table-striped">
+                <tr>
+                    <th> Activity ID</th>
+                    <th>Type</th>
+                    <th>Outcome</th>
+                    <th>Error Type</th>
+                    <th>Error</th>
+                    <th>Tenant</th>
+                    <th>UserName</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Client</th>
+                    <th>Client Ip</th>
+                    <th>Session Host</th>
 
-                    </tr>
-                    @foreach (var d in Model.ConnectionActivity)
-                    {
-                        <tr>
-                            <td>@d.activityId</td>
-                            <td>@d.activityType</td>
-                            <td>@d.outcome</td>
-                            <td>@d.isInternalError</td>
-                            <td>@d.errorMessage</td>
-                            <td>@d.Tenants</td>
-                            <td>@d.userName</td>
-                            <td>@d.startTime</td>
-                            <td>@d.endTime</td>
-                            <td>@d.ClientOS</td>
-                            <td>@d.ClientIPAddress</td>
-                            <td>@d.SessionHostName</td>
-
-
-                        </tr>
-                    }
-                </table>
-            }
-            else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Management)
-            {
-                <table class="table table-bordered table-responsive table-hover table-striped">
+                </tr>
+                @foreach (var d in Model.ConnectionActivity)
+                {
                     <tr>
-                        <th>Activity ID</th>
-                        <th>Type</th>
-                        <th>Outcome</th>
-                        <th>Error Type</th>
-                        <th>Error</th>
-                        <th>Tenant</th>
-                        <th>UserName</th>
-                        <th>Start Time</th>
-                        <th>End Time</th>
-                        <th>Objects Created</th>
-                        <th>Objects Deleted</th>
-                        <th>Objects Fetched</th>
-                        <th>Objects Updated</th>
-                    </tr>
-                    @foreach (var d in Model.ManagementActivity)
-                    {
-                        <tr>
-                            <td>@d.activityId</td>
-                            <td>@d.activityType</td>
-                            <td>@d.outcome</td>
-                            <td>@d.isInternalError</td>
-                            <td>@d.errorMessage</td>
-                            <td>@d.Tenants</td>
-                            <td>@d.userName</td>
-                            <td>@d.startTime</td>
-                            <td>@d.endTime</td>
-                            <td>@d.ObjectsCreated</td>
-                            <td>@d.ObjectsDeleted</td>
-                            <td>@d.ObjectsUpdated</td>
-                        </tr>
-                    }
-                </table>
-            }
-            else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
-            {
-                <table class="table table-bordered table-responsive table-hover table-striped">
-                    <tr>
-                        <th>Activity Id </th>
-                        <th>Activity Type</th>
-                        <th>Start Time</th>
-                        <th>End Time</th>
-                        <th>UserName</th>
-                        <th>Outcome</th>
-                        <th>Internal Error </th>
-                        <th>Error Message</th>
-                        <th>ClientIPAddress </th>
-                        <th>ClientOS </th>
+                        <td>@d.activityId</td>
+                        <td>@d.activityType</td>
+                        <td>@d.outcome</td>
+                        <td>@d.isInternalError</td>
+                        <td>@d.errorMessage</td>
+                        <td>@d.Tenants</td>
+                        <td>@d.userName</td>
+                        <td>@d.startTime</td>
+                        <td>@d.endTime</td>
+                        <td>@d.ClientOS</td>
+                        <td>@d.ClientIPAddress</td>
+                        <td>@d.SessionHostName</td>
 
 
                     </tr>
-                    @foreach (var d in Model.FeedActivity)
-                    {
+                }
+            </table>
+        }
+        else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Management)
+        {
+            <table class="table table-bordered table-responsive table-hover table-striped">
+                <tr>
+                    <th>Activity ID</th>
+                    <th>Type</th>
+                    <th>Outcome</th>
+                    <th>Error Type</th>
+                    <th>Error</th>
+                    <th>Tenant</th>
+                    <th>UserName</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Objects Created</th>
+                    <th>Objects Deleted</th>
+                    <th>Objects Fetched</th>
+                    <th>Objects Updated</th>
+                </tr>
+                @foreach (var d in Model.ManagementActivity)
+                {
+                    <tr>
+                        <td>@d.activityId</td>
+                        <td>@d.activityType</td>
+                        <td>@d.outcome</td>
+                        <td>@d.isInternalError</td>
+                        <td>@d.errorMessage</td>
+                        <td>@d.Tenants</td>
+                        <td>@d.userName</td>
+                        <td>@d.startTime</td>
+                        <td>@d.endTime</td>
+                        <td>@d.ObjectsCreated</td>
+                        <td>@d.ObjectsDeleted</td>
+                        <td>@d.ObjectsUpdated</td>
+                    </tr>
+                }
+            </table>
+        }
+        else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
+        {
+            <table class="table table-bordered table-responsive table-hover table-striped">
+                <tr>
+                    <th>Activity Id </th>
+                    <th>Activity Type</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>UserName</th>
+                    <th>Outcome</th>
+                    <th>Internal Error </th>
+                    <th>Error Message</th>
+                    <th>ClientIPAddress </th>
+                    <th>ClientOS </th>
+
+
+                </tr>
+                @foreach (var d in Model.FeedActivity)
+                {
                     <tr>
                         <td>@d.activityId </td>
                         <td>@d.activityType </td>
@@ -162,16 +165,16 @@
                         <td>@d.ClientIPAddress </td>
                         <td>@d.ClientOS </td>
                     </tr>
-                    }
-                </table>
-            }
-            else
-            {
-                <div>
-                    <p>No records found for the search criteria</p>
-                </div>
-            }
-        </div>
+                }
+            </table>
+        }
+        else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.None)
+        {
+            <div class="norecordstable">
+                <h3 class="text-center">No records found for the search criteria</h3>
+            </div>
+        }
+    </div>
 
 
 

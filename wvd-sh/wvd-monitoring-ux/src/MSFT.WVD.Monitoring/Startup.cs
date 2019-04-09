@@ -93,7 +93,7 @@ namespace MSFT.WVD.Monitoring
             services.AddMvc();
             services.AddSession(options =>
             {
-                options.IdleTimeout = TimeSpan.FromMinutes(1);
+                options.IdleTimeout = TimeSpan.FromMinutes(60);
             });
 
 

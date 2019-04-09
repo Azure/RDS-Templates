@@ -18,15 +18,15 @@ namespace MSFT.WVD.Monitoring.Controllers
     {
         public IActionResult Index()
         {
-            var role = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles").FirstOrDefault();
+            //var role = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles").FirstOrDefault();
+            var role = HttpContext.Session.Get<RoleAssignment>("SelectedRole");
             return View(new DaigonizePageViewModel()
             {
                 SelectedRole = role,
                 DiagonizeQuery = new DiagonizeQuery()
                 {
-                    startDate = DateTime.Now.AddDays(-2),
-                    endDate = DateTime.Now,
-                   
+                    StartDate = DateTime.Now.AddDays(-2),
+                    EndDate = DateTime.Now
                 }
             });
         }
@@ -46,38 +46,38 @@ namespace MSFT.WVD.Monitoring.Controllers
 
                     client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
                     client.Timeout = TimeSpan.FromMinutes(30);
-                    if (data.DiagonizeQuery.activityType == ActivityType.Management)
+                    if (data.DiagonizeQuery.ActivityType == ActivityType.Management)
                     {
                         client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                        var response = await client.GetAsync($"DiagnosticActivity/GetManagementActivities/?upn={data.DiagonizeQuery.upn}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.activityOutcome}");
+                        var response = await client.GetAsync($"DiagnosticActivity/GetManagementActivities/?upn={data.DiagonizeQuery.UPN}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.ActivityOutcome}");
                         if (response.IsSuccessStatusCode)
                         {
                             var strconnectiondetails = await response.Content.ReadAsStringAsync();
-                            viewData.managementActivity = JsonConvert.DeserializeObject<List<ManagementActivity>>(strconnectiondetails);
-                            viewData.activityType = viewData.managementActivity != null && viewData.managementActivity.Count > 0 ? ActivityType.Management : ActivityType.None;
+                            viewData.ManagementActivity = JsonConvert.DeserializeObject<List<ManagementActivity>>(strconnectiondetails);
+                            viewData.ActivityType = viewData.ManagementActivity != null && viewData.ManagementActivity.Count > 0 ? ActivityType.Management : ActivityType.None;
                         };
 
                     }
-                    else if (data.DiagonizeQuery.activityType == ActivityType.Connection)
+                    else if (data.DiagonizeQuery.ActivityType == ActivityType.Connection)
                     {
                         client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                        var response = await client.GetAsync($"DiagnosticActivity/GetConnectionActivities/?upn={data.DiagonizeQuery.upn}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.activityOutcome}");
+                        var response = await client.GetAsync($"DiagnosticActivity/GetConnectionActivities/?upn={data.DiagonizeQuery.UPN}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.ActivityOutcome}");
                         if (response.IsSuccessStatusCode)
                         {
                             var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
-                            viewData.connectionActivity = JsonConvert.DeserializeObject<List<ConnectionActivity>>(strconnectiondetails);
-                            viewData.activityType = viewData.connectionActivity != null && viewData.connectionActivity.Count > 0 ? ActivityType.Connection : ActivityType.None;
+                            viewData.ConnectionActivity = JsonConvert.DeserializeObject<List<ConnectionActivity>>(strconnectiondetails);
+                            viewData.ActivityType = viewData.ConnectionActivity != null && viewData.ConnectionActivity.Count > 0 ? ActivityType.Connection : ActivityType.None;
                         }
                     }
-                    else if (data.DiagonizeQuery.activityType == ActivityType.Feed)
+                    else if (data.DiagonizeQuery.ActivityType == ActivityType.Feed)
                     {
                         client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                        var response = await client.GetAsync($"DiagnosticActivity/GetFeedActivities/?upn={data.DiagonizeQuery.upn}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.activityOutcome}");
+                        var response = await client.GetAsync($"DiagnosticActivity/GetFeedActivities/?upn={data.DiagonizeQuery.UPN}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.ActivityOutcome}");
                         if (response.IsSuccessStatusCode)
                         {
                             var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
-                            viewData.feedActivity = JsonConvert.DeserializeObject<List<FeedActivity>>(strconnectiondetails);
-                            viewData.activityType = viewData.feedActivity != null && viewData.feedActivity.Count > 0 ? ActivityType.Feed : ActivityType.None;
+                            viewData.FeedActivity = JsonConvert.DeserializeObject<List<FeedActivity>>(strconnectiondetails);
+                            viewData.ActivityType = viewData.FeedActivity != null && viewData.FeedActivity.Count > 0 ? ActivityType.Feed : ActivityType.None;
                         }
                     }
                 }

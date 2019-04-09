@@ -67,7 +67,7 @@ namespace MSFT.WVD.Monitoring.Controllers
 
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://localhost:44393/api/");
+                client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
                 client.Timeout = TimeSpan.FromMinutes(30);
                 //HTTP GET
                 return await client.GetAsync("RoleAssignment/TenantGroups?accessToken=" + accessToken + "&upn=" + upn);
