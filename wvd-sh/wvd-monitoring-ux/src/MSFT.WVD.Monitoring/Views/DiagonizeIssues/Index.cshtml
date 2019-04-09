@@ -9,7 +9,7 @@
     {
     <div class="row form-group">
         @Html.Label("UserUPN", "User UPN", new { @class = "control-label col-md-1 f-500" })
-        <div class="col-sm-2">
+        <div class="col-sm-3">
             @Html.TextBoxFor(m => m.DiagonizeQuery.upn, new { @Value = "Enter upn", @class = "form-control" })
             @Html.ValidationMessageFor(m => m.DiagonizeQuery.upn, "",
         new { @class = "text-danger" })
@@ -18,15 +18,14 @@
         <div class="row form-group">
             @Html.Label("interval", "Issue interval from :",
            new { @class = "control-label col-md-1 f-500" })
-            <div class="col-sm-2">
-                @Html.EditorFor(m => m.DiagonizeQuery.startDate, "{0:mm/dd/yyyy}",
-               new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+            <div class="col-sm-3" >
+                @Html.EditorFor(m => m.DiagonizeQuery.startDate, "{mm/dd/yyyy}", new { @class = "form-control", type = "date" })
                 @Html.ValidationMessageFor(m => m.DiagonizeQuery.startDate, "",
         new { @class = "text-danger" })
             </div>
-            @Html.Label("to", "to", new { @class = "control-label col-sm-1 f-500" })
-            <div class="col-sm-2">
-                @Html.EditorFor(m => m.DiagonizeQuery.endDate, "{0:mm/dd/yyyy}",
+            @Html.Label("to", "To", new { @class = "control-label col-sm-1 f-500 mrgnlft" })
+            <div class="col-sm-3" style="margin-left:-100px;">
+                @Html.EditorFor(m => m.DiagonizeQuery.endDate, "{mm/dd/yyyy}",
                new { @style = "line-height:inherit", type = "date", @class = "form-control" })
                 @Html.ValidationMessageFor(m => m.DiagonizeQuery.endDate, "",
         new { @class = "text-danger" })
@@ -34,14 +33,15 @@
         </div>
         <div class="row form-group">
             @Html.Label("activityType", "Activity Type", new { @class = "control-label col-md-1 f-500" })
-            <div class="col-sm-2">
+            <div class="col-sm-3">
                 @Html.DropDownListFor(model => model.DiagonizeQuery.activityType,
         new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityType))),
         new { @class = "form-control" })
 
             </div>
-            @Html.Label("outcome", "outcome", new { @class = "control-label col-sm-1 f-500" })
-            <div class="col-sm-2">
+           
+            @Html.Label("outcome", "Outcome", new { @class = "control-label col-sm-1 f-500" })
+            <div class="col-sm-3">
                 @Html.DropDownListFor(model => model.DiagonizeQuery.activityOutcome,
      new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityOutcome)))
      ,"All",
@@ -49,16 +49,15 @@
             </div>
         </div>
         <div class="row form-group">
-            <div class="col-sm-offset-1">
-                <input type="submit" value="Search" class="btn-default" />
-
+            <div class="search" style="margin-left:9%;">              
+                <input type="submit" value="Search" class="btn-default"  />
             </div>
         </div>
     }
         <div>
             @if (Model.activityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.connectionActivity != null)
             {
-                <table class="table table-bordered table-responsive table-hover">
+                <table class="table table-bordered table-responsive table-hover table-striped">
                     <tr>
                         <th> Activity ID</th>
                         <th>Type</th>
@@ -97,7 +96,7 @@
             }
             else if (Model.activityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Management)
             {
-                <table class="table table-bordered table-responsive table-hover">
+                <table class="table table-bordered table-responsive table-hover table-striped">
                     <tr>
                         <th> Activity ID</th>
                         <th>Type</th>
@@ -134,7 +133,7 @@
             }
             else if (Model.activityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
             {
-                <table class="table table-bordered table-responsive table-hover">
+                <table class="table table-bordered table-responsive table-hover table-striped">
                     <tr>
                         <th>Activity Id </th>
                         <th>Activity Type</th>
