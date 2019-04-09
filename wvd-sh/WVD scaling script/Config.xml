@@ -3,12 +3,12 @@
 <RDMIScale>
   <Azure>
     <!--Settings required to authenticate to Azure subscription -->
-    <Variable Name="AADTenantId" Value="ad638926-c4fa-462d-8b20-1dd3f162028b"/>
-    <Variable Name="AADApplicationId" Value="74e98113-e2ca-48c8-963d-fe33ae70c756"/>    
+    <Variable Name="AADTenantId" Value="00000000-0000-0000-0000-000000000000"/>
+    <Variable Name="AADApplicationId" Value="user@wvdcontoso.com"/>    
     <!-- use AADServicePrincipalSecret filed for testing only, set via New-StoredCredential -->
     <Variable Name="AADServicePrincipalSecret" Value=""/>    
     <!--Azure subscription name -->
-    <Variable Name="currentAzureSubscriptionName" Value="Microsoft Azure"/>
+    <Variable Name="currentAzureSubscriptionId" Value="00000000-0000-0000-0000-000000000000"/>
     <!-- WVD tenant name -->
     <Variable Name="tenantName" Value=""/>
     <!-- WVD tenant name -->
@@ -22,7 +22,7 @@
     <!-- use Password filed for testing only, set via New-StoredCredential -->
     <Variable Name="Password" Value=""/> 
     <!-- accepted values True/False, True indicate service principal is being used to authenticate to WVD -->
-    <Variable Name="isServicePrincipal" Value="False" />
+    <Variable Name="isWVDServicePrincipal" Value="False" />
   </Deployment>
   <RdmiScaleSettings>
     <!-- Begin of the peak usage time -->

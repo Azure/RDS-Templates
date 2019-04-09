@@ -175,6 +175,12 @@
                     "adminPassword": "[parameters('existingDomainPassword')]"
                 },
                 "storageProfile": {
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[variables('storageAccountType')]"
+                        }
+                    },
                     "imageReference": {
                         "id": "[resourceId('Microsoft.Compute/images', variables('imageName'))]"
                     }
