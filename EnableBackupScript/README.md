@@ -17,7 +17,7 @@ This script helps enabling Azure Recovery Services (Backup and Site Recovery) VM
 * **RecoveryVaultResourceGroup** - Resource Group Name where Recovery Services Vault is located.
 * **RecoveryVaultName** - Name of Recovery Services Vault that will provide Azure VM Backup service to the VMs.
 * **BackupPolicyName** - Name of Backup Policy to apply to the Session Hosts VMs. This is optional if policy has the exact same name as the Host Pool.
-* **OverridePersistecyCheck** - Switch that ignores Persistent Desktop option and enable backup anyways for non-persistent desktops
+* **OverridePersistencyCheck** - Switch that ignores Persistent Desktop option and enable backup anyways for non-persistent desktops
 
 ## Usage
 

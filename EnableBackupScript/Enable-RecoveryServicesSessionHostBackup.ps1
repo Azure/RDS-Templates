@@ -22,7 +22,7 @@
     Name of Recovery Services Vault that will provide Azure VM Backup service to the VMs. 
 .PARAMETER BackupPolicyName
     Name of Backup Policy to apply to the Session Hosts VMs. This is optional if policy has the exact same name as the Host Pool. 
-.PARAMETER OverridePersistecyCheck
+.PARAMETER OverridePersistencyCheck
     Ignores Persistent Desktop option and enable backup anyways for non-persistent desktops
 .EXAMPLE
 
@@ -52,7 +52,7 @@ param
     [string]$BackupPolicyName="",
 
     [Parameter(Mandatory=$false)]
-    [switch]$OverridePersistecyCheck
+    [switch]$OverridePersistencyCheck
 )
 
 $ErrorActionPreference="Stop"
