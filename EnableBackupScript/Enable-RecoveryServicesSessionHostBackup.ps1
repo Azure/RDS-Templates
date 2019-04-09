@@ -89,7 +89,7 @@ foreach ($SessionHost in (Get-rdssessionhost -TenantName $TenantName -HostPoolNa
     {
         if ($_.Exception.HResult -eq -2146233088)
         {
-            Write-Warning -Verbose "Backup not enabled on VM due to one of the followig reasons: VM is already protected (most probable), VM does not exist or VM name or service name needs to be case sensite"
+            Write-Warning -Verbose "Backup not enabled on VM due to one of the followig reasons: VM is already protected (most probable), VM does not exist or VM name or service name needs to be case sensitive"
         }
         else
         {
