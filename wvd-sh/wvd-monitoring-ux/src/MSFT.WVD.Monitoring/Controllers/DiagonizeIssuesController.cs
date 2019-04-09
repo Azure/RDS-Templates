@@ -15,9 +15,6 @@ namespace MSFT.WVD.Monitoring.Controllers
 {
     public class DiagonizeIssuesController : Controller
     {
-        List<ManagementActivity> managementActivities;
-        List<ConnectionActivity> connectionActivities;
-        List<FeedActivity> feedActivities;
         public IActionResult Index()
         {
             var role = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles").FirstOrDefault();
@@ -78,7 +75,6 @@ namespace MSFT.WVD.Monitoring.Controllers
                         if (response.IsSuccessStatusCode)
                         {
                             var strconnectiondetails = response.Content.ReadAsStringAsync().Result;
-                            // feedActivities = JsonConvert.DeserializeObject<List<FeedActivity>>(strconnectiondetails);
                             viewData.feedActivity = JsonConvert.DeserializeObject<List<FeedActivity>>(strconnectiondetails);
                             viewData.activityType = viewData.feedActivity != null && viewData.feedActivity.Count > 0 ? ActivityType.Feed : ActivityType.None;
                         }
@@ -86,9 +82,6 @@ namespace MSFT.WVD.Monitoring.Controllers
                 }
             }
             return View("Index", viewData);
-
-
         }
-
     }
 }

@@ -42,30 +42,53 @@ namespace MSFT.WVD.Monitoring
             //    options.minimumsamesitepolicy = samesitemode.none;
             //});
 
-            services.Configure<CookiePolicyOptions>(options =>
-            {
-                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => false;
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-            });
 
-            services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
-              .AddAzureAD(options => Configuration.Bind("AzureAd", options)).AddCookie(OpenIdConnectDefaults.AuthenticationScheme);
-            services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
+
+            services.AddAuthentication(options =>
             {
-                options.Authority = options.Authority;//+ "/v2.0/"
-                options.Resource = Configuration.GetSection("configurations").GetSection("RESOURCE_URL").Value;
-                options.TokenValidationParameters.ValidateIssuer = false;
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+
+            }).AddOpenIdConnect(options =>
+            {
+                options.Authority = Configuration.GetSection("AzureAd").GetSection("Instance").Value+ Configuration.GetSection("AzureAd").GetSection("TenantId").Value; //+ this.TenantName; //358d0f13-4eda-45ea-886e-a6dcc6a70ae2
+                options.ClientId = Configuration.GetSection("AzureAd").GetSection("ClientId").Value;
                 options.ResponseType = OpenIdConnectResponseType.Code;
+                options.CallbackPath = "/security/signin-callback";
+                options.SignedOutRedirectUri = "/home/"; //"";
+
+                // options.TokenValidationParameters.NameClaimType = "name";
+                options.TokenValidationParameters.ValidateIssuer = false;
                 options.SaveTokens = true;
-            });
-            //    services.AddMvc(options =>
+                options.Resource = Configuration.GetSection("configurations").GetSection("RESOURCE_URL").Value;//newly added
+            }).AddCookie();
+
+
+            //services.Configure<CookiePolicyOptions>(options =>
             //{
-            //    var policy = new AuthorizationPolicyBuilder()
-            //        .RequireAuthenticatedUser()
-            //        .Build();
-            //    options.Filters.Add(new AuthorizeFilter(policy));
-            //}).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            //    // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+            //    options.CheckConsentNeeded = context => false;
+            //    options.MinimumSameSitePolicy = SameSiteMode.None;
+            //});
+
+            //services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
+            //  .AddAzureAD(options => Configuration.Bind("AzureAd", options)).AddCookie(OpenIdConnectDefaults.AuthenticationScheme);
+            //services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
+            //{
+            //    options.Authority = options.Authority;//+ "/v2.0/"
+            //    options.Resource = Configuration.GetSection("configurations").GetSection("RESOURCE_URL").Value;
+            //    options.TokenValidationParameters.ValidateIssuer = false;
+            //    options.ResponseType = OpenIdConnectResponseType.Code;
+            //    options.SaveTokens = true;
+            //});
+            ////    services.AddMvc(options =>
+            ////{
+            ////    var policy = new AuthorizationPolicyBuilder()
+            ////        .RequireAuthenticatedUser()
+            ////        .Build();
+            ////    options.Filters.Add(new AuthorizeFilter(policy));
+            ////}).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddDistributedMemoryCache();
             services.AddMvc();
             services.AddSession(options =>
