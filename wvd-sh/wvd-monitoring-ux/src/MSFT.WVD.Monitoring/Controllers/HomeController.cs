@@ -112,6 +112,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         [HttpPost]
         public async Task Logout()
         {
+            HttpContext.Session.Clear();
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
         }

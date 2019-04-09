@@ -11,59 +11,43 @@ namespace MSFT.WVD.Monitoring.Models
     public class DaigonizePageViewModel : IPageViewModel
     {
 
-        public DiagonizeQuery DiagonizeQuery {get; set;}
-        public List<ManagementActivity> managementActivity { get; set; }
-        public List<ConnectionActivity> connectionActivity { get; set; }
-        public ActivityType activityType { get; set; }
-        public List<FeedActivity> feedActivity { get; set; }
+        public DiagonizeQuery DiagonizeQuery { get; set; }
+        public List<ManagementActivity> ManagementActivity { get; set; }
+        public List<ConnectionActivity> ConnectionActivity { get; set; }
+        public ActivityType ActivityType { get; set; }
+        public List<FeedActivity> FeedActivity { get; set; }
         public RoleAssignment SelectedRole { get; set; }
     }
 
     public class DiagonizeQuery : IValidatableObject
     {
         [Required]
-        public string upn { get; set; }
-
-        public DateTime startDate { get; set; }
-        
-        public DateTime endDate { get; set; }
-        public ActivityType activityType { get; set; }
-        public ActivityOutcome activityOutcome { get; set; }
+        public string Upn { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public ActivityType ActivityType { get; set; }
+        public ActivityOutcome ActivityOutcome { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
 
-            int result = DateTime.Compare(endDate,startDate );
+            int result = DateTime.Compare(EndDate, StartDate);
             if (result < 0)
             {
-                yield return new ValidationResult("start date must be less than the end date!", new[] { "startDate", "endDate" });
+                yield return new ValidationResult("start date must be less than the end date!", new[] { "StartDate", "EndDate" });
             }
-           else if (endDate > DateTime.Now)
-        {
-                yield return new ValidationResult("End Date cannot be greater than current date.", new[] { "startDate", "endDate" });
-          }
+            else if (EndDate > DateTime.Now)
+            {
+                yield return new ValidationResult("End Date cannot be greater than current date.", new[] { "StartDate", "EndDate" });
+            }
+            else if (EndDate != StartDate.AddDays(+2))
+            {
+                yield return new ValidationResult("Difference between StartDate and EndDate should not be greater than 48hrs", new[] { "StartDate", "EndDate" });
+
+            }
 
         }
     }
-    //public class DateValidation : ValidationAttribute
-    //{
-    //    protected override ValidationResult IsValid(DiagonizeQuery value, ValidationContext validationContext)
-    //    {
-    //        var model = (Models.DiagonizeQuery)validationContext.ObjectInstance;
-    //        //DateTime _lastDeliveryDate = Convert.ToDateTime(value);
-    //        DateTime EndDate = Convert.ToDateTime(model.endDate);
-    //        if (EndDate > DateTime.Now)
-    //        {
-    //            return new ValidationResult
-    //                 ("End Date cannot be greater than current date.");
-    //        }
-    //        else
-    //        {
-    //            return ValidationResult.Success;
-    //        }
-    //    }
-    //}
-
 
     public class ValidIntervalDate : ValidationAttribute
     {
@@ -83,5 +67,5 @@ namespace MSFT.WVD.Monitoring.Models
         }
     }
 
-    
+
 }

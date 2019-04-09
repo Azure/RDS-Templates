@@ -313,11 +313,12 @@ body {
     border-radius: 4px;
 }
 .mrgnlft {
-    margin-left: -13px;
+    margin-left: 0px;
     top: 7px;
 }
-#outcome {
-    position: relative;
-    left: 54px;
-    top: 10px;
+.btn-primary {
+    background-color: #00a3ec;
+    border-color: #00a3ec;
+    width: 95px;
+    line-height: 2;
 }

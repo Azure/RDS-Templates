@@ -13,7 +13,7 @@
         {
             <div class="flyoutpanel-header">
                 <h4>Please choose Tenant Group &amp; Tenant</h4>
-                <button class="close" href="" id="btnslideclose"><i class="fa fa-times"></i></button>
+                @*<button class="close" href="" id="btnslideclose"><i class="fa fa-times"></i></button>*@
                 <div>
                     @Html.Label("tenantGroupName", "Tenant Group Name")
                     @Html.TextBoxFor(m => m.SubmitData.TenantGroupName,
@@ -26,8 +26,8 @@
                 </div>
             </div>
             <div class="footer">
-                <input type="submit" value="Cancel" class="btn-secondary" />
-                <input type="submit" value="Save" class="btn-default" />
+                @*<input type="submit" value="Cancel" class="btn-secondary" />*@
+                <input type="submit" value="Save" class="btn-primary" />
             </div>
         }
     </div>
