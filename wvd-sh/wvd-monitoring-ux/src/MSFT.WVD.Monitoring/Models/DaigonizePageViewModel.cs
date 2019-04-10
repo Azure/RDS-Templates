@@ -39,15 +39,15 @@ namespace MSFT.WVD.Monitoring.Models
             int result = DateTime.Compare(EndDate, StartDate);
             if (result < 0)
             {
-                yield return new ValidationResult("start date must be less than the end date!", new[] { "StartDate", "EndDate" });
+                yield return new ValidationResult("From date must be less than to date!", new[] { "StartDate", "EndDate" });
             }
             else if (EndDate > DateTime.Now)
             {
-                yield return new ValidationResult("End Date cannot be greater than current date.", new[] { "StartDate", "EndDate" });
+                yield return new ValidationResult("To date cannot be greater than current date.", new[] { "StartDate", "EndDate" });
             }
-            else if (EndDate != StartDate.AddDays(+2))
+            else if (EndDate > StartDate.AddDays(+2))
             {
-                yield return new ValidationResult("Difference between StartDate and EndDate should not be greater than 48hrs", new[] { "StartDate", "EndDate" });
+                yield return new ValidationResult("Difference between from date and to date should not be greater than 48hours", new[] { "StartDate", "EndDate" });
 
             }
 
