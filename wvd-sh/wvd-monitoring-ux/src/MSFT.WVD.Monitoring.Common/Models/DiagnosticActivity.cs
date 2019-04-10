@@ -132,6 +132,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string userName { get; set; }
         public string outcome { get; set; }
         public string Tenants { get; set; }
+        public string SessionHostPoolName { get; set; }
         public string SessionHostName { get; set; }
         public string isInternalError { get; set; }
         public string errorMessage { get; set; }

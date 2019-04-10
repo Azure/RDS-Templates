@@ -68,6 +68,8 @@
                     <th>Error Type</th>
                     <th>Error</th>
                     <th>Tenant</th>
+                    <th>SessionHostPoolName</th>
+
                     <th>UserName</th>
                     <th>Start Time</th>
                     <th>End Time</th>
@@ -78,22 +80,23 @@
                 </tr>
                 @foreach (var d in Model.ConnectionActivity)
                 {
-                    <tr>
-                        <td>@d.activityId</td>
-                        <td>@d.activityType</td>
-                        <td>@d.outcome</td>
-                        <td>@d.isInternalError</td>
-                        <td>@d.errorMessage</td>
-                        <td>@d.Tenants</td>
-                        <td>@d.userName</td>
-                        <td>@d.startTime</td>
-                        <td>@d.endTime</td>
-                        <td>@d.ClientOS</td>
-                        <td>@d.ClientIPAddress</td>
-                        <td>@d.SessionHostName</td>
+                <tr>
+                    <td>@d.activityId</td>
+                    <td>@d.activityType</td>
+                    <td>@d.outcome</td>
+                    <td>@d.isInternalError</td>
+                    <td>@d.errorMessage</td>
+                    <td>@d.Tenants</td>
+                    <td>@d.SessionHostPoolName</td>
+                    <td>@d.userName</td>
+                    <td>@d.startTime</td>
+                    <td>@d.endTime</td>
+                    <td>@d.ClientOS</td>
+                    <td>@d.ClientIPAddress</td>
+                    <td>@d.SessionHostName</td>
 
 
-                    </tr>
+                </tr>
                 }
             </table>
         }

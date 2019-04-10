@@ -48,6 +48,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                         ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
                         Tenants = (string)item["details"]["Tenants"],
                         SessionHostName = (string)item["details"]["SessionHostName"],
+                        SessionHostPoolName=(string)item["details"]["SessionHostPoolName"]
                     }).ToList();
                     return diagnosticActivities;
                 }
