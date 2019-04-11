@@ -43,7 +43,7 @@ param(
     [AllowEmptyString()]
     [string]$AadTenantId="",
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]$EnablePersistentDesktop="False",
 
     [Parameter(Mandatory = $false)]
@@ -144,7 +144,7 @@ else
     }
     else
     {
-        $EnablePersistentDesktopOption=@{$true = "-Persistent"; $false = ""}[$BlnEnablePersistentDesktop -eq $true]
+        $EnablePersistentDesktopOption=@{$true = "-Persistent"; $false = ""}[$EnablePersistentDesktop -ieq "true"]
         $HostPool = Invoke-Expression("New-RdsHostPool -TenantName `"`$TenantName`" -Name `"`$HostPoolName`" -Description `$Description -FriendlyName `$FriendlyName $EnablePersistentDesktopOption -ValidationEnv `$false")
         $HName = $HostPool.name | Out-String -Stream
         Write-Log -Message "Successfully created new Hostpool: $HName"

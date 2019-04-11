@@ -33,8 +33,8 @@ configuration FirstSessionHost
         [AllowEmptyString()]
         [string]$AadTenantId = "",
     
-        [Parameter(Mandatory = $true)]
-        [string]$EnablePersistentDesktop="False",
+        [Parameter(Mandatory = $false)]
+        [string]$EnablePersistentDesktop = "False",
 
         [Parameter(Mandatory = $true)]
         [string]$DefaultDesktopUsers
@@ -129,7 +129,7 @@ configuration AdditionalSessionHosts
         [string]$IsServicePrincipal = "False",
     
         [Parameter(Mandatory = $false)]
-        [string]$AadTenantId
+        [string]$AadTenantId = ""
     )
 
     $rdshIsServer = $true
