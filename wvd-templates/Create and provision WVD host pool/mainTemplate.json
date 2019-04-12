@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
+            "defaultValue": "https://raw.githubusercontent.com/datr93/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -66,13 +66,14 @@
             "metadata": {
                 "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
             },
-            "defaultValue": "[take(toLower(resourceGroup().name),10)]"
+            "defaultValue": "sampa"
         },
         "rdshNumberOfInstances": {
             "type": "int",
             "metadata": {
                 "description": "Number of session hosts that will be created and added to the hostpool."
-            }
+            },
+            "defaultValue": 1
         },
         "rdshVMDiskType": {
             "type": "string",
@@ -111,25 +112,28 @@
             "metadata": {
                 "description": "(Required when rdshUseManagedDisks = False) The resource group containing the storage account of the image vhd file."
             },
-            "defaultValue": ""
+            "defaultValue": "sampa-vm-rg"
         },
         "domainToJoin": {
             "type": "string",
             "metadata": {
                 "description": "FQDN of the AD Domain to which sesion host VMs are going to be joined. For example, 'contoso.com'."
-            }
+            },
+            "defaultValue": "rdpgwcon.net"
         },
         "existingDomainUPN": {
             "type": "string",
             "metadata": {
                 "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'user1@contoso.com'."
-            }
+            },
+            "defaultValue": "tstestadmin2@rdpgwcon.net"
         },
         "existingDomainPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
-            }
+            },
+            "defaultValue": "8ighteenVi$ions"
         },
         "ouPath": {
             "type": "string",
@@ -152,45 +156,50 @@
             "type": "string",
             "metadata": {
                 "description": "The name of the virtual network the VMs will be connected to."
-            }
+            },
+            "defaultValue": "rdpgwcon-vnet"
         },
         "existingSubnetName": {
             "type": "string",
             "metadata": {
                 "description": "The subnet the VMs will be placed in."
-            }
+            },
+            "defaultValue": "default"
         },
         "virtualNetworkResourceGroupName": {
             "type": "string",
             "metadata": {
                 "description": "The resource group containing the existing virtual network."
-            }
+            },
+            "defaultValue": "rdpgwcon"
         },
         "rdBrokerURL": {
             "type": "string",
             "metadata": {
                 "description": "The Broker URL of the Windows Virtual Desktop deployment the session hosts will be connected to."
             },
-            "defaultValue": "https://rdbroker.wvd.microsoft.com"
+            "defaultValue": "https://mrs-scusr0c001-rdbroker-sampa.azurewebsites.net"
         },
         "existingTenantGroupName": {
             "type": "string",
             "metadata": {
                 "description": "The name of the tenant group in the Windows Virtual Desktop deployment"
             },
-            "defaultValue": "Default Tenant Group"
+            "defaultValue": "20A9996A-0715-492E-8AC8-D51DADA0174A"
         },
         "existingTenantName": {
             "type": "string",
             "metadata": {
                 "description": "The name of the tenant in the Windows Virtual Desktop deployment."
-            }
+            },
+            "defaultValue": "sampa-canary-rg"
         },
         "hostPoolName": {
             "type": "string",
             "metadata": {
                 "description": "The name of the hostpool to be created in the RDS Tenant."
-            }
+            },
+            "defaultValue": "SampaHostPoolDavid2"
         },
         "enablePersistentDesktop": {
             "type": "bool",
@@ -210,13 +219,15 @@
             "type": "string",
             "metadata": {
                 "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the WVD Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
-            }
+            },
+            "defaultValue": "tstestadmin2@rdpgwcon.net"
         },
         "tenantAdminPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the tenant admin UPN."
-            }
+            },
+            "defaultValue": "8ighteenVi$ions"
         },
         "isServicePrincipal": {
             "type": "bool",
@@ -227,7 +238,7 @@
         },
         "aadTenantId": {
             "type": "string",
-            "defaultValue": "",
+            "defaultValue": "rdpgwcon.onmicrosoft.com",
             "metadata": {
                 "description": "(Required when isServicePrincipal = True) This value identifies the Azure AD tenant of the service principal."
             }
@@ -264,21 +275,73 @@
                     }
                 }
             ]
-        }
+        },
+        "appgroupname": "DesktopApplicationGroup2",
     },
     "resources": [
+        {
+          "name": "[parameters('hostpoolname')]",
+          "apiVersion": "2019-01-23-preview",
+          "type": "Microsoft.WindowsVirtualDesktop/hostpools",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "friendlyName": "parameters('HostPoolFriendlyName')",
+            "description": "parameters('HostPoolDescription')",
+            "hostPoolType": "Shared",
+            "diskPath": null,
+            "enableUserProfileDisk": false,
+            "excludeFolderPath": null,
+            "excludeFilePath": null,
+            "includeFilePath": null,
+            "includeFolderPath": null,
+            "customRdpProperty": null,
+            "maxSessionLimit": 999999,
+            "useReverseConnect": true,
+            "loadBalancerType": "BreadthFirst",
+            "ValidationEnv": null,
+            "Ring": null,
+            "registrationInfo": {
+              "expirationTime": "2019-09-21T14:01:54.9571247Z",
+              "token": null,
+              "resetToken": true
+            }
+          }
+        },
+        {
+          "name": "[variables('appgroupname')]",
+          "apiVersion": "2019-01-23-preview",
+          "type": "Microsoft.WindowsVirtualDesktop/applicationgroups",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "hostpoolarmpath": "[resourceId('Microsoft.WindowsVirtualDesktop/hostpools/', parameters('HostPoolName'))]",
+            "friendlyName": "Remote Desktop Application Group2",
+            "description": "Application Group for Remote Desktop2",
+            "applicationGroupType": "Desktop",
+            "applicationList": [{
+              "name": "desktopApp",
+              "description": "des",
+              "friendlyName": "fri"
+            }]
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.WindowsVirtualDesktop/hostpools/', parameters('HostPoolName'))]"
+          ]
+        },
         {
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
-            "location": "[parameters('location')]",
+            "location": "South Central US",
             "properties": {
                 "platformUpdateDomainCount": 5,
                 "platformFaultDomainCount": 2
             },
             "sku": {
                 "name": "[variables('avSetSKU')]"
-            }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.WindowsVirtualDesktop/applicationgroups', variables('appgroupname'))]"
+            ]
         },
         {
             "apiVersion": "2018-05-01",
@@ -337,7 +400,7 @@
                         "value": "[parameters('rdshCustomImageSourceName')]"
                     },
                     "location": {
-                        "value": "[parameters('location')]"
+                        "value": "South Central US"
                     }
                 }
             }
@@ -346,7 +409,7 @@
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
-            "location": "[parameters('location')]",
+            "location": "South Central US",
             "dependsOn": [
                 "vmCreation-linkedTemplate"
             ],
@@ -375,7 +438,7 @@
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), '0/', 'dscextension')]",
-            "location": "[parameters('location')]",
+            "location": "South Central US",
             "dependsOn": [
                 "rdsh-domain-join-loop"
             ],
@@ -403,48 +466,6 @@
                         "AadTenantId": "[parameters('aadTenantId')]",
                         "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
                         "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
-                    }
-                },
-                "ProtectedSettings": {
-                    "items": {
-                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
-                    }
-                }
-            }
-        },
-        {
-            "condition":"[greater(parameters('rdshNumberOfInstances'),1)]",
-            "apiVersion": "2018-10-01",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'),'0/extensions/dscextension')]"
-            ],
-            "copy": {
-                "name": "additional-rdsh-dsc-loop",
-                "count": "[if(greater(parameters('rdshNumberOfInstances'),1),sub(parameters('rdshNumberOfInstances'),1),1)]"
-            },
-            "properties": {
-                "publisher": "Microsoft.Powershell",
-                "type": "DSC",
-                "typeHandlerVersion": "2.73",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
-                    "properties": {
-                        "TenantAdminCredentials": {
-                            "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
-                            "password": "PrivateSettingsRef:tenantAdminPassword"
-                        },
-                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
-                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
-                        "TenantName": "[variables('existingTenantName')]",
-                        "HostPoolName": "[variables('hostPoolName')]",
-                        "Hours": "[variables('registrationExpirationHours')]",
-                        "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
                     }
                 },
                 "ProtectedSettings": {
