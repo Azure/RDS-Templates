@@ -303,7 +303,7 @@
             "registrationInfo": {
               "expirationTime": "2019-09-21T14:01:54.9571247Z",
               "token": null,
-              "resetToken": false
+              "resetToken": true
             }
           }
         },
