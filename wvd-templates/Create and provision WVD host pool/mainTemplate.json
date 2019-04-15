@@ -328,6 +328,17 @@
           ]
         },
         {
+          "name": "[parameters('existingDomainUPN')]",
+          "apiVersion": "2019-01-23-preview",
+          "type": "Microsoft.WindowsVirtualDesktop/applicationgroups/assignedusers",
+          "location": "[resourceGroup().location]",
+          "properties": {
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.WindowsVirtualDesktop/applicationgroups/', parameters('appgroupname'))]"
+          ]
+        },
+        {
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
@@ -465,7 +476,8 @@
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]",
                         "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
-                        "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
+                        "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]",
+                        "registrationInfoToken": "[reference(parameters('hostpoolname')).registrationInfo.token]"
                     }
                 },
                 "ProtectedSettings": {

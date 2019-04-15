@@ -47,7 +47,10 @@ param(
     [string]$EnablePersistentDesktop="False",
 
     [Parameter(Mandatory = $false)]
-    [string]$DefaultDesktopUsers=""
+    [string]$DefaultDesktopUsers="",
+
+    [Parameter(Mandatory = $true)]
+    [string]$RegistrationInfoToken
 )
 
 $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
@@ -90,7 +93,7 @@ else
                                        -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
                                        -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" `
                                        -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" `
-                                       -RegistrationToken "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRPU0d3RExqdTVPWWhxV2JBclUxd19GTzYwbyIsInR5cCI6IkpXVCJ9.eyJSZWdpc3RyYXRpb25JZCI6ImFkNjgwZjk5LTNlY2EtNGE2Ni1iMGExLTM2NzBmZTIwMWEwZSIsIkJyb2tlclVyaSI6Imh0dHBzOi8vbXJzLXNjdXNyMGMwMDEtcmRicm9rZXItc2FtcGEuYXp1cmV3ZWJzaXRlcy5uZXQvIiwiRGlhZ25vc3RpY3NVcmkiOiJodHRwczovL21ycy1zY3VzcjBjMDAxLXJkZGlhZ25vc3RpY3Mtc2FtcGEuYXp1cmV3ZWJzaXRlcy5uZXQvIiwibmJmIjoxNTU1MTQyNTYzLCJleHAiOjE1NjkwNzQ1MTQsImlzcyI6IlJESW5mcmFUb2tlbk1hbmFnZXIiLCJhdWQiOiJSRG1pIn0.e9IYJiYZwybAXIwDiCA8AJ5OKaIK0HZoLv6AoR1MUh23EUHjmSeF_MYSLwi3fxzg3qAIyKEyH6JCvwDEceIOOuvGMI_4DTzME8vyHo5jJn9VyU5j2_Iw1ongARJg5oNOnCsVoN3SLBA62NMMewGhqAqF6-FbWJ3d62GQe_FDCsrXZYaAh5OaPk6bNbywOxi-4kntEIjYMqPr_SjKjoiLp4OYaSJzhTlml2vN4oIN6JShTdEfU4I-jUm3c1hmwmKMdiWE2UqeNftPl70Pl_UN69oUAnA9Dlf6C_a-u7M-_kdzSd44UTs8jPyVtPDeSjmyQ1NPrYc5tbhKQaCF0uiHDQ" `
+                                       -RegistrationToken $RegistrationInfoToken `
                                        -StartAgent $true `
                                        -rdshIs1809OrLater $rdshIs1809OrLaterBool
     
