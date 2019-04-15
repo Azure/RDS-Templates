@@ -37,7 +37,7 @@ configuration FirstSessionHost
         [string]$EnablePersistentDesktop = "False",
 
         [Parameter(Mandatory = $true)]
-        [string]$DefaultDesktopUsers
+        [string]$DefaultDesktopUsers,
 
         [Parameter(Mandatory = $true)]
         [string]$RegistrationInfoToken

@@ -199,7 +199,7 @@
             "metadata": {
                 "description": "The name of the hostpool to be created in the RDS Tenant."
             },
-            "defaultValue": "SampaHostPoolDavid2"
+            "defaultValue": "SampaHostPoolDavid5"
         },
         "enablePersistentDesktop": {
             "type": "bool",
@@ -276,7 +276,7 @@
                 }
             ]
         },
-        "appgroupname": "DesktopApplicationGroup2",
+        "appgroupname": "DesktopApplicationGroup5",
     },
     "resources": [
         {
@@ -328,14 +328,14 @@
           ]
         },
         {
-          "name": "[parameters('existingDomainUPN')]",
+          "name": "[concat(variables('appgroupname'), '/', parameters('existingDomainUPN'))]",
           "apiVersion": "2019-01-23-preview",
           "type": "Microsoft.WindowsVirtualDesktop/applicationgroups/assignedusers",
           "location": "[resourceGroup().location]",
           "properties": {
           },
           "dependsOn": [
-            "[resourceId('Microsoft.WindowsVirtualDesktop/applicationgroups/', parameters('appgroupname'))]"
+            "[resourceId('Microsoft.WindowsVirtualDesktop/applicationgroups/', variables('appgroupname'))]"
           ]
         },
         {
