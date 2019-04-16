@@ -49,9 +49,6 @@ $ErrorActionPreference = "Stop"
 # Testing if it is a ServicePrincipal and validade that AadTenant ID in this case is not null or empty
 ValidateServicePrincipal -IsServicePrincipal $isServicePrincipal -AadTenantId $AadTenantId
 
-Write-Log -Message "Identifying if this VM is Build >= 1809"
-$rdshIs1809OrLaterBool = Is1809OrLater
-
 Write-Log -Message "Creating a folder inside rdsh vm for extracting deployagent zip file"
 $DeployAgentLocation = "C:\DeployAgent"
 ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $DeployAgentLocation
@@ -142,11 +139,8 @@ else
     Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall, SxS is $DeployAgentLocation\RDInfraSxSStackInstall"
     $DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
                                        -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
-                                       -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" `
-                                       -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" `
                                        -RegistrationToken $Registered.Token `
-                                       -StartAgent $true `
-                                       -rdshIs1809OrLater $rdshIs1809OrLaterBool
+                                       -StartAgent $true
     
     Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName`n$DAgentInstall"
 
