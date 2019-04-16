@@ -35,7 +35,10 @@ param(
 
     [Parameter(Mandatory = $false)]
     [AllowEmptyString()]
-    [string]$AadTenantId=""
+    [string]$AadTenantId="",
+
+    [Parameter(Mandatory = $true)]
+    [string]$RegistrationInfoToken
 )
 
 $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
@@ -144,7 +147,7 @@ else
                                        -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
                                        -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" `
                                        -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" `
-                                       -RegistrationToken $Registered.Token `
+                                       -RegistrationToken $RegistrationInfoToken `
                                        -StartAgent $true `
                                        -rdshIs1809OrLater $rdshIs1809OrLaterBool
     

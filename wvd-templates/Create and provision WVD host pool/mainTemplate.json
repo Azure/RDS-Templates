@@ -66,14 +66,14 @@
             "metadata": {
                 "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
             },
-            "defaultValue": "sampa"
+            "defaultValue": "sampaRApp"
         },
         "rdshNumberOfInstances": {
             "type": "int",
             "metadata": {
                 "description": "Number of session hosts that will be created and added to the hostpool."
             },
-            "defaultValue": 1
+            "defaultValue": 2
         },
         "rdshVMDiskType": {
             "type": "string",
@@ -199,7 +199,7 @@
             "metadata": {
                 "description": "The name of the hostpool to be created in the RDS Tenant."
             },
-            "defaultValue": "SampaHostPoolDavid5"
+            "defaultValue": "SampaHostPoolDavid7"
         },
         "enablePersistentDesktop": {
             "type": "bool",
@@ -276,7 +276,7 @@
                 }
             ]
         },
-        "appgroupname": "DesktopApplicationGroup5",
+        "appgroupname": "DesktopApplicationGroup7",
     },
     "resources": [
         {
@@ -477,6 +477,49 @@
                         "AadTenantId": "[parameters('aadTenantId')]",
                         "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
                         "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]",
+                        "registrationInfoToken": "[reference(parameters('hostpoolname')).registrationInfo.token]"
+                    }
+                },
+                "ProtectedSettings": {
+                    "items": {
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition":"[greater(parameters('rdshNumberOfInstances'),1)]",
+            "apiVersion": "2018-10-01",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'),'0/extensions/dscextension')]"
+            ],
+            "copy": {
+                "name": "additional-rdsh-dsc-loop",
+                "count": "[if(greater(parameters('rdshNumberOfInstances'),1),sub(parameters('rdshNumberOfInstances'),1),1)]"
+            },
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.73",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
+                    "properties": {
+                        "TenantAdminCredentials": {
+                            "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
+                            "password": "PrivateSettingsRef:tenantAdminPassword"
+                        },
+                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
+                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
+                        "TenantName": "[variables('existingTenantName')]",
+                        "HostPoolName": "[variables('hostPoolName')]",
+                        "Hours": "[variables('registrationExpirationHours')]",
+                        "isServicePrincipal": "[parameters('isServicePrincipal')]",
+                        "AadTenantId": "[parameters('aadTenantId')]",
                         "registrationInfoToken": "[reference(parameters('hostpoolname')).registrationInfo.token]"
                     }
                 },
