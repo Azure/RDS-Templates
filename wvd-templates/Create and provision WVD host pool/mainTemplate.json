@@ -66,7 +66,7 @@
             "metadata": {
                 "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
             },
-            "defaultValue": "sampaRApp"
+            "defaultValue": "sampad"
         },
         "rdshNumberOfInstances": {
             "type": "int",
@@ -276,7 +276,7 @@
                 }
             ]
         },
-        "appgroupname": "DesktopApplicationGroup7",
+        "appgroupname": "DesktopApplicationGroup7"
     },
     "resources": [
         {
