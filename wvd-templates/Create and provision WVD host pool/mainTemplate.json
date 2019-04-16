@@ -199,7 +199,7 @@
             "metadata": {
                 "description": "The name of the hostpool to be created in the RDS Tenant."
             },
-            "defaultValue": "SampaHostPoolDavid8"
+            "defaultValue": "SampaHostPoolDavid9"
         },
         "enablePersistentDesktop": {
             "type": "bool",
@@ -276,7 +276,7 @@
                 }
             ]
         },
-        "appgroupname": "DesktopApplicationGroup8"
+        "appgroupname": "DesktopApplicationGroup9"
     },
     "resources": [
         {
