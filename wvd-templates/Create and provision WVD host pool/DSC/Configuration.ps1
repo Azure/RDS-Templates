@@ -40,7 +40,18 @@ configuration FirstSessionHost
         [string]$DefaultDesktopUsers
     )
 
+    $rdshIsServer = $true
     $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
+
+    $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+    
+    if ($OSVersionInfo -ne $null)
+    {
+        if ($OSVersionInfo.InstallationType -ne $null)
+        {
+            $rdshIsServer=@{$true = $true; $false = $false}[$OSVersionInfo.InstallationType -eq "Server"]
+        }
+    }
 
     Node localhost
     {
@@ -104,7 +115,19 @@ configuration AdditionalSessionHosts
         [string]$AadTenantId = ""
     )
 
+
+    $rdshIsServer = $true
     $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
+
+    $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+    
+    if ($OSVersionInfo -ne $null)
+    {
+        if ($OSVersionInfo.InstallationType -ne $null)
+        {
+            $rdshIsServer=@{$true = $true; $false = $false}[$OSVersionInfo.InstallationType -eq "Server"]
+        }
+    }
 
     Node localhost
     {
