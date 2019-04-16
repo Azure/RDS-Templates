@@ -132,7 +132,10 @@ configuration AdditionalSessionHosts
         [string]$IsServicePrincipal = "False",
     
         [Parameter(Mandatory = $false)]
-        [string]$AadTenantId = ""
+        [string]$AadTenantId = "",
+
+        [Parameter(Mandatory = $true)]
+        [string]$RegistrationInfoToken
     )
 
     $rdshIsServer = $true
