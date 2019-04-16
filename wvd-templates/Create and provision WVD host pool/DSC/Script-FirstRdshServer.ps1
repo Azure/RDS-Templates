@@ -135,6 +135,7 @@ else
     # Checking if host pool exists. If not, create a new one with the given HostPoolName
     Write-Log -Message "Checking Hostpool exists inside the Tenant"
     $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
+    $ApplicationGroupName = "Desktop Application Group"
     if ($HostPool)
     {
         Write-log -Message "Hostpool exists inside tenant: $TenantName"
@@ -145,6 +146,9 @@ else
         $HostPool = Invoke-Expression("New-RdsHostPool -TenantName `"`$TenantName`" -Name `"`$HostPoolName`" -Description `$Description -FriendlyName `$FriendlyName $EnablePersistentDesktopOption -ValidationEnv `$false")
         $HName = $HostPool.name | Out-String -Stream
         Write-Log -Message "Successfully created new Hostpool: $HName"
+        
+        Write-Log -Message "Changing Application Group: $ApplicationGroupName FriendlyName to: $HostPoolName"
+        Set-RdsRemoteDesktop -TenantName $TenantName -HostPoolName $HostPoolName -AppGroupName $ApplicationGroupName -FriendlyName $HostPoolName
     }
 
     # Setting UseReverseConnect property to true
@@ -196,7 +200,6 @@ else
     $DefaultDesktopUsers = $DefaultDesktopUsers.Replace("`"","").Replace("'","").Replace(" ","")
     if (-Not ([string]::IsNullOrEmpty($DefaultDesktopUsers)))
     {
-        $ApplicationGroupName = "Desktop Application Group"
         AddDefaultUsers -TenantName "$TenantName" -HostPoolName "$HostPoolName" -ApplicationGroupName $ApplicationGroupName -DefaultUsers $DefaultDesktopUsers
     }
    
