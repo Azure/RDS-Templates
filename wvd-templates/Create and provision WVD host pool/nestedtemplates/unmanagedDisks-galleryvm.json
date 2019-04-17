@@ -108,6 +108,13 @@
             "metadata": {
                 "description": "Location for all resources to be created in."
             }
+        },
+        "enablePersistentDesktop": {
+            "type": "bool",
+            "metadata": {
+                "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
+            },
+            "defaultValue": false
         }
     },
     "variables": {

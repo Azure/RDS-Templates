@@ -339,6 +339,9 @@
                     },
                     "location": {
                         "value": "[parameters('location')]"
+                    },
+                    "enablePersistentDesktop": {
+                        "value": "[parameters('enablePersistentDesktop')]"
                     }
                 }
             }
