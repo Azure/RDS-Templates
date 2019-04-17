@@ -1,36 +1,31 @@
-﻿@*@model IEnumerable<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>*@
-@model MSFT.WVD.Monitoring.Models.HomePageViewModel
+﻿@model MSFT.WVD.Monitoring.Models.HomePageViewModel
 @{
     ViewData["Title"] = "Home Page";
-    //Layout = "_Layout.cshtml";
 }
 
 @if (Model.ShowDialog)
 {
-<div class="overlay">
-    <div class="flyoutpanel">
-        @using (Html.BeginForm("Save", "Home", FormMethod.Post))
-        {
-            <div class="flyoutpanel-header">
-                <h4>Please choose Tenant Group &amp; Tenant</h4>
-                @*<button class="close" href="" id="btnslideclose"><i class="fa fa-times"></i></button>*@
-                <div>
-                    @Html.Label("tenantGroupName", "Tenant Group Name")
-                    @Html.TextBoxFor(m => m.SubmitData.TenantGroupName,
-                   new { @Value = "Enter TenantGroupName", @class = "form-control" })
+    <div class="overlay">
+        <div class="flyoutpanel">
+
+            <form asp-controller="Home" asp-action="Save" method="post">
+                <div class="flyoutpanel-header">
+                    <h4>Please choose Tenant Group &amp; Tenant</h4>
+                    <div class="form-group">
+                        <label asp-for="SubmitData.TenantGroupName" class="control-label"></label>
+                        <input asp-for="SubmitData.TenantGroupName" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SubmitData.TenantName" class="control-label"></label>
+                        <input asp-for="SubmitData.TenantName" class="form-control" />
+                    </div>
                 </div>
-                <div>
-                    @Html.Label("tenantName", "Tenant Name")
-                    @Html.TextBoxFor(m => m.SubmitData.TenantName,
-                   new { @Value = "Enter Tenant Name", @class = "form-control" })
+                <div class="footer">
+                    <input type="submit" value="cancel" class="btn btn-secondary" />
+                    <input type="submit" value="Save" class="btn btn-primary" />
                 </div>
-            </div>
-            <div class="footer">
-                <input type="submit" value="cancel" class="btn btn-secondary" />
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        }
+            </form>
+        </div>
     </div>
-</div>
 }
 
