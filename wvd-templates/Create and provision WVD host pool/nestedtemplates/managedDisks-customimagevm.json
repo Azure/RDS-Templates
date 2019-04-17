@@ -114,7 +114,10 @@
     },
     "variables": {
         "imageResourceId": "[resourceId(parameters('rdshImageSourceResourceGroup'), 'Microsoft.Compute/images', parameters('rdshImageSourceName'))]",
-        "storageAccountType": "[parameters('rdshVMDiskType')]"
+        "storageAccountType": "[parameters('rdshVMDiskType')]",
+        "availabilitySetId": {
+            "id": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')),json('null'))]"
+        }
     },
     "resources": [
         {
@@ -157,9 +160,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
-                "availabilitySet": {
-                    "id": "[resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet'))]"
-                },
+                "availabilitySet": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),variables('availabilitySetId'),json('null'))]",
                 "osProfile": {
                     "computerName": "[concat(parameters('rdshPrefix'), copyindex())]",
                     "adminUsername": "[parameters('existingDomainUsername')]",
