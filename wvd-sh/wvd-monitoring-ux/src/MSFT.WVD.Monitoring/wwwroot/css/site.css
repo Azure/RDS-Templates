@@ -50,14 +50,17 @@ body {
         display: none;
     }
 }
+
 .logo {
     width: 20px;
     float: left;
 }
-.container{
-    margin-left:0px;
-    width:100%;
+
+.container {
+    margin-left: 0px;
+    width: 100%;
 }
+
 .dropdown-toggle {
     color: #fff;
     text-align: right;
@@ -72,15 +75,16 @@ body {
         margin-right: 10px;
     }
 
-    .dropdown-toggle .user-details span {
-        display: block;
-    }
+        .dropdown-toggle .user-details span {
+            display: block;
+        }
 
-    .dropdown-toggle .user-details label {
-        font-size: 12px;
-        font-weight: 500;
-        margin-bottom: 0;
-    }
+        .dropdown-toggle .user-details label {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
 .user-initials {
     border-radius: 50px;
     width: 40px;
@@ -92,6 +96,7 @@ body {
     text-align: center;
     display: inline-block;
 }
+
 .dropdown {
     background-color: rgb(72, 72, 72);
     width: 350px;
@@ -103,6 +108,7 @@ body {
     border-radius: 0;
     min-height: 200px;
 }
+
 .btn-logout {
     text-align: right;
     cursor: pointer;
@@ -113,6 +119,7 @@ body {
     font-size: 16px;
     float: right;
 }
+
 .vertical-menu {
     background: #EBEBEB;
     height: 100%;
@@ -189,21 +196,26 @@ body {
                     width: 190px;
                     font-family: 'Titillium Web', sans-serif;
                 }
-.marginleft{
-    margin-left:60px;
+
+.marginleft {
+    margin-left: 60px;
 }
+
 .width-100 {
     width: 100%;
 }
+
 .title {
     font-size: 15px;
     line-height: 20px;
     color: white !important;
 }
-.f-500{
-    font-weight:500;
+
+.f-500 {
+    font-weight: 500;
 }
-.flyoutpanel { 
+
+.flyoutpanel {
     padding: 20px;
     box-sizing: border-box;
     background: #fff;
@@ -214,42 +226,50 @@ body {
     width: 400px;
     z-index: 9;
 }
+
 .flyoutpanel-header {
     margin: 10px;
     overflow: hidden;
 }
-.flyoutpanel-header label, .flyoutpanel-header select {
-    display: block;
-}
-.flyoutpanel-header label {
-    font-size: 11px;
-}
-.flyoutpanel-header h4 {
-    margin: 0 0 10px;
-    font-weight:500;
-    display:inline-block;
-}
-.flyoutpanel-header button{
-    color:#333;
-    opacity:1;
-}
-    .overlay {
-        position: fixed;
-        z-index: 1;
-        width: 100%;
-        height: calc(100vh - 50px);
-        overflow-y: auto;
-        left: 0px;
-        background: rgba(82, 82, 86, 0.3);
-        top: 50px;
-        box-sizing: border-box;
-        transition: width 0.5s;
+
+    .flyoutpanel-header label, .flyoutpanel-header select {
+        display: block;
     }
+
+    .flyoutpanel-header label {
+        font-size: 11px;
+    }
+
+    .flyoutpanel-header h4 {
+        margin: 0 0 10px;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .flyoutpanel-header button {
+        color: #333;
+        opacity: 1;
+    }
+
+.overlay {
+    position: fixed;
+    z-index: 1;
+    width: 100%;
+    height: calc(100vh - 50px);
+    overflow-y: auto;
+    left: 0px;
+    background: rgba(82, 82, 86, 0.3);
+    top: 50px;
+    box-sizing: border-box;
+    transition: width 0.5s;
+}
+
 .footer {
     bottom: 30px;
     position: absolute;
     right: 20px;
 }
+
 .btn-default {
     border: none;
     width: 100px;
@@ -258,17 +278,20 @@ body {
     cursor: pointer;
     color: #fff;
 }
+
 .btn-secondary {
     width: 95px;
     background: #ccc;
 }
+
 .redText {
     color: red;
 }
-.text-danger
-{
-    color:red;
+
+.text-danger {
+    color: red;
 }
+
 .text-box {
     display: block;
     width: 100%;
@@ -282,30 +305,64 @@ body {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
 .mrgnlft {
     margin-left: 0px;
     top: 7px;
 }
+
 .btn-primary {
     background-color: #00a3ec;
     border-color: #00a3ec;
     width: 95px;
 }
+
 .searchbtn {
     margin-left: 173px;
     display: inline-block;
 }
+
 .resetbtn {
     display: inline-block
 }
+
 .activitytable {
     padding-right: 12px;
     padding-top: 50px;
 }
-.norecordstable{
-    padding-top:100px;
+
+.norecordstable {
+    padding-top: 100px;
 }
+
 .form-group.required .control-label:after {
     content: "*";
     color: red;
+}
+/*loader*/
+.loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    position: relative;
+    left: 615px;
+    top: 126px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+.Home-icon {
+    position: absolute;
+    right: 157px;
+    top: 9px;
 }
