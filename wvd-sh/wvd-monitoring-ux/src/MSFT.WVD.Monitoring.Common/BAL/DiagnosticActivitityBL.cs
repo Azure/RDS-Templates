@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 
@@ -12,7 +13,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
     public class DiagnosticActivitityBL
     {
 
-        public IEnumerable<ConnectionActivity> GetConnectionActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome=null)
+        public IEnumerable<ConnectionActivity> GetConnectionActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome = null)
         {
             List<ConnectionActivity> diagnosticActivities;
             try
@@ -29,41 +30,63 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 {
                     httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
                 }
+                string strJson = httpResponseMessage.Content.ReadAsStringAsync().Result;
 
                 if (httpResponseMessage.IsSuccessStatusCode)
                 {
-                    string strJson = httpResponseMessage.Content.ReadAsStringAsync().Result;
                     var arr = (JArray)JsonConvert.DeserializeObject(strJson);
                     diagnosticActivities = ((JArray)arr).Select(item => new ConnectionActivity
                     {
                         activityId = (string)item["activityId"],
                         activityType = (string)item["activityType"],
                         startTime = item["startTime"].ToString() != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
-                        endTime = (string)item["endTime"] == null || (string)item["endTime"]=="" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
+                        endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                         userName = item["userName"].ToString(),
-                        outcome = (string)item["outcome"] == null || (string)item["outcome"] ==""? "": Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
+                        outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
                         isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
                         errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
                         ClientOS = (string)item["details"]["ClientOS"],
                         ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
                         Tenants = (string)item["details"]["Tenants"],
                         SessionHostName = (string)item["details"]["SessionHostName"],
-                        SessionHostPoolName=(string)item["details"]["SessionHostPoolName"]
+                        SessionHostPoolName = (string)item["details"]["SessionHostPoolName"]
                     }).ToList();
-                    return diagnosticActivities;
                 }
                 else
                 {
-                    return null;
+                    var jobject = (JObject)JsonConvert.DeserializeObject(strJson);
+                    diagnosticActivities= new List<ConnectionActivity>
+                    {
+                       new ConnectionActivity()
+                       {
+                           ErrorDetails= new ErrorDetails()
+                           {
+                               StatusCode=(int)jobject["error"]["code"],
+                               Message= (string)jobject["error"]["message"]
+                           }
+                       }
+                   };
                 }
             }
             catch (Exception ex)
             {
-                return null;
+                diagnosticActivities = new List<ConnectionActivity>
+                   {
+                       new ConnectionActivity
+                       {
+                           ErrorDetails= new ErrorDetails
+                           {
+                               StatusCode=(int)HttpStatusCode.InternalServerError,
+                               Message= ex.Message.ToString()
+                           }
+                       }
+                   };
             }
+            return diagnosticActivities;
+
         }
 
-        public IEnumerable<ManagementActivity> GetManagementActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome=null)
+        public IEnumerable<ManagementActivity> GetManagementActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome = null)
         {
             List<ManagementActivity> diagnosticActivities;
             try
@@ -80,10 +103,10 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 {
                     httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
                 }
+                string strJson = httpResponseMessage.Content.ReadAsStringAsync().Result;
 
                 if (httpResponseMessage.IsSuccessStatusCode)
                 {
-                    string strJson = httpResponseMessage.Content.ReadAsStringAsync().Result;
                     var arr = (JArray)JsonConvert.DeserializeObject(strJson);
                     diagnosticActivities = ((JArray)arr).Select(item => new ManagementActivity
                     {
@@ -95,7 +118,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                         outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
                         isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
                         errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
-                        ObjectsCreated = (string)item["ObjectsCreated"]==null || (string)item["ObjectsCreated"]==""?0:(int)item["ObjectsCreated"],
+                        ObjectsCreated = (string)item["ObjectsCreated"] == null || (string)item["ObjectsCreated"] == "" ? 0 : (int)item["ObjectsCreated"],
                         ObjectsDeleted = (string)item["ObjectsDeleted"] == null || (string)item["ObjectsDeleted"] == "" ? 0 : (int)item["ObjectsDeleted"],
                         ObjectsFetched = (string)item["ObjectsFetched"] == null || (string)item["ObjectsFetched"] == "" ? 0 : (int)item["ObjectsFetched"],
                         ObjectsUpdated = (string)item["ObjectsUpdated"] == null || (string)item["ObjectsUpdated"] == "" ? 0 : (int)item["ObjectsUpdated"]
@@ -104,16 +127,38 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 }
                 else
                 {
-                    return null;
+                    var jobject = (JObject)JsonConvert.DeserializeObject(strJson);
+                    diagnosticActivities = new List<ManagementActivity>
+                    {
+                       new ManagementActivity()
+                       {
+                           ErrorDetails= new ErrorDetails()
+                           {
+                               StatusCode=(int)jobject["error"]["code"],
+                               Message= (string)jobject["error"]["message"]
+                           }
+                       }
+                   };
                 }
             }
             catch (Exception ex)
             {
-                return null;
+                diagnosticActivities = new List<ManagementActivity>
+                   {
+                       new ManagementActivity
+                       {
+                           ErrorDetails= new ErrorDetails
+                           {
+                               StatusCode=(int)HttpStatusCode.InternalServerError,
+                               Message= ex.Message.ToString()
+                           }
+                       }
+                   };
             }
+            return diagnosticActivities;
         }
 
-        public IEnumerable<FeedActivity> GetFeedActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome=null)
+        public IEnumerable<FeedActivity> GetFeedActivities(string deploymentUrl, string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome = null)
         {
             List<FeedActivity> diagnosticActivities;
             try
@@ -130,9 +175,10 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 {
                     httpResponseMessage = CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true").Result;
                 }
+                string strJson = httpResponseMessage.Content.ReadAsStringAsync().Result;
+
                 if (httpResponseMessage.IsSuccessStatusCode)
                 {
-                    string strJson = httpResponseMessage.Content.ReadAsStringAsync().Result;
                     var arr = (JArray)JsonConvert.DeserializeObject(strJson);
                     diagnosticActivities = ((JArray)arr).Select(item => new FeedActivity
                     {
@@ -151,13 +197,35 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 }
                 else
                 {
-                    return null;
+                    var jobject = (JObject)JsonConvert.DeserializeObject(strJson);
+                    diagnosticActivities = new List<FeedActivity>
+                    {
+                       new FeedActivity()
+                       {
+                           ErrorDetails= new ErrorDetails()
+                           {
+                               StatusCode=(int)jobject["error"]["code"],
+                               Message= (string)jobject["error"]["message"]
+                           }
+                       }
+                   };
                 }
             }
             catch (Exception ex)
             {
-                return null;
+                diagnosticActivities = new List<FeedActivity>
+                   {
+                       new FeedActivity
+                       {
+                           ErrorDetails= new ErrorDetails
+                           {
+                               StatusCode=(int)HttpStatusCode.InternalServerError,
+                               Message= ex.Message.ToString()
+                           }
+                       }
+                   };
             }
+            return diagnosticActivities;
         }
     }
 }

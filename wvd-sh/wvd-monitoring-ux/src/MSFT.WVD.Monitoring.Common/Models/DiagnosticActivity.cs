@@ -126,7 +126,6 @@ namespace MSFT.WVD.Monitoring.Common.Models
     {
         public string activityId { get; set; }
         public string activityType { get; set; }
-
         public Nullable<DateTime> startTime { get; set; }
         public Nullable<DateTime> endTime { get; set; }
         public string userName { get; set; }
@@ -138,6 +137,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string errorMessage { get; set; }
         public string ClientIPAddress { get; set; }
         public string ClientOS { get; set; }
+        public ErrorDetails ErrorDetails { get; set; }
     }
 
     public class ManagementActivity
@@ -158,6 +158,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public int ObjectsCreated { get; set; }
         public int ObjectsUpdated { get; set; }
         public int ObjectsDeleted { get; set; }
+        public ErrorDetails ErrorDetails { get; set; }
     }
 
     public class FeedActivity
@@ -172,5 +173,6 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string errorMessage { get; set; }
         public object ClientIPAddress { get; set; }
         public string ClientOS { get; set; }
+        public ErrorDetails ErrorDetails { get; set; }
     }
 }

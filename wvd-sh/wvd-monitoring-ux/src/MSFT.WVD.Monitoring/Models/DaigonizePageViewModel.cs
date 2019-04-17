@@ -17,6 +17,8 @@ namespace MSFT.WVD.Monitoring.Models
         public ActivityType ActivityType { get; set; }
         public List<FeedActivity> FeedActivity { get; set; }
         public RoleAssignment SelectedRole { get; set; }
+
+        public bool isLoading { get; set; }
     }
 
     public class DiagonizeQuery : IValidatableObject

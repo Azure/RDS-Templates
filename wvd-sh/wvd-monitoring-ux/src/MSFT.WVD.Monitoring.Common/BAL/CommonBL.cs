@@ -43,8 +43,10 @@ namespace MSFT.WVD.Monitoring.Common.BAL
 
         public static HttpClient InitializeHttpClient(string deploymentUrl, string accessToken)
         {
+            var activityId = Guid.NewGuid().ToString();
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri(deploymentUrl);
+            client.DefaultRequestHeaders.Add("x-ms-correlation-id", activityId);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             client.Timeout = TimeSpan.FromMinutes(30);

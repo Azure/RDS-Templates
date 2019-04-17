@@ -15,6 +15,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MSFT.WVD.Monitoring.Common.Models;
 
@@ -43,7 +45,7 @@ namespace MSFT.WVD.Monitoring
             //});
 
 
-
+           
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -55,13 +57,13 @@ namespace MSFT.WVD.Monitoring
                 options.Authority = Configuration.GetSection("AzureAd").GetSection("Instance").Value+ Configuration.GetSection("AzureAd").GetSection("TenantId").Value; //+ this.TenantName; //358d0f13-4eda-45ea-886e-a6dcc6a70ae2
                 options.ClientId = Configuration.GetSection("AzureAd").GetSection("ClientId").Value;
                 options.ResponseType = OpenIdConnectResponseType.Code;
+                options.ResponseMode = OpenIdConnectResponseMode.FormPost;
                 options.CallbackPath = "/security/signin-callback";
-                options.SignedOutRedirectUri = "/home/"; //"";
-
-                // options.TokenValidationParameters.NameClaimType = "name";
+                options.SignedOutRedirectUri = "/home/"; 
                 options.TokenValidationParameters.ValidateIssuer = false;
                 options.SaveTokens = true;
-                options.Resource = Configuration.GetSection("configurations").GetSection("RESOURCE_URL").Value;//newly added
+                options.Resource = Configuration.GetSection("configurations").GetSection("RESOURCE_URL").Value;
+               
             }).AddCookie();
 
 
@@ -103,13 +105,19 @@ namespace MSFT.WVD.Monitoring
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            //loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            //loggerFactory.AddDebug();
+
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                //app.UseDeveloperExceptionPage();
+                app.UseExceptionHandler("/Home/Error");
+                app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
             }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
+                app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
                 app.UseHsts();
             }
 

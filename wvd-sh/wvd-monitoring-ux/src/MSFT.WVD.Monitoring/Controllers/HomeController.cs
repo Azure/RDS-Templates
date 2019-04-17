@@ -12,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -146,5 +147,32 @@ namespace MSFT.WVD.Monitoring.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+
+        public IActionResult Error(int id,ErrorDetails errorDetails)
+        {
+            if(errorDetails.Message != null && errorDetails.StatusCode!=0 )
+            {
+                return View(new ErrorViewModel()
+                { ErrorDetails= errorDetails }
+                );
+            }
+
+            switch (id)
+            {
+                case (int)HttpStatusCode.NotFound :
+                    return View("NotFound");
+                case (int)HttpStatusCode.Unauthorized :
+                    return View("Unauthorized");
+                default:
+                    return View("Error");
+            }
+           
+        }
+
+        public IActionResult AppSettings()
+        {
+            //return RedirectToAction("Index", "Home");
+            return View();
+        }
     }
 }

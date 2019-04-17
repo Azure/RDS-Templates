@@ -13,6 +13,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string userPrincipalName { get; set; }
         public int sessionId { get; set; }
         public string applicationType { get; set; }
+        public ErrorDetails ErrorDetails { get; set; }
     }
 
     public class SendMessageQuery
@@ -22,7 +23,6 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string hostPoolName { get; set; }
         public string sessionHostName { get; set; }
         public int sessionId { get; set; }
-
         public string messageTitle { get; set; }
         public string messageBody { get; set; }
     }
