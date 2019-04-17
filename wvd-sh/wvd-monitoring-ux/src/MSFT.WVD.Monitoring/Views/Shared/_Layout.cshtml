@@ -11,20 +11,79 @@
     <title>@ViewData["Title"] WVD Monitoring</title>
 
     <environment include="Development">
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-        <link rel="stylesheet" href="~/css/site.css" />
+        <!-- <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" /> -->
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css">
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.min.css" />
+<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
+<script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+        <link rel="stylesheet" href="~/css/site.css" />
+
+        
     </environment>
     <environment exclude="Development">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+        <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
-              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
+              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" /> -->
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.min.css" />
+<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
         <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+
     </environment>
 </head>
 <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
+    <nav class="nav-bar">
+        <div class="nav-bar-left">
+            <div class="ms-logo">
+                @*<img class="logo" src="../assets/Images/Microsoft_logo.png">*@
+                <img class="logo" src="~/images/Microsoft_logo.png" />
+                <span class="title">&nbsp;&nbsp;Microsoft</span>
+            </div>
+            <di class="app-title">
+                <span>Windows Virtual Desktop</span>
+            </di>
+        </div>
+        <div class="nav-bar-right">
+            <div class="ms-ContextualMenuExample">
+                <button class="ms-Button ms-Button--primary">
+                    <div class="user-details">
+                        <span>   @roleAssignment.displayName</span>
+                        <label>  @roleAssignment.roleDefinitionName</label>
+                    </div>
+                    <div class="user-initials">@initial</div>
+                </button>
+                <ul class="ms-ContextualMenu is-hidden">
+                    <li class="ms-ContextualMenu-item">
+                        <div class="user-initials">@initial</div>
+                    </li>
+                    <li class="ms-ContextualMenu-item">
+                        <div class="app-info">
+                            <p class="m-0">
+                                <strong>@roleAssignment.displayName</strong><span> @roleAssignment.roleDefinitionName </span>
+                            </p>
+                            <p><span> @roleAssignment.signInName</span></p>
+                            <hr>
+                            <p><b>Infrastructure Permission</b> <br> <span> @roleAssignment.tenantGroupName</span></p>
+                            <hr>
+                        </div>
+                    </li>
+                    <li class="ms-ContextualMenu-item">
+                        @using (Html.BeginForm("Logout", "Home", FormMethod.Post))
+                        {                           
+                            <button type="submit" class="ms-Button">
+                                <span class="ms-Button-label">Sign out</span> 
+                            </button>
+                        }                    
+                    </li>
+                                   
+                </ul>
+            </div>
+        </div>
+        
+    </nav>
+    <!-- <nav class="navbar navbar-inverse navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
 
@@ -91,7 +150,7 @@
 
         </div>
 
-    </nav>
+    </nav> -->
 
 
     <partial name="_CookieConsentPartial" />
@@ -145,6 +204,33 @@
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
+        <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <script type="text/javascript">
+            var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+            for (var i = 0; i < ContextualMenuElements.length; i++) {
+                var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+                var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+                new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+            }
+        </script>
+        <script type="text/javascript">
+            var PanelExamples = document.getElementsByClassName("ms-PanelExample");
+            for (var i = 0; i < PanelExamples.length; i++) {
+                (function() {
+                var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
+                var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
+                PanelExampleButton.addEventListener("click", function(i) {
+                    new fabric['Panel'](PanelExamplePanel);
+                });
+                }());
+            }
+        </script>
+        <script type="text/javascript">
+            var TableElements = document.querySelectorAll(".ms-Table");
+            for (var i = 0; i < TableElements.length; i++) {
+                new fabric['Table'](TableElements[i]);
+            }
+        </script>
     </environment>
     <environment exclude="Development">
 
@@ -154,13 +240,14 @@
                 crossorigin="anonymous"
                 integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT">
         </script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
+        <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
                 asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal"
                 crossorigin="anonymous"
                 integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd">
-        </script>
+        </script> -->
         <script src="~/js/site.min.js" asp-append-version="true"></script>
+        
     </environment>
 
     @RenderSection("Scripts", required: false)
