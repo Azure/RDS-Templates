@@ -5,84 +5,283 @@
 
 }
 
-<div class="width-100">
+
+@*<div class="width-100 content-section">
+        <br />
+        @using (Html.BeginForm("SearchActivity", "DiagonizeIssues", FormMethod.Post))
+        {
+            <div class="ms-Grid" dir="ltr">
+                <div class="ms-Grid-row">
+                    <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
+                        @Html.Label("UserUPN", "User UPN", new { @class = "control-label ms-Grid-col ms-xxxl2" })
+                        <div class="input-wrap ms-Grid-col ms-xxxl4">
+                            @Html.TextBoxFor(m => m.DiagonizeQuery.UPN, new { @Value = "Enter upn", @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.DiagonizeQuery.UPN, "",
+                        new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
+                        @Html.Label("interval", "Issue interval from :",
+                    new { @class = "control-label ms-Grid-col ms-xxxl2" })
+                        <div class="input-wrap ms-Grid-col ms-xxxl4">
+                            @Html.EditorFor(m => m.DiagonizeQuery.StartDate, "{mm/dd/yyyy}", new { @class = "form-control", type = "date" })
+
+                        </div>
+                        @Html.Label("to", "To", new { @class = "control-label ms-Grid-col ms-xxxl2" })
+                        <div class="input-wrap ms-Grid-col ms-xxxl4">
+                            @Html.EditorFor(m => m.DiagonizeQuery.EndDate, "{mm/dd/yyyy}",
+                        new { @style = "line-height:inherit", type = "date", @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.DiagonizeQuery.EndDate, "",
+                    new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
+                        @Html.Label("activityType", "Activity Type", new { @class = "control-label ms-Grid-col ms-xxxl2" })
+                        <div class="input-wrap ms-Grid-col ms-xxxl4">
+                            @Html.DropDownListFor(model => model.DiagonizeQuery.ActivityType,
+                    new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityType))),
+                    new { @class = "form-control width-100" })
+                        </div>
+                        @Html.Label("outcome", "Outcome", new { @class = "control-label ms-Grid-col ms-xxxl2" })
+                        <div class="input-wrap ms-Grid-col ms-xxxl4">
+                            @Html.DropDownListFor(model => model.DiagonizeQuery.ActivityOutcome,
+                new SelectList(Enum.GetValues(typeof(MSFT.WVD.Monitoring.Common.Models.ActivityOutcome))),
+
+                new { @class = "form-control width-100" })
+                        </div>
+                    </div>
+                    <div class="form-wrap ms-Grid-col ms-xxxl12 ms-smPush2 p-l-r-15 m-b-20">
+                        <button type="submit" class="ms-Button primary-btn">
+                            <span class="ms-Button-label">Search</span>
+                            `
+                        </button>
+                        <button type="reset" class="ms-Button secondary-btn">
+                            <span class="ms-Button-label">Clear</span>
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        }
+        <div class="activitytable">
+            @if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.ConnectionActivity != null)
+            {
+                <table class="ms-Table">
+                    <thead>
+                        <tr>
+                            <th> Activity ID</th>
+                            <th>Type</th>
+                            <th>Outcome</th>
+                            <th>Error Type</th>
+                            <th>Error</th>
+                            <th>Tenant</th>
+                            <th>UserName</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Client</th>
+                            <th>Client Ip</th>
+                            <th>Session Host</th>
+                        </tr>
+                    </thead>
+
+                    @foreach (var d in Model.ConnectionActivity)
+                    {
+                        <tbody>
+                            <tr>
+                                <td>@d.activityId</td>
+                                <td>@d.activityType</td>
+                                <td>@d.outcome</td>
+                                <td>@d.isInternalError</td>
+                                <td>@d.errorMessage</td>
+                                <td>@d.Tenants</td>
+                                <td>@d.userName</td>
+                                <td>@d.startTime</td>
+                                <td>@d.endTime</td>
+                                <td>@d.ClientOS</td>
+                                <td>@d.ClientIPAddress</td>
+                                <td>@d.SessionHostName</td>
+                            </tr>
+                        </tbody>
+                    }
+                </table>
+            }
+            else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Management)
+            {
+                <table class="ms-Table">
+                    <thead>
+                        <tr>
+                            <th>Activity ID</th>
+                            <th>Type</th>
+                            <th>Outcome</th>
+                            <th>Error Type</th>
+                            <th>Error</th>
+                            <th>Tenant</th>
+                            <th>UserName</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Objects Created</th>
+                            <th>Objects Deleted</th>
+                            <th>Objects Fetched</th>
+                            <th>Objects Updated</th>
+                        </tr>
+                    </thead>
+
+                    @foreach (var d in Model.ManagementActivity)
+                    {
+                        <tbody>
+                            <tr>
+                                <td>@d.activityId</td>
+                                <td>@d.activityType</td>
+                                <td>@d.outcome</td>
+                                <td>@d.isInternalError</td>
+                                <td>@d.errorMessage</td>
+                                <td>@d.Tenants</td>
+                                <td>@d.userName</td>
+                                <td>@d.startTime</td>
+                                <td>@d.endTime</td>
+                                <td>@d.ObjectsCreated</td>
+                                <td>@d.ObjectsDeleted</td>
+                                <td>@d.ObjectsUpdated</td>
+                            </tr>
+                        </tbody>
+                    }
+                </table>
+            }
+            else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
+            {
+                <table class="ms-Table">
+                    <thead>
+                        <tr>
+                            <th>Activity Id </th>
+                            <th>Activity Type</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>UserName</th>
+                            <th>Outcome</th>
+                            <th>Internal Error </th>
+                            <th>Error Message</th>
+                            <th>ClientIPAddress </th>
+                            <th>ClientOS </th>
+                        </tr>
+                    </thead>
+
+                    @foreach (var d in Model.FeedActivity)
+                    {
+                        <tbody>
+                            <tr>
+                                <td>@d.activityId </td>
+                                <td>@d.activityType </td>
+                                <td>@d.startTime </td>
+                                <td>@d.endTime </td>
+                                <td>@d.userName</td>
+                                <td>@d.outcome </td>
+                                <td>@d.isInternalError </td>
+                                <td>@d.errorMessage </td>
+                                <td>@d.ClientIPAddress </td>
+                                <td>@d.ClientOS </td>
+                            </tr>
+                        </tbody>
+                    }
+                </table>
+            }
+            else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.None)
+            {
+                <div class="norecordstable">
+                    <h3 class="text-center">No records found for the search criteria</h3>
+                </div>
+            }
+        </div>
+
+
+    </div>*@
+
+<div class="width-100 content-section">
     <br />
+
     <form asp-controller="DiagonizeIssues" asp-action="SearchActivity" method="post" id="myform">
-        <div class="row form-group required">
-            <label asp-for="DiagonizeQuery.UPN" class="control-label col-md-1 f-500">User UPN</label>
-            <div class="col-sm-3">
-                <input asp-for="DiagonizeQuery.UPN" class="form-control" id="upn" />
-                <span asp-validation-for="DiagonizeQuery.UPN" class="text-danger"></span>
-            </div>
-        </div>
-        <div class="row form-group">
-            <label asp-for="DiagonizeQuery.StartDate" class="control-label col-md-1 f-500 " style="margin-top: 10px;">Issue Interval From:</label>
-            <div class="col-sm-3">
-                <input asp-for="DiagonizeQuery.StartDate" class="form-control" type="date" id="startDate" />
-                <span asp-validation-for="DiagonizeQuery.StartDate" class="text-danger"></span>
-            </div>
-            <label asp-for="DiagonizeQuery.EndDate" class="control-label col-md-1 f-500 mrgnlft">To</label>
-            <div class="col-sm-3">
-                <input asp-for="DiagonizeQuery.EndDate" class="form-control enddate" type="date" id="endDate" />
-                <span asp-validation-for="DiagonizeQuery.EndDate" class="text-danger"></span>
-            </div>
-        </div>
-        <div class="row form-group">
-            <label asp-for="DiagonizeQuery.ActivityType" class="control-label col-md-1 f-500"></label>
-            <div class="col-sm-3">
-                <select asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>()" class="form-control" id="activityType"></select>
-            </div>
-            <label asp-for="DiagonizeQuery.ActivityOutcome" class="control-label col-md-1 f-500">Outcome</label>
-            <div class="col-sm-3">
-                <select asp-for="DiagonizeQuery.ActivityOutcome" asp-items="Html.GetEnumSelectList<ActivityOutcome>()" class="form-control" id="activityOutcome"></select>
+        <div class="ms-Grid" dir="ltr">
+            <div class="ms-Grid-row">
+                <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
+                    <label asp-for="DiagonizeQuery.UPN" class="control-label ms-Grid-col ms-xxxl2">User UPN</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <input asp-for="DiagonizeQuery.UPN" class="form-control" id="upn" />
+                        <span asp-validation-for="DiagonizeQuery.UPN" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
+                    <label asp-for="DiagonizeQuery.StartDate" class="control-label ms-Grid-col ms-xxxl2" style="margin-top: 10px;">Issue Interval From:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <input asp-for="DiagonizeQuery.StartDate" class="form-control" type="date" id="startDate" />
+                        <span asp-validation-for="DiagonizeQuery.StartDate" class="text-danger"></span>
+                    </div>
+                    <label asp-for="DiagonizeQuery.EndDate" class="control-label ms-Grid-col ms-xxxl2">To</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <input asp-for="DiagonizeQuery.EndDate" class="form-control enddate" type="date" id="endDate" />
+                        <span asp-validation-for="DiagonizeQuery.EndDate" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
+                    <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-Grid-col ms-xxxl2"></label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <select asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>()" class="form-control width-100" id="activityType"></select>
+                    </div>
+                    <label asp-for="DiagonizeQuery.ActivityOutcome" class="control-label ms-Grid-col ms-xxxl2">Outcome</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <select asp-for="DiagonizeQuery.ActivityOutcome" asp-items="Html.GetEnumSelectList<ActivityOutcome>()" class="form-control width-100" id="activityOutcome"></select>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-smPush2 p-l-r-15 m-b-20">
+                    <button type="submit" class="ms-Button primary-btn" id="process">
+                        <span class="ms-Button-label">Search</span>
+                        `
+                    </button>
+                    <button type="reset" class="ms-Button secondary-btn">
+                        <span class="ms-Button-label">Clear</span>
+                    </button>
+
+                </div>
             </div>
         </div>
 
-        <div class="row form-group">
-            <div class="searchbtn">
-                <input type="submit" id="process" value="Search" class="btn btn-primary" />
-            </div>
-            <div class="resetbtn">
-                <input type="reset" value="Clear" class="btn btn-danger" style="width: 95px" />
-            </div>
-        </div>
     </form>
+
 
     @if (Model.ConnectionActivity != null || Model.ManagementActivity != null || Model.FeedActivity != null)
     {
         @if (Model.ConnectionActivity.Count() > 0 || Model.ManagementActivity.Count() > 0 || Model.FeedActivity.Count() > 0)
         {
         }
-        else
-        {
-        }
+       
     }
     else
     {
-
         <div id="loader1" class="loader"></div>
     }
     <div class="activitytable" id="table">
 
         @if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.ConnectionActivity != null)
         {
-            <table class="table table-bordered table-responsive table-hover table-striped">
-                <tr>
-                    <th asp-for="Activity ID">Activity ID</th>
-                    <th asp-for="Type">Type</th>
-                    <th asp-for="Outcome">Outcome</th>
-                    <th asp-for="Error Type">Error Type</th>
-                    <th asp-for="Error">Error</th>
-                    <th asp-for="Tenant">Tenant</th>
-                    <th asp-for="UserName">UserName</th>
-                    <th asp-for="Start Time">Start Time</th>
-                    <th asp-for="End Time">End Time</th>
-                    <th asp-for="Client">Client</th>
-                    <th asp-for="Client Ip">Client Ip</th>
-                    <th asp-for="Session Host">Session Host</th>
-                </tr>
+            <table class="ms-Table">
+                <thead>
+                    <tr>
+                        <th asp-for="Activity ID">Activity ID</th>
+                        <th asp-for="Type">Type</th>
+                        <th asp-for="Outcome">Outcome</th>
+                        <th asp-for="Error Type">Error Type</th>
+                        <th asp-for="Error">Error</th>
+                        <th asp-for="Tenant">Tenant</th>
+                        <th asp-for="UserName">UserName</th>
+                        <th asp-for="Start Time">Start Time</th>
+                        <th asp-for="End Time">End Time</th>
+                        <th asp-for="Client">Client</th>
+                        <th asp-for="Client Ip">Client Ip</th>
+                        <th asp-for="Session Host">Session Host</th>
+                    </tr>
+                </thead>
+               
                 @foreach (var d in Model.ConnectionActivity)
                 {
+                <tbody>
                     <tr>
                         <td>@d.activityId</td>
                         <td>@d.activityType</td>
@@ -97,32 +296,38 @@
                         <td>@d.ClientIPAddress</td>
                         <td>@d.SessionHostName</td>
                     </tr>
+                </tbody>
+                  
                 }
             </table>
         }
         else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Management)
         {
-            <table class="table table-bordered table-responsive table-hover table-striped">
-                <tr>
-                    <th asp-for="Activity ID">Activity ID</th>
-                    <th asp-for="Type">Type</th>
-                    <th asp-for="Outcome">Outcome</th>
-                    <th asp-for="Error Type">Error Type</th>
-                    <th asp-for="Error">Error</th>
-                    <th asp-for="Tenant">Tenant</th>
-                    <th asp-for="UserName">UserName</th>
-                    <th asp-for="Start Time">Start Time</th>
-                    <th asp-for="End Time">End Time</th>
-                    <th asp-for="Objects Created">Objects Created</th>
-                    <th asp-for="Objects Deleted">Objects Deleted</th>
-                    <th asp-for="Objects Fetched">Objects Fetched</th>
-                    <th asp-for="Objects Updated">Objects Updated</th>
-                </tr>
+            <table class="ms-Table">
+                <thead>
+                    <tr>
+                        <th asp-for="Activity ID">Activity ID</th>
+                        <th asp-for="Type">Type</th>
+                        <th asp-for="Outcome">Outcome</th>
+                        <th asp-for="Error Type">Error Type</th>
+                        <th asp-for="Error">Error</th>
+                        <th asp-for="Tenant">Tenant</th>
+                        <th asp-for="UserName">UserName</th>
+                        <th asp-for="Start Time">Start Time</th>
+                        <th asp-for="End Time">End Time</th>
+                        <th asp-for="Objects Created">Objects Created</th>
+                        <th asp-for="Objects Deleted">Objects Deleted</th>
+                        <th asp-for="Objects Fetched">Objects Fetched</th>
+                        <th asp-for="Objects Updated">Objects Updated</th>
+                    </tr>
+                </thead>
+               
                 @foreach (var d in Model.ManagementActivity)
                 {
+                <tbody>
                     <tr>
                         <td>@d.activityId</td>
-                        <td>@d.activityType</td>
+                        <td>@d.activityType</td>p
                         <td>@d.outcome</td>
                         <td>@d.isInternalError</td>
                         <td>@d.errorMessage</td>
@@ -134,26 +339,32 @@
                         <td>@d.ObjectsDeleted</td>
                         <td>@d.ObjectsUpdated</td>
                     </tr>
+                </tbody>
+                   
                 }
             </table>
         }
         else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
         {
-            <table class="table table-bordered table-responsive table-hover table-striped">
-                <tr>
-                    <th asp-for="Activity ID">Activity ID</th>
-                    <th asp-for="Activity Type">Activity Type</th>
-                    <th asp-for="Start Time">Start Time</th>
-                    <th asp-for="End Time">End Time</th>
-                    <th asp-for="UserName">UserName</th>
-                    <th asp-for="Outcome">Outcome</th>
-                    <th asp-for="Internal Error">Internal Error </th>
-                    <th asp-for="Error Message">Error Message</th>
-                    <th asp-for="ClientIPAddress">ClientIPAddress </th>
-                    <th asp-for="ClientOS">ClientOS </th>
-                </tr>
+            <table class="ms-Table">
+                <thead>
+                    <tr>
+                        <th asp-for="Activity ID">Activity ID</th>
+                        <th asp-for="Activity Type">Activity Type</th>
+                        <th asp-for="Start Time">Start Time</th>
+                        <th asp-for="End Time">End Time</th>
+                        <th asp-for="UserName">UserName</th>
+                        <th asp-for="Outcome">Outcome</th>
+                        <th asp-for="Internal Error">Internal Error </th>
+                        <th asp-for="Error Message">Error Message</th>
+                        <th asp-for="ClientIPAddress">ClientIPAddress </th>
+                        <th asp-for="ClientOS">ClientOS </th>
+                    </tr>
+                </thead>
+               
                 @foreach (var d in Model.FeedActivity)
                 {
+                <tbody>
                     <tr>
                         <td>@d.activityId </td>
                         <td>@d.activityType </td>
@@ -166,19 +377,23 @@
                         <td>@d.ClientIPAddress </td>
                         <td>@d.ClientOS </td>
                     </tr>
+                </tbody>
+                    
                 }
             </table>
         }
         else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.None)
-            {
-                <div class="norecordstable">
-                    <h3 class="text-center">No records found for the search criteria</h3>
-                </div>
-            }
+        {
+            <div class="norecordstable">
+                <h3 class="text-center">No records found for the search criteria</h3>
+            </div>
+        }
     </div>
-
-
 </div>
+
+
+
+
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
