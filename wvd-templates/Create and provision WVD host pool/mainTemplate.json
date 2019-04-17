@@ -145,6 +145,16 @@
                 "description": "The name of the virtual network the VMs will be connected to."
             }
         },
+        "newOrExistingVnet": {	
+            "type": "string",	
+            "defaultValue": "existing",	
+            "allowedValues": [	
+                "existing"	
+            ],	
+            "metadata": {	
+                "description": "Only existing vnets are allowed. This parameter ensures validation for Azure Marketplace offering."	
+            }	
+        },
         "existingSubnetName": {
             "type": "string",
             "metadata": {
