@@ -116,7 +116,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
     {
         Success = 0,
         Failure = 1,
-        All = -1,
+        All = 2,
     }
 
 

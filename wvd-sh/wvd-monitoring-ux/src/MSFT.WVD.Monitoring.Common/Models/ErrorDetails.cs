@@ -7,7 +7,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
 {
     public class ErrorDetails
     {
-        public int StatusCode { get; set; }
+        public Nullable<int> StatusCode { get; set; }
         public string Message { get; set; }
 
 

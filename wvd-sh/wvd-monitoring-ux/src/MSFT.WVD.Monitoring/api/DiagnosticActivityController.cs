@@ -16,7 +16,8 @@ using MSFT.WVD.Monitoring.Models;
 namespace MSFT.WVD.Monitoring.api
 {
     [Route("api/[controller]")]
-    public class DiagnosticActivityController : Controller
+    [ApiController]
+    public class DiagnosticActivityController : ControllerBase
     {
         private readonly ILogger _logger;
         DiagnosticActivitityBL diagnosticActivitityBL = new DiagnosticActivitityBL();
@@ -28,84 +29,97 @@ namespace MSFT.WVD.Monitoring.api
         }
 
         [HttpGet("GetConnectionActivities")]
-        public IEnumerable<ConnectionActivity> GetConnectionActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
+        public IActionResult GetConnectionActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
         {
             try
             {
                 string token = Request.Headers["Authorization"];
                 _logger.LogInformation($"Call WVD api to get connection activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
 
-                return diagnosticActivitityBL.GetConnectionActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
+                HttpResponseMessage response = diagnosticActivitityBL.GetConnectionActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
+                if (response.IsSuccessStatusCode)
+                {
+                    IEnumerable<ConnectionActivity> connectionActivities = diagnosticActivitityBL.GetConnectionActivities(response);
+                    return new OkObjectResult(connectionActivities);
+                }
+                else
+                {
+                    var message = string.Empty;
+                    if (response.Content != null)
+                    {
+                        message = !string.IsNullOrEmpty(response.Content.ReadAsStringAsync().Result) ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
+                    }
+                    return StatusCode((int)response.StatusCode, message);
+                }
             }
             catch (Exception ex)
             {
-
-                return new List<ConnectionActivity>
-                   {
-                       new ConnectionActivity
-                       {
-                           ErrorDetails= new ErrorDetails
-                           {
-                               StatusCode=(int)HttpStatusCode.InternalServerError,
-                               Message= ex.Message.ToString()
-                           }
-                       }
-                   };
+                _logger.LogError($"{ex.Message}");
+                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
             }
         }
 
 
         [HttpGet("GetManagementActivities")]
-        public IEnumerable<ManagementActivity> GetManagementActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
+        public IActionResult GetManagementActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
         {
             try
             {
                 string token = Request.Headers["Authorization"];
                 _logger.LogInformation($"Call WVD api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
 
-                return diagnosticActivitityBL.GetManagementActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
+                HttpResponseMessage response = diagnosticActivitityBL.GetManagementActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
+                if (response.IsSuccessStatusCode)
+                {
+                    IEnumerable<ManagementActivity> managementActivities = diagnosticActivitityBL.GetManagementActivities(response);
+                    return new OkObjectResult(managementActivities);
+                }
+                else
+                {
+                    var message = string.Empty;
+                    if (response.Content != null)
+                    {
+                        message = !string.IsNullOrEmpty(response.Content.ReadAsStringAsync().Result) ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
+                    }
+                    return StatusCode((int)response.StatusCode, message);
+                }
             }
             catch (Exception ex)
             {
-                return new List<ManagementActivity>
-                   {
-                       new ManagementActivity
-                       {
-                           ErrorDetails= new ErrorDetails
-                           {
-                               StatusCode=(int)HttpStatusCode.InternalServerError,
-                               Message= ex.Message.ToString()
-                           }
-                       }
-                   };
+                _logger.LogError($"{ex.Message}");
+                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
             }
         }
 
         [HttpGet("GetFeedActivities")]
-        public IEnumerable<FeedActivity> GetFeedActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
+        public IActionResult GetFeedActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
         {
             try
             {
                 string token = Request.Headers["Authorization"];
                 _logger.LogInformation($"Call WVD api to get feed activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
 
-                return diagnosticActivitityBL.GetFeedActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
+                HttpResponseMessage response = diagnosticActivitityBL.GetFeedActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
+                if (response.IsSuccessStatusCode)
+                {
+                    IEnumerable<FeedActivity> feedActivities = diagnosticActivitityBL.GetFeedActivities(response);
+                    return new OkObjectResult(feedActivities);
+                }
+                else
+                {
+                    var message = string.Empty;
+                    if (response.Content != null)
+                    {
+                        message = !string.IsNullOrEmpty(response.Content.ReadAsStringAsync().Result) ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
+                    }
+                    return StatusCode((int)response.StatusCode, message);
+                }
             }
             catch (Exception ex)
             {
-                return new List<FeedActivity>
-                   {
-                       new FeedActivity
-                       {
-                           ErrorDetails= new ErrorDetails
-                           {
-                               StatusCode=(int)HttpStatusCode.InternalServerError,
-                               Message= ex.Message.ToString()
-                           }
-                       }
-                   };
+                _logger.LogError($"{ex.Message}");
+                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
             }
-
         }
     }
 }
