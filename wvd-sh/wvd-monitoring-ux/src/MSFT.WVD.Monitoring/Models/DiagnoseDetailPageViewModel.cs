@@ -12,9 +12,11 @@ namespace MSFT.WVD.Monitoring.Models
 
         public List<UserSession> UserSessions { get; set; }
 
-        public List<UserSession> SelectedUserSessions { get; set; }
+       // public List<UserSession> SelectedUserSessions { get; set; }
 
         public SendMessageQuery SendMessageQuery { get; set; }
         public LogOffUserQuery LogOffUserQuery { get; set; }
+        public string Title { get; set; }
+        public string Message { get; set; }
     }
 }
