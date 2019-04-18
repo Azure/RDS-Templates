@@ -1,0 +1,162 @@
+﻿
+@model DiagnoseDetailPageViewModel
+
+<h2>Win10MultiSession Status</h2>
+
+
+
+<div class="width-100 content-section">
+    <form asp-controller="Demo" asp-action="RegisterLabel" method="post">
+        <div class="ms-Grid" dir="ltr">
+            <div class="ms-Grid-row">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.activityId" class="control-label ms-Grid-col ms-xxxl2">ActivityId:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.activityId</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.activityType" class="control-label ms-Grid-col ms-xxxl2">Type:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.activityType</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.outcome" class="control-label ms-Grid-col ms-xxxl2">Outcome:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.outcome</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.Tenants" class="control-label ms-Grid-col ms-xxxl2">Tenant:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.Tenants</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.userName" class="control-label ms-Grid-col ms-xxxl2">UserName:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.userName</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.startTime" class="control-label ms-Grid-col ms-xxxl2">Start Time:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.startTime</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.endTime" class="control-label ms-Grid-col ms-xxxl2">End Time:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.endTime</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.ClientIPAddress" class="control-label ms-Grid-col ms-xxxl2">Client Ip:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.ClientIPAddress</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.ClientOS" class="control-label ms-Grid-col ms-xxxl2">Client:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.ClientOS</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.SessionHostName" class="control-label ms-Grid-col ms-xxxl2">Session Host:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.SessionHostName</span>
+                    </div>
+                </div>
+                <div class="form-wrap ms-Grid-col ms-xxxl6 m-b-20">
+                    <label asp-for="ConnectionActivity.SessionHostPoolName" class="control-label ms-Grid-col ms-xxxl2">Session Host:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                        <span class="text-danger">@Model.ConnectionActivity.SessionHostPoolName</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="ms-Pivot">
+        <ul class="ms-Pivot-links">
+            <li class="ms-Pivot-link is-selected" data-content="files" title="My files" tabindex="1">
+                VM Performance
+            </li>
+            <li class="ms-Pivot-link " data-content="recent" title="Recent" tabindex="1">
+                Users Connected
+            </li>
+
+        </ul>
+        <div class="ms-Pivot-content" data-content="files">
+            VM Performance
+        </div>
+        <div class="ms-Pivot-content" data-content="recent">
+            <a>Logoff user(s)</a>
+            <div class="ms-PanelExample">
+                <a class="ms-Button">
+                    <span class="ms-Button-label">Message user(s)</span>
+                </a>
+                <div class="ms-Panel">
+                    <button class="ms-Panel-closeButton ms-PanelAction-close">
+                        <i class="ms-Panel-closeIcon ms-Icon ms-Icon--Cancel"></i>
+                    </button>
+                    <div class="ms-Panel-contentInner">
+                        <p class="ms-Panel-headerText">Send A Message</p>
+                        <div class="ms-Panel-content">
+
+                            <label class="control-label ms-Grid-col ms-xxxl2">Title</label>
+
+                            <input class="form-control" id="upn" />
+
+
+
+                            <label class="control-label ms-Grid-col ms-xxxl2">Message</label>
+
+                            <input class="form-control" id="upn" />
+
+
+                        </div>
+                        <div class="flyoutpanel-footer">
+                            <button type="submit" class="ms-Button">
+                                <span class="ms-Button-label">Cancel</span>
+                            </button>
+                            <button type="submit" class="ms-Button primary-btn">
+                                <span class="ms-Button-label">Send</span>
+                            </button>
+                            <!-- <input type="submit" value="cancel" class="btn btn-secondary" />
+        <input type="submit" value="Save" class="btn primary-btn" /> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+       
+            <table class="ms-Table">
+                <thead>
+                    <tr>
+
+                        <th>Select</th>
+                        <th>User UPN</th>
+                    </tr>
+                </thead>
+
+                @foreach (var d in Model.UserSessions)
+                {
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="ms-CheckBox">
+                                    <input tabindex="-1" type="checkbox" class="ms-CheckBox-input">
+                                    <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" name="checkboxa">
+                                    </label>
+                                </div>
+                            </td>
+                            <td>@d.userPrincipalName</td>
+                        </tr>
+                    </tbody>
+                }
+                </table>
+        </div>
+
+    </div>
+</div>

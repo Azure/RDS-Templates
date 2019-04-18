@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.539
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSFT.WVD.Monitoring", "MSFT.WVD.Monitoring\MSFT.WVD.Monitoring.csproj", "{961B1185-E353-4404-8743-C69816648232}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSFT.WVD.Monitoring", "MSFT.WVD.Monitoring\MSFT.WVD.Monitoring.csproj", "{961B1185-E353-4404-8743-C69816648232}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSFT.WVD.Monitoring.Common", "MSFT.WVD.Monitoring.Common\MSFT.WVD.Monitoring.Common.csproj", "{44371C01-8237-4015-B6E2-69FD2002718F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSFT.WVD.Monitoring.Common", "MSFT.WVD.Monitoring.Common\MSFT.WVD.Monitoring.Common.csproj", "{44371C01-8237-4015-B6E2-69FD2002718F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

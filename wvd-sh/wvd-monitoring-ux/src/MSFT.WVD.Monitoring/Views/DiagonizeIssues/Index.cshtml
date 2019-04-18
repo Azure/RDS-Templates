@@ -270,6 +270,7 @@
                         <th asp-for="Error Type">Error Type</th>
                         <th asp-for="Error">Error</th>
                         <th asp-for="Tenant">Tenant</th>
+                        <th asp-for="HostPoolname">HostPoolname</th>
                         <th asp-for="UserName">UserName</th>
                         <th asp-for="Start Time">Start Time</th>
                         <th asp-for="End Time">End Time</th>
@@ -289,19 +290,31 @@
                             <td>@d.isInternalError</td>
                             <td>@d.errorMessage</td>
                             <td>@d.Tenants</td>
+                            <td>@d.SessionHostPoolName</td>
                             <td>@d.userName</td>
                             <td>@d.startTime</td>
                             <td>@d.endTime</td>
                             <td>@d.ClientOS</td>
                             <td>@d.ClientIPAddress</td>
                             <td>
-                                <a id="myBtn" asp-controller="DiagonizeIssues" asp-action="UserSessions" target="_self">Open Modal</a>
-                                @*<button type="button" class="btn btn-primary" data-toggle="ajax-modal" data-target="#add-contact" data-url="@Url.Action("UserSessions")">
-                                        Add contact
-                                    </button>*@
-                                @*<button class="ms-Button docs-DialogExample-button" data-toggle="Modal" data-target="#add-contact" data-url="@Url.Action("UserSessions")">@d.SessionHostName</button>*@
-                                @*<label class="docs-DialogExample-label"></label>
-                                    <a data-toggle="ajax-modal" data-target="#add-contact" data-url="@Url.Action("UserSessions")">@d.SessionHostName</a>*@
+                             @{ 
+                                 var d1 = new Dictionary<string, string>
+                   {
+                   { "activityId", @d.activityId },
+                   { "activityType", @d.activityType },
+                   { "outcome", @d.outcome },
+                   { "Tenants", @d.Tenants },
+                         { "userName", @d.userName },
+                   { "ClientOS", @d.ClientOS },
+                    { "ClientIPAddress", @d.ClientIPAddress },
+                    { "startTime", @d.startTime.ToString() },
+                    { "endTime", @d.endTime.ToString() },
+                                     {"SessionHostName",d.SessionHostName },
+                                     {"SessionHostPoolName",d.SessionHostPoolName }
+                  };
+                             }
+                            @*<a href="@Url.Action("UserSessions", "DiagonizeIssues",@d)">@d.SessionHostName</a>*@
+                            <a asp-controller="DiagonizeIssues" asp-action="UserSessions" asp-all-route-data="d1">@d.SessionHostName</a>
 
                             </td>
                         </tr>
@@ -400,18 +413,7 @@
     </div>
   
 </div>
-<partial name="_UserSessions"/>
-@*@Html.RenderPartial("_Navbar")*@
 
-
-@*<div id="myModal" class="modal">
-
-
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <p>Some text in the Modal..</p>
-        </div>
-    </div>*@
 
 
 
@@ -425,30 +427,3 @@
     });
 </script>
 
-<script>
-    // Get the modal
-    var modal = document.getElementById('myModal');
-
-    // Get the button that opens the modal
-    var btn = document.getElementById("myBtn");
-
-    // Get the <span> element that closes the modal
-    var span = document.getElementsByClassName("close")[0];
-
-    // When the user clicks the button, open the modal
-    btn.onclick = function () {
-        modal.style.display = "block";
-    }
-
-    // When the user clicks on <span> (x), close the modal
-    span.onclick = function () {
-        modal.style.display = "none";
-    }
-
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function (event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-</script>
