@@ -108,18 +108,22 @@ namespace MSFT.WVD.Monitoring
             //loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             //loggerFactory.AddDebug();
 
-            if (env.IsDevelopment())
-            {
-                //app.UseDeveloperExceptionPage();
-                app.UseExceptionHandler("/Home/Error");
-                app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-                app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
-                app.UseHsts();
-            }
+            app.UseExceptionHandler("/Home/Error");
+            app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
+            app.UseHsts();
+
+            //if (env.IsDevelopment())
+            //{
+            //    //app.UseDeveloperExceptionPage();
+            //    app.UseExceptionHandler("/Home/Error");
+            //    app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
+            //}
+            //else
+            //{
+            //    app.UseExceptionHandler("/Home/Error");
+            //    app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
+            //    app.UseHsts();
+            //}
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

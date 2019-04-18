@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MSFT.WVD.Monitoring.Common.Models;
@@ -150,23 +151,22 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public IActionResult Error(int id,ErrorDetails errorDetails)
         {
-            if(errorDetails.Message != null && errorDetails.StatusCode!=0 )
+
+            if (errorDetails.Message != null && errorDetails.StatusCode!=null)
             {
                 return View(new ErrorViewModel()
                 { ErrorDetails= errorDetails }
                 );
             }
-
-            switch (id)
+            else
             {
-                case (int)HttpStatusCode.NotFound :
-                    return View("NotFound");
-                case (int)HttpStatusCode.Unauthorized :
-                    return View("Unauthorized");
-                default:
-                    return View("Error");
+                var exceptionFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+                return View(new ErrorViewModel()
+                { ErrorDetails = new ErrorDetails {
+                    Message= $"RouteOfException : { exceptionFeature.Path}. ErrorMessage : {exceptionFeature.Error.Message}"
+                } }
+             );
             }
-           
         }
 
         public IActionResult AppSettings()
