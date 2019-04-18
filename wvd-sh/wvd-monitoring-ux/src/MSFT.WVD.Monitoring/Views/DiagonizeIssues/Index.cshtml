@@ -5,7 +5,7 @@
 
 }
 
-
+@*<partial name="~/Views/DiagonizeIssues/_UserSessions.cshtml" />*@
 @*<div class="width-100 content-section">
         <br />
         @using (Html.BeginForm("SearchActivity", "DiagonizeIssues", FormMethod.Post))
@@ -242,7 +242,7 @@
                 </div>
             </div>
         </div>
-
+      
     </form>
 
 
@@ -251,7 +251,7 @@
         @if (Model.ConnectionActivity.Count() > 0 || Model.ManagementActivity.Count() > 0 || Model.FeedActivity.Count() > 0)
         {
         }
-       
+
     }
     else
     {
@@ -278,26 +278,35 @@
                         <th asp-for="Session Host">Session Host</th>
                     </tr>
                 </thead>
-               
+
                 @foreach (var d in Model.ConnectionActivity)
                 {
-                <tbody>
-                    <tr>
-                        <td>@d.activityId</td>
-                        <td>@d.activityType</td>
-                        <td>@d.outcome</td>
-                        <td>@d.isInternalError</td>
-                        <td>@d.errorMessage</td>
-                        <td>@d.Tenants</td>
-                        <td>@d.userName</td>
-                        <td>@d.startTime</td>
-                        <td>@d.endTime</td>
-                        <td>@d.ClientOS</td>
-                        <td>@d.ClientIPAddress</td>
-                        <td>@d.SessionHostName</td>
-                    </tr>
-                </tbody>
-                  
+                    <tbody>
+                        <tr>
+                            <td>@d.activityId</td>
+                            <td>@d.activityType</td>
+                            <td>@d.outcome</td>
+                            <td>@d.isInternalError</td>
+                            <td>@d.errorMessage</td>
+                            <td>@d.Tenants</td>
+                            <td>@d.userName</td>
+                            <td>@d.startTime</td>
+                            <td>@d.endTime</td>
+                            <td>@d.ClientOS</td>
+                            <td>@d.ClientIPAddress</td>
+                            <td>
+                                <a id="myBtn" asp-controller="DiagonizeIssues" asp-action="UserSessions" target="_self">Open Modal</a>
+                                @*<button type="button" class="btn btn-primary" data-toggle="ajax-modal" data-target="#add-contact" data-url="@Url.Action("UserSessions")">
+                                        Add contact
+                                    </button>*@
+                                @*<button class="ms-Button docs-DialogExample-button" data-toggle="Modal" data-target="#add-contact" data-url="@Url.Action("UserSessions")">@d.SessionHostName</button>*@
+                                @*<label class="docs-DialogExample-label"></label>
+                                    <a data-toggle="ajax-modal" data-target="#add-contact" data-url="@Url.Action("UserSessions")">@d.SessionHostName</a>*@
+
+                            </td>
+                        </tr>
+                    </tbody>
+
                 }
             </table>
         }
@@ -321,26 +330,26 @@
                         <th asp-for="Objects Updated">Objects Updated</th>
                     </tr>
                 </thead>
-               
+
                 @foreach (var d in Model.ManagementActivity)
                 {
-                <tbody>
-                    <tr>
-                        <td>@d.activityId</td>
-                        <td>@d.activityType</td>p
-                        <td>@d.outcome</td>
-                        <td>@d.isInternalError</td>
-                        <td>@d.errorMessage</td>
-                        <td>@d.Tenants</td>
-                        <td>@d.userName</td>
-                        <td>@d.startTime</td>
-                        <td>@d.endTime</td>
-                        <td>@d.ObjectsCreated</td>
-                        <td>@d.ObjectsDeleted</td>
-                        <td>@d.ObjectsUpdated</td>
-                    </tr>
-                </tbody>
-                   
+                    <tbody>
+                        <tr>
+                            <td>@d.activityId</td>
+                            <td>@d.activityType</td>p
+                            <td>@d.outcome</td>
+                            <td>@d.isInternalError</td>
+                            <td>@d.errorMessage</td>
+                            <td>@d.Tenants</td>
+                            <td>@d.userName</td>
+                            <td>@d.startTime</td>
+                            <td>@d.endTime</td>
+                            <td>@d.ObjectsCreated</td>
+                            <td>@d.ObjectsDeleted</td>
+                            <td>@d.ObjectsUpdated</td>
+                        </tr>
+                    </tbody>
+
                 }
             </table>
         }
@@ -361,24 +370,24 @@
                         <th asp-for="ClientOS">ClientOS </th>
                     </tr>
                 </thead>
-               
+
                 @foreach (var d in Model.FeedActivity)
                 {
-                <tbody>
-                    <tr>
-                        <td>@d.activityId </td>
-                        <td>@d.activityType </td>
-                        <td>@d.startTime </td>
-                        <td>@d.endTime </td>
-                        <td>@d.userName</td>
-                        <td>@d.outcome </td>
-                        <td>@d.isInternalError </td>
-                        <td>@d.errorMessage </td>
-                        <td>@d.ClientIPAddress </td>
-                        <td>@d.ClientOS </td>
-                    </tr>
-                </tbody>
-                    
+                    <tbody>
+                        <tr>
+                            <td>@d.activityId </td>
+                            <td>@d.activityType </td>
+                            <td>@d.startTime </td>
+                            <td>@d.endTime </td>
+                            <td>@d.userName</td>
+                            <td>@d.outcome </td>
+                            <td>@d.isInternalError </td>
+                            <td>@d.errorMessage </td>
+                            <td>@d.ClientIPAddress </td>
+                            <td>@d.ClientOS </td>
+                        </tr>
+                    </tbody>
+
                 }
             </table>
         }
@@ -389,8 +398,20 @@
             </div>
         }
     </div>
+  
 </div>
+<partial name="_UserSessions"/>
+@*@Html.RenderPartial("_Navbar")*@
 
+
+@*<div id="myModal" class="modal">
+
+
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>Some text in the Modal..</p>
+        </div>
+    </div>*@
 
 
 
@@ -402,4 +423,32 @@
             $('#loader1').show();
         });
     });
+</script>
+
+<script>
+    // Get the modal
+    var modal = document.getElementById('myModal');
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("myBtn");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the modal
+    btn.onclick = function () {
+        modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+        modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
 </script>

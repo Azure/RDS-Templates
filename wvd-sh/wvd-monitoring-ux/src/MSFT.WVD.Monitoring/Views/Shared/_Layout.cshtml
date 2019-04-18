@@ -69,17 +69,17 @@
                     </li>
                     <li class="ms-ContextualMenu-item">
                         @using (Html.BeginForm("Logout", "Home", FormMethod.Post))
-                        {                           
+                        {
                             <button type="submit" class="ms-Button">
-                                <span class="ms-Button-label">Sign out</span> 
+                                <span class="ms-Button-label">Sign out</span>
                             </button>
-                        }                    
+                        }
                     </li>
-                                   
+
                 </ul>
             </div>
         </div>
-        
+
     </nav>
     <!-- <nav class="navbar navbar-inverse navbar-fixed-top">
         <div class="container">
@@ -152,7 +152,11 @@
 
 
     <partial name="_CookieConsentPartial" />
-
+    <div class="Home-icon">
+        <a asp-area="" asp-controller="Home" asp-action="AppSettings">
+            <i class="fa fa-address-book"></i>
+        </a>
+    </div>
     <div class="body-content">
         <div class="vertical-menu">
             <ul>
@@ -214,12 +218,12 @@
         <script type="text/javascript">
             var PanelExamples = document.getElementsByClassName("ms-PanelExample");
             for (var i = 0; i < PanelExamples.length; i++) {
-                (function() {
-                var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
-                var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
-                PanelExampleButton.addEventListener("click", function(i) {
-                    new fabric['Panel'](PanelExamplePanel);
-                });
+                (function () {
+                    var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
+                    var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
+                    PanelExampleButton.addEventListener("click", function (i) {
+                        new fabric['Panel'](PanelExamplePanel);
+                    });
                 }());
             }
         </script>
@@ -229,6 +233,48 @@
                 new fabric['Table'](TableElements[i]);
             }
         </script>
+        <script type="text/javascript">
+            (function () {
+                var example = document.querySelector(".docs-DialogExample-default");
+                var button = example.querySelector(".docs-DialogExample-button");
+                var dialog = example.querySelector(".ms-Dialog");
+                //    var label = example.querySelector(".docs-DialogExample-label")
+                var checkBoxElements = example.querySelectorAll(".ms-CheckBox");
+                var actionButtonElements = example.querySelectorAll(".ms-Dialog-action");
+                var checkBoxComponents = [];
+                var actionButtonComponents = [];
+                // Wire up the dialog
+                var dialogComponent = new fabric['Dialog'](dialog);
+                // Wire up the checkBoxes
+                for (var i = 0; i < checkBoxElements.length; i++) {
+                    checkBoxComponents[i] = new fabric['CheckBox'](checkBoxElements[i]);
+                }
+                // Wire up the buttons
+                for (var i = 0; i < actionButtonElements.length; i++) {
+                    actionButtonComponents[i] = new fabric['Button'](actionButtonElements[i], actionHandler);
+                }
+                // When clicking the button, open the dialog
+                button.onclick = function () {
+                    openDialog(dialog);
+                };
+                function actionHandler(event) {
+                    var labelText = "";
+                    var counter = 0;
+                    for (var i = 0; i < checkBoxComponents.length; i++) {
+                        if (checkBoxComponents[i].getValue()) {
+                            counter++;
+                        }
+                    }
+                    labelText += counter + " option(s) selected. " + this.innerText.trim() + " clicked";
+                    label.innerText = labelText;
+                }
+                function openDialog(dialog) {
+                    // Open the dialog
+                    dialogComponent.open();
+                }
+            }());
+        </script>
+
     </environment>
     <environment exclude="Development">
 
@@ -245,7 +291,7 @@
                 integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd">
         </script> -->
         <script src="~/js/site.min.js" asp-append-version="true"></script>
-        
+
     </environment>
 
     @RenderSection("Scripts", required: false)
