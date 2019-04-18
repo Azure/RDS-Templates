@@ -41,13 +41,14 @@
         "rdshVMDiskType": {
             "type": "string",
             "allowedValues": [
-                "SSD",
-                "HDD"
+                "Premium_LRS",
+                "StandardSSD_LRS",
+                "Standard_LRS"
             ],
             "metadata": {
-                "description": "The VM disk type for the VM: HDD or SSD."
+                "description": "The VM disk type for the VM: Premium_LRS (Default), Standard_LRS or StandardSSD_LRS."
             },
-            "defaultValue": "SSD"
+            "defaultValue": "Premium_LRS"
         },
         "rdshVmSize": {
             "type": "string",
@@ -107,13 +108,23 @@
             "metadata": {
                 "description": "Location for all resources to be created in."
             }
+        },
+        "enablePersistentDesktop": {
+            "type": "bool",
+            "metadata": {
+                "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
+            },
+            "defaultValue": false
         }
     },
     "variables": {
         "galleryPublisher": "[if( contains(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'MicrosoftWindowsDesktop', 'MicrosoftwindowsServer')]",
         "galleryOffer": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'Windows-10',  if(equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session-with-Office-365-ProPlus'), 'office-365', 'WindowsServer'))]",
         "gallerySku": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'rs5-evd',   if(equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session-with-Office-365-ProPlus'), 'rs5-evd-o365pp', parameters('rdshGalleryImageSKU')))]",
-        "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'HDD'), 'Standard_LRS', 'Premium_LRS')]"
+        "storageAccountType": "[parameters('rdshVMDiskType')]",
+        "availabilitySetId": {
+            "id": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')),json('null'))]"
+        }
     },
     "resources": [
         {
@@ -156,9 +167,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
-                "availabilitySet": {
-                    "id": "[resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet'))]"
-                },
+                "availabilitySet": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),variables('availabilitySetId'),json('null'))]",
                 "osProfile": {
                     "computerName": "[concat(parameters('rdshPrefix'), copyindex())]",
                     "adminUsername": "[parameters('existingDomainUsername')]",

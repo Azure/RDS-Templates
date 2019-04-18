@@ -77,13 +77,14 @@
         "rdshVMDiskType": {
             "type": "string",
             "allowedValues": [
-                "SSD",
-                "HDD"
+                "Premium_LRS",
+                "StandardSSD_LRS",
+                "Standard_LRS"
             ],
             "metadata": {
-                "description": "The VM disk type for the VM: HDD or SSD."
+                "description": "The VM disk type for the VM: Premium_LRS (Default), Standard_LRS or StandardSSD_LRS."
             },
-            "defaultValue": "SSD"
+            "defaultValue": "Premium_LRS"
         },
         "rdshVmSize": {
             "type": "string",
@@ -138,21 +139,21 @@
                 "description": "(Optional) Specifiy an organizational unit (OU) to place the new virtual machines when joining the domain. If you do not have a specific OU to place the virtual machines, leave it blank. Example OU: 'OU=testOU;DC=domain;DC=Domain;DC=com'"
             }
         },
-        "newOrExistingVnet": {
-            "type": "string",
-            "defaultValue": "existing",
-            "allowedValues": [
-                "existing"
-            ],
-            "metadata": {
-                "description": "Only existing vnets are allowed. This parameter ensures validation for Azure Marketplace offering."
-            }
-        },
         "existingVnetName": {
             "type": "string",
             "metadata": {
                 "description": "The name of the virtual network the VMs will be connected to."
             }
+        },
+        "newOrExistingVnet": {	
+            "type": "string",	
+            "defaultValue": "existing",	
+            "allowedValues": [	
+                "existing"	
+            ],	
+            "metadata": {	
+                "description": "Only existing vnets are allowed. This parameter ensures validation for Azure Marketplace offering."	
+            }	
         },
         "existingSubnetName": {
             "type": "string",
@@ -269,6 +270,7 @@
     "resources": [
         {
             "apiVersion": "2018-10-01",
+            "condition": "[equals(parameters('enablePersistentDesktop'),bool('False'))]",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
             "location": "[parameters('location')]",
@@ -338,6 +340,9 @@
                     },
                     "location": {
                         "value": "[parameters('location')]"
+                    },
+                    "enablePersistentDesktop": {
+                        "value": "[parameters('enablePersistentDesktop')]"
                     }
                 }
             }
