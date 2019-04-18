@@ -15,7 +15,9 @@ using MSFT.WVD.Monitoring.Common.Models;
 namespace MSFT.WVD.Monitoring.api
 {
     [Route("api/[controller]")]
-    public class SessionHostController : Controller
+    [ApiController]
+
+    public class SessionHostController : ControllerBase
     {
         private readonly ILogger _logger;
         SessionHostBL sessionHostBL = new SessionHostBL();
