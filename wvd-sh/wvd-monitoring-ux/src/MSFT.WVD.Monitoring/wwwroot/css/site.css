@@ -1,4 +1,4 @@
-﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
+﻿/*/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
 for details on configuring this project to bundle and minify static web assets. */
 html, body {
     height: 100%;
@@ -373,7 +373,19 @@ html, body {
     }
 
 .nav-bar-right {
+    display:flex;
+    flex-direction:row;
     margin-left: auto;
+}
+.nav-bar-right .home-icon .ms-Button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    line-height: 40px;
+    min-width:0;
 }
 
     .nav-bar-right button.ms-Button.ms-Button--primary {
@@ -437,6 +449,9 @@ html, body {
     margin: 0;
 }
 
+.m-b-25 {
+    margin-bottom: 25px;
+}
 .m-b-20 {
     margin-bottom: 20px;
 }
@@ -540,11 +555,11 @@ html, body {
     }
 }
 
-.Home-icon {
+/*.Home-icon {
     position: absolute;
     right: 157px;
     top: 9px;
-}
+}*/
 /* The Modal (background) */
 .modal {
     display: none; /* Hidden by default */
@@ -583,9 +598,25 @@ html, body {
         text-decoration: none;
         cursor: pointer;
     }
-.Home-icon {
+/*.Home-icon {
     position: absolute;
     right: 157px;
     top: 9px;
+    color: #00a3ec;
+}*/
+
+.users-session .ms-Table{
+    width:40%;
+    margin-top:10px;
+}
+.users-session .ms-PanelExample .ms-Button {
+    background:transparent;
+    border:none;
+    margin-left:20px;
+}
+.users-session .ms-Pivot-content{
+    padding:0 15px;
+}
+.users-session .ms-PanelExample a .ms-Button-label {
     color: #00a3ec;
 }

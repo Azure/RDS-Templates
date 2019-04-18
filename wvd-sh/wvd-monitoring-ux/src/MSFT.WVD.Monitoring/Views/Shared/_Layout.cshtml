@@ -44,6 +44,11 @@
             </di>
         </div>
         <div class="nav-bar-right">
+            <div class="home-icon">
+                <a class="ms-Button" asp-area="" asp-controller="Home" asp-action="AppSettings">
+                    <i class="fa fa-address-book"></i>
+                </a>
+            </div>
             <div class="ms-ContextualMenuExample">
                 <button class="ms-Button ms-Button--primary">
                     <div class="user-details">
@@ -152,11 +157,7 @@
 
 
     <partial name="_CookieConsentPartial" />
-    <div class="Home-icon">
-        <a asp-area="" asp-controller="Home" asp-action="AppSettings">
-            <i class="fa fa-address-book"></i>
-        </a>
-    </div>
+  
     <div class="body-content">
         <div class="vertical-menu">
             <ul>
@@ -249,7 +250,7 @@
             var PanelExamples = document.getElementsByClassName("ms-PanelExample");
             for (var i = 0; i < PanelExamples.length; i++) {
                 (function () {
-                    var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
+                    var PanelExampleButton = PanelExamples[i].querySelector(".message-user");
                     var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
                     PanelExampleButton.addEventListener("click", function (i) {
                         new fabric['Panel'](PanelExamplePanel);
