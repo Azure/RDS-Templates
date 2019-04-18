@@ -15,7 +15,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
         {
             try
             {
-                return CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/TenantGroups/{tenantGroupName}/Tenants/{tenant}/HostPools/{sessionHostName}/Sessions").Result;
+                return CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/TenantGroups/{tenantGroupName}/Tenants/{tenant}/HostPools/{hostPoolName}/Sessions").Result;
             }
             catch (Exception ex)
             {
