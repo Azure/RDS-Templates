@@ -5,7 +5,7 @@
 
 }
 
-
+@*<partial name="~/Views/DiagonizeIssues/_UserSessions.cshtml" />*@
 @*<div class="width-100 content-section">
         <br />
         @using (Html.BeginForm("SearchActivity", "DiagonizeIssues", FormMethod.Post))
@@ -251,7 +251,7 @@
         @if (Model.ConnectionActivity.Count() > 0 || Model.ManagementActivity.Count() > 0 || Model.FeedActivity.Count() > 0)
         {
         }
-       
+
     }
     else
     {
@@ -278,26 +278,29 @@
                         <th asp-for="Session Host">Session Host</th>
                     </tr>
                 </thead>
-               
+
                 @foreach (var d in Model.ConnectionActivity)
                 {
-                <tbody>
-                    <tr>
-                        <td>@d.activityId</td>
-                        <td>@d.activityType</td>
-                        <td>@d.outcome</td>
-                        <td>@d.isInternalError</td>
-                        <td>@d.errorMessage</td>
-                        <td>@d.Tenants</td>
-                        <td>@d.userName</td>
-                        <td>@d.startTime</td>
-                        <td>@d.endTime</td>
-                        <td>@d.ClientOS</td>
-                        <td>@d.ClientIPAddress</td>
-                        <td>@d.SessionHostName</td>
-                    </tr>
-                </tbody>
-                  
+                    <tbody>
+                        <tr>
+                            <td>@d.activityId</td>
+                            <td>@d.activityType</td>
+                            <td>@d.outcome</td>
+                            <td>@d.isInternalError</td>
+                            <td>@d.errorMessage</td>
+                            <td>@d.Tenants</td>
+                            <td>@d.userName</td>
+                            <td>@d.startTime</td>
+                            <td>@d.endTime</td>
+                            <td>@d.ClientOS</td>
+                            <td>@d.ClientIPAddress</td>
+                            <td>
+                                <a asp-controller="DiagonizeIssues"
+                                   asp-action="UserSessions">@d.SessionHostName</a>
+                            </td>
+                        </tr>
+                    </tbody>
+
                 }
             </table>
         }
@@ -321,26 +324,26 @@
                         <th asp-for="Objects Updated">Objects Updated</th>
                     </tr>
                 </thead>
-               
+
                 @foreach (var d in Model.ManagementActivity)
                 {
-                <tbody>
-                    <tr>
-                        <td>@d.activityId</td>
-                        <td>@d.activityType</td>p
-                        <td>@d.outcome</td>
-                        <td>@d.isInternalError</td>
-                        <td>@d.errorMessage</td>
-                        <td>@d.Tenants</td>
-                        <td>@d.userName</td>
-                        <td>@d.startTime</td>
-                        <td>@d.endTime</td>
-                        <td>@d.ObjectsCreated</td>
-                        <td>@d.ObjectsDeleted</td>
-                        <td>@d.ObjectsUpdated</td>
-                    </tr>
-                </tbody>
-                   
+                    <tbody>
+                        <tr>
+                            <td>@d.activityId</td>
+                            <td>@d.activityType</td>p
+                            <td>@d.outcome</td>
+                            <td>@d.isInternalError</td>
+                            <td>@d.errorMessage</td>
+                            <td>@d.Tenants</td>
+                            <td>@d.userName</td>
+                            <td>@d.startTime</td>
+                            <td>@d.endTime</td>
+                            <td>@d.ObjectsCreated</td>
+                            <td>@d.ObjectsDeleted</td>
+                            <td>@d.ObjectsUpdated</td>
+                        </tr>
+                    </tbody>
+
                 }
             </table>
         }
@@ -361,24 +364,24 @@
                         <th asp-for="ClientOS">ClientOS </th>
                     </tr>
                 </thead>
-               
+
                 @foreach (var d in Model.FeedActivity)
                 {
-                <tbody>
-                    <tr>
-                        <td>@d.activityId </td>
-                        <td>@d.activityType </td>
-                        <td>@d.startTime </td>
-                        <td>@d.endTime </td>
-                        <td>@d.userName</td>
-                        <td>@d.outcome </td>
-                        <td>@d.isInternalError </td>
-                        <td>@d.errorMessage </td>
-                        <td>@d.ClientIPAddress </td>
-                        <td>@d.ClientOS </td>
-                    </tr>
-                </tbody>
-                    
+                    <tbody>
+                        <tr>
+                            <td>@d.activityId </td>
+                            <td>@d.activityType </td>
+                            <td>@d.startTime </td>
+                            <td>@d.endTime </td>
+                            <td>@d.userName</td>
+                            <td>@d.outcome </td>
+                            <td>@d.isInternalError </td>
+                            <td>@d.errorMessage </td>
+                            <td>@d.ClientIPAddress </td>
+                            <td>@d.ClientOS </td>
+                        </tr>
+                    </tbody>
+
                 }
             </table>
         }
@@ -391,6 +394,10 @@
     </div>
 </div>
 
+
+<div>
+    <partial name="_UserSessions" />
+</div>
 
 
 
