@@ -1,48 +1,9 @@
-﻿<div class="docs-DialogExample-default">
-    <div class="ms-Dialog">
-        <div class="ms-Dialog-title">Win10 MultiSession Status</div>
-        <a asp-controller="DiagonizeIssues"
-           asp-action="LogoffUsersessions">LogoffUsersessions</a>
-        <a asp-controller="DiagonizeIssues"
-           asp-action="SendMessage">MessageUser</a>
-        <div class="ms-Dialog-content">
+﻿@*@model string*@
 
-            <table class="ms-Table">
-                <tr>
-                    <th>Select</th>
-                    <th>User UPN</th>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="ms-CheckBox">
-                            <input tabindex="-1" type="checkbox" class="ms-CheckBox-input">
-                            <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" name="checkboxa">
+<div id="myModal" class="modal">
 
-                            </label>
-                        </div>
-                    </td>
-                    <td>
-                        wvd.demo@peopletechcsp.onmicrosoft.com
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="ms-CheckBox">
-                            <input tabindex="-1" type="checkbox" class="ms-CheckBox-input">
-                            <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" name="checkboxa">
-
-                            </label>
-                        </div>
-                    </td>
-                    <td>
-                        wvd.demo@peopletechcsp.onmicrosoft.com
-                    </td>
-                </tr>
-            </table>
-
-        </div>
-
-    </div>
-    <button class="ms-Button docs-DialogExample-button">Open Dialog</button>
-    <label class="docs-DialogExample-label"></label>
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Some text in the Modal..</p>
+  </div>
 </div>

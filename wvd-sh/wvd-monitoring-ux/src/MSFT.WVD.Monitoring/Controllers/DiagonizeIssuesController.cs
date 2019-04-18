@@ -108,5 +108,9 @@ namespace MSFT.WVD.Monitoring.Controllers
             return View("Index", viewData);
            
         }
+        public IActionResult UserSessions()
+        {
+            return PartialView("_UserSessions");
+        }
     }
 }
