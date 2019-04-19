@@ -465,9 +465,25 @@ html, body {
     margin-bottom: 10px;
 }
 
-.body-content .content-section {
-    margin: 0 50px;
+.primary-btn {
+    background-color: #00a3ec;
+    border-color: #00a3ec;
 }
+
+.primary-btn:hover {
+    background-color: #00a3ec;
+    border-color: #00a3ec;
+}
+    .primary-btn .ms-Button-label{
+        color:#fff;
+    }
+    .primary-btn:hover .ms-Button-label {
+        color: #fff;
+    }
+
+    .body-content .content-section {
+        margin: 0 50px;
+    }
 
     .body-content .content-section form .form-wrap label {
         line-height: 34px;
@@ -615,13 +631,43 @@ html, body {
     margin-left:20px;
 }
 .users-session .ms-Pivot-content{
-    padding:0 15px;
+    padding:0 8px;
 }
 .users-session .ms-PanelExample a .ms-Button-label {
     color: #00a3ec;
+}
+.users-session .ms-Grid label{
+    font-weight:600;
+    font-size:14px;
 }
 .sendmessagediv {
     width: 370px;
     padding: 16px 0;
     margin-top: 5px;
+}
+.error-msg{
+    color:red;
+    margin-bottom:5px;
+    display:block;
+}
+.anchorlinksdiv {
+    margin-top: 45px;
+}
+.spanlabel {
+    margin-top: 6px;
+    
+}
+.detailshead {
+    margin-left: 16px;
+}
+
+.labelcolor {
+    color: deepskyblue;
+}
+.red{
+    color:orangered;
+}
+.ms-MessageBar
+{
+    width:100%;
 }

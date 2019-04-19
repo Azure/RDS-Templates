@@ -1,6 +1,7 @@
 ﻿using MSFT.WVD.Monitoring.Common.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,7 +17,9 @@ namespace MSFT.WVD.Monitoring.Models
 
         public SendMessageQuery SendMessageQuery { get; set; }
         public LogOffUserQuery LogOffUserQuery { get; set; }
+        [Required]
         public string Title { get; set; }
+        [Required]
         public string Message { get; set; }
     }
 }
