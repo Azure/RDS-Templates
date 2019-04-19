@@ -5,38 +5,8 @@
 
 @if (Model.ShowDialog)
 {
-<div class="ms-PanelExample">
-    <div class="flyoutpanel ms-Panel is-open">
-        @*@using (Html.BeginForm("Save", "Home", FormMethod.Post))
-        {
-            <div class="flyoutpanel-content-wrap">
-                <div class="flyoutpanel-header">
-                    <h4>Please choose Tenant Group &amp; Tenant</h4>
-                    <button><i class="ms-Icon ms-Icon--Cancel" title="Cancel" aria-hidden="true"></i></button>
-                </div>
-                <div class="flyoutpanel-content">
-                    <div class="flyoutpanel-controls">
-                        @Html.Label("tenantGroupName", "Tenant Group Name")
-                        @Html.TextBoxFor(m => m.SubmitData.TenantGroupName,
-                    new { @Value = "Enter TenantGroupName", @class = "form-control m-b-10" })
-
-                        @Html.Label("tenantName", "Tenant Name")
-                        @Html.TextBoxFor(m => m.SubmitData.TenantName,
-                    new { @Value = "Enter Tenant Name", @class = "form-control" })
-                    </div>
-                </div>
-                <div class="flyoutpanel-footer">
-                    <button type="submit" class="ms-Button">
-                        <span class="ms-Button-label">Cancel</span>
-                    </button>
-                    <button type="submit" class="ms-Button primary-btn">
-                        <span class="ms-Button-label">Save</span>
-                    </button>
-               
-                </div>
-            </div>
-        }*@
-
+    <div class="ms-PanelExample">
+        <div class="flyoutpanel ms-Panel is-open">
             <form asp-controller="Home" asp-action="Save" method="post">
                 <div class="flyoutpanel-content-wrap">
                     <div class="flyoutpanel-header">
@@ -45,10 +15,10 @@
                     <div class="flyoutpanel-content">
                         <div class="flyoutpanel-controls">
                             <label asp-for="SubmitData.TenantGroupName" class="control-label"></label>
-                            <input asp-for="SubmitData.TenantGroupName" class="form-control m-b-10"  />
+                            <input asp-for="SubmitData.TenantGroupName" class="form-control m-b-10" />
 
                             <label asp-for="SubmitData.TenantName" class="control-label"></label>
-                            <input asp-for="SubmitData.TenantName" class="form-control m-b-10"  />
+                            <input asp-for="SubmitData.TenantName" class="form-control m-b-10" />
                         </div>
                     </div>
                     <div class="flyoutpanel-footer">
@@ -58,21 +28,11 @@
                         <button type="submit" class="ms-Button primary-btn">
                             <span class="ms-Button-label">Save</span>
                         </button>
-                        <!-- <input type="submit" value="cancel" class="btn btn-secondary" />
-            <input type="submit" value="Save" class="btn primary-btn" /> -->
+
                     </div>
                 </div>
             </form>
-        <!-- <button class="ms-Panel-closeButton ms-PanelAction-close">
-      <i class="ms-Panel-closeIcon ms-Icon ms-Icon--Cancel"></i>
-    </button>
-    <div class="ms-Panel-contentInner">
-      <p class="ms-Panel-headerText">Panel</p>
-      <div class="ms-Panel-content">
-        <span class="ms-font-m">Content goes here</span>
-      </div>
-    </div> -->
+        </div>
     </div>
-</div>
 }
 

@@ -620,3 +620,8 @@ html, body {
 .users-session .ms-PanelExample a .ms-Button-label {
     color: #00a3ec;
 }
+.sendmessagediv {
+    width: 370px;
+    padding: 16px 0;
+    margin-top: 5px;
+}

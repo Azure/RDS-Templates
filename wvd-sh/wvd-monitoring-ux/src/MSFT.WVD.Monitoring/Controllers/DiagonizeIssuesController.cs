@@ -117,6 +117,8 @@ namespace MSFT.WVD.Monitoring.Controllers
             string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             List<UserSession> userSessions = GetUserSessions(accessToken, tenantGroupName, tenant, SessionHostPoolName, SessionHostName);
+            ViewBag.ShowConnectedUser = true;
+
             return View(new DiagnoseDetailPageViewModel()
             {
                 ConnectionActivity = new ConnectionActivity
@@ -134,14 +136,13 @@ namespace MSFT.WVD.Monitoring.Controllers
                     SessionHostPoolName = SessionHostPoolName
                 },
                 UserSessions = userSessions
-
             });
+
         }
 
-        public List<UserSession> GetUserSessions(string accessToken, string tenantGroupName,string tenant, string hostPoolName, string hostName)
+        public List<UserSession> GetUserSessions(string accessToken, string tenantGroupName, string tenant, string hostPoolName, string hostName)
         {
             List<UserSession> userSessions = new List<UserSession>();
-           
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
@@ -149,21 +150,18 @@ namespace MSFT.WVD.Monitoring.Controllers
                 client.DefaultRequestHeaders.Add("Authorization", accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                HttpResponseMessage httpResponseMessage =  client.GetAsync($"SessionHost/GetUserSessions?tenantGroupName={tenantGroupName}&tenant={tenant}&hostPoolName={hostPoolName}&sessionHostName={hostName}").Result;
+                HttpResponseMessage httpResponseMessage = client.GetAsync($"SessionHost/GetUserSessions?tenantGroupName={tenantGroupName}&tenant={tenant}&hostPoolName={hostPoolName}&sessionHostName={hostName}").Result;
                 if (httpResponseMessage.IsSuccessStatusCode)
                 {
-                    var data =  httpResponseMessage.Content.ReadAsStringAsync().Result;
+                    var data = httpResponseMessage.Content.ReadAsStringAsync().Result;
                     userSessions = JsonConvert.DeserializeObject<List<UserSession>>(data);
-                }
-                else
-                {
-                    
+
                 }
             }
             return userSessions;
         }
 
-  
+
         [HttpPost]
         public async Task<IActionResult> LogOffUserSession(DiagnoseDetailPageViewModel data)
         {
@@ -178,8 +176,9 @@ namespace MSFT.WVD.Monitoring.Controllers
                 client.Timeout = TimeSpan.FromMinutes(30);
                 client.DefaultRequestHeaders.Add("Authorization", accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                int SuccessCount = 0, FailedCount = 0;
 
-                foreach (var item in data.UserSessions.Where(x=>x.IsSelected==true).ToList())
+                foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
                 {
                     LogOffUserQuery logOffUserQuery = new LogOffUserQuery()
                     {
@@ -192,17 +191,21 @@ namespace MSFT.WVD.Monitoring.Controllers
                     var Content = new StringContent(JsonConvert.SerializeObject(logOffUserQuery), Encoding.UTF8, "application/json");
                     _logger.LogInformation($"Call api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
                     var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
+
                     if (response.IsSuccessStatusCode)
                     {
-
+                        SuccessCount = SuccessCount + 1;
                     }
                     else
                     {
-                        return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
+                        FailedCount = FailedCount + 1;
+                        // return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
                     }
                 }
+
+                ViewBag.Message = $"{SuccessCount} users logged off successfully. {FailedCount} failed.";
             }
-            return View();
+            return View("UserSessions", data);
         }
 
         [HttpPost]
@@ -219,6 +222,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 client.Timeout = TimeSpan.FromMinutes(30);
                 client.DefaultRequestHeaders.Add("Authorization", accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                int SuccessCount = 0, FailedCount = 0;
+
                 foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
                 {
                     SendMessageQuery sendMessageQuery = new SendMessageQuery()
@@ -236,15 +241,22 @@ namespace MSFT.WVD.Monitoring.Controllers
                     var response = await client.PostAsync($"SessionHost/SendMessage", Content);
                     if (response.IsSuccessStatusCode)
                     {
+                        SuccessCount = SuccessCount + 1;
 
                     }
                     else
                     {
-                        return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
-                    }
+                        FailedCount = FailedCount + 1;
 
+                        // return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
+                    }
                 }
-                return View();
+                ViewBag.Message = $"Message sent successfully to {SuccessCount} users . {FailedCount} failed.";
+                ViewBag.ShowConnectedUser = true;
+                data.UserSessions = data.UserSessions.Where(usr => usr.IsSelected = true)
+           .Select(usr => { usr.IsSelected = false; return usr; })
+           .ToList();
+                return View("UserSessions", data);
             }
         }
     }
