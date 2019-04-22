@@ -339,6 +339,7 @@ html, body {
 
 .norecordstable {
     padding-top: 100px;
+    margin-left: 590px;
 }
 
 .form-group.required .control-label:after {
