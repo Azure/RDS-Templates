@@ -44,10 +44,15 @@ namespace MSFT.WVD.Monitoring.Controllers
         [HttpPost]
         public async Task<IActionResult> SearchActivity(DaigonizePageViewModel data)
         {
+           
             var viewData = new DaigonizePageViewModel();
+            var sessiondatadata = HttpContext.Session.Get<DaigonizePageViewModel>("SelectedActivitySearch");
 
-            if (ModelState.IsValid)
+            if (ModelState.IsValid || sessiondatadata!=null)
             {
+
+                HttpContext.Session.Set<DaigonizePageViewModel>("SelectedActivitySearch", data);
+
                 string accessToken = await HttpContext.GetTokenAsync("access_token");
                 string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
@@ -109,8 +114,102 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         }
 
+       
+        public async Task<IActionResult> GetExistingSearchData()
+        {
+            var viewData = new DaigonizePageViewModel();
 
-        public async Task<IActionResult> UserSessions(string activityId, string activityType, string outcome, string Tenants, string userName, string ClientOS, string ClientIPAddress, string startTime, string endTime, string SessionHostName, string SessionHostPoolName)
+            try
+            {
+                var data = HttpContext.Session.Get<DaigonizePageViewModel>("SelectedActivitySearch");
+
+                //return RedirectToAction("SearchActivity", "DiagonizeIssues", new DaigonizePageViewModel()
+                //{
+                //    SelectedRole = role,
+                //    DiagonizeQuery = new DiagonizeQuery()
+                //    {
+                //        UPN = data.DiagonizeQuery.UPN,
+                //        StartDate = data.DiagonizeQuery.StartDate,
+                //        EndDate = data.DiagonizeQuery.EndDate,
+                //        ActivityOutcome = data.DiagonizeQuery.ActivityOutcome,
+                //        ActivityType = data.DiagonizeQuery.ActivityType
+                //    }
+                //});
+
+                string accessToken = await HttpContext.GetTokenAsync("access_token");
+                string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+                string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+                using (var client = new HttpClient())
+                {
+
+                    client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
+                    client.Timeout = TimeSpan.FromMinutes(30);
+                    client.DefaultRequestHeaders.Add("Authorization", accessToken);
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    viewData.DiagonizeQuery = data.DiagonizeQuery;
+                    if (data.DiagonizeQuery.ActivityType == ActivityType.Management)
+                    {
+                        _logger.LogInformation($"Call api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+                        var response = await client.GetAsync($"DiagnosticActivity/GetManagementActivities/?upn={data.DiagonizeQuery.UPN}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.ActivityOutcome}");
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var strManagementDetails = await response.Content.ReadAsStringAsync();
+                            viewData.ManagementActivity = JsonConvert.DeserializeObject<List<ManagementActivity>>(strManagementDetails);
+                            viewData.ActivityType = viewData.ManagementActivity != null && viewData.ManagementActivity.Count > 0 ? ActivityType.Management : ActivityType.None;
+                        }
+                        else
+                        {
+                            return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
+                        }
+                    }
+                    else if (data.DiagonizeQuery.ActivityType == ActivityType.Connection)
+                    {
+                        _logger.LogInformation($"Call api to get connection activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+                        HttpResponseMessage response = await client.GetAsync($"DiagnosticActivity/GetConnectionActivities/?upn={data.DiagonizeQuery.UPN}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.ActivityOutcome}");
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var strConnectionDetails = response.Content.ReadAsStringAsync().Result;
+                            viewData.ConnectionActivity = JsonConvert.DeserializeObject<List<ConnectionActivity>>(strConnectionDetails);
+                            viewData.ActivityType = viewData.ConnectionActivity != null && viewData.ConnectionActivity.Count > 0 ? ActivityType.Connection : ActivityType.None;
+                        }
+                        else
+                        {
+                            return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
+                        }
+                    }
+                    else if (data.DiagonizeQuery.ActivityType == ActivityType.Feed)
+                    {
+                        var response = await client.GetAsync($"DiagnosticActivity/GetFeedActivities/?upn={data.DiagonizeQuery.UPN}&tenantGroupName={tenantGroupName}&tenant={tenant}&startDate={data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&endDate={data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")}&outcome={data.DiagonizeQuery.ActivityOutcome}");
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var strFeedDetails = response.Content.ReadAsStringAsync().Result;
+                            viewData.FeedActivity = JsonConvert.DeserializeObject<List<FeedActivity>>(strFeedDetails);
+                            viewData.ActivityType = viewData.FeedActivity != null && viewData.FeedActivity.Count > 0 ? ActivityType.Feed : ActivityType.None;
+                        }
+                        else
+                        {
+                            return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
+                        }
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+                throw ex;
+            }
+            return View("Index", viewData);
+
+        }
+
+
+
+        public async Task<IActionResult> UserSessions(string activityId, string activityType, string outcome, string Tenants, string userName, string ClientOS, string ClientIPAddress, string startTime, string endTime, string SessionHostName, string SessionHostPoolName, string returnUri="")
         {
             // get user sesssions
             string accessToken = await HttpContext.GetTokenAsync("access_token");
@@ -137,7 +236,31 @@ namespace MSFT.WVD.Monitoring.Controllers
                 },
                 UserSessions = userSessions
             });
+            //return View(new DiagnoseDetailPageViewModel()
+            //{
+            //    ConnectionActivity = new ConnectionActivity
+            //    {
+            //        activityId = activityId,
+            //        activityType = activityType,
+            //        outcome = outcome,
+            //        Tenants = Tenants,
+            //        userName = userName,
+            //        ClientOS = ClientOS,
+            //        ClientIPAddress = ClientIPAddress,
+            //        startTime = Convert.ToDateTime(startTime),
+            //        endTime = Convert.ToDateTime(endTime),
+            //        SessionHostName = SessionHostName,
+            //        SessionHostPoolName = SessionHostPoolName
+            //    },
+            //    UserSessions = userSessions
+            //});
+           // return LocalRedirect("/DiagonizeIssues/UserSessions");
+            //return Redirect(returnUri);
+        }
 
+        public IActionResult GetUserSessions(DiagnoseDetailPageViewModel data)
+        {
+            return View("UserSessions",data);
         }
 
         public List<UserSession> GetUserSessions(string accessToken, string tenantGroupName, string tenant, string hostPoolName, string hostName)
@@ -258,6 +381,12 @@ namespace MSFT.WVD.Monitoring.Controllers
            .ToList();
                 return View("UserSessions", data);
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Test(string activityId)
+        {
+            return null;
         }
     }
 }
