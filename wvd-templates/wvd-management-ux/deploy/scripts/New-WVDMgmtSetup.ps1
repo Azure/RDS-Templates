@@ -227,7 +227,7 @@ Import-Module AzureRM.Resources
 `$Securepass=ConvertTo-SecureString -String `$Password -AsPlainText -Force
 `$Azurecred=New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList(`$Username, `$Securepass)
 `$login=Login-AzureRmAccount -Credential `$Azurecred -SubscriptionId `$SubscriptionId
-$AutomationAccount = Get-AzureRmAutomationAccount -ResourceGroupName `$ResourceGroupName -Name `$automationAccountName
+`$AutomationAccount = Get-AzureRmAutomationAccount -ResourceGroupName `$ResourceGroupName -Name `$automationAccountName
 if(`$AutomationAccount){
 #Remove-AzureRmAutomationAccount -Name `$automationAccountName -ResourceGroupName `$ResourceGroupName -Force
 `$resourcedetails = Get-AzureRmResource -Name `$automationAccountName -ResourceGroupName `$ResourceGroupName
