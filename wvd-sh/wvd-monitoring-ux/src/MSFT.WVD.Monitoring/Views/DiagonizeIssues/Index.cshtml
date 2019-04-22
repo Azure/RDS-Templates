@@ -71,6 +71,10 @@
             @if (Model.ConnectionActivity.Count() > 0 || Model.ManagementActivity.Count() > 0 || Model.FeedActivity.Count() > 0)
             {
             }
+            else if (Model.ConnectionActivity.Count() == 0 || Model.ManagementActivity.Count() == 0 || Model.FeedActivity.Count() == 0)
+            {
+              
+            }
 
         }
         else
@@ -121,8 +125,8 @@
                                 <td>
                                     @{
                                         bool isDisable = d.SessionHostName != "" && d.SessionHostName != null ? false : true;
-                                        <button type="submit" class="ms-Button primary-btn" style="width:130px;" formaction="UserSessions" name="btnHost" value="@d.activityId" disabled="@isDisable">
-                                            View Status
+                                        <button type="submit" class="ms-Button primary-btn disablebtn" style="width:130px;" formaction="UserSessions" name="btnHost" value="@d.activityId" disabled="@isDisable" @(d.SessionHostName != "" ? "" : "disabled='disabled'")>
+                                            ViewStatus
                                         </button>
                                     }
                                 </td>
