@@ -27,6 +27,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public int sessionId { get; set; }
         public string messageTitle { get; set; }
         public string messageBody { get; set; }
+        public string userPrincipalName { get; set; }
     }
 
     public class LogOffUserQuery

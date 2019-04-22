@@ -44,11 +44,11 @@ namespace MSFT.WVD.Monitoring.Controllers
         [HttpPost]
         public async Task<IActionResult> SearchActivity(DaigonizePageViewModel data)
         {
-           
+
             var viewData = new DaigonizePageViewModel();
             var sessiondatadata = HttpContext.Session.Get<DaigonizePageViewModel>("SelectedActivitySearch");
 
-            if (ModelState.IsValid || sessiondatadata!=null)
+            if (ModelState.IsValid || sessiondatadata != null)
             {
 
                 HttpContext.Session.Set<DaigonizePageViewModel>("SelectedActivitySearch", data);
@@ -114,7 +114,7 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         }
 
-       
+
         public async Task<IActionResult> GetExistingSearchData()
         {
             var viewData = new DaigonizePageViewModel();
@@ -209,58 +209,58 @@ namespace MSFT.WVD.Monitoring.Controllers
 
 
 
-        public async Task<IActionResult> UserSessions(string activityId, string activityType, string outcome, string Tenants, string userName, string ClientOS, string ClientIPAddress, string startTime, string endTime, string SessionHostName, string SessionHostPoolName, string returnUri="")
-        {
-            // get user sesssions
-            string accessToken = await HttpContext.GetTokenAsync("access_token");
-            string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
-            string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-            List<UserSession> userSessions = GetUserSessions(accessToken, tenantGroupName, tenant, SessionHostPoolName, SessionHostName);
-            ViewBag.ShowConnectedUser = true;
+        //public async Task<IActionResult> UserSessions(string activityId, string activityType, string outcome, string Tenants, string userName, string ClientOS, string ClientIPAddress, string startTime, string endTime, string SessionHostName, string SessionHostPoolName, string returnUri = "")
+        //{
+        //    // get user sesssions
+        //    string accessToken = await HttpContext.GetTokenAsync("access_token");
+        //    string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+        //    string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+        //    List<UserSession> userSessions = GetUserSessions(accessToken, tenantGroupName, tenant, SessionHostPoolName, SessionHostName);
+        //    ViewBag.ShowConnectedUser = true;
 
-            return View(new DiagnoseDetailPageViewModel()
-            {
-                ConnectionActivity = new ConnectionActivity
-                {
-                    activityId = activityId,
-                    activityType = activityType,
-                    outcome = outcome,
-                    Tenants = Tenants,
-                    userName = userName,
-                    ClientOS = ClientOS,
-                    ClientIPAddress = ClientIPAddress,
-                    startTime = Convert.ToDateTime(startTime),
-                    endTime = Convert.ToDateTime(endTime),
-                    SessionHostName = SessionHostName,
-                    SessionHostPoolName = SessionHostPoolName
-                },
-                UserSessions = userSessions
-            });
-            //return View(new DiagnoseDetailPageViewModel()
-            //{
-            //    ConnectionActivity = new ConnectionActivity
-            //    {
-            //        activityId = activityId,
-            //        activityType = activityType,
-            //        outcome = outcome,
-            //        Tenants = Tenants,
-            //        userName = userName,
-            //        ClientOS = ClientOS,
-            //        ClientIPAddress = ClientIPAddress,
-            //        startTime = Convert.ToDateTime(startTime),
-            //        endTime = Convert.ToDateTime(endTime),
-            //        SessionHostName = SessionHostName,
-            //        SessionHostPoolName = SessionHostPoolName
-            //    },
-            //    UserSessions = userSessions
-            //});
-           // return LocalRedirect("/DiagonizeIssues/UserSessions");
-            //return Redirect(returnUri);
-        }
+        //    return View(new DiagnoseDetailPageViewModel()
+        //    {
+        //        ConnectionActivity = new ConnectionActivity
+        //        {
+        //            activityId = activityId,
+        //            activityType = activityType,
+        //            outcome = outcome,
+        //            Tenants = Tenants,
+        //            userName = userName,
+        //            ClientOS = ClientOS,
+        //            ClientIPAddress = ClientIPAddress,
+        //            startTime = Convert.ToDateTime(startTime),
+        //            endTime = Convert.ToDateTime(endTime),
+        //            SessionHostName = SessionHostName,
+        //            SessionHostPoolName = SessionHostPoolName
+        //        },
+        //        UserSessions = userSessions
+        //    });
+        //    //return View(new DiagnoseDetailPageViewModel()
+        //    //{
+        //    //    ConnectionActivity = new ConnectionActivity
+        //    //    {
+        //    //        activityId = activityId,
+        //    //        activityType = activityType,
+        //    //        outcome = outcome,
+        //    //        Tenants = Tenants,
+        //    //        userName = userName,
+        //    //        ClientOS = ClientOS,
+        //    //        ClientIPAddress = ClientIPAddress,
+        //    //        startTime = Convert.ToDateTime(startTime),
+        //    //        endTime = Convert.ToDateTime(endTime),
+        //    //        SessionHostName = SessionHostName,
+        //    //        SessionHostPoolName = SessionHostPoolName
+        //    //    },
+        //    //    UserSessions = userSessions
+        //    //});
+        //    // return LocalRedirect("/DiagonizeIssues/UserSessions");
+        //    //return Redirect(returnUri);
+        //}
 
         public IActionResult GetUserSessions(DiagnoseDetailPageViewModel data)
         {
-            return View("UserSessions",data);
+            return View("UserSessions", data);
         }
 
         public List<UserSession> GetUserSessions(string accessToken, string tenantGroupName, string tenant, string hostPoolName, string hostName)
@@ -292,6 +292,8 @@ namespace MSFT.WVD.Monitoring.Controllers
             string accessToken = await HttpContext.GetTokenAsync("access_token");
             string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+            List<MessageStatus> messageStatus = new List<MessageStatus>();
+
             using (var client = new HttpClient())
             {
 
@@ -299,43 +301,68 @@ namespace MSFT.WVD.Monitoring.Controllers
                 client.Timeout = TimeSpan.FromMinutes(30);
                 client.DefaultRequestHeaders.Add("Authorization", accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                int SuccessCount = 0, FailedCount = 0;
-
-                foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
+                if(data.UserSessions.Where(x => x.IsSelected == true).ToList().Count >0)
                 {
-                    LogOffUserQuery logOffUserQuery = new LogOffUserQuery()
+                    foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
                     {
-                        tenantGroupName = item.tenantGroupName,
-                        tenantName = item.tenantName,
-                        hostPoolName = item.hostPoolName,
-                        sessionHostName = item.sessionHostName,
-                        sessionId = item.sessionId
-                    };
-                    var Content = new StringContent(JsonConvert.SerializeObject(logOffUserQuery), Encoding.UTF8, "application/json");
-                    _logger.LogInformation($"Call api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
-                    var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
+                        LogOffUserQuery logOffUserQuery = new LogOffUserQuery()
+                        {
+                            tenantGroupName = item.tenantGroupName,
+                            tenantName = item.tenantName,
+                            hostPoolName = item.hostPoolName,
+                            sessionHostName = item.sessionHostName,
+                            sessionId = item.sessionId
+                        };
+                        var Content = new StringContent(JsonConvert.SerializeObject(logOffUserQuery), Encoding.UTF8, "application/json");
+                        _logger.LogInformation($"Call api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+                        var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
 
-                    if (response.IsSuccessStatusCode)
-                    {
-                        SuccessCount = SuccessCount + 1;
-                    }
-                    else
-                    {
-                        FailedCount = FailedCount + 1;
-                        // return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
+                        if (response.IsSuccessStatusCode)
+                        {
+                            messageStatus.Add(new MessageStatus()
+                            {
+                                Message = $"Log off sucessfully for {item.userPrincipalName} user session.",
+                                Status = "Success"
+                            });
+                        }
+                        else
+                        {
+                            messageStatus.Add(new MessageStatus()
+                            {
+                                Message = $"Failed to logoff {item.userPrincipalName} user session.",
+                                Status = "Error"
+                            });
+                        }
                     }
                 }
+                else
+                {
+                    messageStatus.Add(new MessageStatus()
+                    {
+                        Message = $"Please select users.",
+                        Status = "Error"
+                    });
+                }
+              
 
-                ViewBag.Message = $"{SuccessCount} users logged off successfully. {FailedCount} failed.";
             }
-            return View("UserSessions", data);
+            return View("UserSessions", new DiagnoseDetailPageViewModel
+            {
+                Title = "",
+                Message = "",
+                SendMsgStatuses = messageStatus,
+                ConnectionActivity = data.ConnectionActivity,
+                ShowConnectedUser = true,
+                ShowMessageForm=false,
+                UserSessions = GetUserSessions(accessToken,tenantGroupName,tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
+            });
         }
 
         [HttpPost]
         public async Task<IActionResult> SendMessage(DiagnoseDetailPageViewModel data)
         {
             var viewData = new SendMessageQuery();
-            List<SendMsgStatus> messageStatus = new List<SendMsgStatus>();
+            List<MessageStatus> messageStatus = new List<MessageStatus>();
             string accessToken = await HttpContext.GetTokenAsync("access_token");
             string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
@@ -346,50 +373,118 @@ namespace MSFT.WVD.Monitoring.Controllers
                 client.Timeout = TimeSpan.FromMinutes(30);
                 client.DefaultRequestHeaders.Add("Authorization", accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                int SuccessCount = 0, FailedCount = 0;
-
-                foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
+                if(data.UserSessions.Where(x => x.IsSelected == true).ToList().Count>0)
                 {
-                    SendMessageQuery sendMessageQuery = new SendMessageQuery()
+                    foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
                     {
-                        tenantGroupName = item.tenantGroupName,
-                        tenantName = item.tenantName,
-                        hostPoolName = item.hostPoolName,
-                        sessionHostName = item.sessionHostName,
-                        sessionId = item.sessionId,
-                        messageTitle = data.Title,
-                        messageBody = data.Message
-                    };
-                    var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
-                    _logger.LogInformation($"Call api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
-                    var response = await client.PostAsync($"SessionHost/SendMessage", Content);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        SuccessCount = SuccessCount + 1;
-                        //messageStatus.Add(new SendMsgStatus()
-                        //{
-                        messageStatus.Add(new SendMsgStatus()
+                        SendMessageQuery sendMessageQuery = new SendMessageQuery()
                         {
+                            tenantGroupName = item.tenantGroupName,
+                            tenantName = item.tenantName,
+                            hostPoolName = item.hostPoolName,
+                            sessionHostName = item.sessionHostName,
+                            sessionId = item.sessionId,
+                            messageTitle = data.Title,
+                            messageBody = data.Message,
+                            userPrincipalName = item.userPrincipalName
+                        };
+                        var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
+                        _logger.LogInformation($"Call api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+                        var response = await client.PostAsync($"SessionHost/SendMessage", Content);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            messageStatus.Add(new MessageStatus()
+                            {
+                                Message = $"Message sent sucessfully to {item.userPrincipalName}",
+                                Status = "Success"
+                            });
+                        }
+                        else
+                        {
+                            messageStatus.Add(new MessageStatus()
+                            {
+                                Message = $"Failed to send message to {item.userPrincipalName}",
+                                Status = "Error"
+                            });
 
-                        });
-
-                    }
-                    else
-                    {
-                        FailedCount = FailedCount + 1;
-
-                        // return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
+                            // return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
+                        }
                     }
                 }
-             // ViewBag.SendMsgStatus = $"Message sent successfully to {UserName}";
-                ViewBag.ShowConnectedUser = true;
-                data.UserSessions = data.UserSessions.Where(usr => usr.IsSelected = true)
+                else
+                {
+                    messageStatus.Add(new MessageStatus()
+                    {
+                        Message = $"Please select users",
+                        Status = "Error"
+                    });
+                }
+               
+
+                return View("UserSessions", new DiagnoseDetailPageViewModel
+                {
+                    UserSessions = data.UserSessions.Where(usr => usr.IsSelected = true)
            .Select(usr => { usr.IsSelected = false; return usr; })
-           .ToList();
-                return View("UserSessions", data);
+           .ToList(),
+
+                    Title="",
+                    Message="",
+
+                    SendMsgStatuses = messageStatus,
+                    ConnectionActivity = data.ConnectionActivity,
+                    ShowConnectedUser = true,
+                    ShowMessageForm=true
+                });
             }
         }
 
-      
+        public async Task<IActionResult> UserSessions(string btnHost)
+        {
+            string accessToken = await HttpContext.GetTokenAsync("access_token");
+            string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+            string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+            using (var client = new HttpClient())
+            {
+
+                client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
+                client.Timeout = TimeSpan.FromMinutes(30);
+                client.DefaultRequestHeaders.Add("Authorization", accessToken);
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                HttpResponseMessage response = await client.GetAsync($"DiagnosticActivity/GetActivityDetails/?tenantGroupName={tenantGroupName}&tenant={tenant}&activityId={btnHost}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var strConnectionDetails = response.Content.ReadAsStringAsync().Result;
+                    var ConnectionActivity = JsonConvert.DeserializeObject<List<ConnectionActivity>>(strConnectionDetails);
+                    List<UserSession> userSessions = GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName);
+                    ViewBag.ShowConnectedUser = true;
+
+                    return View(new DiagnoseDetailPageViewModel()
+                    {
+                        ConnectionActivity = new ConnectionActivity
+                        {
+                            activityId = ConnectionActivity[0].activityId,
+                            activityType = ConnectionActivity[0].activityType,
+                            outcome = ConnectionActivity[0].outcome,
+                            Tenants = ConnectionActivity[0].Tenants,
+                            userName = ConnectionActivity[0].userName,
+                            ClientOS = ConnectionActivity[0].ClientOS,
+                            ClientIPAddress = ConnectionActivity[0].ClientIPAddress,
+                            startTime = Convert.ToDateTime(ConnectionActivity[0].startTime),
+                            endTime = Convert.ToDateTime(ConnectionActivity[0].endTime),
+                            SessionHostName = ConnectionActivity[0].SessionHostName,
+                            SessionHostPoolName = ConnectionActivity[0].SessionHostPoolName
+                        },
+                        UserSessions = userSessions,
+                        ShowConnectedUser= false,
+                        ShowMessageForm=true
+                    });
+                }
+                else
+                {
+                    return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
+                }
+            }
+
+        }
     }
 }

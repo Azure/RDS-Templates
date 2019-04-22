@@ -21,5 +21,12 @@ namespace MSFT.WVD.Monitoring.Models
         public string Title { get; set; }
         [Required]
         public string Message { get; set; }
+
+
+        public List<MessageStatus> SendMsgStatuses { get; set; }
+
+        public bool ShowConnectedUser { get; set; }
+     
+        public bool ShowMessageForm { get; set; }
     }
 }
