@@ -121,5 +121,37 @@ namespace MSFT.WVD.Monitoring.api
                 return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
             }
         }
+
+        [HttpGet("GetActivityDetails")]
+        public IActionResult GetActivityDetails(string tenantGroupName,string tenant,string activityId)
+        {
+            try
+            {
+                string token = Request.Headers["Authorization"];
+
+                HttpResponseMessage response = diagnosticActivitityBL.GetActivityDetails(Configuration.RDBrokerUrl, token,  tenantGroupName, tenant, activityId);
+                if (response.IsSuccessStatusCode)
+                {
+                    IEnumerable<ConnectionActivity> activities = diagnosticActivitityBL.GetActivityDetails(response);
+                    return new OkObjectResult(activities);
+                }
+                else
+                {
+                    var message = string.Empty;
+                    if (response.Content != null)
+                    {
+                        message = !string.IsNullOrEmpty(response.Content.ReadAsStringAsync().Result) ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
+                    }
+                    return StatusCode((int)response.StatusCode, message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"{ex.Message}");
+                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
+            }
+        }
+
+       
     }
 }

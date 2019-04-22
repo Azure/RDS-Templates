@@ -141,5 +141,40 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 ClientIPAddress = item["details"]["ClientIPAddress"].ToString()
             }).ToList();
         }
+
+        public HttpResponseMessage GetActivityDetails(string deploymentUrl, string accessToken,string tenantGroupName,string tenant, string activityId)
+        {
+            try
+            {
+               
+                
+                    return CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?ActivityId={activityId}&Detailed=true").Result;
+            }
+            catch (Exception ex)
+            {
+                return new HttpResponseMessage() { StatusCode = HttpStatusCode.BadRequest, Content = new StringContent(ex.Message) };
+            }
+        }
+        public IEnumerable<ConnectionActivity> GetActivityDetails(HttpResponseMessage httpResponseMessage)
+        {
+            string strJson = httpResponseMessage.Content.ReadAsStringAsync().Result;
+            var arr = (JArray)JsonConvert.DeserializeObject(strJson);
+            return ((JArray)arr).Select(item => new ConnectionActivity
+            {
+                activityId = (string)item["activityId"],
+                activityType = (string)item["activityType"],
+                startTime = item["startTime"].ToString() != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
+                endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
+                userName = item["userName"].ToString(),
+                outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
+                isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
+                errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
+                ClientOS = (string)item["details"]["ClientOS"],
+                ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
+                Tenants = (string)item["details"]["Tenants"],
+                SessionHostName = (string)item["details"]["SessionHostName"],
+                SessionHostPoolName = (string)item["details"]["SessionHostPoolName"]
+            }).ToList();
+        }
     }
 }

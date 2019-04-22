@@ -4,7 +4,19 @@
     ViewData["Title"] = "Diagonize Issues";
 
 }
+<script type="text/javascript">
 
+    function getSessions(activityId, activityType, outcome,   userName,  ClientOS,  ClientIPAddress,  startTime,  endTime,  SessionHostName,  SessionHostPoolName) {
+        console.log(userName);
+       var newUrl= '@Url.Action("DiagonizeIssues", "UserSessions")';
+        $.post("/DiagonizeIssues/UserSessions", { activityId: activityId, activityType: activityType, outcome: outcome, userName: userName, ClientOS: ClientOS, ClientIPAddress: ClientIPAddress, startTime: startTime, endTime: endTime, SessionHostName: SessionHostName, SessionHostPoolName: SessionHostPoolName}) //
+            .done(function (data) {
+                debugger;
+                console.log(data);
+                location.href = newUrl;
+            });
+    }
+</script>
 <div class="width-100 content-section">
     <br />
     <form asp-controller="DiagonizeIssues" asp-action="SearchActivity" method="post" id="myform" asp-route-returnUrl="@Context.Request.Path"  role="form">
@@ -85,6 +97,7 @@
                             <th asp-for="Client">Client</th>
                             <th asp-for="Client Ip">Client Ip</th>
                             <th asp-for="Session Host">Session Host</th>
+                            <th asp-for="Action">Session Host</th>
                         </tr>
                     </thead>
 
@@ -104,30 +117,41 @@
                                 <td>@d.endTime</td>
                                 <td>@d.ClientOS</td>
                                 <td>@d.ClientIPAddress</td>
+                                <td>  @d.SessionHostName</td>
+
                                 <td>
+
+                                    @*@{
+            var d1 = new Dictionary<string, string>
+                                                                                                                                                                                                                               {
+                                                                                                                                                                                                                                { "activityId", @d.activityId },
+                                                                                                                                                                                                                                { "activityType", @d.activityType },
+                                                                                                                                                                                                                                { "outcome", @d.outcome },
+                                                                                                                                                                                                                                { "Tenants", @d.Tenants },
+                                                                                                                                                                                                                                { "userName", @d.userName },
+                                                                                                                                                                                                                                { "ClientOS", @d.ClientOS },
+                                                                                                                                                                                                                                { "ClientIPAddress", @d.ClientIPAddress },
+                                                                                                                                                                                                                                { "startTime", @d.startTime.ToString() },
+                                                                                                                                                                                                                                { "endTime", @d.endTime.ToString() },
+                                                                                                                                                                                                                                {"SessionHostName",d.SessionHostName },
+                                                                                                                                                                                                                                {"SessionHostPoolName",d.SessionHostPoolName }
+                                                                                                                                                                                                                              };
+        }*@
+
+                                    @*<a asp-controller="DiagonizeIssues" asp-action="UserSessions" asp-all-route-data="d1" asp-route-returnUri="@Context.Request.Path">@d.SessionHostName</a>*@
+                                    @*<a href="javascript:getSessions('@d.activityId','@d.activityType','@d.outcome','@d.userName','@d.ClientOS','@d.ClientIPAddress', '@d.startTime',  '@d.endTime',  '@d.SessionHostName',  '@d.SessionHostPoolName' )">@d.SessionHostName</a>*@
+                                    <br />
                                     @{
-                                        var d1 = new Dictionary<string, string>
-                                                                                                                           {
-                                                                                                                            { "activityId", @d.activityId },
-                                                                                                                            { "activityType", @d.activityType },
-                                                                                                                            { "outcome", @d.outcome },
-                                                                                                                            { "Tenants", @d.Tenants },
-                                                                                                                            { "userName", @d.userName },
-                                                                                                                            { "ClientOS", @d.ClientOS },
-                                                                                                                            { "ClientIPAddress", @d.ClientIPAddress },
-                                                                                                                            { "startTime", @d.startTime.ToString() },
-                                                                                                                            { "endTime", @d.endTime.ToString() },
-                                                                                                                            {"SessionHostName",d.SessionHostName },
-                                                                                                                            {"SessionHostPoolName",d.SessionHostPoolName }
-                                                                                                                          };
+                                        bool isDisable = d.SessionHostName != "" && d.SessionHostName != null ? false : true;
+                                        <button type="submit" class="ms-Button primary-btn" style="width:130px;" formaction="UserSessions" name="btnHost" value="@d.activityId" disabled="@isDisable">
+                                            View Status
+                                        </button>
                                     }
 
-                                    <a asp-controller="DiagonizeIssues" asp-action="UserSessions" asp-all-route-data="d1" asp-route-returnUri="@Context.Request.Path">@d.SessionHostName</a>
 
-                                   
-                                    @*<button type="submit" class="ms-Button primary-btn" formaction="Test" value="@d.activityId">
-                                        @d.SessionHostName
-                                    </button>*@
+
+
+
                                 </td>
                             </tr>
                         </tbody>

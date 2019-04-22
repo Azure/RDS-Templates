@@ -39,8 +39,8 @@ namespace MSFT.WVD.Monitoring.api
                 HttpResponseMessage httpResponseMessage = sessionHostBL.GetUserSessions(Configuration.RDBrokerUrl, token, tenantGroupName, tenant, hostPoolName, sessionHostName);
                 if (httpResponseMessage.IsSuccessStatusCode)
                 {
-                    IEnumerable<UserSession> connectionActivities = sessionHostBL.GetUserSessions(httpResponseMessage, sessionHostName);
-                    return new OkObjectResult(connectionActivities);
+                    IEnumerable<UserSession> usersessions = sessionHostBL.GetUserSessions(httpResponseMessage, sessionHostName);
+                    return new OkObjectResult(usersessions);
                 }
                 else
                 {
