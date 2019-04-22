@@ -481,9 +481,11 @@ html, body {
         color: #fff;
     }
 
-    .body-content .content-section {
-        margin: 0 50px;
-    }
+.body-content .content-section {
+    margin: 0 0 0 50px;
+    overflow: auto;
+    height: 100%;
+}
 
     .body-content .content-section form .form-wrap label {
         line-height: 34px;
@@ -506,9 +508,13 @@ html, body {
             color: #fff;
         }
 
-.flyoutpanel-footer .primary-btn {
-    margin-left: 8px;
-}
+    .body-content .content-section table td.word-break {
+        word-break:break-word;
+    }
+
+    .flyoutpanel-footer .primary-btn {
+        margin-left: 8px;
+    }
 
 .ms-Table {
     border: 1px solid #eaeaea;
