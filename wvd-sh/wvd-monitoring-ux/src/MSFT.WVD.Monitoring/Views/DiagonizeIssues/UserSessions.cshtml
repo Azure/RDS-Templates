@@ -5,7 +5,7 @@
 
 <script type="text/javascript">
     $(document).ready(function () {
-      //  $("#sendmessagediv").hide();
+       $("#sendmessagediv").hide();
         $("#msgbardiv").hide();
         $("#divVmContent").show();
         $("#msguserbtn").click(function () {
@@ -23,10 +23,16 @@
 <div class="width-100 content-section users-session">
    
     <form asp-controller="DiagonizeIssues" method="post">
-        <button class="ms-Button " formaction="GetExistingSearchData" type="submit" id="btnBack">
-            <span class="ms-Button-label labelcolor">Back To List</span>
-        </button>
-        <h2 class="detailshead">@Model.ConnectionActivity.SessionHostName Status</h2>
+        <div class="page-header">
+           
+           
+            <h2>
+                <button class="ms-Button " formaction="GetExistingSearchData" type="submit" id="btnBack">
+                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                @Model.ConnectionActivity.SessionHostName Status
+            </h2>
+        </div>       
         <div class="ms-Grid m-b-25" dir="ltr">
             <div class="ms-Grid-row">
                 <div class="form-wrap ms-Grid-col ms-xxxl6">

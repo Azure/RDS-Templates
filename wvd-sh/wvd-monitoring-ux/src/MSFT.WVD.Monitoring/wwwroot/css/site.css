@@ -671,3 +671,19 @@ html, body {
 {
     width:100%;
 }
+.page-header h2{
+    display:inline-block;
+}
+.page-header h2 button{
+    display:inline-block;
+    background:none;
+    border:0;
+    min-width:0;
+    padding:0;
+}
+    .page-header h2 button:hover {
+        background:none;
+    }
+        .page-header h2 button i{
+    font-size:16px;
+}

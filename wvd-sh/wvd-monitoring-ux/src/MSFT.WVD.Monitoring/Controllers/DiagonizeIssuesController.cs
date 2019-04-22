@@ -335,6 +335,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         public async Task<IActionResult> SendMessage(DiagnoseDetailPageViewModel data)
         {
             var viewData = new SendMessageQuery();
+            List<SendMsgStatus> messageStatus = new List<SendMsgStatus>();
             string accessToken = await HttpContext.GetTokenAsync("access_token");
             string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
@@ -365,6 +366,12 @@ namespace MSFT.WVD.Monitoring.Controllers
                     if (response.IsSuccessStatusCode)
                     {
                         SuccessCount = SuccessCount + 1;
+                        //messageStatus.Add(new SendMsgStatus()
+                        //{
+                        messageStatus.Add(new SendMsgStatus()
+                        {
+
+                        });
 
                     }
                     else
@@ -374,7 +381,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                         // return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
                     }
                 }
-                ViewBag.Message = $"Message sent successfully to {SuccessCount} users . {FailedCount} failed.";
+             // ViewBag.SendMsgStatus = $"Message sent successfully to {UserName}";
                 ViewBag.ShowConnectedUser = true;
                 data.UserSessions = data.UserSessions.Where(usr => usr.IsSelected = true)
            .Select(usr => { usr.IsSelected = false; return usr; })
@@ -383,10 +390,6 @@ namespace MSFT.WVD.Monitoring.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Test(string activityId)
-        {
-            return null;
-        }
+      
     }
 }
