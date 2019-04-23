@@ -1,7 +1,7 @@
 ﻿@*@model IPageViewModel*@
 @using Microsoft.AspNetCore.Http
 @{ var roleAssignment = Context.Session.Get<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>("SelectedRole");
-    var initial = roleAssignment!=null && roleAssignment.displayName!=null && roleAssignment.displayName.Split(" ").Length > 1 ? roleAssignment.displayName.Split(" ")[0].Substring(0, 1) + roleAssignment.displayName.Split(" ")[1].Substring(0, 1) : roleAssignment.displayName.Split(" ")[0].Substring(0, 2).ToUpper();}
+    var initial = roleAssignment != null && roleAssignment.displayName != null && roleAssignment.displayName.Split(" ").Length > 1 ? roleAssignment.displayName.Split(" ")[0].Substring(0, 1) + roleAssignment.displayName.Split(" ")[1].Substring(0, 1) : roleAssignment.displayName.Split(" ")[0].Substring(0, 2).ToUpper();}
 
 <!DOCTYPE html>
 <html>
@@ -14,8 +14,8 @@
         <!-- <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" /> -->
         <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css">
         <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.min.css" />
-<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
-<script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
+        <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
         <link rel="stylesheet" href="~/css/site.css" />
     </environment>
@@ -25,9 +25,9 @@
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" /> -->
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
         <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.min.css" />
-<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
         <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-<script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
 
     </environment>
 </head>
@@ -157,7 +157,7 @@
 
 
     <partial name="_CookieConsentPartial" />
-  
+
     <div class="body-content">
         <div class="vertical-menu">
             <ul>

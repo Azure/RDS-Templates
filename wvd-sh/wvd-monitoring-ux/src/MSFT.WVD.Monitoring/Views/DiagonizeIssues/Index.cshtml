@@ -1,25 +1,13 @@
-﻿@model DaigonizePageViewModel
+﻿@model DiagonizePageViewModel
 @using MSFT.WVD.Monitoring.Common.Models
 @{
     ViewData["Title"] = "Diagonize Issues";
 
 }
-<script type="text/javascript">
 
-    function getSessions(activityId, activityType, outcome,   userName,  ClientOS,  ClientIPAddress,  startTime,  endTime,  SessionHostName,  SessionHostPoolName) {
-        console.log(userName);
-       var newUrl= '@Url.Action("DiagonizeIssues", "UserSessions")';
-        $.post("/DiagonizeIssues/UserSessions", { activityId: activityId, activityType: activityType, outcome: outcome, userName: userName, ClientOS: ClientOS, ClientIPAddress: ClientIPAddress, startTime: startTime, endTime: endTime, SessionHostName: SessionHostName, SessionHostPoolName: SessionHostPoolName}) //
-            .done(function (data) {
-                debugger;
-                console.log(data);
-                location.href = newUrl;
-            });
-    }
-</script>
 <div class="width-100 content-section">
     <br />
-    <form asp-controller="DiagonizeIssues" asp-action="SearchActivity" method="post" id="myform" asp-route-returnUrl="@Context.Request.Path" role="form">
+    <form asp-controller="DiagonizeIssues" asp-action="Index" method="post" id="myform" asp-route-returnUrl="@Context.Request.Path" role="form">
         <div class="ms-Grid" dir="ltr">
             <div class="ms-Grid-row">
                 <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
@@ -68,7 +56,7 @@
 
         @if (Model.ConnectionActivity != null || Model.ManagementActivity != null || Model.FeedActivity != null)
         {
-          
+
             //else if (Model.ConnectionActivity.Count() == 0 || Model.ManagementActivity.Count() == 0 || Model.FeedActivity.Count() == 0)
             //{
 
@@ -99,7 +87,7 @@
                             <th asp-for="Client">Client</th>
                             <th asp-for="Client Ip">Client Ip</th>
                             <th asp-for="Session Host">Session Host</th>
-                            <th asp-for="Action">Action</th>
+                            <th asp-for="Details">Details</th>
                         </tr>
                     </thead>
 
@@ -119,13 +107,13 @@
                                 <td>@d.endTime</td>
                                 <td>@d.ClientOS</td>
                                 <td>@d.ClientIPAddress</td>
-                                <td>  @d.SessionHostName</td>
+                                <td>@d.SessionHostName</td>
                                 <td>
-                                    @{
-                                        bool isDisable = d.SessionHostName != "" && d.SessionHostName != null ? false : true;
-                                        <button type="submit" class="ms-Button primary-btn disablebtn" style="width:130px;" formaction="UserSessions" name="btnHost" value="@d.activityId" disabled="@isDisable" @(d.SessionHostName != "" ? "" : "disabled='disabled'")>
-                                            ViewStatus
-                                        </button>
+                                    @if (!string.IsNullOrEmpty(d.SessionHostName))
+                                    {
+                                        <a asp-controller="DiagonizeIssues"
+                                           asp-action="ActivityHostDetails"
+                                           asp-route-id="@d.activityId" class="ms-ContextualMenu-item">View Status</a>
                                     }
                                 </td>
                             </tr>

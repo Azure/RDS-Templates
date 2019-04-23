@@ -123,48 +123,59 @@ namespace MSFT.WVD.Monitoring.Controllers
         [Authorize]
         public IActionResult Save(HomePageViewModel data)
         {
-            var submittedData = data.SubmitData;
-            HttpContext.Session.Set<string>("SelectedTenantGroupName", submittedData.TenantGroupName);
-            HttpContext.Session.Set<string>("SelectedTenantName", submittedData.TenantName);
-
-            /***following line will have to use ***/
-            //HttpContext.Session.Set<RoleAssignment>("selectedRole", roles?.SingleOrDefault(x => x.tenantGroupName == submittedData.TenantGroupName));
-            //var roles = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
-
-            //temporary code
-            var roleAssignment = new RoleAssignment
+            if (ModelState.IsValid)
             {
-                tenantGroupName = submittedData.TenantGroupName,
-                signInName = User.Claims.First(claim => claim.Type.Contains("upn")).Value,
-                displayName = User.Claims.First(claim => claim.Type == "name").Value
-            };
-            var roles = new List<RoleAssignment> { new RoleAssignment {
+                var submittedData = data.SubmitData;
+                HttpContext.Session.Set<string>("SelectedTenantGroupName", submittedData.TenantGroupName);
+                HttpContext.Session.Set<string>("SelectedTenantName", submittedData.TenantName);
+
+                /***following line will have to use ***/
+                //HttpContext.Session.Set<RoleAssignment>("selectedRole", roles?.SingleOrDefault(x => x.tenantGroupName == submittedData.TenantGroupName));
+                //var roles = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
+
+                //temporary code
+                var roleAssignment = new RoleAssignment
+                {
+                    tenantGroupName = submittedData.TenantGroupName,
+                    signInName = User.Claims.First(claim => claim.Type.Contains("upn")).Value,
+                    displayName = User.Claims.First(claim => claim.Type == "name").Value
+                };
+                var roles = new List<RoleAssignment> { new RoleAssignment {
                 tenantGroupName= submittedData.TenantGroupName,
                 signInName=User.Claims.First(claim => claim.Type.Contains("upn")).Value,
                 displayName=User.Claims.First(claim => claim.Type=="name").Value
                 } };
-            HttpContext.Session.Set("WVDRoles", roles);
-            HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleAssignment);
-            return RedirectToAction("Index", "Home");
+                HttpContext.Session.Set("WVDRoles", roles);
+                HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleAssignment);
+                return RedirectToAction("Index", "Home");
+            }
+            else
+            {
+                return View("Index", new HomePageViewModel() { ShowDialog = true });
+            }
+
         }
 
 
-        public IActionResult Error(int id,ErrorDetails errorDetails)
+        public IActionResult Error(int id, ErrorDetails errorDetails)
         {
 
-            if (errorDetails.Message != null && errorDetails.StatusCode!=null)
+            if (errorDetails.Message != null && errorDetails.StatusCode != null)
             {
                 return View(new ErrorViewModel()
-                { ErrorDetails= errorDetails }
+                { ErrorDetails = errorDetails }
                 );
             }
             else
             {
                 var exceptionFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
                 return View(new ErrorViewModel()
-                { ErrorDetails = new ErrorDetails {
-                    Message= $"RouteOfException : { exceptionFeature.Path}. ErrorMessage : {exceptionFeature.Error.Message}"
-                } }
+                {
+                    ErrorDetails = new ErrorDetails
+                    {
+                        Message = $"RouteOfException : { exceptionFeature.Path}. ErrorMessage : {exceptionFeature.Error.Message}"
+                    }
+                }
              );
             }
         }

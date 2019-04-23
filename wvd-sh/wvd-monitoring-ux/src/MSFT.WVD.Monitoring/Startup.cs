@@ -105,40 +105,23 @@ namespace MSFT.WVD.Monitoring
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            //loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            //loggerFactory.AddDebug();
-
+          
             app.UseExceptionHandler("/Home/Error");
             app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
             app.UseHsts();
-
-            //if (env.IsDevelopment())
-            //{
-            //    //app.UseDeveloperExceptionPage();
-            //    app.UseExceptionHandler("/Home/Error");
-            //    app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
-            //}
-            //else
-            //{
-            //    app.UseExceptionHandler("/Home/Error");
-            //    app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
-            //    app.UseHsts();
-            //}
-
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-            //app.UseCookiePolicy();
+           
             app.UseAuthentication();
 
             app.UseSession();
-            app.UseMvcWithDefaultRoute();
 
-            //app.UseMvc(routes =>
-            //{
-            //    routes.MapRoute(
-            //        name: "default",
-            //        template: "{controller=Home}/{action=Index}/{id?}");
-            //});
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Home}/{action=Index}/{id?}");
+            });
         }
     }
 }

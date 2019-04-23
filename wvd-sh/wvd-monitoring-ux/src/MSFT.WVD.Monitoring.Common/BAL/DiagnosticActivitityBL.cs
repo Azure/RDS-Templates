@@ -66,7 +66,7 @@ namespace MSFT.WVD.Monitoring.Common.BAL
                 if (outcome != null)
                 {
                     int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
-                   return CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true").Result;
+                    return CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true").Result;
                 }
                 else
                 {
@@ -142,13 +142,11 @@ namespace MSFT.WVD.Monitoring.Common.BAL
             }).ToList();
         }
 
-        public HttpResponseMessage GetActivityDetails(string deploymentUrl, string accessToken,string tenantGroupName,string tenant, string activityId)
+        public HttpResponseMessage GetActivityDetails(string deploymentUrl, string accessToken, string tenantGroupName, string tenant, string activityId)
         {
             try
             {
-               
-                
-                    return CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?ActivityId={activityId}&Detailed=true").Result;
+                return CommonBL.InitializeHttpClient(deploymentUrl, accessToken).GetAsync($"/RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?ActivityId={activityId}&Detailed=true").Result;
             }
             catch (Exception ex)
             {

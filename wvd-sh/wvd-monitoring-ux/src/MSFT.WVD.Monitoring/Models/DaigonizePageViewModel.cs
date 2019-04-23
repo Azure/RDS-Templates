@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MSFT.WVD.Monitoring.Models
 {
-    public class DaigonizePageViewModel : IPageViewModel
+    public class DiagonizePageViewModel : IPageViewModel
     {
 
         public DiagonizeQuery DiagonizeQuery { get; set; }
@@ -17,8 +17,7 @@ namespace MSFT.WVD.Monitoring.Models
         public ActivityType ActivityType { get; set; }
         public List<FeedActivity> FeedActivity { get; set; }
         public RoleAssignment SelectedRole { get; set; }
-
-        public bool isLoading { get; set; }
+        public bool isExisting { get; set; }
     }
 
     public class DiagonizeQuery : IValidatableObject
@@ -52,7 +51,6 @@ namespace MSFT.WVD.Monitoring.Models
                 yield return new ValidationResult("Difference between from date and to date should not be greater than 48hours", new[] { "StartDate", "EndDate" });
 
             }
-
         }
     }
 
@@ -73,6 +71,4 @@ namespace MSFT.WVD.Monitoring.Models
             }
         }
     }
-
-
 }
