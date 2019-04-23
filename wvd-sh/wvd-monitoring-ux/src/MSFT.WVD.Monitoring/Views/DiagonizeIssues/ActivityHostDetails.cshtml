@@ -1,32 +1,11 @@
 ﻿
 @model DiagnoseDetailPageViewModel
 
-<script src="~/lib/jquery/dist/jquery.js"></script>
-
-<script type="text/javascript">
-    $(document).ready(function () {
-        $("#sendmessagediv").hide();
-        //$("#msgbardiv").hide();
-        // $("#divVmContent").show();
-        $("#msguserbtn").click(function () {
-            $("#sendmessagediv").show();
-            $("#divVmContent").hide();
-        });
-        $("#sendmsg").click(function () {
-            $("#msgbardiv").show();
-            $("#sendmessagediv").show();
-        })
-    });
-</script>
-
-
-
 <div class="width-100 content-section users-session">
     <div class="page-header">
         <h2>
             <a asp-controller="DiagonizeIssues"
                asp-action="SearchResults"><i class="fa fa-chevron-left" aria-hidden="false"></i></a>
-            @*<a onclick="history.go(-1);"><i class="fa fa-chevron-left" aria-hidden="false"></i></a>*@
             @Model.ConnectionActivity.SessionHostName Status
         </h2>
     </div>
@@ -46,7 +25,6 @@
                     <div class="input-wrap ms-Grid-col ms-xxxl8 spanlabel">
                         <span>@Model.ConnectionActivity.activityType</span>
                         <input asp-for="@Model.ConnectionActivity.activityType" type="hidden">
-
                     </div>
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl6">
@@ -198,8 +176,6 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                @*<input type="checkbox"  value="@d.IsSelected" />*@
-
                                                 <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox">
                                                 <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
 
@@ -225,9 +201,6 @@
                         <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
                             <span class="ms-Button-label labelcolor">Logoff user(s)</span>
                         </button>
-                        @*<button formaction="LogOffUserSession">
-                                <span class="ms-Button-label">Logoff user(s)</span>
-                            </button>*@
                         <div class="ms-Button message-user" id="msguserbtn">
                             <span class="ms-Button-label labelcolor">Message user(s)</span>
                         </div>
@@ -251,9 +224,7 @@
                         <label asp-for="Message" class="control-labe">Message</label>
                         <input asp-for="Message" class="form-control m-b-10" value="" multiple />
 
-                        @*<textarea asp-for="Message" class="form-control  m-b-10"></textarea>*@
                         <span asp-validation-for="Message" class="error-msg"></span>
-                        @*<input type="text" asp-for="Message" class="form-control  m-b-10" id="upn" />*@
                         <button type="reset" class="ms-Button">
                             <span class="ms-Button-label">Cancel</span>
                         </button>
@@ -262,50 +233,26 @@
                         </button>
                     </div>
                 }
-
-
-
-
-                @*<div class="ms-PanelExample">
-                        <a>
-                            <span class="ms-Button-label">Logoff user(s)</span>
-                        </a>
-                        <a class="ms-Button message-user">
-                            <span class="ms-Button-label">Message user(s)</span>
-                        </a>
-                        <div class="flyoutpanel ms-Panel">
-
-                            <div class="flyoutpanel-content-wrap">
-                                <div class="flyoutpanel-header">
-                                    <h4>Send A Message</h4>
-
-                                </div>
-                                <div class="flyoutpanel-content">
-                                    <div class="flyoutpanel-controls">
-                                        <label class="control-label">Title</label>
-                                        <input class="form-control m-b-10" id="upn" />
-
-                                        <label class="control-label ms-Grid-col ms-xxxl2">Message</label>
-                                        <input class="form-control  m-b-10" id="upn" />
-                                    </div>
-                                </div>
-                                <div class="flyoutpanel-footer">
-                                    <button type="submit" class="ms-Button">
-                                        <span class="ms-Button-label">Cancel</span>
-                                    </button>
-                                    <button type="submit" class="ms-Button primary-btn">
-                                        <span class="ms-Button-label">Send</span>
-                                    </button>
-                                </div>
-                            </div>
-
-
-                        </div>
-                    </div>*@
-
-
             </div>
-
         </div>
     </form>
 </div>
+<script type="text/javascript">
+    var PivotElements = document.querySelectorAll(".ms-Pivot");
+    for (var i = 0; i < PivotElements.length; i++) {
+        new fabric['Pivot'](PivotElements[i]);
+    }
+</script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#sendmessagediv").hide();
+        $("#msguserbtn").click(function () {
+            $("#sendmessagediv").show();
+            $("#divVmContent").hide();
+        });
+        $("#sendmsg").click(function () {
+            $("#msgbardiv").show();
+            $("#sendmessagediv").show();
+        })
+    });
+</script>

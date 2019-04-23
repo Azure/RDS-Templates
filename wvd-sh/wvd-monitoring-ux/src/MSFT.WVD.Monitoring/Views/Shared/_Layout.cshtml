@@ -11,23 +11,24 @@
     <title>@ViewData["Title"] WVD Monitoring</title>
 
     <environment include="Development">
-        <!-- <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" /> -->
         <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css">
         <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.min.css" />
         <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
         <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
         <link rel="stylesheet" href="~/css/site.css" />
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+
     </environment>
     <environment exclude="Development">
-        <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
-              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
-              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" /> -->
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css">
         <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.min.css" />
         <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
-        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
         <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+        <link rel="stylesheet" href="~/css/site.css" />
+        <script src="~/lib/jquery/dist/jquery.js"></script>
 
     </environment>
 </head>
@@ -35,7 +36,6 @@
     <nav class="nav-bar">
         <div class="nav-bar-left">
             <div class="ms-logo">
-                @*<img class="logo" src="../assets/Images/Microsoft_logo.png">*@
                 <img class="logo" src="~/images/Microsoft_logo.png" />
                 <span class="title">&nbsp;&nbsp;Microsoft</span>
             </div>
@@ -53,7 +53,7 @@
                 <button class="ms-Button ms-Button--primary">
                     <div class="user-details">
                         <span>   @roleAssignment.displayName</span>
-                        <label>  @roleAssignment.roleDefinitionName</label>
+                        <span>  @roleAssignment.roleDefinitionName</span>
                     </div>
                     <div class="user-initials">@initial</div>
                 </button>
@@ -86,74 +86,7 @@
         </div>
 
     </nav>
-    <!-- <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
 
-                <a class="navbar-brand">
-                    @*<img class="logo" src="../assets/Images/Microsoft_logo.png">*@
-                    <img class="logo" src="~/images/Microsoft_logo.png" />
-                    <span class="title">&nbsp;&nbsp;Microsoft</span>
-                </a>
-
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand title">Windows Virtual Desktop</a>
-            </div>
-
-            @*<div class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav">
-                        <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
-                        <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
-                        <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
-                    </ul>
-                </div>*@
-            <div class="pull-right">
-                <div class="Home-icon">
-                        <a asp-area="" asp-controller="Home" asp-action="AppSettings" >
-                            <i class="fa fa-address-book"></i>
-                        </a>
-                    </div>
-                <div class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                    <div class="user-details">
-                        <span>   @roleAssignment.displayName</span>
-                        <label>  @roleAssignment.roleDefinitionName</label>
-                    </div>
-                    <div class="user-initials">@initial</div>
-                </div>
-                <ul class="dropdown-menu dropdown" style="right:0;left: inherit;">
-                    <li style="padding:10px 20px 10px 20px;">
-                        <span class="user-initials">@initial</span>
-                    </li>
-                    <li>
-                        <div style="padding:5px 20px 0px 20px; color:#fff;">
-                            <p style="margin-top:0px; margin-bottom:0px">
-                                <span style="font-weight:bold; font-size:15px;">  @roleAssignment.displayName</span><span> @roleAssignment.roleDefinitionName</span>
-                            </p>
-                            <p><span> @roleAssignment.signInName</span></p>
-
-                            <p style="border-bottom:1px solid #666666; margin:0px"></p>
-                            <p><span><b>infrastructure permission</b></span><br /><span> @roleAssignment.tenantGroupName</span></p>
-                            <p style="border-bottom:1px solid #666666; margin:0px"></p>
-                        </div>
-                    </li>
-
-                    <li>
-                        @using (Html.BeginForm("Logout", "Home", FormMethod.Post))
-                        {
-                            <button type="submit" class="btn btn-link btn-logout">Signout</button>
-                        }
-                    </li>
-                </ul>
-            </div>
-
-        </div>
-
-    </nav> -->
 
 
     <partial name="_CookieConsentPartial" />
@@ -195,18 +128,12 @@
         </div>
 
         @RenderBody()
-
-
-        @*<hr />*@
-        @*<footer>
-                <p>&copy; 2019 - MSFT.WVD.Monitoring</p>
-            </footer>*@
     </div>
 
     <environment include="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
-        <script src="~/js/site.js" asp-append-version="true"></script>
+        <script src="~/js/site.js"></script>
         <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
         <script type="text/javascript">
             var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
@@ -234,12 +161,7 @@
                 new fabric['Table'](TableElements[i]);
             }
         </script>
-        <script type="text/javascript">
-            var PivotElements = document.querySelectorAll(".ms-Pivot");
-            for (var i = 0; i < PivotElements.length; i++) {
-                new fabric['Pivot'](PivotElements[i]);
-            }
-        </script>
+
         <script type="text/javascript">
             var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
             for (var i = 0; i < CheckBoxElements.length; i++) {
@@ -259,23 +181,70 @@
             }
         </script>
     </environment>
+
     <environment exclude="Development">
-
-        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js"
-                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
-                asp-fallback-test="window.jQuery"
-                crossorigin="anonymous"
-                integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/js/site.js"></script>
+        <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <script type="text/javascript">
+            var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+            for (var i = 0; i < ContextualMenuElements.length; i++) {
+                var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+                var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+                new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+            }
         </script>
-        <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
-                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
-                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal"
-                crossorigin="anonymous"
-                integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd">
-        </script> -->
-        <script src="~/js/site.min.js" asp-append-version="true"></script>
+        <script type="text/javascript">
+            var PanelExamples = document.getElementsByClassName("ms-PanelExample");
+            for (var i = 0; i < PanelExamples.length; i++) {
+                (function () {
+                    var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
+                    var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
+                    PanelExampleButton.addEventListener("click", function (i) {
+                        new fabric['Panel'](PanelExamplePanel);
+                    });
+                }());
+            }
+        </script>
+        <script type="text/javascript">
+            var TableElements = document.querySelectorAll(".ms-Table");
+            for (var i = 0; i < TableElements.length; i++) {
+                new fabric['Table'](TableElements[i]);
+            }
+        </script>
 
+        <script type="text/javascript">
+            var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
+            for (var i = 0; i < CheckBoxElements.length; i++) {
+                new fabric['CheckBox'](CheckBoxElements[i]);
+            }
+        </script>
+        <script type="text/javascript">
+            var PanelExamples = document.getElementsByClassName("ms-PanelExample");
+            for (var i = 0; i < PanelExamples.length; i++) {
+                (function () {
+                    var PanelExampleButton = PanelExamples[i].querySelector(".message-user");
+                    var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
+                    PanelExampleButton.addEventListener("click", function (i) {
+                        new fabric['Panel'](PanelExamplePanel);
+                    });
+                }());
+            }
+        </script>
     </environment>
+    @*<environment exclude="Development">
+
+            <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js"
+                    asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
+                    asp-fallback-test="window.jQuery"
+                    crossorigin="anonymous"
+                    integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT">
+            </script>
+
+            <script src="~/js/site.min.js" ></script>
+
+        </environment>*@
 
     @RenderSection("Scripts", required: false)
 </body>
