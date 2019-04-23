@@ -17,9 +17,9 @@ namespace MSFT.WVD.Monitoring.Models
 
         public SendMessageQuery SendMessageQuery { get; set; }
         public LogOffUserQuery LogOffUserQuery { get; set; }
-        [Required]
+       [Required]
         public string Title { get; set; }
-        [Required]
+      [Required]
         public string Message { get; set; }
 
 

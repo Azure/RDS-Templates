@@ -201,9 +201,12 @@
                         <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
                             <span class="ms-Button-label labelcolor">Logoff user(s)</span>
                         </button>
-                        <div class="ms-Button message-user" id="msguserbtn">
+                        <button class="ms-Button message-user" asp-action="ShowMessgePanel" type="submit" id="msguserbtn">
                             <span class="ms-Button-label labelcolor">Message user(s)</span>
-                        </div>
+                        </button>
+                        @*<div class="ms-Button message-user" id="msguserbtn">
+            <span class="ms-Button-label labelcolor">Message user(s)</span>
+        </div>*@
                     </div>
                 }
                 else
@@ -218,13 +221,13 @@
                 {
                     <div id="sendmessagediv" class="sendmessagediv">
                         <label asp-for="Title" class="control-label">Title</label>
-                        <input asp-for="Title" class="form-control m-b-10" value="" />
-                        <span asp-validation-for="Title" class="error-msg"></span>
+                        <input asp-for="@Model.Title" class="form-control m-b-10" value="@Model.Title" id="txtTitle" />
+                        <span asp-validation-for="@Model.Title" class="error-msg" id="titleError"></span>
 
                         <label asp-for="Message" class="control-labe">Message</label>
-                        <input asp-for="Message" class="form-control m-b-10" value="" multiple />
+                        <input asp-for="@Model.Message" class="form-control m-b-10" value="@Model.Message" multiple="multiple" id="txtMessage" />
 
-                        <span asp-validation-for="Message" class="error-msg"></span>
+                        <span asp-validation-for="@Model.Message" class="error-msg"  id="msgError"></span>
                         <button type="reset" class="ms-Button">
                             <span class="ms-Button-label">Cancel</span>
                         </button>
@@ -245,14 +248,57 @@
 </script>
 <script type="text/javascript">
     $(document).ready(function () {
-        $("#sendmessagediv").hide();
-        $("#msguserbtn").click(function () {
+
+        var showmesssageform = '@Model.ShowMessageForm';
+        var connectedUsers = '@Model.ShowConnectedUser';
+        console.log(showmesssageform);
+        if (showmesssageform == "True" && connectedUsers == "True") {
             $("#sendmessagediv").show();
-            $("#divVmContent").hide();
+           
+        }
+        else {
+            $("#sendmessagediv").hide();
+          
+        }
+      
+        $("#msguserbtn").click(function () {
+           // $("#sendmessagediv").show();
+
+            // $("#divVmContent").hide();
+            var title = $("#txtTitle").val();
+            var message = $("#txtMessage").val();
+            //con.log(title);
+            //con.log(message);
+            if (title == "" || title == null) {
+                $('.field-validation-error').show();
+               
+            }
+
+            else if (message == "" || message == null) {
+                $('.field-validation-error').show();
+                
+            }
+            else {
+                $('.field-validation-error').hide();
+            }
+
+
+
         });
         $("#sendmsg").click(function () {
+           
             $("#msgbardiv").show();
             $("#sendmessagediv").show();
-        })
+            $('.field-validation-error').show();
+            //     var title = $("#txtTitle").val();
+            //var message = $("#txtMessage").val();
+            //if (title == "" || title == null || message == "" || message == null) {
+            //    return false;
+            //}
+            //else {
+            //    return true;
+            //}
+        });
+       
     });
 </script>

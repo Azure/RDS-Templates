@@ -144,6 +144,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             List<MessageStatus> messageStatus = new List<MessageStatus>();
+           
             using (var client = new HttpClient())
             {
 
@@ -164,7 +165,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                             sessionId = item.sessionId
                         };
                         var Content = new StringContent(JsonConvert.SerializeObject(logOffUserQuery), Encoding.UTF8, "application/json");
-                        _logger.LogInformation($"Call api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+                        _logger.LogInformation($"Call api to log off user session ");
                         var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
 
                         if (response.IsSuccessStatusCode)
@@ -206,6 +207,28 @@ namespace MSFT.WVD.Monitoring.Controllers
             });
         }
 
+      
+        public async Task<IActionResult> ShowMessgePanel(DiagnoseDetailPageViewModel data)
+        {
+            
+                string accessToken = await HttpContext.GetTokenAsync("access_token");
+                string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+                string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+                return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
+                {
+                    Title = "",
+                    Message = "",
+                    ConnectionActivity = data.ConnectionActivity,
+                    ShowConnectedUser = true,
+                    ShowMessageForm = true,
+                    UserSessions = GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
+                });
+            
+                
+            
+          
+        }
+
         [HttpPost]
         public async Task<IActionResult> SendMessage(DiagnoseDetailPageViewModel data)
         {
@@ -238,7 +261,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                                 userPrincipalName = item.userPrincipalName
                             };
                             var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
-                            _logger.LogInformation($"Call api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+                            _logger.LogInformation($"Call api to send message to {item.userPrincipalName}");
                             var response = await client.PostAsync($"SessionHost/SendMessage", Content);
                             if (response.IsSuccessStatusCode)
                             {
@@ -247,6 +270,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                                     Message = $"Message sent sucessfully to {item.userPrincipalName}",
                                     Status = "Success"
                                 });
+                                data.Title = data.Message = "";
                             }
                             else
                             {
@@ -255,7 +279,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                                     Message = $"Failed to send message to {item.userPrincipalName}",
                                     Status = "Error"
                                 });
-
+                                data.Title = data.Message = "";
                             }
                         }
                     }
@@ -274,10 +298,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                         UserSessions = data.UserSessions.Where(usr => usr.IsSelected = true)
                .Select(usr => { usr.IsSelected = false; return usr; })
                .ToList(),
-
-                        Title = "",
-                        Message = "",
-
+                        Title = data.Title,
+                        Message = data.Message,
                         SendMsgStatuses = messageStatus,
                         ConnectionActivity = data.ConnectionActivity,
                         ShowConnectedUser = true,
@@ -294,7 +316,9 @@ namespace MSFT.WVD.Monitoring.Controllers
               .ToList(),
                     ConnectionActivity = data.ConnectionActivity,
                     ShowConnectedUser = true,
-                    ShowMessageForm = true
+                    ShowMessageForm = true,
+                    Title = data.Title,
+                    Message = data.Message,
                 });
             }
 
