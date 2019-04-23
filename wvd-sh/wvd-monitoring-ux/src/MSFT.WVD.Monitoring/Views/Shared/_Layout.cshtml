@@ -1,5 +1,4 @@
-﻿@*@model IPageViewModel*@
-@using Microsoft.AspNetCore.Http
+﻿@using Microsoft.AspNetCore.Http
 @{ var roleAssignment = Context.Session.Get<MSFT.WVD.Monitoring.Common.Models.RoleAssignment>("SelectedRole");
     var initial = roleAssignment != null && roleAssignment.displayName != null && roleAssignment.displayName.Split(" ").Length > 1 ? roleAssignment.displayName.Split(" ")[0].Substring(0, 1) + roleAssignment.displayName.Split(" ")[1].Substring(0, 1) : roleAssignment.displayName.Split(" ")[0].Substring(0, 2).ToUpper();}
 
@@ -233,19 +232,6 @@
             }
         </script>
     </environment>
-    @*<environment exclude="Development">
-
-            <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js"
-                    asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
-                    asp-fallback-test="window.jQuery"
-                    crossorigin="anonymous"
-                    integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT">
-            </script>
-
-            <script src="~/js/site.min.js" ></script>
-
-        </environment>*@
-
     @RenderSection("Scripts", required: false)
 </body>
 </html>

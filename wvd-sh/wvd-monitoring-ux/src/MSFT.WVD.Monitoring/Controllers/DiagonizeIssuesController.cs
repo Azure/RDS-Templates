@@ -256,7 +256,6 @@ namespace MSFT.WVD.Monitoring.Controllers
                                     Status = "Error"
                                 });
 
-                                // return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
                             }
                         }
                     }

@@ -182,7 +182,6 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public IActionResult AppSettings()
         {
-            //return RedirectToAction("Index", "Home");
             return View();
         }
     }
