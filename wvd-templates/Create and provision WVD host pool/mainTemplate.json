@@ -246,6 +246,7 @@
         "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
+        "existingDomainSuffix": "[last(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "existingTenantName": "[replace(parameters('existingTenantName'),'\"','')]",
@@ -367,7 +368,7 @@
                 "settings": {
                     "name": "[parameters('domainToJoin')]",
                     "ouPath": "[parameters('ouPath')]",
-                    "user": "[parameters('existingDomainUPN')]",
+                    "user": "[concat(variables('existingDomainSuffix'),'\\',variables('existingDomainUsername'))",
                     "restart": "true",
                     "options": "3"
                 },
