@@ -26,7 +26,7 @@
                         <button type="reset" class="ms-Button">
                             <span class="ms-Button-label">Cancel</span>
                         </button>
-                        <button type="submit" class="ms-Button primary-btn"  >
+                        <button type="submit" class="ms-Button" id="save">
                             <span class="ms-Button-label">Save</span>
                         </button>
 
@@ -37,10 +37,18 @@
     </div>
 }
     <script type="text/javascript">
+        $(document).ready(function () {
+            $('#save').attr("disabled", true);
+            $('#save').removeClass("primary-btn");
+        })
         $("#tenantgrp").keyup(function () {
-        $('.validate').hide();
+            $('.validate').hide();
+            $('#save').removeAttr("disabled");
+            $('#save').addClass("primary-btn");
         })
         $("#tenant").keyup(function () {
             $('.validatetenant').hide();
+            $('#save').removeAttr("disabled");
+            $('#save').addClass("primary-btn");
         })
     </script>

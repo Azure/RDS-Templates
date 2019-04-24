@@ -10,10 +10,10 @@
                 <div class="flyoutpanel-content">
                     <div class="flyoutpanel-controls">
                         <label asp-for="SubmitData.TenantGroupName" class="control-label">TenantGroupName<span class="red">*</span></label>
-                        <input asp-for="SubmitData.TenantGroupName" class="form-control m-b-10" id="tenantgrp"/>
+                        <input asp-for="SubmitData.TenantGroupName" class="form-control m-b-10" id="tenantgrp" />
                         <span asp-validation-for="SubmitData.TenantGroupName" class="error-msg validate"></span>
                         <label asp-for="SubmitData.TenantName" class="control-label">TenantName<span class="red">*</span></label>
-                        <input asp-for="SubmitData.TenantName" class="form-control m-b-10" id="tenant"/>
+                        <input asp-for="SubmitData.TenantName" class="form-control m-b-10" id="tenant" />
                         <span asp-validation-for="SubmitData.TenantName" class="error-msg validatetenant"></span>
                     </div>
                 </div>
@@ -21,7 +21,7 @@
                     <button type="reset" class="ms-Button">
                         <span class="ms-Button-label">Cancel</span>
                     </button>
-                    <button type="submit" class="ms-Button primary-btn">
+                    <button type="submit" class="ms-Button"  id="save">
                         <span class="ms-Button-label">Save</span>
                     </button>
 
@@ -31,10 +31,18 @@
     </div>
 </div>
 <script type="text/javascript">
-        $("#tenantgrp").keyup(function () {
+    $(document).ready(function () {
+        $('#save').attr("disabled", true);
+        $('#save').removeClass("primary-btn");
+    })
+    $("#tenantgrp").keyup(function () {
         $('.validate').hide();
-        })
-        $("#tenant").keyup(function () {
-            $('.validatetenant').hide();
-        })
-    </script>
+        $('#save').removeAttr("disabled");
+        $('#save').addClass("primary-btn");
+    })
+    $("#tenant").keyup(function () {
+        $('.validatetenant').hide();
+        $('#save').removeAttr("disabled");
+        $('#save').addClass("primary-btn");
+    })
+</script>
