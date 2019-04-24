@@ -66,7 +66,7 @@ class PsRdsSessionHost
             }
         }
 
-        if (($operation -eq "get") -and $this.$CheckForAvailableState)
+        if (($operation -eq "get") -and $this.CheckForAvailableState)
         {
             $StartTime = Get-Date
 
@@ -79,14 +79,14 @@ class PsRdsSessionHost
                 {
                     if ($sessionHost -eq $null)
                     {
-                        $this.$CheckForAvailableState = $false
+                        $this.CheckForAvailableState = $false
                         return $null
                     }
                 }
             }
         }
 
-        $this.$CheckForAvailableState = $false
+        $this.CheckForAvailableState = $false
         return $sessionHost
     }
 

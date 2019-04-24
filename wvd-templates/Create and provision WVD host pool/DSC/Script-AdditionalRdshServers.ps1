@@ -147,14 +147,15 @@ else
     # Get Session Host Info
     Write-Log -Message "Getting rdsh host $SessionHostName information"
 
-    [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = ([PsRdsSessionHost]::new("$TenantName","$HostPoolName",$SessionHostName)).GetSessionHost()
+    [PsRdsSessionHost]$pssh = [PsRdsSessionHost]::new("$TenantName","$HostPoolName",$SessionHostName)
+    [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = $pssh.GetSessionHost()
     Write-Log -Message "RDSH object content: `n$($rdsh | Out-String)"
 
     $rdshName = $rdsh.SessionHostName | Out-String -Stream
     $poolName = $rdsh.hostpoolname | Out-String -Stream
 
     Write-Log -Message "Waiting for session host return when in available status"
-    $AvailableSh = $rdsh.GetSessionHostWhenAvailable()
+    $AvailableSh =  $pssh.GetSessionHostWhenAvailable()
     if ($AvailableSh -ne $null)
     {
         Write-Log -Message "Session host $($rdsh.SessionHostName) is now in Available state"
