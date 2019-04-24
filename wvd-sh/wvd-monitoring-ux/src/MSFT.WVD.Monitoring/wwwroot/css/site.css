@@ -501,6 +501,7 @@ html, body {
         background-color: #d9534f;
         border-color: #d43f3a;
         margin-left: 8px;
+        text-decoration: none;
     }
 
         .body-content .content-section form .form-wrap .primary-btn .ms-Button-label,
