@@ -202,6 +202,17 @@ else
     {
         AddDefaultUsers -TenantName "$TenantName" -HostPoolName "$HostPoolName" -ApplicationGroupName $ApplicationGroupName -DefaultUsers $DefaultDesktopUsers
     }
+
+    Write-Log -Message "Waiting for session host return when in available status"
+    $AvailableSh = $rdsh.GetSessionHostWhenAvailable()
+    if ($AvailableSh -ne $null)
+    {
+        Write-Log -Message "Session host $($rdsh.SessionHostName) is now in Available state"
+    }
+    else
+    {
+        Write-Log -Message "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
+    }
    
     Write-Log -Message "Successfully added $rdshName VM to $poolName"
 }

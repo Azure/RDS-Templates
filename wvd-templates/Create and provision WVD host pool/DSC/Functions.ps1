@@ -16,6 +16,7 @@ class PsRdsSessionHost
     [string]$HostPoolName = [string]::Empty
     [string]$SessionHostName = [string]::Empty
     [int]$TimeoutInSec=900
+    [bool]$CheckForAvailableState = $false
 
     PsRdsSessionHost() {}
 
@@ -54,19 +55,38 @@ class PsRdsSessionHost
         while ($sessionHost -eq $null)
         {
             Start-Sleep -Seconds 10
-            Write-Output "PsRdsSessionHost: Retrying Add SessionHost..."
             $sessionHost = (Invoke-Expression $commandToExecute)
     
             if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec)
             {
                 if ($sessionHost -eq $null)
                 {
-                    Write-Output "PsRdsSessionHost: An error ocurred while adding session host:`nSessionHost:$this.SessionHostname`nHostPoolName:$this.HostPoolNmae`nTenantName:$this.TenantName`nError Message: $($error[0] | Out-String)"
                     return $null
                 }
             }
         }
 
+        if (($operation -eq "get") -and $this.$CheckForAvailableState)
+        {
+            $StartTime = Get-Date
+
+            while ($sessionHost.Status -ine "Available")
+            {
+                Start-Sleep -Seconds 10
+                $sessionHost = (Invoke-Expression $commandToExecute)
+        
+                if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec)
+                {
+                    if ($sessionHost -eq $null)
+                    {
+                        $this.$CheckForAvailableState = $false
+                        return $null
+                    }
+                }
+            }
+        }
+
+        $this.$CheckForAvailableState = $false
         return $sessionHost
     }
 
@@ -91,6 +111,19 @@ class PsRdsSessionHost
         }
         else
         {
+            return ($this._trySessionHost("get"))
+        }
+    }
+
+    [object] GetSessionHostWhenAvailable() {
+
+        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName))
+        {
+            return $null
+        }
+        else
+        {
+            $this.CheckForAvailableState = $true
             return ($this._trySessionHost("get"))
         }
     }
