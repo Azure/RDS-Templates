@@ -14,7 +14,7 @@
                     <label asp-for="DiagonizeQuery.UPN" class="control-label ms-Grid-col ms-xxxl2">User UPN<span class="red">*</span></label>
                     <div class="input-wrap ms-Grid-col ms-xxxl4">
                         <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" />
-                        <span asp-validation-for="DiagonizeQuery.UPN" class="error-msg"></span>
+                        <span asp-validation-for="DiagonizeQuery.UPN" class="error-msg validate" ></span>
                     </div>
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
@@ -73,7 +73,7 @@
                             <th asp-for="Activity ID">Activity ID</th>
                             <th asp-for="Type">Type</th>
                             <th asp-for="Outcome">Outcome</th>
-                            <th asp-for="Error Type">Error Type</th>
+                            <th asp-for="isInternalError">Internal Error</th>
                             <th asp-for="Error">Error</th>
                             <th asp-for="Tenant">Tenant</th>
                             <th asp-for="HostPoolname">HostPoolname</th>
@@ -94,7 +94,10 @@
                                 <td class="word-break">@d.activityId</td>
                                 <td>@d.activityType</td>
                                 <td>@d.outcome</td>
-                                <td>@d.isInternalError</td>
+                               
+                                <td>
+                                   @(d.isInternalError.ToString() == "true" ? "Yes" : "No")
+                                </td>
                                 <td>@d.errorMessage</td>
                                 <td>@d.Tenants</td>
                                 <td>@d.SessionHostPoolName</td>
@@ -125,7 +128,7 @@
                             <th asp-for="Activity ID">Activity ID</th>
                             <th asp-for="Type">Type</th>
                             <th asp-for="Outcome">Outcome</th>
-                            <th asp-for="Error Type">Error Type</th>
+                            <th asp-for="isInternalError">Internal Error</th>
                             <th asp-for="Error">Error</th>
                             <th asp-for="Tenant">Tenant</th>
                             <th asp-for="UserName">UserName</th>
@@ -142,10 +145,10 @@
                     {
                         <tbody>
                             <tr>
-                                <td >@d.activityId</td>
+                                <td>@d.activityId</td>
                                 <td>@d.activityType</td>
                                 <td>@d.outcome</td>
-                                <td>@d.isInternalError</td>
+                                <td>  @(d.isInternalError.ToString() == "true" ? "Yes" : "No")</td>
                                 <td>@d.errorMessage</td>
                                 <td>@d.Tenants</td>
                                 <td>@d.userName</td>
@@ -189,7 +192,7 @@
                                 <td>@d.endTime </td>
                                 <td>@d.userName</td>
                                 <td>@d.outcome </td>
-                                <td>@d.isInternalError </td>
+                                <td>  @(d.isInternalError.ToString() == "true" ? "Yes" : "No") </td>
                                 <td>@d.errorMessage </td>
                                 <td>@d.ClientIPAddress </td>
                                 <td>@d.ClientOS </td>
@@ -220,6 +223,9 @@
             $('#loader1').show();
         });
     });
+    $("#upn").keyup(function () {
+        $('.validate').hide();
+    })
 </script>
 <script type="text/javascript">
     var TableElements = document.querySelectorAll(".ms-Table");
