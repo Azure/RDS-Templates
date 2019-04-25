@@ -54,7 +54,7 @@ class PsRdsSessionHost
         $StartTime = Get-Date
         while ($sessionHost -eq $null)
         {
-            Start-Sleep -Seconds 10
+            Start-Sleep -Seconds 60
             $sessionHost = (Invoke-Expression $commandToExecute)
     
             if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec)
@@ -72,12 +72,12 @@ class PsRdsSessionHost
 
             while ($sessionHost.Status -ine "Available")
             {
-                Start-Sleep -Seconds 10
+                Start-Sleep -Seconds 60
                 $sessionHost = (Invoke-Expression $commandToExecute)
         
                 if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec)
                 {
-                    if ($sessionHost -eq $null)
+                    if ($sessionHost.Status -ine "Available")
                     {
                         $this.CheckForAvailableState = $false
                         return $null
