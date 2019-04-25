@@ -1,0 +1,1 @@
+High Availability version of sample Scaling Script.
