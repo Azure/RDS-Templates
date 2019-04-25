@@ -54,7 +54,7 @@ class PsRdsSessionHost
         $StartTime = Get-Date
         while ($sessionHost -eq $null)
         {
-            Start-Sleep -Seconds 60
+            Start-Sleep -Seconds 30
             $sessionHost = (Invoke-Expression $commandToExecute)
     
             if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec)
