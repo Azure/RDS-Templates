@@ -1,0 +1,141 @@
+{
+	"RDMIScale": {
+		"Azure": {
+			"Variable": [
+				{
+					"_Comments": "Tenant ID of the Azure Active Directory",
+					"Name": "AADTenantId",
+					"Value": "ad638926-c4fa-462d-8b20-1dd3f162028b"
+				},
+				{
+					"_Comments": "Key Vault key name of Azure Service Principal GUID",
+					"Name": "AADApplicationId",
+					"Value": "4e3b45f2-1ed3-4e08-a3ed-3efefb814d6c"
+				},
+				{
+					"_Comments": "use AADServicePrincipalSecret filed for testing only, set via New-StoredCredential",
+					"Name": "AADServicePrincipalSecret",
+					"Value": ""
+				},
+				{
+					"_Comments": "Subscription ID of the Azure",
+					"Name": "currentAzureSubscriptionId",
+					"Value": "c779fcf5-46e5-407b-ab0d-6c32c501782d"
+				},
+				{
+					"_Comments": "Name of the WVD Tenant Group",
+					"Name": "tenantName",
+					"Value": "RdsIsmTenant1"
+				},
+				{
+					"_Comments": "Name of the WVD Tenant",
+					"Name": "tenantGroupName",
+					"Value": "Default Tenant Group"
+				},
+				{
+					"_Comments": "Name of the WVD Host Pool",
+					"Name": "hostPoolName",
+					"Value": "WS2016-p"
+				},
+				{
+					"_Comments": "Hostpool session Load Balancing Type",
+					"Name": "PeakLoadBalancingType",
+					"Value": "DepthFirst"
+				},
+				{
+					"_Comments": "Hostpool session Load Balancing Type",
+					"Name": "OffPeakLoadBalancingType",
+					"Value": "BreadthFirst"
+				},
+				{
+					"_Comments": "Session Load Balancing Peak Hours",
+					"Name": "sessionLoadBalancingPeakHours",
+					"Value": "9:00-18:00"
+				},
+				{
+					"_Comments": "Session Load Balancing off Peak Hours",
+					"Name": "sessionLoadBalancingOffPeakHours",
+					"Value": "18:00-22:00"
+				},
+				{
+					"_Comments": "Key Vault Name",
+					"Name": "KeyVaultName",
+					"Value": "wvdmsikeyvault"
+				}
+			]
+		},
+		"Deployment": {
+			"Variable": [
+				{
+					"_Comments":"RDbroker URL",
+					"Name": "Rdbroker",
+					"Value": "https://rdbroker.wvd.microsoft.com"
+				},
+				{
+					"_Comments": "Is Service Principal Value is False then provide keyvault key name of the Password stored",
+					"Name": "KeyName",
+					"Value": "Keyvault key name of the Password stored"
+				},
+				{
+					"_Comments":"Is Service Principal is 'False' then provide username of WVD with fully qualified domain name else WVD Service Principal GUID of Keyvault Key Name",
+					"Name": "Username",
+					"Value": "74e98113-e2ca-48c8-963d-fe33ae70c756"
+				},
+				{
+					"_Comments":"use Password filed for testing only, set via New-StoredCredential",
+					"Name": "Password",
+					"Value": ""
+				},
+				{
+					"_Comments":"Accepted values True/False, True indicate service principal is being used to authenticate to WVD",
+					"Name": "isServicePrincipal",
+					"Value": "True"
+				}
+			]
+		},
+		"RdmiScaleSettings": {
+			"Variable": [
+				{
+					"_Comments":"Begin of the peak usage time",
+					"Name": "BeginPeakTime",
+					"Value": "09:00:00"
+				},
+				{
+					"_Comments":"End of the peak usage time",
+					"Name": "EndPeakTime",
+					"Value": "18:00:00"
+				},
+				{
+					"_Comments":"Time difference between local time and UTC, in hours",
+					"Name": "TimeDifferenceInHours",
+					"Value": "0"
+				},
+				{
+					"_Comments":"Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started ",
+					"Name": "SessionThresholdPerCPU",
+					"Value": "1"
+				},
+				{
+					"_Comments":"Minimum number of host pool VMs to keep running during off-peak usage time",
+					"Name": "MinimumNumberOfRDSH",
+					"Value": "1"
+				},
+				{
+					"_Comments":"Number of seconds to wait before forcing users to logoff. If 0, don't force users to logoff",
+					"Name": "LimitSecondsToForceLogOffUser",
+					"Value": "5"
+				},
+				{
+					"_Comments":"Message title sent to a user before forcing logoff",
+					"Name": "LogOffMessageTitle",
+					"Value": "System Under Maintenance"
+				},
+				{
+					"_Comments":"Message body to send to a user before forcing logoff",
+					"Name": "LogOffMessageBody",
+					"Value": "Please save your work and logoff!"
+				}
+			]
+		}
+	}
+}
