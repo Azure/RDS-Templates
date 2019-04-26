@@ -37,7 +37,7 @@
     },
     "variables": {
 		"uniquestr": "[uniqueString(resourceGroup().id, deployment().name)]",
-        "accountName": "[concat('wvdsaas-autoAccount','-',variables('uniquestr'))]",,
+        "accountName": "[concat('wvdsaas-autoAccount','-',variables('uniquestr'))]",
         "credentialName": "DefaultAzureCredential",
         "runbookName": "[concat('msftsaasbook','-',variables('uniquestr'))]",
         "webAPIAppName": "[concat(parameters('ApplicationName'),'-API')]",
