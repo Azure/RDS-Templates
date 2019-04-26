@@ -2,13 +2,13 @@
 Copyright 2019 Microsoft
 Version 2.0 March 2019
 .SYNOPSIS
-This is a sample script for automatically scaling Tenant Environment WVD Host Servers in Microsoft Azure
-.Description
-This script will start/stop Tenant WVD host VMs based on the number of user sessions and peak/off-peak time period specified in the configuration file.
-During the peak hours, the script will start necessary session hosts in the host pool to meet the demands of users.
-During the off-peak hours, the script will shut down session hosts and only keep the minimum number of session hosts.
-This script depends on two PowerShell modules: Azure RM and Windows Virtual Desktop modules. To install Azure RM module execute the following command. Use "-AllowClobber" parameter if you have more than one version of PowerShell modules installed.
-PS C:\>Install-Module Az  -AllowClobber
+	This is a sample script for automatically scaling Tenant Environment WVD Host Servers in Microsoft Azure
+.DESCRIPTION
+	This script will start/stop Tenant WVD host VMs based on the number of user sessions and peak/off-peak time period specified in the configuration file.
+	During the peak hours, the script will start necessary session hosts in the host pool to meet the demands of users.
+	During the off-peak hours, the script will shut down session hosts and only keep the minimum number of session hosts.
+	This script depends on two PowerShell modules: Azure RM and Windows Virtual Desktop modules. To install Azure RM module execute the following command. Use "-AllowClobber" parameter if you have more than one version of PowerShell modules installed.
+	PS C:\>Install-Module Az  -AllowClobber
 #>
 #Requires -Modules AzTable, Microsoft.RDInfra.RDPowerShell
 
@@ -17,12 +17,13 @@ PS C:\>Install-Module Az  -AllowClobber
 $ErrorActionPreference = "Stop"
 
 #region Functions and other supporting elements
-<#
-.SYNOPSIS
-Function for writing the log
-#>
+
 function Write-Log
 {
+	<#
+	.SYNOPSIS
+		Function for writing the log
+	#>
     param
     (
         [string]$Message,
@@ -36,12 +37,13 @@ function Write-Log
     Add-Content $logname -Value ("{0} - [{1}] {2}" -f $time, $severity, $Message)
 }
 
-<# 
-.SYNOPSIS
-Function for writing the usage log
-#>
+
 function Write-UsageLog
 {
+	<# 
+	.SYNOPSIS
+		Function for writing the usage log
+	#>
     param
     (
         [string]$hostpoolName,
@@ -63,13 +65,48 @@ function Write-UsageLog
     }
 }
 
-<#
-.SYNOPSIS
-Function for creating a variable from XML
-#>
-function Set-ScriptVariable ($Name, $Value)
+function LogCleanUp
 {
-    Invoke-Expression ("`$Script:" + $Name + " = `"" + $Value + "`"")
+	<#
+	.SYNOPSIS
+		Cleaning up Execution and TenantLog logs after a certain threshold in days
+	#>
+	param
+	(
+		[string[]]$LogFiles,
+		[int]$TruncateFilesThresholdDays
+	)
+
+	$firstlogdate = $null
+	foreach ($FileName in $LogFiles)
+	{
+		if ($FileName.Contains("WVDTenantScale"))
+		{
+			$content = (Get-Content -Path $FileName)[0]
+
+			try
+			{
+				$firstlogdate = [datetime]$content.split("-")[0]
+			}
+			catch {}
+		}
+
+		if ($firstlogdate -ne $null)
+		{
+			if ((Get-Date).Subtract($firstlogdate).TotalDays -gt $TruncateFilesThresholdInDays)
+			{
+				if ($FileName.Contains("ExecutionTranscript"))
+				{
+				 	Stop-Transcript
+					Start-Transcript -Path $FileName -Force
+				}
+				else
+				{
+					Clear-Content $FileName
+				}
+			}
+		}
+	}
 }
 
 #endregion
@@ -82,18 +119,6 @@ $rdmiTenantlog = "$CurrentPath\WVDTenantScale.log"
 $RdmiTenantUsagelog = "$CurrentPath\WVDTenantUsage.log"
 $ExecutionStranscriptLog = "$CurrentPath\ExecutionTranscript.log"
 $LogFiles = @($rdmiTenantlog,$ExecutionStranscriptLog)
-
-# Cleaning up Execution and TenantLog logs after 30 days
-$CleanUpFilesDays = 30
-
-foreach ($FileName in $LogFiles)
-{
-    $File = Get-ChildItem -Path $FileName
-    if ((Get-Date).Subtract($File.LastWriteTime).TotalDays -gt $CleanUpFilesDays)
-    {
-        Clear-Content $file.FullName
-    }
-}
 
 # Starting Execution Transcript - This allows us to check for unhandled exceptions
 Start-Transcript -Path $ExecutionStranscriptLog -Append
@@ -126,10 +151,11 @@ else
 # Load XML configuration values as variables 
 Write-Log "Loading values from Config.xml" "Info"
 
-$Variable = [xml](Get-Content "$XMLPath")
-$Variable.RDMIScale.Azure | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-ScriptVariable -Name $_.Name -Value $_.Value }
-$Variable.RDMIScale.RdmiScaleSettings | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-ScriptVariable -Name $_.Name -Value $_.Value }
-$Variable.RDMIScale.Deployment | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-ScriptVariable -Name $_.Name -Value $_.Value }
+$Variable.RDMIScale.Azure | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-Variable -Name $_.Name -Value $_.Value -Scope Global }
+$Variable.RDMIScale.RdmiScaleSettings | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-Variable -Name $_.Name -Value $_.Value -Scope Global}
+$Variable.RDMIScale.Deployment | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-Variable -Name $_.Name -Value $_.Value -Scope Global }
+
+LogCleanUp -LogFiles $LogFiles -TruncateFilesThresholdInDays $TruncateFilesThresholIndDays
 
 # Load functions/module
 Import-Module Az.Accounts -MinimumVersion 1.5.1
@@ -1183,6 +1209,11 @@ else
         $depthBool = $false
         Write-UsageLog $hostPoolName $totalRunningCores $numberOfRunningHost $depthBool
     }
+
+	# Cleaning up old log entries
+	$msg = "Cleaning up old log entries"
+    GlobalLog -Message $msg -LogLevel ([LogLevel]::Info) -OwnerToken $OwnerToken -LogTable $ScalingLogTable
+	LogTableCleanUp -LogTable $ScalingLogTable -LogTableKeepLastDays $LogTableKeepLastDays -ActivityId $ActivityId
 
     # Execution completed
     $OwnerToken.Status = [HAStatuses]::Completed

@@ -35,6 +35,7 @@ enum ExecCodes
     UpdateFromOnwer
     NoLongerOwner
     ErrorGettingUpdatedOwnerInfo
+	OwnerLogCleanUp
 }
 
 class PsOwnerToken
@@ -380,4 +381,26 @@ function GlobalLog
 
     Add-TableLog -OwnerStatus $OwnerToken.Status -ExecCode ($ExecutionCode) -Message $msg -EntityName $Owner -Level ($LogLevel.ToString()) -ActivityId $ActivityId -LogTable $LogTable | Out-Null
     Write-Log $msg $LogLevel.ToString()
+}
+
+function LogTableCleanUp
+{
+	param
+	(
+	   $LogTable,
+	   [int]$LogTableKeepLastDays,
+	   [string]$ActivityId
+	)
+
+	$filter = "LogTimeStampUTC gt datetime'$((get-date).AddDays($LogTableKeepLastDays*(-1)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'"))'"
+	$LogEntriesForDeletion = Get-AzTableRow -Table $ScalingLogTable -CustomFilter $filter
+
+	if ($LogEntriesForDeletion -ne $null)
+	{
+		Add-TableLog -OwnerStatus $OwnerToken.Status -ExecCode (([ExecCode]::OwnerLogCleanUp).ToString()) -Message "Old log entries cleanup. Cleaning up $($LogEntriesForDeletion.Count) old entries" -EntityName $Owner -Level (([LogLevel]::Info).ToString()) -ActivityId $ActivityId -LogTable $LogTable | Out-Null
+		foreach ($entry in $LogEntriesForDeletion)
+		{
+			Remove-AzTableRow -table $LogTable –entity $entry
+		}
+	}
 }

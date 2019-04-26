@@ -9,10 +9,12 @@
     <Variable Name="StorageAccountRG" Value="Support-rg"/> <!-- Storage account resource group -->
     <Variable Name="StorageAccountName" Value="pmcstorage07"/> <!-- Storage account that hosts the scaling tables (HA and Log) -->
     <Variable Name="WVDTenantAdminAadTenantId" Value=""/> <!-- Aad Tenant Used for Wvd Tenant Admin, leave empty if it is the same AAD tenant -->
-    <Variable Name="KeyVaultName" Value="pmckeyvault03"/>
-    <Variable Name="KeyVaultSecretName" Value=""/>
+    <Variable Name="KeyVaultName" Value="pmckeyvault03"/> <!-- Keyvault name where the WVD Tenant Admin Account have stored secret -->
+    <Variable Name="KeyVaultSecretName" Value=""/> <!-- Secret name to be retrieved -->
+    <Variable Name="TruncateFilesThresholdInDays" Value="1" /> <!-- After this ammount of days the local log files will be truncated -->
+    <Variable Name="LogTableKeepLastDays" Value="1" /> <!-- How many days worth it of logs will be kept in the table -->
 
-    <!--Settings required to authenticate to Azure subscription -->
+    <!-- Settings required to authenticate to Azure subscription -->
     <Variable Name="AADTenantId" Value=""/>
     <Variable Name="AADApplicationId" Value=""/>    
    
