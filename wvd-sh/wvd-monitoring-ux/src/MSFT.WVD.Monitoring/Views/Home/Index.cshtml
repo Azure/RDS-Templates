@@ -48,7 +48,8 @@
 </script>
 <script type="text/javascript">
     document.getElementById("tenant")
-        .addEventListener("keypress", function () {
+        .addEventListener("focus", function () {
             document.getElementById("validatetenant").hidden = true;
+            document.getElementById("save").removeAttribute("disabled");
         }, false);
 </script>
