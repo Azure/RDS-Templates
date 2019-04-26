@@ -203,9 +203,6 @@
                             <button class="ms-Button message-user" asp-action="ShowMessgePanel" type="submit" id="msguserbtn">
                                 <span class="ms-Button-label labelcolor">Message user(s)</span>
                             </button>
-                            @*<div class="ms-Button message-user" id="msguserbtn">
-                    <span class="ms-Button-label labelcolor">Message user(s)</span>
-                </div>*@
                         </div>
                     }
                     else
@@ -218,20 +215,7 @@
 
                     @if (Model.ShowMessageForm)
                     {
-                        @*<div id="sendmessagediv" >
-                <label asp-for="Title" class="control-label">Title</label>
-                <input asp-for="@Model.Title" class="form-control m-b-10" value="@Model.Title" id="txtTitle"/>
-                    <span asp-validation-for="@Model.Title"  id="validationmsg" ></span>
-                <label asp-for="Message" class="control-labe">Message</label>
-                <input asp-for="@Model.Message" class="form-control m-b-10" value="@Model.Message" multiple="multiple" id="txtMessage" />
-                <span asp-validation-for="@Model.Message"  id="msgError"></span>
-                <button type="reset" class="ms-Button">
-                    <span class="ms-Button-label">Cancel</span>
-                </button>
-                <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
-                    <span class="ms-Button-label">Send</span>
-                </button>
-            </div>*@
+                        
 
                         <div id="sendmessagediv">
                             <label asp-for="Title" class="control-label">Title</label>
@@ -260,62 +244,6 @@
         new fabric['Pivot'](PivotElements[i]);
     }
 </script>
-@*<script type="text/javascript">
-        $(document).ready(function () {
-
-            var showmesssageform = '@Model.ShowMessageForm';
-            var connectedUsers = '@Model.ShowConnectedUser';
-            console.log(showmesssageform);
-            if (showmesssageform == "True" && connectedUsers == "True") {
-                $("#sendmessagediv").show();
-
-            }
-            else {
-                $("#sendmessagediv").hide();
-
-            }
-
-            $("#msguserbtn").click(function () {
-               // $("#sendmessagediv").show();
-
-                // $("#divVmContent").hide();
-                var title = $("#txtTitle").val();
-                var message = $("#txtMessage").val();
-                //con.log(title);
-                //con.log(message);
-                if (title == "" || title == null) {
-                    $('.field-validation-error').show();
-
-                }
-
-                else if (message == "" || message == null) {
-                    $('.field-validation-error').show();
-
-                }
-                else {
-                    $('.field-validation-error').hide();
-                }
-
-
-
-            });
-            $("#sendmsg").click(function () {
-
-                $("#msgbardiv").show();
-                $("#sendmessagediv").show();
-                $('.field-validation-error').show();
-                //     var title = $("#txtTitle").val();
-                //var message = $("#txtMessage").val();
-                //if (title == "" || title == null || message == "" || message == null) {
-                //    return false;
-                //}
-                //else {
-                //    return true;
-                //}
-            });
-
-        });
-    </script>*@
 <script type="text/javascript">
     var button = document.getElementById("UserConnected"),
         paragraph = document.getElementById("sendmessagediv");

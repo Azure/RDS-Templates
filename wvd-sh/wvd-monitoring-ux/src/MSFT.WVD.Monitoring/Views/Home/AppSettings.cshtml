@@ -21,7 +21,7 @@
                     <button type="reset" class="ms-Button">
                         <span class="ms-Button-label">Cancel</span>
                     </button>
-                    <button type="submit" class="ms-Button"  id="save">
+                    <button type="submit" class="ms-Button" id="save">
                         <span class="ms-Button-label">Save</span>
                     </button>
 
@@ -31,18 +31,15 @@
     </div>
 </div>
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('#save').attr("disabled", true);
-        $('#save').removeClass("primary-btn");
-    })
-    $("#tenantgrp").keyup(function () {
-        $('.validate').hide();
-        $('#save').removeAttr("disabled");
-        $('#save').addClass("primary-btn");
-    })
-    $("#tenant").keyup(function () {
-        $('.validatetenant').hide();
-        $('#save').removeAttr("disabled");
-        $('#save').addClass("primary-btn");
-    })
+    document.getElementById("tenantgrp")
+        .addEventListener("focus", function () {
+            document.getElementById("validate").hidden = true;
+            document.getElementById("save").removeAttribute("disabled");
+        }, false);
+</script>
+<script type="text/javascript">
+    document.getElementById("tenant")
+        .addEventListener("keypress", function () {
+            document.getElementById("validatetenant").hidden = true;
+        }, false);
 </script>
