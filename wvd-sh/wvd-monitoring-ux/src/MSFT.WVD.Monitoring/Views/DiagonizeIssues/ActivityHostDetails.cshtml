@@ -235,11 +235,11 @@
 
                         <div id="sendmessagediv">
                             <label asp-for="Title" class="control-label">Title</label>
-                            <input asp-for="@Model.Title" class="form-control m-b-10" type="text" id="texttitle" />
+                            <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
                             <span asp-validation-for="@Model.Title" id="validationtitle"></span>
                             <br />
                             <label asp-for="Message" class="control-label">Message</label>
-                            <input asp-for="@Model.Message" class="form-control m-b-10" type="text" multiple="multiple" id="texterror" />
+                            <input asp-for="@Model.Message" class="form-control m-b-10 inputform" type="text" multiple="multiple" id="texterror" />
                             <span asp-validation-for="@Model.Message" id="validationmsg"></span>
                             <br />
                             <button type="reset" class="ms-Button">
