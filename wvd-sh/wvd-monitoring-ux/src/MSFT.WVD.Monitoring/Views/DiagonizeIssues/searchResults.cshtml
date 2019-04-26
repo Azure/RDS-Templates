@@ -14,7 +14,7 @@
                     <label asp-for="DiagonizeQuery.UPN" class="control-label ms-Grid-col ms-xxxl2">User UPN<span class="red">*</span></label>
                     <div class="input-wrap ms-Grid-col ms-xxxl4">
                         <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" />
-                        <span asp-validation-for="DiagonizeQuery.UPN" class="error-msg validate"></span>
+                        <span asp-validation-for="DiagonizeQuery.UPN"  id="validate"></span>
                     </div>
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
@@ -215,18 +215,7 @@
 
 
 
-<script src="~/lib/jquery/dist/jquery.js"></script>
-<script type="text/javascript">
-    $(document).ready(function () {
-        $('#loader1').hide();
-        $('#process').click(function () {
-            $('#loader1').show();
-        });
-    });
-    $("#upn").keyup(function () {
-        $('.validate').hide();
-    })
-</script>
+
 <script type="text/javascript">
     var TableElements = document.querySelectorAll(".ms-Table");
     for (var i = 0; i < TableElements.length; i++) {
@@ -234,3 +223,15 @@
     }
 </script>
 
+<script type="text/javascript">
+    document.getElementById("upn")
+        .addEventListener("keypress", function () {
+            document.getElementById("validate").hidden = true;
+        }, false);
+</script>
+<script>
+    document.getElementById("loader1").hidden = true;
+    document.getElementById("process").addEventListener("click", function () {
+        document.getElementById("loader1").hidden = false;
+    }, false);
+</script>

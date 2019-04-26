@@ -695,3 +695,7 @@ html, body {
         .page-header h2 button i{
     font-size:16px;
 }
+.savebtn
+{
+    color:deepskyblue;
+}
