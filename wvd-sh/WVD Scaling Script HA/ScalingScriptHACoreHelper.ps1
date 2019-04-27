@@ -392,7 +392,7 @@ function LogTableCleanUp
 	   [string]$ActivityId
 	)
 
-	$filter = "LogTimeStampUTC gt datetime'$((get-date).AddDays($LogTableKeepLastDays*(-1)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'"))'"
+	$filter = "LogTimeStampUTC lt datetime'$((get-date).AddDays($LogTableKeepLastDays*(-1)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'"))'"
 	$LogEntriesForDeletion = Get-AzTableRow -Table $ScalingLogTable -CustomFilter $filter
 
 	if ($LogEntriesForDeletion -ne $null)
