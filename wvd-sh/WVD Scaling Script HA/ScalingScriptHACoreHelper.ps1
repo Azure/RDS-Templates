@@ -397,7 +397,7 @@ function LogTableCleanUp
 
 	if ($LogEntriesForDeletion -ne $null)
 	{
-		Add-TableLog -OwnerStatus $OwnerToken.Status -ExecCode (([ExecCode]::OwnerLogCleanUp).ToString()) -Message "Old log entries cleanup. Cleaning up $($LogEntriesForDeletion.Count) old entries" -EntityName $Owner -Level (([LogLevel]::Info).ToString()) -ActivityId $ActivityId -LogTable $LogTable | Out-Null
+		Add-TableLog -OwnerStatus $OwnerToken.Status -ExecCode (([ExecCodes]::OwnerLogCleanUp).ToString()) -Message "Old log entries cleanup. Cleaning up $($LogEntriesForDeletion.Count) old entries" -EntityName $Owner -Level (([LogLevel]::Info).ToString()) -ActivityId $ActivityId -LogTable $LogTable | Out-Null
 		foreach ($entry in $LogEntriesForDeletion)
 		{
 			Remove-AzTableRow -table $LogTable –entity $entry
