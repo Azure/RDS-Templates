@@ -491,7 +491,6 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst")
                                 }
 
                                 $numberOfRunningHost = $numberOfRunningHost + 1
-                                break
                             }
                         }
                     }
