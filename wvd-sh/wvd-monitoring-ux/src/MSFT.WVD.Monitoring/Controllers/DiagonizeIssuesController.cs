@@ -208,7 +208,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         }
 
       
-        public async Task<IActionResult> ShowMessgePanel(DiagnoseDetailPageViewModel data)
+        public async Task<IActionResult> ShowMessagePanel(DiagnoseDetailPageViewModel data)
         {
             
                 string accessToken = await HttpContext.GetTokenAsync("access_token");

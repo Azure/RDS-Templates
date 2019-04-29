@@ -200,7 +200,7 @@
                             <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
                                 <span class="ms-Button-label labelcolor">Logoff user(s)</span>
                             </button>
-                            <button class="ms-Button message-user" asp-action="ShowMessgePanel" type="submit" id="msguserbtn">
+                            <button class="ms-Button message-user" asp-action="ShowMessagePanel" type="submit" id="msguserbtn">
                                 <span class="ms-Button-label labelcolor">Message user(s)</span>
                             </button>
                         </div>
@@ -211,12 +211,8 @@
                             <h4>There is no active user sessions.</h4>
                         </div>
                     }
-
-
                     @if (Model.ShowMessageForm)
                     {
-                       
-
                             <div id="sendmessagediv">
                                 <label asp-for="Title" class="control-label">Title</label>
                                 <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />

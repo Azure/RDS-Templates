@@ -93,7 +93,7 @@
                                 <td>@d.activityType</td>
                                 <td>@d.outcome</td>
                                 <td>
-                                    @(d.isInternalError.ToString() == "true" ? "Yes" : "No")
+                                    @(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")
                                 </td>
                                 <td>@d.errorMessage</td>
                                 <td>@d.Tenants</td>
@@ -146,7 +146,7 @@
                                 <td>@d.activityType</td>
                                 <td>@d.outcome</td>
                                 <td>
-                                    @(d.isInternalError.ToString() == "true" ? "Yes" : "No")
+                                    @(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")
                                 </td>
                                 <td>@d.errorMessage</td>
                                 <td>@d.Tenants</td>
@@ -192,7 +192,7 @@
                                 <td>@d.endTime </td>
                                 <td>@d.userName</td>
                                 <td>@d.outcome </td>
-                                <td>  @(d.isInternalError.ToString() == "true" ? "Yes" : "No")</td>
+                                <td> @(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")</td>
                                 <td>@d.errorMessage </td>
                                 <td>@d.ClientIPAddress </td>
                                 <td>@d.ClientOS </td>
