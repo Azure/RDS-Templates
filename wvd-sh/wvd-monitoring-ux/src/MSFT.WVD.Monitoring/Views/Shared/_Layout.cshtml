@@ -16,8 +16,7 @@
         <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
         <link rel="stylesheet" href="~/css/site.css" />
-        <script src="~/lib/jquery/dist/jquery.js"></script>
-
+     
     </environment>
     <environment exclude="Development">
 
@@ -27,8 +26,7 @@
         <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
         <link rel="stylesheet" href="~/css/site.css" />
-        <script src="~/lib/jquery/dist/jquery.js"></script>
-
+  
     </environment>
 </head>
 <body>
@@ -142,43 +140,6 @@
                 new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
             }
         </script>
-        <script type="text/javascript">
-            var PanelExamples = document.getElementsByClassName("ms-PanelExample");
-            for (var i = 0; i < PanelExamples.length; i++) {
-                (function () {
-                    var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
-                    var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
-                    PanelExampleButton.addEventListener("click", function (i) {
-                        new fabric['Panel'](PanelExamplePanel);
-                    });
-                }());
-            }
-        </script>
-        <script type="text/javascript">
-            var TableElements = document.querySelectorAll(".ms-Table");
-            for (var i = 0; i < TableElements.length; i++) {
-                new fabric['Table'](TableElements[i]);
-            }
-        </script>
-
-        <script type="text/javascript">
-            var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
-            for (var i = 0; i < CheckBoxElements.length; i++) {
-                new fabric['CheckBox'](CheckBoxElements[i]);
-            }
-        </script>
-        <script type="text/javascript">
-            var PanelExamples = document.getElementsByClassName("ms-PanelExample");
-            for (var i = 0; i < PanelExamples.length; i++) {
-                (function () {
-                    var PanelExampleButton = PanelExamples[i].querySelector(".message-user");
-                    var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
-                    PanelExampleButton.addEventListener("click", function (i) {
-                        new fabric['Panel'](PanelExamplePanel);
-                    });
-                }());
-            }
-        </script>
     </environment>
 
     <environment exclude="Development">
@@ -186,51 +147,6 @@
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
         <script src="~/js/site.js"></script>
         <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
-        <script type="text/javascript">
-            var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
-            for (var i = 0; i < ContextualMenuElements.length; i++) {
-                var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
-                var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
-                new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
-            }
-        </script>
-        <script type="text/javascript">
-            var PanelExamples = document.getElementsByClassName("ms-PanelExample");
-            for (var i = 0; i < PanelExamples.length; i++) {
-                (function () {
-                    var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
-                    var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
-                    PanelExampleButton.addEventListener("click", function (i) {
-                        new fabric['Panel'](PanelExamplePanel);
-                    });
-                }());
-            }
-        </script>
-        <script type="text/javascript">
-            var TableElements = document.querySelectorAll(".ms-Table");
-            for (var i = 0; i < TableElements.length; i++) {
-                new fabric['Table'](TableElements[i]);
-            }
-        </script>
-
-        <script type="text/javascript">
-            var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
-            for (var i = 0; i < CheckBoxElements.length; i++) {
-                new fabric['CheckBox'](CheckBoxElements[i]);
-            }
-        </script>
-        <script type="text/javascript">
-            var PanelExamples = document.getElementsByClassName("ms-PanelExample");
-            for (var i = 0; i < PanelExamples.length; i++) {
-                (function () {
-                    var PanelExampleButton = PanelExamples[i].querySelector(".message-user");
-                    var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
-                    PanelExampleButton.addEventListener("click", function (i) {
-                        new fabric['Panel'](PanelExamplePanel);
-                    });
-                }());
-            }
-        </script>
     </environment>
     @RenderSection("Scripts", required: false)
 </body>

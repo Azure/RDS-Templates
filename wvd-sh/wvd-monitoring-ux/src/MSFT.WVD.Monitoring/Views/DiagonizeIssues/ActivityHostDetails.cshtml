@@ -175,7 +175,7 @@
                                         <tbody>
                                             <tr>
                                                 <td>
-                                                    <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox">
+                                                    <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="checkbox">
                                                     <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
 
                                                     <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
@@ -215,27 +215,28 @@
 
                     @if (Model.ShowMessageForm)
                     {
-                        
+                       
 
-                        <div id="sendmessagediv">
-                            <label asp-for="Title" class="control-label">Title</label>
-                            <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
-                            <span asp-validation-for="@Model.Title" id="validationtitle"></span>
-                            <br />
-                            <label asp-for="Message" class="control-label">Message</label>
-                            <input asp-for="@Model.Message" class="form-control m-b-10 inputform" type="text" multiple="multiple" id="texterror" />
-                            <span asp-validation-for="@Model.Message" id="validationmsg"></span>
-                            <br />
-                            <button type="reset" class="ms-Button">
-                                <span class="ms-Button-label">Cancel</span>
-                            </button>
-                            <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
-                                <span class="ms-Button-label">Send</span>
-                            </button>
+                            <div id="sendmessagediv">
+                                <label asp-for="Title" class="control-label">Title</label>
+                                <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
+                                <span asp-validation-for="@Model.Title" id="validationtitle"></span>
+                                <br />
+                                <label asp-for="Message" class="control-label">Message</label>
+                                <input asp-for="@Model.Message" class="form-control m-b-10 inputform" type="text" multiple="multiple" id="texterror" />
+                                <span asp-validation-for="@Model.Message" id="validationmsg"></span>
+                                <br />
+                                <br/>
+                                <button type="reset" class="ms-Button">
+                                    <span class="ms-Button-label">Cancel</span>
+                                </button>
+                                <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
+                                    <span class="ms-Button-label">Send</span>
+                                </button>
+                            </div>
+                            }
                         </div>
-                    }
-                </div>
-        </div>
+                    </div>
     </form>
 </div>
 <script type="text/javascript">
@@ -255,7 +256,7 @@
         }
     }, false);
 </script>
-<script type="text/javascript">
+@*<script type="text/javascript">
     var button = document.getElementById("msguserbtn"),
         paragraph = document.getElementById("sendmessagediv");
     button.addEventListener("click", function () {
@@ -265,16 +266,30 @@
             paragraph.style.display = 'none';
         }
     }, false);
-</script>
+</script>*@
 <script type="text/javascript">
     document.getElementById("texttitle")
-        .addEventListener("keypress", function () {
+        .addEventListener("focus", function () {
             document.getElementById("validationtitle").hidden = true;
         }, false);
 </script>
 <script type="text/javascript">
     document.getElementById("texterror")
-        .addEventListener("keypress", function () {
+        .addEventListener("focus", function () {
             document.getElementById("validationmsg").hidden = true;
         }, false);
 </script>
+
+<script type="text/javascript">
+    var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
+    for (var i = 0; i < CheckBoxElements.length; i++) {
+        new fabric['CheckBox'](CheckBoxElements[i]);
+    }
+</script>
+@*<script>
+    function sendmsgfunc() {
+        document.getElementById("texttitle").value = "";
+        document.getElementById("texterror").value = "";
+        document.getElementById("checkbox").value = "";
+    }
+</script>*@

@@ -568,7 +568,13 @@ html, body {
     left: 615px;
     top: 126px;
 }
+#validationtitle {
+    color: red;
+}
 
+#validationmsg {
+    color: red;
+}
 @keyframes spin {
     0% {
         transform: rotate(0deg);
@@ -658,6 +664,13 @@ html, body {
     margin-bottom:5px;
     display:block;
 }
+#validate {
+    color: red;
+}
+
+#validatetenant {
+    color: red;
+}
 .anchorlinksdiv {
     margin-top: 45px;
 }
@@ -703,3 +716,4 @@ html, body {
 {
     width:14%;
 }
+

@@ -31,6 +31,26 @@
     </div>
 </div>
 <script type="text/javascript">
+    var PanelExamples = document.getElementsByClassName("ms-PanelExample");
+    for (var i = 0; i < PanelExamples.length; i++) {
+        (function () {
+            var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
+            var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
+            PanelExampleButton.addEventListener("click", function (i) {
+                new fabric['Panel'](PanelExamplePanel);
+            });
+        }());
+    }
+</script>
+<script type="text/javascript">
+    var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+    for (var i = 0; i < ContextualMenuElements.length; i++) {
+        var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+        var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+        new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+    }
+</script>
+<script type="text/javascript">
     document.getElementById("tenantgrp")
         .addEventListener("focus", function () {
             document.getElementById("validate").hidden = true;
@@ -38,7 +58,7 @@
         }, false);
 </script>
 <script type="text/javascript">
-    document.getElementById("tenant")
+    document.getElementById("focus")
         .addEventListener("keypress", function () {
             document.getElementById("validatetenant").hidden = true;
         }, false);
