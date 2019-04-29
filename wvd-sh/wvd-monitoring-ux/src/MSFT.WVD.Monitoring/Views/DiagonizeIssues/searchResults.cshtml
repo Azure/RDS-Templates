@@ -14,7 +14,7 @@
                     <label asp-for="DiagonizeQuery.UPN" class="control-label ms-Grid-col ms-xxxl2">User UPN<span class="red">*</span></label>
                     <div class="input-wrap ms-Grid-col ms-xxxl4">
                         <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" />
-                        <span asp-validation-for="DiagonizeQuery.UPN" class="error-msg validate"></span>
+                        <span asp-validation-for="DiagonizeQuery.UPN" id="validate"></span>
                     </div>
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
@@ -59,178 +59,173 @@
         }
         else
         {
-        <div id="loader1" class="loader"></div>
+            <div id="loader1" class="loader"></div>
         }
         <div class="activitytable" id="table">
 
             @if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.ConnectionActivity != null)
             {
-            <table class="ms-Table">
-                <thead>
-                    <tr>
-                        <th asp-for="Activity ID">Activity ID</th>
-                        <th asp-for="Type">Type</th>
-                        <th asp-for="Outcome">Outcome</th>
-                        <th asp-for="isInternalError">Internal Error</th>
-                        <th asp-for="Error">Error</th>
-                        <th asp-for="Tenant">Tenant</th>
-                        <th asp-for="HostPoolname">HostPoolname</th>
-                        <th asp-for="UserName">UserName</th>
-                        <th asp-for="Start Time">Start Time</th>
-                        <th asp-for="End Time">End Time</th>
-                        <th asp-for="Client">Client</th>
-                        <th asp-for="Client Ip">Client Ip</th>
-                        <th asp-for="Session Host">Session Host</th>
-                        <th asp-for="Details">Details</th>
-                    </tr>
-                </thead>
+                <table class="ms-Table">
+                    <thead>
+                        <tr>
+                            <th asp-for="Activity ID">Activity ID</th>
+                            <th asp-for="Type">Type</th>
+                            <th asp-for="Outcome">Outcome</th>
+                            <th asp-for="isInternalError">Internal Error</th>
+                            <th asp-for="Error">Error</th>
+                            <th asp-for="Tenant">Tenant</th>
+                            <th asp-for="HostPoolname">HostPoolname</th>
+                            <th asp-for="UserName">UserName</th>
+                            <th asp-for="Start Time">Start Time</th>
+                            <th asp-for="End Time">End Time</th>
+                            <th asp-for="Client">Client</th>
+                            <th asp-for="Client Ip">Client Ip</th>
+                            <th asp-for="Session Host">Session Host</th>
+                            <th asp-for="Details">Details</th>
+                        </tr>
+                    </thead>
 
-                @foreach (var d in Model.ConnectionActivity)
+                    @foreach (var d in Model.ConnectionActivity)
                     {
-                <tbody>
-                    <tr>
-                        <td class="word-break">@d.activityId</td>
-                        <td>@d.activityType</td>
-                        <td>@d.outcome</td>
-                        <td>
-                            @(d.isInternalError.ToString() == "true" ? "Yes" : "No")
-                        </td>
-                        <td>@d.errorMessage</td>
-                        <td>@d.Tenants</td>
-                        <td>@d.SessionHostPoolName</td>
-                        <td class="word-break">@d.userName</td>
-                        <td>@d.startTime</td>
-                        <td>@d.endTime</td>
-                        <td>@d.ClientOS</td>
-                        <td>@d.ClientIPAddress</td>
-                        <td>@d.SessionHostName</td>
-                        <td>
-                            @if (!string.IsNullOrEmpty(d.SessionHostName))
-                            {
-                                <a asp-controller="DiagonizeIssues"
-                                   asp-action="ActivityHostDetails"
-                                   asp-route-id="@d.activityId" class="ms-ContextualMenu-item">View Status</a>
-                            }
-                        </td>
-                    </tr>
-                </tbody>
+                        <tbody>
+                            <tr>
+                                <td class="word-break">@d.activityId</td>
+                                <td>@d.activityType</td>
+                                <td>@d.outcome</td>
+                                <td>
+                                    @(d.isInternalError.ToString() == "true" ? "Yes" : "No")
+                                </td>
+                                <td>@d.errorMessage</td>
+                                <td>@d.Tenants</td>
+                                <td>@d.SessionHostPoolName</td>
+                                <td class="word-break">@d.userName</td>
+                                <td>@d.startTime</td>
+                                <td>@d.endTime</td>
+                                <td>@d.ClientOS</td>
+                                <td>@d.ClientIPAddress</td>
+                                <td>@d.SessionHostName</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(d.SessionHostName))
+                                    {
+                                        <a asp-controller="DiagonizeIssues"
+                                           asp-action="ActivityHostDetails"
+                                           asp-route-id="@d.activityId" class="ms-ContextualMenu-item">View Status</a>
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
                     }
-            </table>
+                </table>
             }
             else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Management)
             {
-            <table class="ms-Table">
-                <thead>
-                    <tr>
-                        <th asp-for="Activity ID">Activity ID</th>
-                        <th asp-for="Type">Type</th>
-                        <th asp-for="Outcome">Outcome</th>
-                        <th asp-for="isInternalError">Internal Error</th>
-                        <th asp-for="Error">Error</th>
-                        <th asp-for="Tenant">Tenant</th>
-                        <th asp-for="UserName">UserName</th>
-                        <th asp-for="Start Time">Start Time</th>
-                        <th asp-for="End Time">End Time</th>
-                        <th asp-for="Objects Created">Objects Created</th>
-                        <th asp-for="Objects Deleted">Objects Deleted</th>
-                        <th asp-for="Objects Fetched">Objects Fetched</th>
-                        <th asp-for="Objects Updated">Objects Updated</th>
-                    </tr>
-                </thead>
+                <table class="ms-Table">
+                    <thead>
+                        <tr>
+                            <th asp-for="Activity ID">Activity ID</th>
+                            <th asp-for="Type">Type</th>
+                            <th asp-for="Outcome">Outcome</th>
+                            <th asp-for="isInternalError">Internal Error</th>
+                            <th asp-for="Error">Error</th>
+                            <th asp-for="Tenant">Tenant</th>
+                            <th asp-for="UserName">UserName</th>
+                            <th asp-for="Start Time">Start Time</th>
+                            <th asp-for="End Time">End Time</th>
+                            <th asp-for="Objects Created">Objects Created</th>
+                            <th asp-for="Objects Deleted">Objects Deleted</th>
+                            <th asp-for="Objects Fetched">Objects Fetched</th>
+                            <th asp-for="Objects Updated">Objects Updated</th>
+                        </tr>
+                    </thead>
 
-                @foreach (var d in Model.ManagementActivity)
+                    @foreach (var d in Model.ManagementActivity)
                     {
-                <tbody>
-                    <tr>
-                        <td>@d.activityId</td>
-                        <td>@d.activityType</td>
-                        <td>@d.outcome</td>
-                        <td>
-                            @(d.isInternalError.ToString() == "true" ? "Yes" : "No")
-                        </td>
-                        <td>@d.errorMessage</td>
-                        <td>@d.Tenants</td>
-                        <td>@d.userName</td>
-                        <td>@d.startTime</td>
-                        <td>@d.endTime</td>
-                        <td>@d.ObjectsCreated</td>
-                        <td>@d.ObjectsDeleted</td>
-                        <td>@d.ObjectsFetched</td>
+                        <tbody>
+                            <tr>
+                                <td>@d.activityId</td>
+                                <td>@d.activityType</td>
+                                <td>@d.outcome</td>
+                                <td>
+                                    @(d.isInternalError.ToString() == "true" ? "Yes" : "No")
+                                </td>
+                                <td>@d.errorMessage</td>
+                                <td>@d.Tenants</td>
+                                <td>@d.userName</td>
+                                <td>@d.startTime</td>
+                                <td>@d.endTime</td>
+                                <td>@d.ObjectsCreated</td>
+                                <td>@d.ObjectsDeleted</td>
+                                <td>@d.ObjectsFetched</td>
 
-                        <td>@d.ObjectsUpdated</td>
-                    </tr>
-                </tbody>
+                                <td>@d.ObjectsUpdated</td>
+                            </tr>
+                        </tbody>
 
                     }
-            </table>
+                </table>
             }
             else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
             {
-            <table class="ms-Table">
-                <thead>
-                    <tr>
-                        <th asp-for="Activity ID">Activity ID</th>
-                        <th asp-for="Activity Type">Activity Type</th>
-                        <th asp-for="Start Time">Start Time</th>
-                        <th asp-for="End Time">End Time</th>
-                        <th asp-for="UserName">UserName</th>
-                        <th asp-for="Outcome">Outcome</th>
-                        <th asp-for="Internal Error">Internal Error </th>
-                        <th asp-for="Error Message">Error Message</th>
-                        <th asp-for="ClientIPAddress">ClientIPAddress </th>
-                        <th asp-for="ClientOS">ClientOS </th>
-                    </tr>
-                </thead>
+                <table class="ms-Table">
+                    <thead>
+                        <tr>
+                            <th asp-for="Activity ID">Activity ID</th>
+                            <th asp-for="Activity Type">Activity Type</th>
+                            <th asp-for="Start Time">Start Time</th>
+                            <th asp-for="End Time">End Time</th>
+                            <th asp-for="UserName">UserName</th>
+                            <th asp-for="Outcome">Outcome</th>
+                            <th asp-for="Internal Error">Internal Error </th>
+                            <th asp-for="Error Message">Error Message</th>
+                            <th asp-for="ClientIPAddress">ClientIPAddress </th>
+                            <th asp-for="ClientOS">ClientOS </th>
+                        </tr>
+                    </thead>
 
-                @foreach (var d in Model.FeedActivity)
+                    @foreach (var d in Model.FeedActivity)
                     {
-                <tbody>
-                    <tr>
-                        <td>@d.activityId </td>
-                        <td>@d.activityType </td>
-                        <td>@d.startTime </td>
-                        <td>@d.endTime </td>
-                        <td>@d.userName</td>
-                        <td>@d.outcome </td>
-                        <td>  @(d.isInternalError.ToString() == "true" ? "Yes" : "No")</td>
-                        <td>@d.errorMessage </td>
-                        <td>@d.ClientIPAddress </td>
-                        <td>@d.ClientOS </td>
-                    </tr>
-                </tbody>
+                        <tbody>
+                            <tr>
+                                <td>@d.activityId </td>
+                                <td>@d.activityType </td>
+                                <td>@d.startTime </td>
+                                <td>@d.endTime </td>
+                                <td>@d.userName</td>
+                                <td>@d.outcome </td>
+                                <td>  @(d.isInternalError.ToString() == "true" ? "Yes" : "No")</td>
+                                <td>@d.errorMessage </td>
+                                <td>@d.ClientIPAddress </td>
+                                <td>@d.ClientOS </td>
+                            </tr>
+                        </tbody>
 
                     }
-            </table>
+                </table>
             }
             else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.None)
             {
-            <div class="norecordstable">
-                <h3 class="text-center">No records found for the search criteria</h3>
-            </div>
+                <div class="norecordstable">
+                    <h3 class="text-center">No records found for the search criteria</h3>
+                </div>
             }
         </div>
     </form>
 </div>
-
-
-
-
-<script src="~/lib/jquery/dist/jquery.js"></script>
-<script type="text/javascript">
-    $(document).ready(function () {
-        $('#loader1').hide();
-        $('#process').click(function () {
-            $('#loader1').show();
-        });
-    });
-    $("#upn").keyup(function () {
-        $('.validate').hide();
-    })
-</script>
 <script type="text/javascript">
     var TableElements = document.querySelectorAll(".ms-Table");
     for (var i = 0; i < TableElements.length; i++) {
         new fabric['Table'](TableElements[i]);
     }
 </script>
-
+<script type="text/javascript">
+    document.getElementById("upn")
+        .addEventListener("keypress", function () {
+            document.getElementById("validate").hidden = true;
+        }, false);
+</script>
+<script>
+    document.getElementById("loader1").hidden = true;
+    document.getElementById("process").addEventListener("click", function () {
+        document.getElementById("loader1").hidden = false;
+    }, false);
+</script>

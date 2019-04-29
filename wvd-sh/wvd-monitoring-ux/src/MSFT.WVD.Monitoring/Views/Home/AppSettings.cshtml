@@ -21,7 +21,7 @@
                     <button type="reset" class="ms-Button">
                         <span class="ms-Button-label">Cancel</span>
                     </button>
-                    <button type="submit" class="ms-Button"  id="save">
+                    <button type="submit" class="ms-Button" id="save">
                         <span class="ms-Button-label">Save</span>
                     </button>
 
@@ -31,18 +31,35 @@
     </div>
 </div>
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('#save').attr("disabled", true);
-        $('#save').removeClass("primary-btn");
-    })
-    $("#tenantgrp").keyup(function () {
-        $('.validate').hide();
-        $('#save').removeAttr("disabled");
-        $('#save').addClass("primary-btn");
-    })
-    $("#tenant").keyup(function () {
-        $('.validatetenant').hide();
-        $('#save').removeAttr("disabled");
-        $('#save').addClass("primary-btn");
-    })
+    var PanelExamples = document.getElementsByClassName("ms-PanelExample");
+    for (var i = 0; i < PanelExamples.length; i++) {
+        (function () {
+            var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
+            var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
+            PanelExampleButton.addEventListener("click", function (i) {
+                new fabric['Panel'](PanelExamplePanel);
+            });
+        }());
+    }
+</script>
+<script type="text/javascript">
+    var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+    for (var i = 0; i < ContextualMenuElements.length; i++) {
+        var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+        var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+        new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+    }
+</script>
+<script type="text/javascript">
+    document.getElementById("tenantgrp")
+        .addEventListener("focus", function () {
+            document.getElementById("validate").hidden = true;
+            document.getElementById("save").removeAttribute("disabled");
+        }, false);
+</script>
+<script type="text/javascript">
+    document.getElementById("focus")
+        .addEventListener("keypress", function () {
+            document.getElementById("validatetenant").hidden = true;
+        }, false);
 </script>
