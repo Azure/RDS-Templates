@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -21,12 +22,14 @@ namespace MSFT.WVD.Monitoring.Controllers
     {
         private readonly ILogger _logger;
         DiagnozeService _diagnozeService;
+        UserSessionService _userSessionService;
         DiagnosticActivitityBL diagnosticActivityBL = new DiagnosticActivitityBL();
         private readonly HttpClient apiClient;
-        public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService)
+        public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService )
         {
             _logger = logger;
             _diagnozeService = diagnozeService;
+            _userSessionService = userSessionService;
             apiClient = new HttpClient();
             apiClient.Timeout = TimeSpan.FromMinutes(30);
             apiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -112,24 +115,12 @@ namespace MSFT.WVD.Monitoring.Controllers
             return View("UserSessions", data);
         }
 
-        public List<UserSession> GetUserSessions(string accessToken, string tenantGroupName, string tenant, string hostPoolName, string hostName)
+        public async Task<List<UserSession>> GetUserSessions(string accessToken, string tenantGroupName, string tenant, string hostPoolName, string hostName)
         {
-            List<UserSession> userSessions = new List<UserSession>();
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
-                client.Timeout = TimeSpan.FromMinutes(30);
-                client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                HttpResponseMessage httpResponseMessage = client.GetAsync($"SessionHost/GetUserSessions?tenantGroupName={tenantGroupName}&tenant={tenant}&hostPoolName={hostPoolName}&sessionHostName={hostName}").Result;
-                if (httpResponseMessage.IsSuccessStatusCode)
-                {
-                    var data = httpResponseMessage.Content.ReadAsStringAsync().Result;
-                    userSessions = JsonConvert.DeserializeObject<List<UserSession>>(data);
-                }
-            }
-            return userSessions;
+           var data = await  _userSessionService.GetUserSessions(accessToken, tenantGroupName, tenant, hostPoolName, hostName);
+            return data;
+
         }
 
 
@@ -142,13 +133,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             List<MessageStatus> messageStatus = new List<MessageStatus>();
 
-            using (var client = new HttpClient())
-            {
-
-                client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
-                client.Timeout = TimeSpan.FromMinutes(30);
-                client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+           
                 if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
                 {
                     foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
@@ -163,9 +148,9 @@ namespace MSFT.WVD.Monitoring.Controllers
                         };
                         var Content = new StringContent(JsonConvert.SerializeObject(logOffUserQuery), Encoding.UTF8, "application/json");
                         _logger.LogInformation($"Call api to log off user session ");
-                        var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
-
-                        if (response.IsSuccessStatusCode)
+                       // var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
+                    var response = await _userSessionService.LogOffUserSession(accessToken, logOffUserQuery);
+                        if (response == "Ok" || response == "Success")
                         {
                             messageStatus.Add(new MessageStatus()
                             {
@@ -191,7 +176,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                         Status = "Error"
                     });
                 }
-            }
+            
             return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
             {
                 Title = "",
@@ -200,12 +185,12 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ConnectionActivity = data.ConnectionActivity,
                 ShowConnectedUser = true,
                 ShowMessageForm = false,
-                UserSessions = GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
+                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
             });
         }
 
 
-        public async Task<IActionResult> ShowMessgePanel(DiagnoseDetailPageViewModel data)
+        public async Task<IActionResult> ShowMessagePanel(DiagnoseDetailPageViewModel data)
         {
 
             string accessToken = await HttpContext.GetTokenAsync("access_token");
@@ -218,7 +203,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ConnectionActivity = data.ConnectionActivity,
                 ShowConnectedUser = true,
                 ShowMessageForm = true,
-                UserSessions = GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
+                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
             });
 
 
@@ -229,6 +214,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         [HttpPost]
         public async Task<IActionResult> SendMessage(DiagnoseDetailPageViewModel data)
         {
+
             if (ModelState.IsValid)
             {
                 var viewData = new SendMessageQuery();
@@ -236,12 +222,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 string accessToken = await HttpContext.GetTokenAsync("access_token");
                 string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
-                    client.Timeout = TimeSpan.FromMinutes(30);
-                    client.DefaultRequestHeaders.Add("Authorization", accessToken);
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+               
                     if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
                     {
                         foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
@@ -259,9 +240,9 @@ namespace MSFT.WVD.Monitoring.Controllers
                             };
                             var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
                             _logger.LogInformation($"Call api to send message to {item.userPrincipalName}");
-                            var response = await client.PostAsync($"SessionHost/SendMessage", Content);
-                            if (response.IsSuccessStatusCode)
-                            {
+                            var response =  await _userSessionService.SendMessage(accessToken, sendMessageQuery);
+                        if (response == HttpStatusCode.OK.ToString() )
+                        {
                                 messageStatus.Add(new MessageStatus()
                                 {
                                     Message = $"Message sent sucessfully to {item.userPrincipalName}",
@@ -302,7 +283,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                         ShowConnectedUser = true,
                         ShowMessageForm = true
                     });
-                }
+               
             }
             else
             {
@@ -335,7 +316,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             {
                 var strConnectionDetails = response.Content.ReadAsStringAsync().Result;
                 var ConnectionActivity = JsonConvert.DeserializeObject<List<ConnectionActivity>>(strConnectionDetails);
-                List<UserSession> userSessions = GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName);
+                List<UserSession> userSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName);
                 ViewBag.ShowConnectedUser = true;
 
                 return View(new DiagnoseDetailPageViewModel()
