@@ -1,0 +1,361 @@
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using MSFT.WVD.Monitoring.Common.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+
+namespace MSFT.WVD.Monitoring.Common.Services
+{
+    public class DiagnozeService
+    {
+        IConfiguration _config;
+        string _authResource;
+        string _brokerUrl;
+        ILogger _logger;
+        IMemoryCache _cache;
+
+        public DiagnozeService(IConfiguration configuration, ILoggerFactory logger, IMemoryCache memoryCache) 
+        {
+            _logger = logger?.CreateLogger<DiagnozeService>() ?? throw new ArgumentNullException(nameof(logger));
+            _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _cache = memoryCache ?? throw new ArgumentException(nameof(memoryCache));
+
+            _authResource = _config["configurations:RESOURCE_URL"];
+            if (string.IsNullOrEmpty(_authResource))
+            {
+                //throw new ConfigurationErrorsException("Missing RDSManagement:RESOURCE_URL");
+                throw new Exception("Missing configurations:RDBROKER_URL");
+            }
+            _brokerUrl = _config["configurations:RDBROKER_URL"];
+            if (string.IsNullOrEmpty(_brokerUrl))
+            {
+                //throw new ConfigurationErrorsException("Missing RDSManagement:RDBROKER_URL");
+                throw new Exception("Missing configurations:RDBROKER_URL");
+            }
+        }
+
+
+        public async Task<List<ConnectionActivity>> GetConnectionActivities( string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome )
+        {
+            try
+            {
+                // Here we will add user to the key
+                var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetConnectionActivities),  upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
+
+                // Try to get from cache first
+                var result = await _cache.GetOrCreateAsync(key, async entry =>
+                {
+                    int activityType = (int)ActivityType.Connection;
+                    outcome = outcome == ActivityOutcome.All.ToString() ? null : outcome;
+                    var url = "";
+                    if (outcome == null)
+                    {
+                        url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true";
+
+                    }
+                    else
+                    {
+                        int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
+                        url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true";
+                    }
+
+                    var reply = await SendRequest(url, accessToken).ConfigureAwait(false);
+
+                    // Set cache expiration
+                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2);
+
+                    return reply;
+
+                }).ConfigureAwait(false);
+
+                if (result.StatusCode == HttpStatusCode.OK)
+                {
+                    var data = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var arr = (JArray)JsonConvert.DeserializeObject(data);
+                    return ((JArray)arr).Select(item => new ConnectionActivity
+                    {
+                        activityId = (string)item["activityId"],
+                        activityType = (string)item["activityType"],
+                        startTime = item["startTime"].ToString() != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
+                        endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
+                        userName = item["userName"].ToString(),
+                        outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
+                        isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
+                        errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
+                        ClientOS = (string)item["details"]["ClientOS"],
+                        ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
+                        Tenants = (string)item["details"]["Tenants"],
+                        SessionHostName = (string)item["details"]["SessionHostName"],
+                        SessionHostPoolName = (string)item["details"]["SessionHostPoolName"]
+                    }).ToList();
+
+                }
+                else
+                {
+                    return new List<ConnectionActivity>() {
+                        new ConnectionActivity()
+                        {
+                            ErrorDetails= new ErrorDetails
+                            {
+                                Message = result.ToString()
+                            }
+                        }
+                    };
+                }
+                //return result;
+
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+
+          
+
+        }
+
+        public async Task<List<ManagementActivity>> GetManagementActivities(string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome)
+        {
+            try
+            {
+                // Here we will add user to the key
+                var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetConnectionActivities), upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
+
+                // Try to get from cache first
+                var result = await _cache.GetOrCreateAsync(key, async entry =>
+                {
+                    int activityType = (int)ActivityType.Management;
+                    outcome = outcome == ActivityOutcome.All.ToString() ? null : outcome;
+                    var url = "";
+                    if (outcome == null)
+                    {
+                        url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true";
+
+                    }
+                    else
+                    {
+                        int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
+                        url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true";
+                    }
+
+                    var reply = await SendRequest(url, accessToken).ConfigureAwait(false);
+
+                    // Set cache expiration
+                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2);
+
+                    return reply;
+
+                }).ConfigureAwait(false);
+
+                if (result.StatusCode == HttpStatusCode.OK)
+                {
+                    var data = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var arr = (JArray)JsonConvert.DeserializeObject(data);
+                    return ((JArray)arr).Select(item => new ManagementActivity
+                    {
+                        activityId = (string)item["activityId"],
+                        activityType = (string)item["activityType"],
+                        startTime = item["startTime"].ToString() != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
+                        endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
+                        userName = (string)item["userName"],
+                        outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
+                        isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
+                        errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
+                        ObjectsCreated = (string)item["ObjectsCreated"] == null || (string)item["ObjectsCreated"] == "" ? 0 : (int)item["ObjectsCreated"],
+                        ObjectsDeleted = (string)item["ObjectsDeleted"] == null || (string)item["ObjectsDeleted"] == "" ? 0 : (int)item["ObjectsDeleted"],
+                        ObjectsFetched = (string)item["ObjectsFetched"] == null || (string)item["ObjectsFetched"] == "" ? 0 : (int)item["ObjectsFetched"],
+                        ObjectsUpdated = (string)item["ObjectsUpdated"] == null || (string)item["ObjectsUpdated"] == "" ? 0 : (int)item["ObjectsUpdated"]
+                    }).ToList();
+
+                }
+                else
+                {
+                    return new List<ManagementActivity>() {
+                        new ManagementActivity()
+                        {
+                            ErrorDetails= new ErrorDetails
+                            {
+                                Message = result.ToString()
+                            }
+                        }
+                    };
+                }
+                //return result;
+
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+
+
+
+        }
+
+        public async Task<List<FeedActivity>> GetFeedActivities(string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome)
+        {
+            try
+            {
+                // Here we will add user to the key
+                var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetConnectionActivities), upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
+
+                // Try to get from cache first
+                var result = await _cache.GetOrCreateAsync(key, async entry =>
+                {
+                    int activityType = (int)ActivityType.Management;
+                    outcome = outcome == ActivityOutcome.All.ToString() ? null : outcome;
+                    var url = "";
+                    if (outcome == null)
+                    {
+                        url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true";
+
+                    }
+                    else
+                    {
+                        int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
+                        url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true";
+                    }
+
+                    var reply = await SendRequest(url, accessToken).ConfigureAwait(false);
+
+                    // Set cache expiration
+                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2);
+
+                    return reply;
+
+                }).ConfigureAwait(false);
+
+                if (result.StatusCode == HttpStatusCode.OK)
+                {
+                    var data = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var arr = (JArray)JsonConvert.DeserializeObject(data);
+                    return ((JArray)arr).Select(item => new FeedActivity
+                    {
+                        activityId = (string)item["activityId"],
+                        activityType = (string)item["activityType"],
+                        startTime = item["startTime"].ToString() != null ? Convert.ToDateTime(item["startTime"]) : (DateTime?)null,
+                        endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
+                        userName = (string)item["userName"],
+                        outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
+                        isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
+                        errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
+                        ClientOS = (string)item["details"]["ClientOS"],
+                        ClientIPAddress = item["details"]["ClientIPAddress"].ToString()
+                    }).ToList();
+                }
+                else
+                {
+                    return new List<FeedActivity>() {
+                        new FeedActivity()
+                        {
+                            ErrorDetails= new ErrorDetails
+                            {
+                                Message = result.ToString()
+                            }
+                        }
+                    };
+                }
+                //return result;
+
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+
+
+
+        }
+
+
+       
+
+        //private async Task<string> SendRequest(string url, string user)
+        //{
+        //    var authResult = await _tokenService.GetToken(_authResource, user).ConfigureAwait(false);
+
+        //    return await SendRequest(url, authResult).ConfigureAwait(false);
+        //}
+        //private async Task<string> SendRequest(string url, string accessToken)
+        //{
+        //   // var authResult = await _tokenService.GetServiceToken(_authResource).ConfigureAwait(false);
+
+        //    return await SendRequest(url, accessToken).ConfigureAwait(false);
+        //}
+        private async Task<HttpResponseMessage> SendRequest(string url, string accessToken)
+        {
+            return await Request(HttpMethod.Get, url,  accessToken);
+        }
+
+        private async Task<HttpResponseMessage> PostRequest(string url, string body, string accessToken)
+        {
+
+            using (var handler = new HttpClientHandler { })
+            using (var client = new HttpClient())
+            {
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, url);
+                StringContent content = new StringContent(body);
+                content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                request.Content = content;
+                HttpResponseMessage response = await client.SendAsync(request);
+                return response;
+                //var txt = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                //return txt;
+            }
+        }
+
+        private async Task<HttpResponseMessage> Request(HttpMethod httpMethod, string url, string accessToken)
+        {
+
+            var activityId = Guid.NewGuid().ToString();
+
+            //if (accessToken == null)
+            //{
+            //    throw new ArgumentNullException(nameof(accessToken));
+            //}
+            //if (!token.Success)
+            //{
+            //    _logger.LogError($"Invalid token for user {token.User}");
+            //    throw new InvalidOperationException("Cannot redirect on api");
+            //}
+
+            _logger.LogInformation($"Sending RDSManagement request to {url}. ActivityId:{activityId}");
+            using (var handler = new HttpClientHandler { })
+            using (var client = new HttpClient())
+            {
+
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Add("x-ms-correlation-id", activityId);
+                //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Result.AccessToken);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                HttpRequestMessage request = new HttpRequestMessage(httpMethod, url);
+                HttpResponseMessage response = await client.SendAsync(request);
+                _logger.LogInformation($"Received response from ActivityId:{activityId} Status:{response.StatusCode}");
+                return response;
+                //if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                //{
+                //    return response;
+                //}
+
+
+                //var txt = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                //return txt;
+            }
+
+        }
+
+    }
+}

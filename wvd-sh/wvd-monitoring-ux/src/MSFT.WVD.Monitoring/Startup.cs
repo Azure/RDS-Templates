@@ -19,6 +19,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MSFT.WVD.Monitoring.Common.Models;
+using MSFT.WVD.Monitoring.Common.Services;
 
 namespace MSFT.WVD.Monitoring
 {
@@ -98,7 +99,7 @@ namespace MSFT.WVD.Monitoring
                 options.IdleTimeout = TimeSpan.FromMinutes(60);
             });
 
-
+            services.AddSingleton<DiagnozeService>();
 
         }
 
