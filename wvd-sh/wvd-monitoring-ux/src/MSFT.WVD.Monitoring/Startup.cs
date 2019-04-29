@@ -101,6 +101,7 @@ namespace MSFT.WVD.Monitoring
 
             services.AddSingleton<DiagnozeService>();
             services.AddSingleton<UserSessionService>();
+            services.AddSingleton<UserService>();
 
         }
 

@@ -25,7 +25,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
 
         public UserSessionService(IConfiguration configuration, ILoggerFactory logger, IMemoryCache memoryCache)
         {
-            _logger = logger?.CreateLogger<DiagnozeService>() ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger?.CreateLogger<UserSessionService>() ?? throw new ArgumentNullException(nameof(logger));
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _cache = memoryCache ?? throw new ArgumentException(nameof(memoryCache));
 

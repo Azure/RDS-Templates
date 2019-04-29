@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Models;
 using Newtonsoft.Json;
@@ -22,7 +23,12 @@ namespace MSFT.WVD.Monitoring.Controllers
     [Authorize]
     public class HomeController : Controller
     {
+        private readonly IMemoryCache _cache;
 
+        public HomeController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
         public async Task<IActionResult> Index()
         {
             var role = new RoleAssignment();
@@ -128,6 +134,9 @@ namespace MSFT.WVD.Monitoring.Controllers
                 var submittedData = data.SubmitData;
                 HttpContext.Session.Set<string>("SelectedTenantGroupName", submittedData.TenantGroupName);
                 HttpContext.Session.Set<string>("SelectedTenantName", submittedData.TenantName);
+
+                _cache.Set("SelectedTenantGroupName", submittedData.TenantGroupName);
+                _cache.Set("SelectedTenantName", submittedData.TenantName);
 
                 /***following line will have to use ***/
                 //HttpContext.Session.Set<RoleAssignment>("selectedRole", roles?.SingleOrDefault(x => x.tenantGroupName == submittedData.TenantGroupName));

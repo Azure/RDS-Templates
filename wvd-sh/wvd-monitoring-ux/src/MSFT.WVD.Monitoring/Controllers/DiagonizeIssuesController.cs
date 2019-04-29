@@ -22,14 +22,16 @@ namespace MSFT.WVD.Monitoring.Controllers
     {
         private readonly ILogger _logger;
         DiagnozeService _diagnozeService;
+        UserService _userService;
         UserSessionService _userSessionService;
         DiagnosticActivitityBL diagnosticActivityBL = new DiagnosticActivitityBL();
         private readonly HttpClient apiClient;
-        public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService )
+        public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService , UserService userService)
         {
             _logger = logger;
             _diagnozeService = diagnozeService;
             _userSessionService = userSessionService;
+            _userService = userService;
             apiClient = new HttpClient();
             apiClient.Timeout = TimeSpan.FromMinutes(30);
             apiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -49,9 +51,9 @@ namespace MSFT.WVD.Monitoring.Controllers
             var viewData = new DiagonizePageViewModel();
             if (ModelState.IsValid)
             {
-
-                string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
-                string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+                UserInfo userInfo= _userService.GetUserData();
+                string tenantGroupName = userInfo.tenantGroupName; //HttpContext.Session.Get<string>("SelectedTenantGroupName");
+                string tenant = userInfo.tenant; // HttpContext.Session.Get<string>("SelectedTenantName");
                 string accessToken = await HttpContext.GetTokenAsync("access_token");
                 //apiClient.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
                 //apiClient.DefaultRequestHeaders.Add("Authorization", accessToken);
