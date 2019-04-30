@@ -28,16 +28,11 @@ namespace MSFT.WVD.Monitoring.Common.Services
             _logger = logger?.CreateLogger<UserSessionService>() ?? throw new ArgumentNullException(nameof(logger));
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _cache = memoryCache ?? throw new ArgumentException(nameof(memoryCache));
-
-            _authResource = _config["configurations:RESOURCE_URL"];
-            if (string.IsNullOrEmpty(_authResource))
-            {
-                //throw new ConfigurationErrorsException("Missing RDSManagement:RESOURCE_URL");
-                throw new Exception("Missing configurations:RDBROKER_URL");
-            }
+            
             _brokerUrl = _config["configurations:RDBROKER_URL"];
             if (string.IsNullOrEmpty(_brokerUrl))
             {
+                _logger.LogError("Missing configurations:RDBROKER_URL");
                 //throw new ConfigurationErrorsException("Missing RDSManagement:RDBROKER_URL");
                 throw new Exception("Missing configurations:RDBROKER_URL");
             }
@@ -47,13 +42,12 @@ namespace MSFT.WVD.Monitoring.Common.Services
             var key = new Tuple<string, string, string, string, string, string>(nameof(GetUserSessions), accessToken, tenantGroupName, tenant, hostPoolName, hostName);
             var result = await _cache.GetOrCreateAsync(key, async entry =>
              {
-                 var url = "";
+                 var url = string.Empty;
                  url = $"{_brokerUrl}RdsManagement/V1/TenantGroups/{tenantGroupName}/Tenants/{tenant}/HostPools/{hostPoolName}/Sessions";
                  var reply = await SendRequest(url, accessToken).ConfigureAwait(false);
 
                  // Set cache expiration
                  entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2);
-
                  return reply;
 
              }).ConfigureAwait(false);
@@ -74,6 +68,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             }
             else
             {
+                _logger.LogError("No user sessions found.");
                 return null;
             }
 
@@ -84,6 +79,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
         }
         public async Task<string> SendMessage(string accessToken, SendMessageQuery sendMessageQuery)
         {
+            _logger.LogInformation($"Enter into service call to send message to {sendMessageQuery.userPrincipalName}");
 
             var key = sendMessageQuery;
             var result = await _cache.GetOrCreateAsync(key, async entry =>
@@ -94,29 +90,24 @@ namespace MSFT.WVD.Monitoring.Common.Services
                 var reply = await PostRequest(url, JsonConvert.SerializeObject(sendMessageQuery), accessToken).ConfigureAwait(false);
                 // Set cache expiration
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2);
-
                 return reply;
-
             }).ConfigureAwait(false);
-
             return result;
         }
         public async Task<string> LogOffUserSession(string accessToken, LogOffUserQuery logOffUserQuery)
         {
+            _logger.LogInformation($"Enter into service call to log off user session of {logOffUserQuery.sessionId}");
 
             var key = logOffUserQuery;
             var result = await _cache.GetOrCreateAsync(key, async entry =>
             {
-                var url = "";
+                var url = string.Empty;
                 var Content = new StringContent(JsonConvert.SerializeObject(logOffUserQuery), Encoding.UTF8, "application/json");
                 url = $"{_brokerUrl}RdsManagement/V1/TenantGroups/{logOffUserQuery.tenantGroupName}/Tenants/{logOffUserQuery.tenantName}/HostPools/{logOffUserQuery.hostPoolName}/SessionHosts/{logOffUserQuery.sessionHostName}/Sessions/{logOffUserQuery.sessionId}/actions/logoff-user";
                 var reply = await PostRequest(url, JsonConvert.SerializeObject(logOffUserQuery), accessToken).ConfigureAwait(false);
-
                 // Set cache expiration
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2);
-
                 return reply;
-
             }).ConfigureAwait(false);
             return result;
         }
@@ -124,11 +115,13 @@ namespace MSFT.WVD.Monitoring.Common.Services
 
         private async Task<string> PostRequest(string url, string body, string accessToken)
         {
+            var activityId = Guid.NewGuid().ToString();
+            _logger.LogInformation($"RDS Management api call to post request to url {url}. Activity Id:{activityId}");
             using (var handler = new HttpClientHandler { })
             using (var client = new HttpClient())
             {
-
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                client.DefaultRequestHeaders.Add("x-ms-correlation-id", activityId);
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
                 StringContent content = new StringContent(body);
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -139,7 +132,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
         }
         private async Task<HttpResponseMessage> Request(HttpMethod httpMethod, string url, string accessToken)
         {
-
             var activityId = Guid.NewGuid().ToString();
             _logger.LogInformation($"Sending RDS Management request to {url}. ActivityId:{activityId}");
             using (var handler = new HttpClientHandler { })

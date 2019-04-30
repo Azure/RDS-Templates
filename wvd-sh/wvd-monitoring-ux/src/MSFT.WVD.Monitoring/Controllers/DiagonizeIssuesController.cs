@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using MSFT.WVD.Monitoring.Common.BAL;
 using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Common.Services;
 using MSFT.WVD.Monitoring.Models;
@@ -24,7 +23,6 @@ namespace MSFT.WVD.Monitoring.Controllers
         DiagnozeService _diagnozeService;
         UserService _userService;
         UserSessionService _userSessionService;
-        DiagnosticActivitityBL diagnosticActivityBL = new DiagnosticActivitityBL();
         private readonly HttpClient apiClient;
         public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService)
         {
