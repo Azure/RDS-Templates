@@ -175,13 +175,13 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <div class="ms-CheckBox">
+                                                @*<div class="ms-CheckBox">
                                                     <input asp-for="@Model.UserSessions[i].IsSelected" tabindex="-1" type="checkbox" name="chkIsSelected" class="ms-CheckBox-input" id="checkbox">
                                                     <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" name="checkboxa">
                                                        
                                                     </label>
-                                                </div>
-                                                @*<input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="checkbox">*@
+                                                </div>*@
+                                                <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="checkbox" class="chkbox">
                                                 <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
 
                                                 <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
@@ -275,38 +275,21 @@
             }, false);
         document.getElementById("UserConnected")
             .addEventListener("click", function () {
+               
                 document.getElementById("anchorlinksdiv").hidden = true;
             }, false);
 
 
 
-
-        //sendBtn.addEventListener('click', function (e) {
-        //    var title = document.getElementById("texttitle").innerText;
-        //    var message = document.getElementById("texterror").innerText;
-        //    console.log(title);
-        //    if (title == "" || title == null) {
-        //        document.getElementById("validationtitle").hidden = false;
-        //        document.getElementById("validationtitle").innerText = "Title is required.";
-        //        return false;
-        //    }
-
-        //    if (message == "" || message == null) {
-        //        document.getElementById("validationmsg").hidden = false;
-        //        document.getElementById("validationmsg").innerText = "Message is required.";
-        //        return false;
-
-        //    }
-        //    e.preventDefault();
-        //},false);
       
 
         var checkbox = document.getElementById("checkbox");
         checkbox.addEventListener("change", ShowAnchorsDiv, false);
 
         function ShowAnchorsDiv() {
-            var chk = document.getElementsByClassName("ms-CheckBox-input");
+            var chk = document.getElementsByClassName("chkbox");
             var ln = 0;
+            console.log(chk);
             for (var i = 0; i < chk.length; i++) {
                 if (chk[i].checked)
                     ln++
@@ -316,7 +299,7 @@
                 document.getElementById("anchorlinksdiv").hidden = false;
             }
             else {
-                consol.log(ln);
+             
                 document.getElementById("anchorlinksdiv").hidden = true;
 
             }

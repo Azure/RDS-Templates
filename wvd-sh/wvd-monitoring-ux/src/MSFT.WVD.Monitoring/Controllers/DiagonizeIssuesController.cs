@@ -144,7 +144,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     _logger.LogInformation($"Service Call to log off user session ");
                     // var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
                     var response = await _userSessionService.LogOffUserSession(accessToken, logOffUserQuery);
-                    if (response == "Ok" || response == "Success")
+                    if (response == HttpStatusCode.OK.ToString() || response == "Success")
                     {
                         messageStatus.Add(new MessageStatus()
                         {
