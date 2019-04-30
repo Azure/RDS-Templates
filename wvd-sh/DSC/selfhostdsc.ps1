@@ -73,6 +73,14 @@ Configuration SelfhostConfig {
                         ValueData   = 0
                         ValueType   = "DWORD"
 		}
+		Registry DeleteLocalProfileWhenVHDShouldApply
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
+                        ValueName   = "DeleteLocalProfileWhenVHDShouldApply"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
 
 # Diasble MMA to change watson settings
 
