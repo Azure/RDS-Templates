@@ -273,38 +273,39 @@
             .addEventListener("focus", function () {
                 document.getElementById("validationmsg").hidden = true;
             }, false);
-        document.getElementById("UserConnected")
-            .addEventListener("click", function () {
+        //document.getElementById("UserConnected")
+        //    .addEventListener("click", function () {
                
-                document.getElementById("anchorlinksdiv").hidden = true;
-            }, false);
+        //        document.getElementById("anchorlinksdiv").hidden = true;
+        //    }, false);
 
 
 
       
 
-        var checkbox = document.getElementById("checkbox");
-        checkbox.addEventListener("change", ShowAnchorsDiv, false);
+        //var checkbox = document.getElementById("checkbox");
+        //checkbox.addEventListener("change", ShowAnchorsDiv, false);
 
-        function ShowAnchorsDiv() {
-            var chk = document.getElementsByClassName("chkbox");
-            var ln = 0;
-            console.log(chk);
-            for (var i = 0; i < chk.length; i++) {
-                if (chk[i].checked)
-                    ln++
-            }
+        //function ShowAnchorsDiv() {
+        //    var chk = document.getElementsByClassName("chkbox");
+        //    var ln = 1;
+        //    console.log(chk);
+        //    for (var i = 0; i < chk.length; i++) {
+        //        if (chk[i].checked)
+        //            ln++
+        //    }
 
-            if (ln > 0) {
-                document.getElementById("anchorlinksdiv").hidden = false;
-            }
-            else {
+        //    if (ln > 0) {
+        //        //document.getElementById("anchorlinksdiv").hidden = false;
+
+        //    }
+        //    else {
              
-                document.getElementById("anchorlinksdiv").hidden = true;
+        //        //document.getElementById("anchorlinksdiv").hidden = true;
 
-            }
-        }
-
+        //    }
+        //}
+        
        
     })();
 

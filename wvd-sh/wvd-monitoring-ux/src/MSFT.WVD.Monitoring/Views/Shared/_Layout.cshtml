@@ -147,6 +147,14 @@
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
         <script src="~/js/site.js"></script>
         <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <script type="text/javascript">
+            var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+            for (var i = 0; i < ContextualMenuElements.length; i++) {
+                var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+                var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+                new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+            }
+        </script>
     </environment>
     @RenderSection("Scripts", required: false)
 </body>

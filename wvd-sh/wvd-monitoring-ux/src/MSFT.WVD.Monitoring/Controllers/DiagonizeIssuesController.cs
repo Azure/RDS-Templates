@@ -187,15 +187,29 @@ namespace MSFT.WVD.Monitoring.Controllers
             var tenantGroupName = userInfo.tenantGroupName;
             var tenant = userInfo.tenant;
             var accessToken = userInfo.accessToken;
+            bool ShowMessageForm = false;
+            if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
+            {
+                ShowMessageForm = true;
+                ViewBag.ErrorMsg = "";
+
+            }
+            else
+            {
+                ViewBag.ErrorMsg = "Please select at least one user";
+                ShowMessageForm = false;
+            }
+
             return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
             {
                 Title = string.Empty,
                 Message = string.Empty,
                 ConnectionActivity = data.ConnectionActivity,
                 ShowConnectedUser = true,
-                ShowMessageForm = true,
+                ShowMessageForm = ShowMessageForm,
                 UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
             });
+
         }
 
         [HttpPost]
