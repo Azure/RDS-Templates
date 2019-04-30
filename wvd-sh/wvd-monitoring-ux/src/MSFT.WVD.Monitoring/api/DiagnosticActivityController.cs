@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using MSFT.WVD.Monitoring.Common.BAL;
 using MSFT.WVD.Monitoring.Common.Models;
+using MSFT.WVD.Monitoring.Common.Services;
 using MSFT.WVD.Monitoring.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -20,136 +20,45 @@ namespace MSFT.WVD.Monitoring.api
     public class DiagnosticActivityController : ControllerBase
     {
         private readonly ILogger _logger;
-        DiagnosticActivitityBL diagnosticActivitityBL = new DiagnosticActivitityBL();
-        ConfigSettings Configuration;
-        public DiagnosticActivityController(IConfiguration config, ILogger<DiagnosticActivityController> logger)
+        DiagnozeService _diagnozeService;
+
+        public DiagnosticActivityController(IConfiguration config, ILogger<DiagnosticActivityController> logger, DiagnozeService diagnozeService)
         {
-            Configuration = new ConfigSettings(config);
             _logger = logger;
+            _diagnozeService = diagnozeService;
         }
 
         [HttpGet("GetConnectionActivities")]
-        public IActionResult GetConnectionActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
+        public async Task<List<ConnectionActivity>> GetConnectionActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
         {
-            try
-            {
-                string token = Request.Headers["Authorization"];
-                _logger.LogInformation($"Call WVD api to get connection activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
-
-                HttpResponseMessage response = diagnosticActivitityBL.GetConnectionActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
-                if (response.IsSuccessStatusCode)
-                {
-                    IEnumerable<ConnectionActivity> connectionActivities = diagnosticActivitityBL.GetConnectionActivities(response);
-                    return new OkObjectResult(connectionActivities);
-                }
-                else
-                {
-                    var message = string.Empty;
-                    if (response.Content != null)
-                    {
-                        message = !string.IsNullOrEmpty(response.Content.ReadAsStringAsync().Result) ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
-                    }
-                    return StatusCode((int)response.StatusCode, message);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{ex.Message}");
-                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
-            }
+            _logger.LogInformation($"Make api call to get connection activities of user {upn} within tenant {tenant} within tenant group {tenantGroupName}");
+            string token = Request.Headers["Authorization"];
+            return await _diagnozeService.GetConnectionActivities(token, upn, tenantGroupName, tenant, startDate, endDate, outcome).ConfigureAwait(false);
         }
 
 
         [HttpGet("GetManagementActivities")]
-        public IActionResult GetManagementActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
+        public async Task<List<ManagementActivity>> GetManagementActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
         {
-            try
-            {
-                string token = Request.Headers["Authorization"];
-                _logger.LogInformation($"Call WVD api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
-
-                HttpResponseMessage response = diagnosticActivitityBL.GetManagementActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
-                if (response.IsSuccessStatusCode)
-                {
-                    IEnumerable<ManagementActivity> managementActivities = diagnosticActivitityBL.GetManagementActivities(response);
-                    return new OkObjectResult(managementActivities);
-                }
-                else
-                {
-                    var message = string.Empty;
-                    if (response.Content != null)
-                    {
-                        message = !string.IsNullOrEmpty(response.Content.ReadAsStringAsync().Result) ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
-                    }
-                    return StatusCode((int)response.StatusCode, message);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{ex.Message}");
-                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
-            }
+            _logger.LogInformation($"Make api call to get management activities of user {upn} within tenant {tenant} within tenant group {tenantGroupName}");
+            string token = Request.Headers["Authorization"];
+            return await _diagnozeService.GetManagementActivities(token, upn, tenantGroupName, tenant, startDate, endDate, outcome).ConfigureAwait(false);
         }
 
         [HttpGet("GetFeedActivities")]
-        public IActionResult GetFeedActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
+        public async Task<List<FeedActivity>> GetFeedActivities(string upn, string tenantGroupName, string tenant, string startDate, string endDate, string outcome = null)
         {
-            try
-            {
-                string token = Request.Headers["Authorization"];
-                _logger.LogInformation($"Call WVD api to get feed activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
-
-                HttpResponseMessage response = diagnosticActivitityBL.GetFeedActivities(Configuration.RDBrokerUrl, token, upn, tenantGroupName, tenant, startDate, endDate, outcome);
-                if (response.IsSuccessStatusCode)
-                {
-                    IEnumerable<FeedActivity> feedActivities = diagnosticActivitityBL.GetFeedActivities(response);
-                    return new OkObjectResult(feedActivities);
-                }
-                else
-                {
-                    var message = string.Empty;
-                    if (response.Content != null)
-                    {
-                        message = !string.IsNullOrEmpty(response.Content.ReadAsStringAsync().Result) ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
-                    }
-                    return StatusCode((int)response.StatusCode, message);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{ex.Message}");
-                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
-            }
+            _logger.LogInformation($"Make api call to get feed activities of user {upn} within tenant {tenant} within tenant group {tenantGroupName}");
+            string token = Request.Headers["Authorization"];
+            return await _diagnozeService.GetFeedActivities(token, upn, tenantGroupName, tenant, startDate, endDate, outcome).ConfigureAwait(false);
         }
 
         [HttpGet("GetActivityDetails")]
-        public IActionResult GetActivityDetails(string tenantGroupName,string tenant,string activityId)
+        public async Task<List<ConnectionActivity>> GetActivityDetails(string tenantGroupName,string tenant,string activityId)
         {
-            try
-            {
-                string token = Request.Headers["Authorization"];
-
-                HttpResponseMessage response = diagnosticActivitityBL.GetActivityDetails(Configuration.RDBrokerUrl, token,  tenantGroupName, tenant, activityId);
-                if (response.IsSuccessStatusCode)
-                {
-                    IEnumerable<ConnectionActivity> activities = diagnosticActivitityBL.GetActivityDetails(response);
-                    return new OkObjectResult(activities);
-                }
-                else
-                {
-                    var message = string.Empty;
-                    if (response.Content != null)
-                    {
-                        message = !string.IsNullOrEmpty(response.Content.ReadAsStringAsync().Result) ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
-                    }
-                    return StatusCode((int)response.StatusCode, message);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{ex.Message}");
-                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
-            }
+            _logger.LogInformation($"Make api call to get connection  activity details of activityId{activityId}");
+            string token = Request.Headers["Authorization"];
+            return await _diagnozeService.GetActivityHostDetails(token,tenantGroupName,tenant,activityId).ConfigureAwait(false);
         }
 
        

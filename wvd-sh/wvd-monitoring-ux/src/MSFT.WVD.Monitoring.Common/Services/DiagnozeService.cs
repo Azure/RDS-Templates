@@ -28,15 +28,11 @@ namespace MSFT.WVD.Monitoring.Common.Services
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _cache = memoryCache ?? throw new ArgumentException(nameof(memoryCache));
 
-            _authResource = _config["configurations:RESOURCE_URL"];
-            if (string.IsNullOrEmpty(_authResource))
-            {
-                //throw new ConfigurationErrorsException("Missing RDSManagement:RESOURCE_URL");
-                throw new Exception("Missing configurations:RDBROKER_URL");
-            }
+         
             _brokerUrl = _config["configurations:RDBROKER_URL"];
             if (string.IsNullOrEmpty(_brokerUrl))
             {
+                _logger.LogError("Missing configurations:RDBROKER_URL");
                 //throw new ConfigurationErrorsException("Missing RDSManagement:RDBROKER_URL");
                 throw new Exception("Missing configurations:RDBROKER_URL");
             }
@@ -45,6 +41,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
 
         public async Task<List<ConnectionActivity>> GetConnectionActivities(string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome)
         {
+            _logger.LogInformation($"Service call to get connection activities of user {upn} of Tenant {tenant} within tenant group {tenantGroupName} ");
 
             // Here we will add user to the key
             var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetConnectionActivities), upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
@@ -98,6 +95,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             }
             else
             {
+                _logger.LogError($"Service call to get connection activities of user {upn} of Tenant {tenant} within tenant group {tenantGroupName} is failed. Error : {result} ");
                 return new List<ConnectionActivity>() {
                         new ConnectionActivity()
                         {
@@ -113,6 +111,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
 
         public async Task<List<ManagementActivity>> GetManagementActivities(string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome)
         {
+            _logger.LogInformation($"Service call to get management activities of user {upn} of Tenant {tenant} within tenant group {tenantGroupName} ");
+
             // Here we will add user to the key
             var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetConnectionActivities), upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
 
@@ -164,6 +164,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
             }
             else
             {
+                _logger.LogError($"Service call to get management activities of user {upn} of Tenant {tenant} within tenant group {tenantGroupName} is failed. Error : {result} ");
+
                 return new List<ManagementActivity>() {
                         new ManagementActivity()
                         {
@@ -178,6 +180,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
 
         public async Task<List<FeedActivity>> GetFeedActivities(string accessToken, string upn, string tenantGroupName, string tenant, string startDatetime, string endDatetime, string outcome)
         {
+            _logger.LogInformation($"Service call to get feed activities of user {upn} of Tenant {tenant} within tenant group {tenantGroupName} ");
+
             // Here we will add user to the key
             var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetConnectionActivities), upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
 
@@ -226,6 +230,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
             }
             else
             {
+                _logger.LogError($"Service call to get feed activities of user {upn} of Tenant {tenant} within tenant group {tenantGroupName} is  failed. Error : {result} ");
+
                 return new List<FeedActivity>() {
                         new FeedActivity()
                         {
@@ -236,12 +242,12 @@ namespace MSFT.WVD.Monitoring.Common.Services
                         }
                     };
             }
-            //return result;
+           
         }
 
         public async Task<List<ConnectionActivity>> GetActivityHostDetails(string accessToken, string tenantGroupName, string tenant, string activityId)
         {
-
+            _logger.LogInformation($"Service call to get activity details based on activityId {activityId}");
             // Here we will add user to the key
             var key = new Tuple<string, string, string, string>(nameof(GetConnectionActivities), tenantGroupName, tenant, activityId);
 
@@ -279,10 +285,11 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     SessionHostName = (string)item["details"]["SessionHostName"],
                     SessionHostPoolName = (string)item["details"]["SessionHostPoolName"]
                 }).ToList();
-
             }
             else
             {
+                _logger.LogError($"Service call to get activity details based on activityId {activityId} is failed. Error : {result} ");
+
                 return new List<ConnectionActivity>() {
                         new ConnectionActivity()
                         {

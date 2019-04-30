@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using MSFT.WVD.Monitoring.Common.BAL;
 using MSFT.WVD.Monitoring.Common.Models;
-
-
+using MSFT.WVD.Monitoring.Common.Services;
 
 namespace MSFT.WVD.Monitoring.api
 {
@@ -20,111 +18,36 @@ namespace MSFT.WVD.Monitoring.api
     public class SessionHostController : ControllerBase
     {
         private readonly ILogger _logger;
-        SessionHostBL sessionHostBL = new SessionHostBL();
-        ConfigSettings Configuration;
-        public SessionHostController(IConfiguration config, ILogger<DiagnosticActivityController> logger)
+        UserSessionService _userSessionService;
+        public SessionHostController( ILogger<DiagnosticActivityController> logger, UserSessionService userSessionService)
         {
-            Configuration = new ConfigSettings(config);
-            _logger = logger;
+            _userSessionService = userSessionService;
+             _logger = logger;
         }
         // GET: api/<controller>
         [HttpGet("GetUserSessions")]
-        public IActionResult GetUserSessions(string tenantGroupName,string tenant,string hostPoolName, string sessionHostName)
+        public async Task<List<UserSession>> GetUserSessions(string tenantGroupName,string tenant,string hostPoolName, string sessionHostName)
         {
-            try
-            {
-                string token = Request.Headers["Authorization"];
-                _logger.LogInformation($"Call WVD api to get list of user sessions for selected tenant group {tenantGroupName} and tenant {tenant}");
-
-                HttpResponseMessage httpResponseMessage = sessionHostBL.GetUserSessions(Configuration.RDBrokerUrl, token, tenantGroupName, tenant, hostPoolName, sessionHostName);
-                if (httpResponseMessage.IsSuccessStatusCode)
-                {
-                    IEnumerable<UserSession> usersessions = sessionHostBL.GetUserSessions(httpResponseMessage, sessionHostName);
-                    return new OkObjectResult(usersessions);
-                }
-                else
-                {
-                    var message = string.Empty;
-                    if (httpResponseMessage.Content != null)
-                    {
-                        message = !string.IsNullOrEmpty(httpResponseMessage.Content.ReadAsStringAsync().Result) ? httpResponseMessage.Content.ReadAsStringAsync().Result : httpResponseMessage.ReasonPhrase;
-                    }
-                    _logger.LogError($"Error on listing connected user : {message}");
-                    return StatusCode((int)httpResponseMessage.StatusCode, message);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{ex.Message}");
-                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
-            }
+            _logger.LogInformation($"Make api call to get user session of host {sessionHostName} within hostpool {hostPoolName},  tenant {tenant} and tenant group {tenantGroupName} ");
+            string token = Request.Headers["Authorization"];
+            return await _userSessionService.GetUserSessions(token, tenantGroupName, tenant, hostPoolName, sessionHostName);
         }
-
        
         // POST api/<controller>
         [HttpPost("SendMessage")]
-        public IActionResult SendMessage(SendMessageQuery sendMessageQuery)
+        public async Task<string> SendMessage(SendMessageQuery sendMessageQuery)
         {
-            try
-            {
-                string token = Request.Headers["Authorization"];
-                _logger.LogInformation($"Call WVD api to post message to connected user");
-
-                HttpResponseMessage httpResponseMessage = sessionHostBL.SendMessage(Configuration.RDBrokerUrl, token, sendMessageQuery);
-                if (httpResponseMessage.IsSuccessStatusCode)
-                {
-                    return new OkResult();
-                }
-                else
-                {
-                    var message = string.Empty;
-                    if (httpResponseMessage.Content != null)
-                    {
-                        message = !string.IsNullOrEmpty(httpResponseMessage.Content.ReadAsStringAsync().Result) ? httpResponseMessage.Content.ReadAsStringAsync().Result : httpResponseMessage.ReasonPhrase;
-                    }
-                    _logger.LogError($"Error on sending message to connected user{message}");
-                    return StatusCode((int)httpResponseMessage.StatusCode, message);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{ex.Message}");
-                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
-            }
+            _logger.LogInformation($"Make api call  get send message to user {sendMessageQuery.userPrincipalName}");
+            string token = Request.Headers["Authorization"];
+            return await _userSessionService.SendMessage(token, sendMessageQuery);
         }
 
         [HttpPost("LogOffUser")]
-        public IActionResult LogOffUser(LogOffUserQuery logOffUserQuery)
+        public async Task<string> LogOffUser(LogOffUserQuery logOffUserQuery)
         {
-            try
-            {
-                string token = Request.Headers["Authorization"];
-                _logger.LogInformation($"Call WVD api to logoff connected user");
-
-                HttpResponseMessage httpResponseMessage = sessionHostBL.LogOffUser(Configuration.RDBrokerUrl, token, logOffUserQuery);
-                if (httpResponseMessage.IsSuccessStatusCode)
-                {
-                    return new OkResult();
-                }
-                else
-                {
-                    var message = string.Empty;
-                    if (httpResponseMessage.Content != null)
-                    {
-                        message = !string.IsNullOrEmpty(httpResponseMessage.Content.ReadAsStringAsync().Result) ? httpResponseMessage.Content.ReadAsStringAsync().Result : httpResponseMessage.ReasonPhrase;
-                    }
-                    _logger.LogError($"Error on logoff connected user : {message}");
-                    return StatusCode((int)httpResponseMessage.StatusCode, message);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{ex.Message}");
-                return StatusCode((int)HttpStatusCode.BadRequest, ex.Message);
-            }
-           
+            _logger.LogInformation($"Make api call to log off user session of session id {logOffUserQuery.sessionId}");
+            string token = Request.Headers["Authorization"];
+            return await _userSessionService.LogOffUserSession(token, logOffUserQuery);
         }
-
-
     }
 }
