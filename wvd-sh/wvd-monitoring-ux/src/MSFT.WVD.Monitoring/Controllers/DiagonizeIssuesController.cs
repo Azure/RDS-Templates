@@ -183,7 +183,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         }
 
 
-        public async Task<IActionResult> ShowMessagePanel(DiagnoseDetailPageViewModel data)
+        public async Task<IActionResult> InitiateSendMessage(DiagnoseDetailPageViewModel data)
         {
             var userInfo = _userService.GetUserDetails();
             var tenantGroupName = userInfo.tenantGroupName;
@@ -212,53 +212,61 @@ namespace MSFT.WVD.Monitoring.Controllers
                 var tenantGroupName = userInfo.tenantGroupName;
                 var tenant = userInfo.tenant;
                 var accessToken = userInfo.accessToken;
-
-                if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
+                if (string.IsNullOrEmpty(data.Title) )
                 {
-                    foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
-                    {
-                        var sendMessageQuery = new SendMessageQuery()
-                        {
-                            tenantGroupName = item.tenantGroupName,
-                            tenantName = item.tenantName,
-                            hostPoolName = item.hostPoolName,
-                            sessionHostName = item.sessionHostName,
-                            sessionId = item.sessionId,
-                            messageTitle = data.Title,
-                            messageBody = data.Message,
-                            userPrincipalName = item.userPrincipalName
-                        };
-                        var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
-                        _logger.LogInformation($"Call service to send message to {item.userPrincipalName}");
-                        var response = await _userSessionService.SendMessage(accessToken, sendMessageQuery);
-                        if (response == HttpStatusCode.OK.ToString())
-                        {
-                            messageStatus.Add(new MessageStatus()
-                            {
-                                Message = $"Message sent sucessfully to {item.userPrincipalName}",
-                                Status = "Success"
-                            });
-                            data.Title = data.Message = string.Empty;
-                        }
-                        else
-                        {
-                            messageStatus.Add(new MessageStatus()
-                            {
-                                Message = $"Failed to send message to {item.userPrincipalName}",
-                                Status = "Error"
-                            });
-                            data.Title = data.Message = string.Empty;
-                        }
-                    }
-                    ViewBag.ErrorMsg = "";
+                    ViewBag.TitleErrorMsg = "Title is required";
+                }
+                else if(string.IsNullOrEmpty(data.Message))
+                {
+                    ViewBag.MessageErrorMsg = "Message is required";
                 }
                 else
                 {
+                    if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
+                    {
+                        foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
+                        {
+                            var sendMessageQuery = new SendMessageQuery()
+                            {
+                                tenantGroupName = item.tenantGroupName,
+                                tenantName = item.tenantName,
+                                hostPoolName = item.hostPoolName,
+                                sessionHostName = item.sessionHostName,
+                                sessionId = item.sessionId,
+                                messageTitle = data.Title,
+                                messageBody = data.Message,
+                                userPrincipalName = item.userPrincipalName
+                            };
+                            var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
+                            _logger.LogInformation($"Call service to send message to {item.userPrincipalName}");
+                            var response = await _userSessionService.SendMessage(accessToken, sendMessageQuery);
+                            if (response == HttpStatusCode.OK.ToString())
+                            {
+                                messageStatus.Add(new MessageStatus()
+                                {
+                                    Message = $"Message sent sucessfully to {item.userPrincipalName}",
+                                    Status = "Success"
+                                });
+                                data.Title = data.Message = string.Empty;
+                            }
+                            else
+                            {
+                                messageStatus.Add(new MessageStatus()
+                                {
+                                    Message = $"Failed to send message to {item.userPrincipalName}",
+                                    Status = "Error"
+                                });
+                                data.Title = data.Message = string.Empty;
+                            }
+                        }
+                        ViewBag.ErrorMsg = "";
+                    }
+                    else
+                    {
 
-                    ViewBag.ErrorMsg = "Please select at least one user";
+                        ViewBag.ErrorMsg = "Please select at least one user";
+                    }
                 }
-
-
                 return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
                 {
                     UserSessions = data.UserSessions.Where(usr => usr.IsSelected = true)
@@ -269,7 +277,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     SendMsgStatuses = messageStatus,
                     ConnectionActivity = data.ConnectionActivity,
                     ShowConnectedUser = true,
-                    ShowMessageForm = false
+                    ShowMessageForm = true
                 });
 
             }

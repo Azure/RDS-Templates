@@ -8,7 +8,7 @@
             @Model.ConnectionActivity.SessionHostName Status
         </h2>
     </div>
-    <form asp-controller="DiagonizeIssues" method="post">
+    <form asp-controller="DiagonizeIssues" method="post" id="msgForm">
         <div class="ms-Grid m-b-25" dir="ltr">
             <div class="ms-Grid-row">
                 <div class="form-wrap ms-Grid-col ms-xxxl6">
@@ -156,139 +156,173 @@
             }
 
 
-                <div class="ms-Pivot-content" data-content="recent">
-                    @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
-                    {
-                        <div>
-                            <table class="ms-Table">
-                                <thead>
-                                    <tr>
-                                        <th>Select</th>
-                                        <th>Session ID</th>
-                                        <th>User UPN</th>
-                                    </tr>
-                                </thead>
-                                @{
-                                    for (int i = 0; i < Model.UserSessions.Count; i++)
-                                    {
-                                        bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="checkbox">
-                                                    <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
+            <div class="ms-Pivot-content" data-content="recent">
+                @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
+                {
+                    <div>
+                        <table class="ms-Table">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Session ID</th>
+                                    <th>User UPN</th>
+                                </tr>
+                            </thead>
+                            @{
+                                for (int i = 0; i < Model.UserSessions.Count; i++)
+                                {
+                                    bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div class="ms-CheckBox">
+                                                    <input asp-for="@Model.UserSessions[i].IsSelected" tabindex="-1" type="checkbox" name="chkIsSelected" class="ms-CheckBox-input" id="checkbox">
+                                                    <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" name="checkboxa">
+                                                       
+                                                    </label>
+                                                </div>
+                                                @*<input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="checkbox">*@
+                                                <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
 
-                                                    <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
+                                                <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
 
-                                                    <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
+                                                <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
 
-                                                    <input asp-for="@Model.UserSessions[i].sessionHostName" type="hidden">
+                                                <input asp-for="@Model.UserSessions[i].sessionHostName" type="hidden">
 
-                                                    <input asp-for="@Model.UserSessions[i].userPrincipalName" type="hidden">
+                                                <input asp-for="@Model.UserSessions[i].userPrincipalName" type="hidden">
 
-                                                    <input asp-for="@Model.UserSessions[i].sessionId" type="hidden">
-                                                </td>
-                                                <td>@Model.UserSessions[i].sessionId</td>
-                                                <td><label> @Model.UserSessions[i].userPrincipalName  </label></td>
-                                            </tr>
-                                        </tbody>
-                                    }
+                                                <input asp-for="@Model.UserSessions[i].sessionId" type="hidden">
+                                            </td>
+                                            <td>@Model.UserSessions[i].sessionId</td>
+                                            <td><label> @Model.UserSessions[i].userPrincipalName  </label></td>
+                                        </tr>
+                                    </tbody>
                                 }
-                            </table>
-                        </div>
-                        <div>
-                            <p class="error-msg">@ViewBag.ErrorMsg</p>
-                        </div>
-                        <div class="anchorlinksdiv">
-                            <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
-                                <span class="ms-Button-label labelcolor">Logoff user(s)</span>
-                            </button>
-                            <button class="ms-Button message-user" asp-action="ShowMessagePanel" type="submit" id="msguserbtn">
-                                <span class="ms-Button-label labelcolor">Message user(s)</span>
-                            </button>
-                        </div>
-                    }
-                    else
-                    {
-                        <div>
-                            <h4>There is no active user sessions.</h4>
-                        </div>
-                    }
-                    @if (Model.ShowMessageForm)
-                    {
-                            <div id="sendmessagediv">
-                                <label asp-for="Title" class="control-label">Title</label>
-                                <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
-                                <span asp-validation-for="@Model.Title" id="validationtitle"></span>
-                                <br />
-                                <label asp-for="Message" class="control-label">Message</label>
-                                <input asp-for="@Model.Message" class="form-control m-b-10 inputform" type="text" multiple="multiple" id="texterror" />
-                                <span asp-validation-for="@Model.Message" id="validationmsg"></span>
-                                <br />
-                                <br/>
-                                <button type="reset" class="ms-Button">
-                                    <span class="ms-Button-label">Cancel</span>
-                                </button>
-                                <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
-                                    <span class="ms-Button-label">Send</span>
-                                </button>
-                            </div>
                             }
-                        </div>
+                        </table>
                     </div>
+                    <div>
+                        <p class="error-msg">@ViewBag.ErrorMsg</p>
+                    </div>
+                    <div class="anchorlinksdiv" id="anchorlinksdiv">
+                        <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
+                            <span class="ms-Button-label labelcolor">Logoff user(s)</span>
+                        </button>
+                        <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
+                            <span class="ms-Button-label labelcolor">Message user(s)</span>
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        <h4>There is no active user sessions.</h4>
+                    </div>
+                }
+                @if (Model.ShowMessageForm)
+                {
+                    <div id="sendmessagediv">
+                        <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
+                        <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
+                        <span asp-validation-for="@Model.Title" id="validationtitle">@ViewBag.TitleErrorMsg</span>
+                        <br />
+                        <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
+                        <input asp-for="@Model.Message" class="form-control m-b-10 inputform" type="text" multiple="multiple" id="texterror" />
+                        <span asp-validation-for="@Model.Message" id="validationmsg"> @ViewBag.MessageErrorMsg </span>
+                        <br />
+                        <br />
+                        <button type="reset" class="ms-Button">
+                            <span class="ms-Button-label">Cancel</span>
+                        </button>
+                        <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg" >
+                            <span class="ms-Button-label">Send</span>
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
     </form>
 </div>
-<script type="text/javascript">
-    var PivotElements = document.querySelectorAll(".ms-Pivot");
-    for (var i = 0; i < PivotElements.length; i++) {
-        new fabric['Pivot'](PivotElements[i]);
-    }
-</script>
-<script type="text/javascript">
-    var button = document.getElementById("UserConnected"),
-        paragraph = document.getElementById("sendmessagediv");
-    button.addEventListener("click", function () {
-        if (paragraph.style.display == 'block') {
-            paragraph.style.display = 'none';
-        } else {
-            paragraph.style.display = 'none';
+<script type="text/javascript" async>
+    (function () {
+        var PivotElements = document.querySelectorAll(".ms-Pivot");
+        for (var i = 0; i < PivotElements.length; i++) {
+            new fabric['Pivot'](PivotElements[i]);
         }
-    }, false);
-</script>
-@*<script type="text/javascript">
-    var button = document.getElementById("msguserbtn"),
-        paragraph = document.getElementById("sendmessagediv");
-    button.addEventListener("click", function () {
-        if (paragraph.style.display == 'none') {
-            paragraph.style.display = 'block';
-        } else {
-            paragraph.style.display = 'none';
-        }
-    }, false);
-</script>*@
-<script type="text/javascript">
-    document.getElementById("texttitle")
-        .addEventListener("focus", function () {
-            document.getElementById("validationtitle").hidden = true;
-        }, false);
-</script>
-<script type="text/javascript">
-    document.getElementById("texterror")
-        .addEventListener("focus", function () {
-            document.getElementById("validationmsg").hidden = true;
-        }, false);
-</script>
 
-<script type="text/javascript">
-    var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
-    for (var i = 0; i < CheckBoxElements.length; i++) {
-        new fabric['CheckBox'](CheckBoxElements[i]);
-    }
+        var button = document.getElementById("UserConnected"),
+            paragraph = document.getElementById("sendmessagediv");
+        button.addEventListener("click", function () {
+            if (paragraph.style.display == 'block') {
+                paragraph.style.display = 'none';
+            } else {
+                paragraph.style.display = 'none';
+            }
+        }, false);
+
+        var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
+        for (var i = 0; i < CheckBoxElements.length; i++) {
+            new fabric['CheckBox'](CheckBoxElements[i]);
+        }
+        document.getElementById("texttitle")
+            .addEventListener("focus", function () {
+                document.getElementById("validationtitle").hidden = true;
+            }, false);
+        document.getElementById("texterror")
+            .addEventListener("focus", function () {
+                document.getElementById("validationmsg").hidden = true;
+            }, false);
+        document.getElementById("UserConnected")
+            .addEventListener("click", function () {
+                document.getElementById("anchorlinksdiv").hidden = true;
+            }, false);
+
+
+
+
+        //sendBtn.addEventListener('click', function (e) {
+        //    var title = document.getElementById("texttitle").innerText;
+        //    var message = document.getElementById("texterror").innerText;
+        //    console.log(title);
+        //    if (title == "" || title == null) {
+        //        document.getElementById("validationtitle").hidden = false;
+        //        document.getElementById("validationtitle").innerText = "Title is required.";
+        //        return false;
+        //    }
+
+        //    if (message == "" || message == null) {
+        //        document.getElementById("validationmsg").hidden = false;
+        //        document.getElementById("validationmsg").innerText = "Message is required.";
+        //        return false;
+
+        //    }
+        //    e.preventDefault();
+        //},false);
+      
+
+        var checkbox = document.getElementById("checkbox");
+        checkbox.addEventListener("change", ShowAnchorsDiv, false);
+
+        function ShowAnchorsDiv() {
+            var chk = document.getElementsByClassName("ms-CheckBox-input");
+            var ln = 0;
+            for (var i = 0; i < chk.length; i++) {
+                if (chk[i].checked)
+                    ln++
+            }
+
+            if (ln > 0) {
+                document.getElementById("anchorlinksdiv").hidden = false;
+            }
+            else {
+                consol.log(ln);
+                document.getElementById("anchorlinksdiv").hidden = true;
+
+            }
+        }
+
+       
+    })();
+
 </script>
-@*<script>
-    function sendmsgfunc() {
-        document.getElementById("texttitle").value = "";
-        document.getElementById("texterror").value = "";
-        document.getElementById("checkbox").value = "";
-    }
-</script>*@

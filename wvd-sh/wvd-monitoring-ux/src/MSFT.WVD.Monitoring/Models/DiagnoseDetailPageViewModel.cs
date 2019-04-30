@@ -13,9 +13,9 @@ namespace MSFT.WVD.Monitoring.Models
         public List<UserSession> UserSessions { get; set; }
         public SendMessageQuery SendMessageQuery { get; set; }
         public LogOffUserQuery LogOffUserQuery { get; set; }
-        [Required]
+        
         public string Title { get; set; }
-        [Required]
+       
         public string Message { get; set; }
         public List<MessageStatus> SendMsgStatuses { get; set; }
         public bool ShowConnectedUser { get; set; }

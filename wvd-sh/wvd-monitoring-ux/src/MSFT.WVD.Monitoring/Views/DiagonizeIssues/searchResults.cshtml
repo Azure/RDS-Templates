@@ -211,21 +211,20 @@
         </div>
     </form>
 </div>
-<script type="text/javascript">
-    var TableElements = document.querySelectorAll(".ms-Table");
-    for (var i = 0; i < TableElements.length; i++) {
-        new fabric['Table'](TableElements[i]);
-    }
-</script>
-<script type="text/javascript">
-    document.getElementById("upn")
-        .addEventListener("keypress", function () {
-            document.getElementById("validate").hidden = true;
-        }, false);
-</script>
+
 <script>
-    document.getElementById("loader1").hidden = true;
-    document.getElementById("process").addEventListener("click", function () {
-        document.getElementById("loader1").hidden = false;
-    }, false);
+    (function () {
+        var TableElements = document.querySelectorAll(".ms-Table");
+        for (var i = 0; i < TableElements.length; i++) {
+            new fabric['Table'](TableElements[i]);
+        } 
+        document.getElementById("upn")
+            .addEventListener("keypress", function () {
+                document.getElementById("validate").hidden = true;
+            }, false);
+        document.getElementById("loader1").hidden = true;
+        document.getElementById("process").addEventListener("click", function () {
+            document.getElementById("loader1").hidden = false;
+        }, false);
+    })();
 </script>
