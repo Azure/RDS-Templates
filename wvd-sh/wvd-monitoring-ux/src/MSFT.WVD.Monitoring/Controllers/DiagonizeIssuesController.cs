@@ -26,7 +26,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         UserSessionService _userSessionService;
         DiagnosticActivitityBL diagnosticActivityBL = new DiagnosticActivitityBL();
         private readonly HttpClient apiClient;
-        public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService , UserService userService)
+        public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService)
         {
             _logger = logger;
             _diagnozeService = diagnozeService;
@@ -47,21 +47,16 @@ namespace MSFT.WVD.Monitoring.Controllers
         [HttpPost]
         public async Task<IActionResult> Index(DiagonizePageViewModel data)
         {
-
             var viewData = new DiagonizePageViewModel();
             if (ModelState.IsValid)
             {
-                UserInfo userInfo= _userService.GetUserData();
-                string tenantGroupName = userInfo.tenantGroupName; //HttpContext.Session.Get<string>("SelectedTenantGroupName");
-                string tenant = userInfo.tenant; // HttpContext.Session.Get<string>("SelectedTenantName");
-                string accessToken = await HttpContext.GetTokenAsync("access_token");
-                //apiClient.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
-                //apiClient.DefaultRequestHeaders.Add("Authorization", accessToken);
+                var userInfo = _userService.GetUserDetails();
+                var tenantGroupName = userInfo.tenantGroupName;
+                var tenant = userInfo.tenant;
+                var accessToken = userInfo.accessToken;
                 if (data.DiagonizeQuery.ActivityType == ActivityType.Management)
                 {
-                    _logger.LogInformation($"Call api to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
-
-
+                    _logger.LogInformation($"Service call to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
                     //call from service layer
                     viewData.ManagementActivity = await _diagnozeService.GetManagementActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
                     if (viewData.ManagementActivity?.Count > 0 && viewData.ManagementActivity[0].ErrorDetails != null)
@@ -73,7 +68,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 }
                 else if (data.DiagonizeQuery.ActivityType == ActivityType.Connection)
                 {
-                    _logger.LogInformation($"Call api to get connection activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+                    _logger.LogInformation($"Service Call  to get connection activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
 
                     //call from service layer
                     viewData.ConnectionActivity = await _diagnozeService.GetConnectionActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
@@ -87,6 +82,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 }
                 else if (data.DiagonizeQuery.ActivityType == ActivityType.Feed)
                 {
+                    _logger.LogInformation($"Service call to get feed activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+
                     viewData.FeedActivity = await _diagnozeService.GetFeedActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
                     if (viewData.FeedActivity?.Count > 0 && viewData.FeedActivity[0].ErrorDetails != null)
                     {
@@ -119,10 +116,8 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<List<UserSession>> GetUserSessions(string accessToken, string tenantGroupName, string tenant, string hostPoolName, string hostName)
         {
-
-           var data = await  _userSessionService.GetUserSessions(accessToken, tenantGroupName, tenant, hostPoolName, hostName);
+            var data = await _userSessionService.GetUserSessions(accessToken, tenantGroupName, tenant, hostPoolName, hostName);
             return data;
-
         }
 
 
@@ -130,59 +125,55 @@ namespace MSFT.WVD.Monitoring.Controllers
         public async Task<IActionResult> LogOffUserSession(DiagnoseDetailPageViewModel data)
         {
             var viewData = new LogOffUserQuery();
-            string accessToken = await HttpContext.GetTokenAsync("access_token");
-            string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
-            string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-            List<MessageStatus> messageStatus = new List<MessageStatus>();
-
-           
-                if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
+            var userInfo = _userService.GetUserDetails();
+            var tenantGroupName = userInfo.tenantGroupName;
+            var tenant = userInfo.tenant;
+            var accessToken = userInfo.accessToken;
+            var messageStatus = new List<MessageStatus>();
+            if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
+            {
+                foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
                 {
-                    foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
+                    var logOffUserQuery = new LogOffUserQuery()
                     {
-                        LogOffUserQuery logOffUserQuery = new LogOffUserQuery()
-                        {
-                            tenantGroupName = item.tenantGroupName,
-                            tenantName = item.tenantName,
-                            hostPoolName = item.hostPoolName,
-                            sessionHostName = item.sessionHostName,
-                            sessionId = item.sessionId
-                        };
-                        var Content = new StringContent(JsonConvert.SerializeObject(logOffUserQuery), Encoding.UTF8, "application/json");
-                        _logger.LogInformation($"Call api to log off user session ");
-                       // var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
+                        tenantGroupName = item.tenantGroupName,
+                        tenantName = item.tenantName,
+                        hostPoolName = item.hostPoolName,
+                        sessionHostName = item.sessionHostName,
+                        sessionId = item.sessionId
+                    };
+                    var Content = new StringContent(JsonConvert.SerializeObject(logOffUserQuery), Encoding.UTF8, "application/json");
+                    _logger.LogInformation($"Service Call to log off user session ");
+                    // var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
                     var response = await _userSessionService.LogOffUserSession(accessToken, logOffUserQuery);
-                        if (response == "Ok" || response == "Success")
+                    if (response == "Ok" || response == "Success")
+                    {
+                        messageStatus.Add(new MessageStatus()
                         {
-                            messageStatus.Add(new MessageStatus()
-                            {
-                                Message = $"Log off sucessfully for {item.userPrincipalName} user session.",
-                                Status = "Success"
-                            });
-                        }
-                        else
+                            Message = $"Log off sucessfully for {item.userPrincipalName} user session.",
+                            Status = "Success"
+                        });
+                    }
+                    else
+                    {
+                        messageStatus.Add(new MessageStatus()
                         {
-                            messageStatus.Add(new MessageStatus()
-                            {
-                                Message = $"Failed to logoff {item.userPrincipalName} user session.",
-                                Status = "Error"
-                            });
-                        }
+                            Message = $"Failed to logoff {item.userPrincipalName} user session.",
+                            Status = "Error"
+                        });
                     }
                 }
-                else
-                {
-                    messageStatus.Add(new MessageStatus()
-                    {
-                        Message = $"Please select users.",
-                        Status = "Error"
-                    });
-                }
-            
+                ViewBag.ErrorMsg = "";
+            }
+            else
+            {
+                ViewBag.ErrorMsg = "Please select at least one user";
+            }
+
             return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
             {
-                Title = "",
-                Message = "",
+                Title = string.Empty,
+                Message = string.Empty,
                 SendMsgStatuses = messageStatus,
                 ConnectionActivity = data.ConnectionActivity,
                 ShowConnectedUser = true,
@@ -194,23 +185,19 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<IActionResult> ShowMessagePanel(DiagnoseDetailPageViewModel data)
         {
-
-            string accessToken = await HttpContext.GetTokenAsync("access_token");
-            string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
-            string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+            var userInfo = _userService.GetUserDetails();
+            var tenantGroupName = userInfo.tenantGroupName;
+            var tenant = userInfo.tenant;
+            var accessToken = userInfo.accessToken;
             return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
             {
-                Title = "",
-                Message = "",
+                Title = string.Empty,
+                Message = string.Empty,
                 ConnectionActivity = data.ConnectionActivity,
                 ShowConnectedUser = true,
                 ShowMessageForm = true,
                 UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
             });
-
-
-
-
         }
 
         [HttpPost]
@@ -220,72 +207,71 @@ namespace MSFT.WVD.Monitoring.Controllers
             if (ModelState.IsValid)
             {
                 var viewData = new SendMessageQuery();
-                List<MessageStatus> messageStatus = new List<MessageStatus>();
-                string accessToken = await HttpContext.GetTokenAsync("access_token");
-                string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
-                string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-               
-                    if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
+                var messageStatus = new List<MessageStatus>();
+                var userInfo = _userService.GetUserDetails();
+                var tenantGroupName = userInfo.tenantGroupName;
+                var tenant = userInfo.tenant;
+                var accessToken = userInfo.accessToken;
+
+                if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
+                {
+                    foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
                     {
-                        foreach (var item in data.UserSessions.Where(x => x.IsSelected == true).ToList())
+                        var sendMessageQuery = new SendMessageQuery()
                         {
-                            SendMessageQuery sendMessageQuery = new SendMessageQuery()
-                            {
-                                tenantGroupName = item.tenantGroupName,
-                                tenantName = item.tenantName,
-                                hostPoolName = item.hostPoolName,
-                                sessionHostName = item.sessionHostName,
-                                sessionId = item.sessionId,
-                                messageTitle = data.Title,
-                                messageBody = data.Message,
-                                userPrincipalName = item.userPrincipalName
-                            };
-                            var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
-                            _logger.LogInformation($"Call api to send message to {item.userPrincipalName}");
-                            var response =  await _userSessionService.SendMessage(accessToken, sendMessageQuery);
-                        if (response == HttpStatusCode.OK.ToString() )
+                            tenantGroupName = item.tenantGroupName,
+                            tenantName = item.tenantName,
+                            hostPoolName = item.hostPoolName,
+                            sessionHostName = item.sessionHostName,
+                            sessionId = item.sessionId,
+                            messageTitle = data.Title,
+                            messageBody = data.Message,
+                            userPrincipalName = item.userPrincipalName
+                        };
+                        var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
+                        _logger.LogInformation($"Call service to send message to {item.userPrincipalName}");
+                        var response = await _userSessionService.SendMessage(accessToken, sendMessageQuery);
+                        if (response == HttpStatusCode.OK.ToString())
                         {
-                                messageStatus.Add(new MessageStatus()
-                                {
-                                    Message = $"Message sent sucessfully to {item.userPrincipalName}",
-                                    Status = "Success"
-                                });
-                                data.Title = data.Message = "";
-                            }
-                            else
+                            messageStatus.Add(new MessageStatus()
                             {
-                                messageStatus.Add(new MessageStatus()
-                                {
-                                    Message = $"Failed to send message to {item.userPrincipalName}",
-                                    Status = "Error"
-                                });
-                                data.Title = data.Message = "";
-                            }
+                                Message = $"Message sent sucessfully to {item.userPrincipalName}",
+                                Status = "Success"
+                            });
+                            data.Title = data.Message = string.Empty;
+                        }
+                        else
+                        {
+                            messageStatus.Add(new MessageStatus()
+                            {
+                                Message = $"Failed to send message to {item.userPrincipalName}",
+                                Status = "Error"
+                            });
+                            data.Title = data.Message = string.Empty;
                         }
                     }
-                    else
-                    {
-                        messageStatus.Add(new MessageStatus()
-                        {
-                            Message = $"Please select users",
-                            Status = "Error"
-                        });
-                    }
+                    ViewBag.ErrorMsg = "";
+                }
+                else
+                {
+
+                    ViewBag.ErrorMsg = "Please select at least one user";
+                }
 
 
-                    return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
-                    {
-                        UserSessions = data.UserSessions.Where(usr => usr.IsSelected = true)
-               .Select(usr => { usr.IsSelected = false; return usr; })
-               .ToList(),
-                        Title = data.Title,
-                        Message = data.Message,
-                        SendMsgStatuses = messageStatus,
-                        ConnectionActivity = data.ConnectionActivity,
-                        ShowConnectedUser = true,
-                        ShowMessageForm = true
-                    });
-               
+                return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
+                {
+                    UserSessions = data.UserSessions.Where(usr => usr.IsSelected = true)
+           .Select(usr => { usr.IsSelected = false; return usr; })
+           .ToList(),
+                    Title = data.Title,
+                    Message = data.Message,
+                    SendMsgStatuses = messageStatus,
+                    ConnectionActivity = data.ConnectionActivity,
+                    ShowConnectedUser = true,
+                    ShowMessageForm = false
+                });
+
             }
             else
             {
@@ -306,21 +292,20 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<IActionResult> ActivityHostDetails(string id)
         {
-            string accessToken = await HttpContext.GetTokenAsync("access_token");
-            string tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
-            string tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+            var userInfo = _userService.GetUserDetails();
+            var tenantGroupName = userInfo.tenantGroupName;
+            var tenant = userInfo.tenant;
+            var accessToken = userInfo.accessToken;
 
-
-            apiClient.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
-            apiClient.DefaultRequestHeaders.Add("Authorization", accessToken);
-            HttpResponseMessage response = await apiClient.GetAsync($"DiagnosticActivity/GetActivityDetails/?tenantGroupName={tenantGroupName}&tenant={tenant}&activityId={id}");
-            if (response.IsSuccessStatusCode)
+            var ConnectionActivity = await _diagnozeService.GetActivityHostDetails(accessToken, tenantGroupName, tenant, id);
+            if (ConnectionActivity?.Count > 0 && ConnectionActivity[0].ErrorDetails != null)
             {
-                var strConnectionDetails = response.Content.ReadAsStringAsync().Result;
-                var ConnectionActivity = JsonConvert.DeserializeObject<List<ConnectionActivity>>(strConnectionDetails);
-                List<UserSession> userSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName);
-                ViewBag.ShowConnectedUser = true;
-
+                _logger.LogError($"Error Occured : {ConnectionActivity[0].ErrorDetails.Message}");
+                return RedirectToAction("Error", "Home", new ErrorDetails() { Message = ConnectionActivity[0].ErrorDetails.Message });
+            }
+            else
+            {
+                var userSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName);
                 return View(new DiagnoseDetailPageViewModel()
                 {
                     ConnectionActivity = new ConnectionActivity
@@ -341,10 +326,6 @@ namespace MSFT.WVD.Monitoring.Controllers
                     ShowConnectedUser = false,
                     ShowMessageForm = true
                 });
-            }
-            else
-            {
-                return RedirectToAction("Error", "Home", new ErrorDetails() { Message = response.Content.ReadAsStringAsync().Result, StatusCode = (int)response.StatusCode });
             }
         }
     }

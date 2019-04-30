@@ -7,6 +7,5 @@ namespace MSFT.WVD.Monitoring.Common.Models
     public interface IUserService
     {
         RoleAssignment SelectedRole { get; set; }
-        //RoleAssignment SaveUser();
     }
 }

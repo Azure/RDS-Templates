@@ -10,27 +10,24 @@ namespace MSFT.WVD.Monitoring.Common.Services
 {
     public class UserService
     {
-        IConfiguration _config;
-        ILogger _logger;
         IMemoryCache _cache;
 
-        public UserService(IConfiguration configuration, ILoggerFactory logger, IMemoryCache memoryCache)
+        public UserService(IMemoryCache memoryCache)
         {
-            _logger = logger?.CreateLogger<UserService>() ?? throw new ArgumentNullException(nameof(logger));
-            _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _cache = memoryCache ?? throw new ArgumentException(nameof(memoryCache));
         }
 
-        public UserInfo GetUserData()
+        public UserInfo GetUserDetails()
         {
             // get user data from cache memory
             var tenantGroup = _cache.Get<string>("SelectedTenantGroupName");
             var SelectedTenantName = _cache.Get<string>("SelectedTenantName");
-
+            var token = _cache.Get<string>("AccessToken");
             return new UserInfo()
             {
                 tenantGroupName = tenantGroup,
-                tenant = SelectedTenantName
+                tenant = SelectedTenantName,
+                accessToken = token
             };
         }
 

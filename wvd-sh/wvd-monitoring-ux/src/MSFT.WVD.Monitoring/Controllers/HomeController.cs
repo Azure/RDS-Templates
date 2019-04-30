@@ -29,7 +29,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         {
             _cache = cache;
         }
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             var role = new RoleAssignment();
             if (HttpContext.Session.Get<RoleAssignment>("SelectedRole") == null)
@@ -61,7 +61,6 @@ namespace MSFT.WVD.Monitoring.Controllers
             {
                 SelectedRole = role,
                 ShowDialog = HttpContext.Session.GetString("SelectedTenantGroupName") == null
-
             });
         }
 
@@ -88,7 +87,6 @@ namespace MSFT.WVD.Monitoring.Controllers
                 //}
             }
             //HttpContext.Session.Set<JArray>("WVDRoles", roleAssignments);
-
         }
 
         public IActionResult Login()
@@ -101,21 +99,6 @@ namespace MSFT.WVD.Monitoring.Controllers
             return Challenge(new AuthenticationProperties { RedirectUri = "/" });
         }
 
-        // [HttpPost]
-        // public IActionResult Logout()
-        // {
-        //     //HttpContext.Session.Clear();
-        //     //await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
-        //     //await HttpContext.SignOutAsync(AzureADDefaults.AuthenticationScheme);
-        //     //await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        //     //return RedirectToAction("Login", "Home");
-
-        //     return SignOut(
-        //new AuthenticationProperties { RedirectUri = "/" },
-        //AzureADDefaults.AuthenticationScheme,
-        //OpenIdConnectDefaults.AuthenticationScheme);
-
-        // }
 
         [HttpPost]
         public async Task Logout()
@@ -127,7 +110,7 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         [HttpPost]
         [Authorize]
-        public IActionResult Save(HomePageViewModel data)
+        public async Task<IActionResult> Save(HomePageViewModel data)
         {
             if (ModelState.IsValid)
             {
@@ -135,8 +118,10 @@ namespace MSFT.WVD.Monitoring.Controllers
                 HttpContext.Session.Set<string>("SelectedTenantGroupName", submittedData.TenantGroupName);
                 HttpContext.Session.Set<string>("SelectedTenantName", submittedData.TenantName);
 
+                string accessToken = await HttpContext.GetTokenAsync("access_token");
                 _cache.Set("SelectedTenantGroupName", submittedData.TenantGroupName);
                 _cache.Set("SelectedTenantName", submittedData.TenantName);
+                _cache.Set("AccessToken", accessToken);
 
                 /***following line will have to use ***/
                 //HttpContext.Session.Set<RoleAssignment>("selectedRole", roles?.SingleOrDefault(x => x.tenantGroupName == submittedData.TenantGroupName));
@@ -162,13 +147,10 @@ namespace MSFT.WVD.Monitoring.Controllers
             {
                 return View("Index", new HomePageViewModel() { ShowDialog = true });
             }
-
         }
-
 
         public IActionResult Error(int id, ErrorDetails errorDetails)
         {
-
             if (errorDetails.Message != null && errorDetails.StatusCode != null)
             {
                 return View(new ErrorViewModel()
@@ -188,7 +170,6 @@ namespace MSFT.WVD.Monitoring.Controllers
              );
             }
         }
-
         public IActionResult AppSettings()
         {
             return View();

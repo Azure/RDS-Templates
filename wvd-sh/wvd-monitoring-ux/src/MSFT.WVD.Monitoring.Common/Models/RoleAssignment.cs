@@ -22,13 +22,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
     {
         public string tenantGroupName { get; set; }
         public string tenant { get; set; }
+        public string accessToken { get; set; }
     }
-
-    //public class RoleAssignmentDetails
-    //{
-    //    public List<RoleAssignment> roleAssignments { get; set; }
-
-    //    public string[] tenantGroups { get; set; }
-    //}
     
 }
