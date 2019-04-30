@@ -175,13 +175,7 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                @*<div class="ms-CheckBox">
-                                                    <input asp-for="@Model.UserSessions[i].IsSelected" tabindex="-1" type="checkbox" name="chkIsSelected" class="ms-CheckBox-input" id="checkbox">
-                                                    <label role="checkbox" class="ms-CheckBox-field" tabindex="0" aria-checked="false" name="checkboxa">
-                                                       
-                                                    </label>
-                                                </div>*@
-                                                <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="checkbox" class="chkbox">
+                                                <input asp-for="@Model.UserSessions[i].IsSelected"  type="checkbox" id="@i-checkbox" class="chkbox"> <!---->
                                                 <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
 
                                                 <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
@@ -235,7 +229,7 @@
                         <button type="reset" class="ms-Button">
                             <span class="ms-Button-label">Cancel</span>
                         </button>
-                        <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg" >
+                        <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
                             <span class="ms-Button-label">Send</span>
                         </button>
                     </div>
@@ -265,6 +259,7 @@
         for (var i = 0; i < CheckBoxElements.length; i++) {
             new fabric['CheckBox'](CheckBoxElements[i]);
         }
+
         document.getElementById("texttitle")
             .addEventListener("focus", function () {
                 document.getElementById("validationtitle").hidden = true;
@@ -273,40 +268,17 @@
             .addEventListener("focus", function () {
                 document.getElementById("validationmsg").hidden = true;
             }, false);
-        //document.getElementById("UserConnected")
-        //    .addEventListener("click", function () {
-               
-        //        document.getElementById("anchorlinksdiv").hidden = true;
-        //    }, false);
 
+        var msgbardiv = document.getElementById("msgbardiv");
+        if (msgbardiv != null) {
+            var chk = document.getElementsByClassName("chkbox");
+            for (var i = 0; i < chk.length; i++) {
+                document.getElementById(i + '-checkbox').checked = false;
+            }
+            document.getElementById("texttitle").value = "";
+            document.getElementById("texterror").value = "";
+        }
 
-
-      
-
-        //var checkbox = document.getElementById("checkbox");
-        //checkbox.addEventListener("change", ShowAnchorsDiv, false);
-
-        //function ShowAnchorsDiv() {
-        //    var chk = document.getElementsByClassName("chkbox");
-        //    var ln = 1;
-        //    console.log(chk);
-        //    for (var i = 0; i < chk.length; i++) {
-        //        if (chk[i].checked)
-        //            ln++
-        //    }
-
-        //    if (ln > 0) {
-        //        //document.getElementById("anchorlinksdiv").hidden = false;
-
-        //    }
-        //    else {
-             
-        //        //document.getElementById("anchorlinksdiv").hidden = true;
-
-        //    }
-        //}
-        
-       
     })();
 
 </script>

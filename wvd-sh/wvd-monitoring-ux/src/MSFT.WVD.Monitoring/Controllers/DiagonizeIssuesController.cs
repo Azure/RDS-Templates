@@ -259,7 +259,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                                     Message = $"Message sent sucessfully to {item.userPrincipalName}",
                                     Status = "Success"
                                 });
-                                data.Title = data.Message = string.Empty;
+                               
                             }
                             else
                             {
@@ -268,7 +268,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                                     Message = $"Failed to send message to {item.userPrincipalName}",
                                     Status = "Error"
                                 });
-                                data.Title = data.Message = string.Empty;
+                              
                             }
                         }
                         ViewBag.ErrorMsg = "";
