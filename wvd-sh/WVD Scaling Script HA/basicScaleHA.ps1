@@ -914,7 +914,7 @@ else
                                         GlobalLog -Message $msg -LogLevel ([LogLevel]::Info) -OwnerToken $OwnerToken -LogTable $ScalingLogTable
                                     }
 
-                                    Start-Sleep 
+                                    Start-Sleep -Seconds 30
                                 }
 
                                 # Calculate available capacity of sessions
@@ -1020,7 +1020,7 @@ else
                             $isInstanceReady = $false
                             $numOfRetries = 0
 
-                            while (!$isInstanceReady -and $num -le 3)
+                            while (!$isInstanceReady -and $numOfRetries -le 3)
                             {
                                 $numOfRetries = $numOfRetries + 1
 
@@ -1031,7 +1031,7 @@ else
                                     $isInstanceReady = $true
                                 }
 
-                                Start-Sleep -Seconds 30
+                                Start-Sleep -Seconds 60
                             }
 
                             if ($isInstanceReady)
