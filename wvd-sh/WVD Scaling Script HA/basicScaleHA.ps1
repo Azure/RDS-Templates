@@ -190,6 +190,7 @@ for ($i=0;$i -lt $CharsToCleanUp.Length;$i++)
 
 $ScalingHATableName = [string]::Format("WVDScalingHa{0}",$SanitizedHostPoolName)
 $ScalingLogTableName = [string]::Format("WVDScalingLog{0}",$SanitizedHostPoolName)
+$ScalingUsageLogTableName = [string]::Format("WVDScalingUsageLog{0}",$SanitizedHostPoolName)
 $ActivityId = ([guid]::NewGuid().Guid)
 
 Write-Log "ActivityId: $ActivityId - Please use this guid to query this execution on $ScalingLogTableName table." "Info"
@@ -197,15 +198,23 @@ Write-Log "ActivityId: $ActivityId - Please use this guid to query this executio
 # Get tables
 $ScalingHATable = Get-AzTableTable -resourceGroup $StorageAccountRG -TableName $ScalingHATableName -storageAccountName $StorageAccountName
 $ScalingLogTable = Get-AzTableTable -resourceGroup $StorageAccountRG -TableName $ScalingLogTableName -storageAccountName $StorageAccountName
+$ScalingUsageLogTable = Get-AzTableTable -resourceGroup $StorageAccountRG -TableName $ScalingUsageLogTableName -storageAccountName $StorageAccountName
 
 if ($ScalingHATable -eq $null) 
 {
     Write-Log "An error ocurred trying to obtain table $ScalingHATableName in Storage Account $StorageAccountName at Resource Group $StorageAccountRG" "Error"
     exit 1
 }
-elseif ($ScalingLogTable -eq $null)
+
+if ($ScalingLogTable -eq $null)
 {
     Write-Log "An error ocurred trying to obtain table $ScalingLogTable in Storage Account $StorageAccountName at Resource Group $StorageAccountRG" "Error"
+    exit 1
+}
+
+if ($ScalingUsageLogTable -eq $null)
+{
+    Write-Log "An error ocurred trying to obtain table $ScalingUsageLogTable in Storage Account $StorageAccountName at Resource Group $StorageAccountRG" "Error"
     exit 1
 }
 
@@ -507,6 +516,10 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst")
 
         $depthBool = $true
         Write-UsageLog $hostPoolName $numberOfRunningHost $depthBool
+		Add-AzTableRow -table $UsagelogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property @{"HostPoolName"=$HostPooName; `
+																												    "NumberOfRunningHosts"=$numberOfRunningHost; `
+																												    "IsDepthMode"=$depthBool;
+																													"EntityLoggingUsage"=$OwnerToken.Owner} | Out-null
     }
     else
     {
@@ -690,6 +703,10 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst")
 
         $depthBool = $true
         Write-UsageLog $hostPoolName $numberOfRunningHost $depthBool
+		Add-AzTableRow -table $UsagelogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property @{"HostPoolName"=$HostPooName; `
+																											        "NumberOfRunningHosts"=$numberOfRunningHost; `
+																											        "IsDepthMode"=$depthBool;
+																													"EntityLoggingUsage"=$OwnerToken.Owner} | Out-null
     }
 
     $msg = "End WVD Tenant Scale Optimization."
@@ -946,6 +963,11 @@ else
         # Write to the usage log
         $depthBool = $false
         Write-UsageLog $hostPoolName $totalRunningCores $numberOfRunningHost $depthBool
+		Add-AzTableRow -table $UsagelogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property @{"HostPoolName"=$HostPooName; `
+																													"TotalRunningCores"=$totalRunningCores; `
+																													"NumberOfRunningHosts"=$numberOfRunningHost; `
+																													"IsDepthMode"=$depthBool;
+																													"EntityLoggingUsage"=$OwnerToken.Owner} | Out-null
     }
     else
     {
@@ -1218,7 +1240,11 @@ else
     
         $depthBool = $false
         Write-UsageLog $hostPoolName $totalRunningCores $numberOfRunningHost $depthBool
-    }
+		Add-AzTableRow -table $UsagelogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property @{"HostPoolName"=$HostPooName; `
+																													"TotalRunningCores"=$totalRunningCores; `
+																													"NumberOfRunningHosts"=$numberOfRunningHost; `
+																													"IsDepthMode"=$depthBool;
+																													"EntityLoggingUsage"=$OwnerToken.Owner} | Out-null
 
 	# Cleaning up old log entries
 	$msg = "Cleaning up old log entries"
