@@ -244,8 +244,8 @@ UpdateOwnerToken -HaTable $ScalingHATable -LogTable $ScalingLogTable -PartitionK
 $isWVDServicePrincipal = ($isWVDServicePrincipal -eq "True")
 
 # Building credentials from KeyVault
-$WVDServicePrincipalPwd = (Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecretName).SecretValue
-$WVDCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList($Username, $WVDServicePrincipalPwd)
+$WVDPrincipalPwd = (Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecretName).SecretValue
+$WVDCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList($Username, $WVDPrincipalPwd)
 
 # WVD Authentication
 if (!$isWVDServicePrincipal)
@@ -422,6 +422,8 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst")
                                 {
                                     $IsHostAvailable = $true
                                 }
+
+                                Start-Sleep -Seconds 30
                             }
                         }
                     }
@@ -488,6 +490,8 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst")
                                     {
                                         $IsHostAvailable = $true
                                     }
+
+                                    Start-Sleep -Seconds 30
                                 }
 
                                 $numberOfRunningHost = $numberOfRunningHost + 1
@@ -813,17 +817,18 @@ else
                             $IsVMStarted = $false
                             while (!$IsVMStarted)
                             {
-                                $vm = Get-AzVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
-
+                                $vm = Get-AzVM -Status -Name $roleInstance.Name
                                 if ($vm.PowerState -eq "VM running" -and $vm.ProvisioningState -eq "Succeeded")
                                 {
                                     $IsVMStarted = $true
                                     Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true
                                 }
+
+                                Start-Sleep -Seconds 30
                             }
 
                             # Calculate available capacity of sessions
-                            $vm = Get-AzVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
+                            $vm = Get-AzVM -Status -Name $roleInstance.Name
                             $roleSize = Get-AzVMSize -Location $roleInstance.Location | Where-Object { $_.Name -eq $roleInstance.HardwareProfile.VmSize }
                             $AvailableSessionCapacity = $AvailableSessionCapacity + $roleSize.NumberOfCores * $SessionThresholdPerCPU
                             $numberOfRunningHost = $numberOfRunningHost + 1
@@ -895,7 +900,7 @@ else
                                 $IsVMStarted = $false
                                 while (!$IsVMStarted)
                                 {
-                                    $vm = Get-AzVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
+                                    $vm = Get-AzVM -Status -Name $roleInstance.Name
 
                                     if ($vm.PowerState -eq "VM running" -and $vm.ProvisioningState -eq "Succeeded")
                                     {
@@ -908,10 +913,12 @@ else
                                         $msg = "Waiting for Azure VM to start $($roleInstance.Name) ..."
                                         GlobalLog -Message $msg -LogLevel ([LogLevel]::Info) -OwnerToken $OwnerToken -LogTable $ScalingLogTable
                                     }
+
+                                    Start-Sleep 
                                 }
 
                                 # Calculate available capacity of sessions
-                                $vm = Get-AzVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
+                                $vm = Get-AzVM -Status -Name $roleInstance.Name
                                 $roleSize = Get-AzVMSize -Location $roleInstance.Location | Where-Object { $_.Name -eq $roleInstance.HardwareProfile.VmSize }
 
                                 $AvailableSessionCapacity = $AvailableSessionCapacity + $roleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -1018,11 +1025,13 @@ else
                                 $numOfRetries = $numOfRetries + 1
 
                                 ExitIfNotOwner -HaTable $ScalingHATable -LogTable $ScalingLogTable -PartitionKey $PartitionKey -RowKey $RowKey -OwnerToken $OwnerToken
-                                $instance = Get-AzVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
+                                $instance = Get-AzVM -Status -Name $roleInstance.Name
                                 if ($instance -ne $null -and $instance.ProvisioningState -eq "Succeeded")
                                 {
                                     $isInstanceReady = $true
                                 }
+
+                                Start-Sleep -Seconds 30
                             }
 
                             if ($isInstanceReady)
@@ -1158,7 +1167,7 @@ else
                                     $IsVMStopped = $false
                                     while (!$IsVMStopped)
                                     {
-                                        $vm = Get-AzVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
+                                        $vm = Get-AzVM -Status -Name $roleInstance.Name
 
                                         if ($vm.PowerState -eq "VM deallocated")
                                         {
@@ -1171,6 +1180,8 @@ else
                                             $msg = "Waiting for Azure VM to stop $($roleInstance.Name) ..."
                                             GlobalLog -Message $msg -LogLevel ([LogLevel]::Info) -OwnerToken $OwnerToken -LogTable $ScalingLogTable
                                         }
+
+                                        Start-Sleep -Seconds 30
                                     }
 
                                     # Ensure Azure VMs that are off have AllowNewSession mode set to True
@@ -1188,7 +1199,7 @@ else
                                         exit 1
                                     }
 
-                                    $vm = Get-AzVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
+                                    $vm = Get-AzVM -Status -Name $roleInstance.Name
                                     $roleSize = Get-AzVMSize -Location $roleInstance.Location | Where-Object { $_.Name -eq $roleInstance.HardwareProfile.VmSize }
                                     
                                     # Decrement number of running session host
