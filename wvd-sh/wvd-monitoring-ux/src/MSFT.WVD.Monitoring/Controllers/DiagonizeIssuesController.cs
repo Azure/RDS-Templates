@@ -24,6 +24,8 @@ namespace MSFT.WVD.Monitoring.Controllers
         UserService _userService;
         UserSessionService _userSessionService;
         private readonly HttpClient apiClient;
+
+        public string tenantGroupName, tenant, accessToken;
         public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService)
         {
             _logger = logger;
@@ -33,6 +35,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             apiClient = new HttpClient();
             apiClient.Timeout = TimeSpan.FromMinutes(30);
             apiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+           
         }
         public IActionResult Index()
         {
@@ -48,10 +51,13 @@ namespace MSFT.WVD.Monitoring.Controllers
             var viewData = new DiagonizePageViewModel();
             if (ModelState.IsValid)
             {
-                var userInfo = _userService.GetUserDetails();
-                var tenantGroupName = userInfo.tenantGroupName;
-                var tenant = userInfo.tenant;
-                var accessToken = userInfo.accessToken;
+                //var userInfo = _userService.GetUserDetails();
+                //var tenantGroupName = userInfo.tenantGroupName;
+                //var tenant = userInfo.tenant;
+                //var accessToken = userInfo.accessToken;
+                tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+                tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+                accessToken = await HttpContext.GetTokenAsync("access_token");
                 if (data.DiagonizeQuery.ActivityType == ActivityType.Management)
                 {
                     _logger.LogInformation($"Service call to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
@@ -123,10 +129,14 @@ namespace MSFT.WVD.Monitoring.Controllers
         public async Task<IActionResult> LogOffUserSession(DiagnoseDetailPageViewModel data)
         {
             var viewData = new LogOffUserQuery();
-            var userInfo = _userService.GetUserDetails();
-            var tenantGroupName = userInfo.tenantGroupName;
-            var tenant = userInfo.tenant;
-            var accessToken = userInfo.accessToken;
+            //var userInfo = _userService.GetUserDetails();
+            //var tenantGroupName = userInfo.tenantGroupName;
+            //var tenant = userInfo.tenant;
+            //var accessToken = userInfo.accessToken;
+            tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+            tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+            accessToken = await HttpContext.GetTokenAsync("access_token");
+
             var messageStatus = new List<MessageStatus>();
             if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
             {
@@ -183,10 +193,14 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<IActionResult> InitiateSendMessage(DiagnoseDetailPageViewModel data)
         {
-            var userInfo = _userService.GetUserDetails();
-            var tenantGroupName = userInfo.tenantGroupName;
-            var tenant = userInfo.tenant;
-            var accessToken = userInfo.accessToken;
+            //var userInfo = _userService.GetUserDetails();
+            //var tenantGroupName = userInfo.tenantGroupName;
+            //var tenant = userInfo.tenant;
+            //var accessToken = userInfo.accessToken;
+            tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+            tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+            accessToken = await HttpContext.GetTokenAsync("access_token");
+
             bool ShowMessageForm = false;
             if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
             {
@@ -220,10 +234,14 @@ namespace MSFT.WVD.Monitoring.Controllers
             {
                 var viewData = new SendMessageQuery();
                 var messageStatus = new List<MessageStatus>();
-                var userInfo = _userService.GetUserDetails();
-                var tenantGroupName = userInfo.tenantGroupName;
-                var tenant = userInfo.tenant;
-                var accessToken = userInfo.accessToken;
+                //var userInfo = _userService.GetUserDetails();
+                //var tenantGroupName = userInfo.tenantGroupName;
+                //var tenant = userInfo.tenant;
+                //var accessToken = userInfo.accessToken;
+                tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+                tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+                accessToken = await HttpContext.GetTokenAsync("access_token");
+
                 if (string.IsNullOrEmpty(data.Title) )
                 {
                     ViewBag.TitleErrorMsg = "Title is required";
@@ -312,10 +330,14 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<IActionResult> ActivityHostDetails(string id)
         {
-            var userInfo = _userService.GetUserDetails();
-            var tenantGroupName = userInfo.tenantGroupName;
-            var tenant = userInfo.tenant;
-            var accessToken = userInfo.accessToken;
+            //var userInfo = _userService.GetUserDetails();
+            //var tenantGroupName = userInfo.tenantGroupName;
+            //var tenant = userInfo.tenant;
+            //var accessToken = userInfo.accessToken;
+            tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
+            tenant = HttpContext.Session.Get<string>("SelectedTenantName");
+            accessToken = await HttpContext.GetTokenAsync("access_token");
+
 
             var ConnectionActivity = await _diagnozeService.GetActivityHostDetails(accessToken, tenantGroupName, tenant, id);
             if (ConnectionActivity?.Count > 0 && ConnectionActivity[0].ErrorDetails != null)

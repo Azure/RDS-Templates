@@ -106,7 +106,7 @@ namespace MSFT.WVD.Monitoring
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
           
             app.UseExceptionHandler("/Home/Error");
@@ -114,7 +114,7 @@ namespace MSFT.WVD.Monitoring
             app.UseHsts();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-           
+            loggerFactory.AddFile($"Logs/wvdMonitoringLog-{DateTime.Now.ToString("MMddyyyyyhhmmss")}.txt");
             app.UseAuthentication();
 
             app.UseSession();

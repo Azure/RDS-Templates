@@ -17,7 +17,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
     public class DiagnozeService
     {
         IConfiguration _config;
-        string _authResource;
         string _brokerUrl;
         ILogger _logger;
         IMemoryCache _cache;
@@ -83,8 +82,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                     userName = item["userName"].ToString(),
                     outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
-                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
-                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
+                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
+                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"]: null,
                     ClientOS = (string)item["details"]["ClientOS"],
                     ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
                     Tenants = (string)item["details"]["Tenants"],
@@ -153,12 +152,13 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                     userName = (string)item["userName"],
                     outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
-                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
-                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
+                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
+                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
                     ObjectsCreated = (string)item["ObjectsCreated"] == null || (string)item["ObjectsCreated"] == "" ? 0 : (int)item["ObjectsCreated"],
                     ObjectsDeleted = (string)item["ObjectsDeleted"] == null || (string)item["ObjectsDeleted"] == "" ? 0 : (int)item["ObjectsDeleted"],
                     ObjectsFetched = (string)item["ObjectsFetched"] == null || (string)item["ObjectsFetched"] == "" ? 0 : (int)item["ObjectsFetched"],
-                    ObjectsUpdated = (string)item["ObjectsUpdated"] == null || (string)item["ObjectsUpdated"] == "" ? 0 : (int)item["ObjectsUpdated"]
+                    ObjectsUpdated = (string)item["ObjectsUpdated"] == null || (string)item["ObjectsUpdated"] == "" ? 0 : (int)item["ObjectsUpdated"],
+                    Tenants=(string)item["details"]["Tenants"]
                 }).ToList();
 
             }
@@ -222,8 +222,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                     userName = (string)item["userName"],
                     outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
-                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
-                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
+                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
+                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
                     ClientOS = (string)item["details"]["ClientOS"],
                     ClientIPAddress = item["details"]["ClientIPAddress"].ToString()
                 }).ToList();

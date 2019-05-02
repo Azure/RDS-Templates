@@ -1,0 +1,3 @@
+2019-05-02T11:27:21.9028256+05:30 0HLMEOC5G1HI8:00000001 [INF] Request starting HTTP/1.1 GET http://localhost:44393/favicon.ico   (ca22a1cb)
+2019-05-02T11:27:21.9663778+05:30 0HLMEOC5G1HI8:00000001 [INF] Sending file. Request path: '"/favicon.ico"'. Physical path: '"D:\Github\RDS-Templates\wvd-sh\wvd-monitoring-ux\src\MSFT.WVD.Monitoring\wwwroot\favicon.ico"' (27b0a520)
+2019-05-02T11:27:21.9673296+05:30 0HLMEOC5G1HI8:00000001 [INF] Request finished in 67.3936ms 200 image/x-icon (791a596a)
