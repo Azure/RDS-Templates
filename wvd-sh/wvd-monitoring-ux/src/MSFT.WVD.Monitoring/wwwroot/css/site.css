@@ -334,9 +334,8 @@ html, body {
 
 .activitytable {
     padding-right: 12px;
-    padding-top: 50px;
+    padding-top: 50px;   
 }
-
 .norecordstable {
     padding-top: 100px;
     margin-left: 590px;
@@ -717,3 +716,7 @@ html, body {
     width:14%;
 }
 
+.activity-details-table tbody tr td
+{
+    border-bottom:0px;
+}
