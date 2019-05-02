@@ -11,7 +11,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
 {
     public class KustoService
     {
-        const string ConnectionString = @"Data Source=https://datfun.kusto.windows.net:443;Initial Catalog=DatFun;AAD Federated Security=True";
+        const string ConnectionString = @"Data Source=https://help.kusto.windows.net:443;Initial Catalog=WVDLAW;AAD Federated Security=True";
 
         public static void Connect()
         {

@@ -113,7 +113,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             _logger.LogInformation($"Service call to get management activities of user {upn} of Tenant {tenant} within tenant group {tenantGroupName} ");
 
             // Here we will add user to the key
-            var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetConnectionActivities), upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
+            var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetManagementActivities), upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
 
             // Try to get from cache first
             var result = await _cache.GetOrCreateAsync(key, async entry =>
@@ -183,7 +183,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             _logger.LogInformation($"Service call to get feed activities of user {upn} of Tenant {tenant} within tenant group {tenantGroupName} ");
 
             // Here we will add user to the key
-            var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetConnectionActivities), upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
+            var key = new Tuple<string, string, string, string, string, string, string>(nameof(GetFeedActivities), upn, tenantGroupName, tenant, startDatetime, endDatetime, outcome);
 
             // Try to get from cache first
             var result = await _cache.GetOrCreateAsync(key, async entry =>
