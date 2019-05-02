@@ -37,7 +37,6 @@ function Write-Log
     Add-Content $logname -Value ("{0} - [{1}] {2}" -f $time, $severity, $Message)
 }
 
-
 function Write-UsageLog
 {
 	<# 
@@ -163,12 +162,6 @@ Import-Module AzTable
 Import-Module Microsoft.RdInfra.RdPowershell
 . $CurrentPath\ScalingScriptHACoreHelper.ps1
 
-# Getting credentials
-if ([string]::IsNullOrEmpty($WVDTenantAdminAadTenantId))
-{
-    $WVDTenantAdminAadTenantId = $AADTenantId
-}
-
 # MSI based authentication
 #    - In order to rely on this, please add the MSI accounts as VM contributors at resource group level
 #    - Also, assign storage account contributors to MSI accounts at the storage account holding the tables
@@ -276,7 +269,7 @@ else
 {
     try
     {
-        Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $WVDTenantAdminAadTenantId -Credential $WVDCreds -ServicePrincipal
+        Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $AadTenantId -Credential $WVDCreds -ServicePrincipal
         $msg = "Authenticated as service principal account for WVD."
         GlobalLog -Message $msg -LogLevel ([LogLevel]::Info) -OwnerToken $OwnerToken -LogTable $ScalingLogTable
     }
@@ -516,10 +509,14 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst")
 
         $depthBool = $true
         Write-UsageLog $hostPoolName $numberOfRunningHost $depthBool
-		Add-AzTableRow -table $UsagelogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property @{"HostPoolName"=$HostPooName; `
-																												    "NumberOfRunningHosts"=$numberOfRunningHost; `
-																												    "IsDepthMode"=$depthBool;
-																													"EntityLoggingUsage"=$OwnerToken.Owner} | Out-null
+
+        [hashtable]$UsageRecord = @{"HostPoolName"=$HostPoolName;
+                                    "NumberOfRunningHosts"=$numberOfRunningHost;
+                                    "IsDepthMode"=$depthBool;
+                                    "EntityLoggingUsage"=$OwnerToken.Owner }
+
+        Write-
+        Add-AzTableRow -table $ScalingUsageLogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property $UsageRecord | Out-null
     }
     else
     {
@@ -697,16 +694,21 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst")
                 }
             }
         }
+        
+        #TODO: BUG - in offpeak hours minium number of Session hosts is not respected - Implement minimum number of session hosts if applicable
 
         $msg =  "HostpoolName:$hostpoolname, NumberofRunnighosts:$numberOfRunningHost"
         GlobalLog -Message $msg -LogLevel ([LogLevel]::Info) -OwnerToken $OwnerToken -LogTable $ScalingLogTable
 
         $depthBool = $true
         Write-UsageLog $hostPoolName $numberOfRunningHost $depthBool
-		Add-AzTableRow -table $UsagelogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property @{"HostPoolName"=$HostPooName; `
-																											        "NumberOfRunningHosts"=$numberOfRunningHost; `
-																											        "IsDepthMode"=$depthBool;
-																													"EntityLoggingUsage"=$OwnerToken.Owner} | Out-null
+
+        [hashtable]$UsageRecord = @{"HostPoolName"=$HostPoolName;
+                                    "NumberOfRunningHosts"=$numberOfRunningHost;
+                                    "IsDepthMode"=$depthBool;
+                                    "EntityLoggingUsage"=$OwnerToken.Owner }
+        
+		Add-AzTableRow -table $ScalingUsageLogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property $UsageRecord | Out-null
     }
 
     $msg = "End WVD Tenant Scale Optimization."
@@ -963,11 +965,14 @@ else
         # Write to the usage log
         $depthBool = $false
         Write-UsageLog $hostPoolName $totalRunningCores $numberOfRunningHost $depthBool
-		Add-AzTableRow -table $UsagelogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property @{"HostPoolName"=$HostPooName; `
-																													"TotalRunningCores"=$totalRunningCores; `
-																													"NumberOfRunningHosts"=$numberOfRunningHost; `
-																													"IsDepthMode"=$depthBool;
-																													"EntityLoggingUsage"=$OwnerToken.Owner} | Out-null
+
+        [hashtable]$UsageRecord = @{"HostPoolName"=$HostPoolName;
+                                    "TotalRunningCores"=$totalRunningCores; 
+                                    "NumberOfRunningHosts"=$numberOfRunningHost;
+                                    "IsDepthMode"=$depthBool;
+                                    "EntityLoggingUsage"=$OwnerToken.Owner }
+
+        Add-AzTableRow -table $ScalingUsageLogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property $UsageRecord | Out-null
     }
     else
     {
@@ -1240,11 +1245,15 @@ else
     
         $depthBool = $false
         Write-UsageLog $hostPoolName $totalRunningCores $numberOfRunningHost $depthBool
-		Add-AzTableRow -table $UsagelogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property @{"HostPoolName"=$HostPooName; `
-																													"TotalRunningCores"=$totalRunningCores; `
-																													"NumberOfRunningHosts"=$numberOfRunningHost; `
-																													"IsDepthMode"=$depthBool;
-																													"EntityLoggingUsage"=$OwnerToken.Owner} | Out-null
+
+        [hashtable]$UsageRecord = @{"HostPoolName"=$HostPoolName;
+                                    "TotalRunningCores"=$totalRunningCores; 
+                                    "NumberOfRunningHosts"=$numberOfRunningHost;
+                                    "IsDepthMode"=$depthBool;
+                                    "EntityLoggingUsage"=$OwnerToken.Owner }
+
+        Add-AzTableRow -table $ScalingUsageLogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property $UsageRecord | Out-null
+    }
 
 	# Cleaning up old log entries
 	$msg = "Cleaning up old log entries"

@@ -1,4 +1,3 @@
-
 <#
 .SYNOPSIS
 	ScalingScriptHACoreHelper.ps1 - Script module that provides all functions used for HA implementation
@@ -400,7 +399,7 @@ function LogTableCleanUp
 		Add-TableLog -OwnerStatus $OwnerToken.Status -ExecCode (([ExecCodes]::OwnerLogCleanUp).ToString()) -Message "Old log entries cleanup. Cleaning up $($LogEntriesForDeletion.Count) old entries" -EntityName $Owner -Level (([LogLevel]::Info).ToString()) -ActivityId $ActivityId -LogTable $LogTable | Out-Null
 		foreach ($entry in $LogEntriesForDeletion)
 		{
-			Remove-AzTableRow -table $LogTable –entity $entry | Out-Null
+			Remove-AzTableRow -table $LogTable ï¿½entity $entry | Out-Null
 		}
 	}
 }
