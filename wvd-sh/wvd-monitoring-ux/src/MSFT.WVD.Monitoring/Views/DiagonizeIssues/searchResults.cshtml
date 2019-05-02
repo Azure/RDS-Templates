@@ -10,43 +10,42 @@
     <form asp-controller="DiagonizeIssues" asp-action="Index" method="post" id="myform" asp-route-returnUrl="@Context.Request.Path" role="form">
         <div class="ms-Grid" dir="ltr">
             <div class="ms-Grid-row">
-                <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
+                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
                     <label asp-for="DiagonizeQuery.UPN" class="control-label ms-Grid-col ms-xxxl2">User UPN<span class="red">*</span></label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                    <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
                         <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" />
                         <span asp-validation-for="DiagonizeQuery.UPN" id="validate"></span>
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
+                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
                     <label asp-for="DiagonizeQuery.StartDate" class="control-label ms-Grid-col ms-xxxl2" style="margin-top: 10px;">Issue Interval From</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                    <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
                         <input asp-for="DiagonizeQuery.StartDate" class="form-control" type="date" id="startDate" />
                         <span asp-validation-for="DiagonizeQuery.StartDate" class="error-msg"></span>
                     </div>
-                    <label asp-for="DiagonizeQuery.EndDate" class="control-label ms-Grid-col ms-xxxl2">To</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                    <label asp-for="DiagonizeQuery.EndDate" class="control-label ms-Grid-col ms-xxxl2 ms-xxl12 ms-xl12">To</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
                         <input asp-for="DiagonizeQuery.EndDate" class="form-control enddate" type="date" id="endDate" />
                         <span asp-validation-for="DiagonizeQuery.EndDate" class="error-msg"></span>
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl12 m-b-20">
+                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
                     <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-Grid-col ms-xxxl2"></label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                    <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
                         <select asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>()" class="form-control width-100" id="activityType"></select>
                     </div>
-                    <label asp-for="DiagonizeQuery.ActivityOutcome" class="control-label ms-Grid-col ms-xxxl2">Outcome</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl4">
+                    <label asp-for="DiagonizeQuery.ActivityOutcome" class="control-label ms-Grid-col ms-xxxl2 ms-xxl12 ms-xl12">Outcome</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
                         <select asp-for="DiagonizeQuery.ActivityOutcome" asp-items="Html.GetEnumSelectList<ActivityOutcome>()" class="form-control width-100" id="activityOutcome"></select>
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-smPush2 p-l-r-15 m-b-20">
+                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 ms-smPush2 p-l-r-15 m-b-20">
                     <button type="submit" class="ms-Button primary-btn" id="process">
                         <span class="ms-Button-label">Search</span>
                         `
                     </button>
                     <a asp-controller="DiagonizeIssues"
                        asp-action="Index" class="ms-Button secondary-btn"><span class="ms-Button-label">Clear</span></a>
-
                 </div>
             </div>
         </div>
