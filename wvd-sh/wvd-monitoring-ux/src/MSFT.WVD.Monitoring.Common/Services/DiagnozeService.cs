@@ -188,7 +188,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             // Try to get from cache first
             var result = await _cache.GetOrCreateAsync(key, async entry =>
             {
-                int activityType = (int)ActivityType.Management;
+                int activityType = (int)ActivityType.Feed;
                 outcome = outcome == ActivityOutcome.All.ToString() ? null : outcome;
                 var url = "";
                 if (outcome == null)
