@@ -515,7 +515,6 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst")
                                     "IsDepthMode"=$depthBool;
                                     "EntityLoggingUsage"=$OwnerToken.Owner }
 
-        Write-
         Add-AzTableRow -table $ScalingUsageLogTable -partitionKey $ActivityId -rowKey ([guid]::NewGuid().Guid) -property $UsageRecord | Out-null
     }
     else
