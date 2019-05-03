@@ -145,15 +145,15 @@
                 "description": "The name of the virtual network the VMs will be connected to."
             }
         },
-        "newOrExistingVnet": {	
-            "type": "string",	
-            "defaultValue": "existing",	
-            "allowedValues": [	
-                "existing"	
-            ],	
-            "metadata": {	
-                "description": "Only existing vnets are allowed. This parameter ensures validation for Azure Marketplace offering."	
-            }	
+        "newOrExistingVnet": {
+            "type": "string",
+            "defaultValue": "existing",
+            "allowedValues": [
+                "existing"
+            ],
+            "metadata": {
+                "description": "Only existing vnets are allowed. This parameter ensures validation for Azure Marketplace offering."
+            }
         },
         "existingSubnetName": {
             "type": "string",
@@ -210,7 +210,7 @@
         "tenantAdminUpnOrApplicationId": {
             "type": "string",
             "metadata": {
-                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the WVD Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
+                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the Windows Virtual Desktop Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
             }
         },
         "tenantAdminPassword": {
@@ -256,12 +256,12 @@
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
         "rdshVmNamesOutput": {
-            "copy":[
+            "copy": [
                 {
-                    "name":"rdshVmNamesCopy",
-                    "count":"[parameters('rdshNumberOfInstances')]",
+                    "name": "rdshVmNamesCopy",
+                    "count": "[parameters('rdshNumberOfInstances')]",
                     "input": {
-                        "name":"[concat(variables('rdshPrefix'),copyIndex('rdshVmNamesCopy'))]"
+                        "name": "[concat(variables('rdshPrefix'),copyIndex('rdshVmNamesCopy'))]"
                     }
                 }
             ]
@@ -418,7 +418,7 @@
             }
         },
         {
-            "condition":"[greater(parameters('rdshNumberOfInstances'),1)]",
+            "condition": "[greater(parameters('rdshNumberOfInstances'),1)]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
@@ -461,8 +461,8 @@
         }
     ],
     "outputs": {
-        "rdshVmNamesObject":{
-            "value":"[variables('rdshVmNamesOutput')]",
+        "rdshVmNamesObject": {
+            "value": "[variables('rdshVmNamesOutput')]",
             "type": "object"
         }
     }

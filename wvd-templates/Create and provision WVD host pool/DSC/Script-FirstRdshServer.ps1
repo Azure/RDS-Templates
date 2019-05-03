@@ -81,16 +81,16 @@ else
 {
     Write-Log -Message "VM not registered with RDInfraAgent, script execution will continue"
 
-    # Importing WVD PowerShell module
+    # Importing Windows Virtual Desktop PowerShell module
     Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
 
-    Write-Log -Message "Imported RDMI PowerShell modules successfully"
+    Write-Log -Message "Imported Windows Virtual Desktop PowerShell modules successfully"
 
     # Getting fqdn of rdsh vm
     $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
     Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
-    # Authenticating to WVD
+    # Authenticating to Windows Virtual Desktop
     if ($isServicePrincipal -eq "True")
     {
         Write-Log  -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
@@ -107,12 +107,12 @@ else
 
     if ($authentication)
     {
-        Write-Log -Message "RDMI Authentication successfully Done. Result:`n$obj"  
+        Write-Log -Message "Windows Virtual Desktop Authentication successfully Done. Result:`n$obj"  
     }
     else
     {
-        Write-Log -Error "RDMI Authentication Failed, Error:`n$obj"
-        throw "RDMI Authentication Failed, Error:`n$obj"
+        Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
+        throw "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
     }
 
     # Set context to the appropriate tenant group
