@@ -334,7 +334,8 @@ html, body {
 
 .activitytable {
     padding-right: 12px;
-    padding-top: 50px;   
+    padding-top: 50px; 
+    overflow-x:auto;
 }
 .norecordstable {
     padding-top: 100px;

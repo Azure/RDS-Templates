@@ -153,27 +153,27 @@
             <div class="ms-Pivot-content" data-content="files" id="divVmContent">
                 <h4>VM Performance current state</h4> 
                 <table class="ms-Table activity-details-table">
-                    <tr>
+                    <tr style="background-color:#dff6dd">
                         <td>Active Session</td>
                         <td>25</td>
                         <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
-                    <tr>
+                    <tr style="background-color:#dff6dd">
                         <td>Disk Queue Time</td>
                         <td>1</td>
                         <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
-                    <tr>
+                    <tr style="background-color:#dff6dd">
                         <td>Time to Service</td>
                         <td>0.98</td>
                         <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
-                    <tr>
+                    <tr style="background-color:#fed9cc">
                         <td>Memory Page faults</td>
                         <td>0.2</td>
                         <td> <i class="fa fa-times" style="color: #a80000;"></i></td>
                     </tr>
-                    <tr>
+                    <tr style="background-color: #fed9cc">
                         <td>Response time for machine </td>
                         <td>0.1</td>
                         <td><i class="fa fa-times" style="color: #a80000;"></i></td>
@@ -182,21 +182,21 @@
                 <h4>VM Performance counter for selected session timeframe</h4>
                 <table class="ms-Table activity-details-table">
                    
-                    <tr>
+                    <tr style="background-color: #dff6dd">
                         <td>Disk Utiliztion</td>
                         <td></td>
                         <td></td>
                         <td></td>
                         <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
-                    <tr>
+                    <tr style="background-color:#dff6dd">
                         <td>Processor Utiliztion</td>
                         <td></td>
                         <td></td>
                         <td></td>
                         <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
-                    <tr>
+                    <tr style="background-color:#fed9cc">
                         <td>Memory Page faults</td>
                         <td></td>
                         <td></td>
@@ -329,6 +329,7 @@
             }
             document.getElementById("texttitle").value = "";
             document.getElementById("texterror").value = "";
+            document.getElementById("sendmessagediv").hidden = true;
         }
 
     })();
