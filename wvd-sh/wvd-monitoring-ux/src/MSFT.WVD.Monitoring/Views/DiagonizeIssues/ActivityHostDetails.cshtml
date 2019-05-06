@@ -183,14 +183,14 @@
                 <table class="ms-Table activity-details-table">
                    
                     <tr style="background-color: #dff6dd">
-                        <td>Disk Utiliztion</td>
+                        <td>Disk Utilization</td>
                         <td></td>
                         <td></td>
                         <td></td>
                         <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
                     <tr style="background-color:#dff6dd">
-                        <td>Processor Utiliztion</td>
+                        <td>Processor Utilization</td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -291,7 +291,9 @@
     </form>
 </div>
 <script type="text/javascript" async>
+
     (function () {
+        document.getElementById("Diagnosebreadcrumb").style.display = "block";
         var PivotElements = document.querySelectorAll(".ms-Pivot");
         for (var i = 0; i < PivotElements.length; i++) {
             new fabric['Pivot'](PivotElements[i]);
