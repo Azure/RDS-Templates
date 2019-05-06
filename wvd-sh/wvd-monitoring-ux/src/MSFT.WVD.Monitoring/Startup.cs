@@ -55,7 +55,7 @@ namespace MSFT.WVD.Monitoring
 
             }).AddOpenIdConnect(options =>
             {
-                options.Authority = Configuration.GetSection("AzureAd").GetSection("Instance").Value+ Configuration.GetSection("AzureAd").GetSection("TenantId").Value; //+ this.TenantName; //358d0f13-4eda-45ea-886e-a6dcc6a70ae2
+                options.Authority = $"{Configuration.GetSection("AzureAd").GetSection("Instance").Value}{Configuration.GetSection("AzureAd").GetSection("TenantId").Value}"; //+ this.TenantName; //358d0f13-4eda-45ea-886e-a6dcc6a70ae2
                 options.ClientId = Configuration.GetSection("AzureAd").GetSection("ClientId").Value;
                 options.ResponseType = OpenIdConnectResponseType.Code;
                 options.ResponseMode = OpenIdConnectResponseMode.FormPost;
@@ -102,6 +102,7 @@ namespace MSFT.WVD.Monitoring
             services.AddSingleton<DiagnozeService>();
             services.AddSingleton<UserSessionService>();
             services.AddSingleton<UserService>();
+            services.AddSingleton<LogAnalyticsService>();
 
         }
 

@@ -24,14 +24,16 @@ namespace MSFT.WVD.Monitoring.Controllers
         UserService _userService;
         UserSessionService _userSessionService;
         private readonly HttpClient apiClient;
+        LogAnalyticsService _logAnalyticsService;
 
         public string tenantGroupName, tenant, accessToken;
-        public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService)
+        public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService,LogAnalyticsService logAnalyticsService)
         {
             _logger = logger;
             _diagnozeService = diagnozeService;
             _userSessionService = userSessionService;
             _userService = userService;
+            _logAnalyticsService = logAnalyticsService;
             apiClient = new HttpClient();
             apiClient.Timeout = TimeSpan.FromMinutes(30);
             apiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -58,6 +60,10 @@ namespace MSFT.WVD.Monitoring.Controllers
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
                 accessToken = await HttpContext.GetTokenAsync("access_token");
+                var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
+
+                _logAnalyticsService.GetLogData(refreshToken);
+
                 if (data.DiagonizeQuery.ActivityType == ActivityType.Management)
                 {
                     _logger.LogInformation($"Service call to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
