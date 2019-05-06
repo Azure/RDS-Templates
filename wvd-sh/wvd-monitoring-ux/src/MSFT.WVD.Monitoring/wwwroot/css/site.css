@@ -482,9 +482,11 @@ html, body {
     }
 
 .body-content .content-section {
-    margin: 0 0 0 50px;
+    margin: 0 50px 0 50px;
     overflow: auto;
-    height: 100%;
+    overflow-x:hidden;
+    height:calc(100% - 50px);
+    /*height: 100%;*/
 }
 
     .body-content .content-section form .form-wrap label {
@@ -716,7 +718,12 @@ html, body {
     width:14%;
 }
 
-.activity-details-table tbody tr td
-{
-    border-bottom:0px;
+.activity-details-table tbody tr td {
+    border-bottom: 0px;  
+}
+.activitytable .ms-Table, .users-session form {
+    margin-bottom: 50px;
+}
+#sendmessagediv {
+    margin-top: 25px;
 }

@@ -39,6 +39,24 @@
             <di class="app-title">
                 <span>Windows Virtual Desktop</span>
             </di>
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            <di class="app-title" id="Homebreadcrumb">
+                <a class="app-title" asp-area="" asp-controller="Home" asp-action="Index" style="color: whitesmoke;
+    text-decoration: none;">
+                    > Home
+                </a>
+            </di>
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            <di class="app-title" id="Diagnosebreadcrumb">
+                <a class="app-title" asp-area="" asp-controller="DiagonizeIssues" asp-action="Index" style="color: whitesmoke;
+    text-decoration: none;">
+                  >  Diagnose Issues
+                </a>
+            </di>
         </div>
         <div class="nav-bar-right">
             <div class="home-icon">
@@ -98,7 +116,7 @@
                     </a>
                 </li>
                 <li>
-                    <a asp-area="" asp-controller="DiagonizeIssues" asp-action="Index">
+                    <a asp-area="" asp-controller="DiagonizeIssues" asp-action="Index" id="Diagnoseissuesnav">
                         <i class="fa fa-exclamation-triangle"></i>
                         <span>Diagnose Issues</span>
                     </a>
@@ -123,7 +141,7 @@
                 </li>
             </ul>
         </div>
-
+       
         @RenderBody()
     </div>
 
@@ -140,6 +158,16 @@
                 new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
             }
         </script>
+        <script type="text/javascript">
+            var BreadcrumbHTML = document.querySelector('.ms-Breadcrumb');
+            var Breadcrumb = new fabric['Breadcrumb'](BreadcrumbHTML);
+        </script>
+        <script type="text/javascript">
+            document.getElementById("Diagnosebreadcrumb").hidden = true;
+            document.getElementById("Diagnoseissuesnav").addEventListener("click", function () {
+                document.getElementById("Diagnosebreadcrumb").hidden = false;
+            }, false);
+        </script>
     </environment>
 
     <environment exclude="Development">
@@ -154,6 +182,10 @@
                 var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
                 new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
             }
+        </script>
+        <script type="text/javascript">
+            var BreadcrumbHTML = document.querySelector('.ms-Breadcrumb');
+            var Breadcrumb = new fabric['Breadcrumb'](BreadcrumbHTML);
         </script>
     </environment>
     @RenderSection("Scripts", required: false)

@@ -11,81 +11,81 @@
     <form asp-controller="DiagonizeIssues" method="post" id="msgForm">
         <div class="ms-Grid m-b-25" dir="ltr">
             <div class="ms-Grid-row">
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.activityId" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">ActivityID:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 spanlabel">
+                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.activityId</span>
                         <input asp-for="@Model.ConnectionActivity.activityId" type="hidden">
 
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.activityType" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Type:</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl8 spanlabel">
                         <span>@Model.ConnectionActivity.activityType</span>
                         <input asp-for="@Model.ConnectionActivity.activityType" type="hidden">
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.userName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">UserName:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 spanlabel">
+                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.userName</span>
                         <input asp-for="@Model.ConnectionActivity.userName" type="hidden">
 
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.outcome" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Outcome:</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.outcome</span>
                         <input asp-for="@Model.ConnectionActivity.outcome" type="hidden">
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.startTime" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Start Time:</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.startTime</span>
                         <input asp-for="@Model.ConnectionActivity.startTime" type="hidden">
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.endTime" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">End Time:</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.endTime</span>
                         <input asp-for="@Model.ConnectionActivity.endTime" type="hidden">
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.ClientIPAddress" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Client IP:</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.ClientIPAddress</span>
                         <input asp-for="@Model.ConnectionActivity.ClientIPAddress" type="hidden">
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.ClientOS" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Client:</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.ClientOS</span>
                         <input asp-for="@Model.ConnectionActivity.ClientOS" type="hidden">
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.SessionHostName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Session Host:</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.SessionHostName</span>
                         <input asp-for="@Model.ConnectionActivity.SessionHostName" type="hidden">
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                     <label asp-for="ConnectionActivity.SessionHostPoolName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">SessionHostPoolName:</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.SessionHostPoolName</span>
                         <input asp-for="@Model.ConnectionActivity.SessionHostPoolName" type="hidden">
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl6">
-                    <label asp-for="ConnectionActivity.Tenants" class="control-label ms-Grid-col ms-xxxl4">Tenant:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 spanlabel">
+                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                    <label asp-for="ConnectionActivity.Tenants" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Tenant:</label>
+                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
                         <span>@Model.ConnectionActivity.Tenants</span>
                         <input asp-for="@Model.ConnectionActivity.Tenants" type="hidden">
                     </div>
@@ -151,58 +151,57 @@
             @if (Model.ShowConnectedUser == false)
             {
             <div class="ms-Pivot-content" data-content="files" id="divVmContent">
-                VM Performance current state
+                <h4>VM Performance current state</h4> 
                 <table class="ms-Table activity-details-table">
                     <tr>
                         <td>Active Session</td>
                         <td>25</td>
-                        <td> <i class="fa fa-check"></i></td>
+                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
                     <tr>
                         <td>Disk Queue Time</td>
                         <td>1</td>
-                        <td> <i class="fa fa-check"></i></td>
+                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
                     <tr>
                         <td>Time to Service</td>
                         <td>0.98</td>
-                        <td> <i class="fa fa-check"></i></td>
+                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
                     <tr>
                         <td>Memory Page faults</td>
                         <td>0.2</td>
-                        <td> <i class="fa fa-times"></i></td>
+                        <td> <i class="fa fa-times" style="color: #a80000;"></i></td>
                     </tr>
                     <tr>
                         <td>Response time for machine </td>
                         <td>0.1</td>
-                        <td><i class="fa fa-times"></i></td>
+                        <td><i class="fa fa-times" style="color: #a80000;"></i></td>
                     </tr>
                 </table>
-                VM Performance counter for selected session timeframe
-                <table class="ms-Table   activity-details-table">
+                <h4>VM Performance counter for selected session timeframe</h4>
+                <table class="ms-Table activity-details-table">
                    
                     <tr>
                         <td>Disk Utiliztion</td>
                         <td></td>
                         <td></td>
                         <td></td>
-
-                        <td> <i class="fa fa-check"></i></td>
+                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
                     <tr>
                         <td>Processor Utiliztion</td>
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td> <i class="fa fa-check"></i></td>
+                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
                     </tr>
                     <tr>
                         <td>Memory Page faults</td>
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td> <i class="fa fa-times"></i></td>
+                        <td> <i class="fa fa-times" style="color: #a80000;"></i></td>
                     </tr>
                 </table>
             </div>
