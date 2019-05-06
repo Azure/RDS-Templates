@@ -214,12 +214,13 @@
 
 <script>
     (function () {
+        document.getElementById("Diagnosebreadcrumb").style.display = "block";
         var TableElements = document.querySelectorAll(".ms-Table");
         for (var i = 0; i < TableElements.length; i++) {
             new fabric['Table'](TableElements[i]);
         }
         document.getElementById("upn")
-            .addEventListener("keypress", function () {
+            .addEventListener("focus", function () {
                 document.getElementById("validate").hidden = true;
             }, false);
         document.getElementById("loader1").hidden = true;
