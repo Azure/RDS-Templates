@@ -6,18 +6,20 @@ namespace MSFT.WVD.Monitoring.Common.Models
 {
     public class VMPerformance
     {
-        public Counter Counters { get; set; }
+        public List<Counter> CurrentStateCounters { get; set; }
+        public List<Counter> TimeFrameCounters { get; set; }
+    
     }
 
     public class Counter
     {
-        public bool ProcessorUtilization { get; set; }
-        public bool DiskUtilization { get; set; }
-        public bool MemoryUtilization { get; set; }
+        public string ObjectName { get; set; }
+        public string CounterName { get; set; }
+        public long avg { get; set; }
+        public long Value { get; set; }
+        public string Computer { get; set; }
+        public bool Status { get; set; }
     }
 
-    public class QueryDetails
-    {
-        public string query { get; set; }
-    }
+
 }

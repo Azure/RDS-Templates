@@ -1,10 +1,13 @@
-﻿using MSFT.WVD.Monitoring.Common.Models;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using MSFT.WVD.Monitoring.Common.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,51 +15,134 @@ namespace MSFT.WVD.Monitoring.Common.Services
 {
     public class LogAnalyticsService
     {
-        CommonService CommonService = new CommonService();
-        public async Task<VMPerformance> GetLogData(string refreshToken)
+        CommonService _commonService = new CommonService();
+        IConfiguration Configuration { get; }
+        ILogger _logger;
+        public LogAnalyticsService(IConfiguration configuration, ILoggerFactory logger)
         {
-            string hostName = "rdsh-Ptg01-0.rdmicontoso.com";
-            string tokenval = CommonService.GetAccessToken(refreshToken);
-            JObject obj= JObject.Parse(tokenval);
-            var accesstoken = (string)obj["access_token"];
-            string query1 = $"Perf | where Computer == '{hostName}' | where ObjectName == 'Processor Information' | where CounterName == '% Processor Time' | where InstanceName == '_Total' | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer | project avg = 0, Value, Computer, Status = iff(Value < 80 , true, false)";
-            string query2 = $"Perf | where Computer == '{hostName}' | where ObjectName == 'LogicalDisk' | where CounterName == '% Free Space' | where InstanceName == '*' | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer | project avg = 0, Value, Computer, Status = iff(Value < 20 , true, false)";
-            string query3 = $"Perf | where Computer == '{hostName}' | where ObjectName == 'Memory' | where CounterName == 'Available Mbytes' | where InstanceName == '*' | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer | project avg = 0, Value, Computer, Status = iff(Value < 500 , true, false)";
-            
-
-            VMPerformance vMPerformance = new VMPerformance();
-            vMPerformance.Counters = new Counter {
-                ProcessorUtilization= await GetStatus(accesstoken, query1),
-                DiskUtilization = await GetStatus(accesstoken, query2),
-                MemoryUtilization = await GetStatus(accesstoken, query3),
-
-            };
-            return vMPerformance;
-
-
+            Configuration = configuration;
+            _logger = logger?.CreateLogger<LogAnalyticsService>() ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<bool> GetStatus(string accesstoken,string query)
+        public JObject PrepareBatchQueryRequest(string hostName)
         {
-            bool result = false;
-            QueryDetails queryDetails = new QueryDetails();
-            queryDetails.query = query;// "Perf | where Computer == 'rdsh-Ptg01-0.rdmicontoso.com'";
-            string url = "https://api.loganalytics.io/v1/workspaces/6fb37e86-270f-4c57-becb-85ec0211f3ce/query";
+            string WorkspaceID = Configuration.GetSection("AzureAd").GetSection("WorkspaceID").Value;
+            VMPerfCurrentStateQueries vMPerfQueries = new VMPerfCurrentStateQueries();
+            JArray jArray = new JArray();
+            int id = 0;
+            foreach (FieldInfo item in vMPerfQueries.GetType().GetFields())
+            {
+                id++;
+                jArray.Add(new JObject() {
+                     new JProperty("id",id),
+                new JProperty("body",new JObject(){
+                    new JProperty("query", item.GetValue(vMPerfQueries).ToString().Replace("[hostName]",hostName)),
+                    new JProperty("timespan","PT1H")
+                }),
+                new JProperty("method","POST"),
+                new JProperty("path","/query"),
+                new JProperty("workspace",WorkspaceID),
+                });
+            }
+            var queryPayLoad = new JObject();
+            queryPayLoad.Add("requests", jArray);
+            return queryPayLoad;
+        }
+        public async Task<List<Counter>> ExecuteLogAnalyticsQuery(string refreshToken, string hostName, bool isCurrent, string startTime=null, string endTime=null)
+        {
 
+            List<Counter> counters  = new List<Counter>();
+
+            string loganalyticUrl = Configuration.GetSection("configurations").GetSection("LogAnalytic_URL").Value;
+            string tokenval = _commonService.GetAccessToken(refreshToken, loganalyticUrl);
+            JObject obj = JObject.Parse(tokenval);
+            var accesstoken = (string)obj["access_token"];
+            VMPerformance vMPerformance = new VMPerformance();
+            var body= new JObject();
+            if (isCurrent)
+            {
+                 body = PrepareBatchQueryRequest(hostName);
+            }
+            else
+            {
+                body = PrepareBatchQueryRequestForTimeFrame(hostName, startTime,endTime);
+
+            }
+
+            string url = "https://api.loganalytics.io/v1/$batch";
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accesstoken);
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
-                var content = new StringContent(JsonConvert.SerializeObject(queryDetails), Encoding.UTF8, "application/json");
-                //content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                var content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
                 request.Content = content;
                 HttpResponseMessage response = await client.SendAsync(request);
-                var data= response.Content.ReadAsStringAsync().Result;
-                var jobj = JObject.Parse(data);
-                result = jobj["tables"][0]["rows"] == null || jobj["tables"][0]["rows"].ToString() == "[]" ? true : (bool)jobj["tables"][0]["rows"][0][3];
+                var data = response.Content.ReadAsStringAsync().Result;
+                foreach (var item in JObject.Parse(data)["responses"])
+                {
+                    if (item["status"].ToString() == "200")
+                    {
+                        if (item["body"]["tables"] != null && item["body"]["tables"][0]["rows"] != null && item["body"]["tables"][0]["rows"].ToString()!="[]" && item["body"]["tables"][0]["rows"][0] != null)
+                        {
+                            var counter = new Counter()
+                            {
+                                ObjectName = item["body"]["tables"][0]["rows"][0][0].ToString(),
+                                CounterName = item["body"]["tables"][0]["rows"][0][1].ToString(),
+                                avg = (long)item["body"]["tables"][0]["rows"][0][2],
+                                Value = (long)item["body"]["tables"][0]["rows"][0][3],
+                                Computer = (string)item["body"]["tables"][0]["rows"][0][4],
+                                Status = (bool)item["body"]["tables"][0]["rows"][0][5],
+                            };
+                            if(isCurrent)
+                            {
+                               counters.Add(counter);
+
+                            }
+                            else
+                            {
+                                counters.Add(counter);
+                            }
+                        }
+                    }
+                }
             }
-            return  result;
+            return counters;
+        }
+        public async Task<VMPerformance> GetSessionHostPerformance(string refreshToken, string hostName,  string startTime=null, string endTime=null)
+        {
+            _logger.LogInformation($" Enter into GetSessionHostPerformance() to get log data for {hostName} ");
+
+            return new VMPerformance()
+            {
+                CurrentStateCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName, true),
+                TimeFrameCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName, false, startTime, endTime)
+            };
         }
 
+        public JObject PrepareBatchQueryRequestForTimeFrame(string hostName, string startTime, string endTime)
+        {
+            string WorkspaceID = Configuration.GetSection("AzureAd").GetSection("WorkspaceID").Value;
+
+            VMPerfTimeFrameQueries vMPerfQueries = new VMPerfTimeFrameQueries();
+            JArray jArray = new JArray();
+            int id = 0;
+            foreach (FieldInfo item in vMPerfQueries.GetType().GetFields())
+            {
+                id++;
+                jArray.Add(new JObject() {
+                     new JProperty("id",id),
+                new JProperty("body",new JObject(){
+                    new JProperty("query", item.GetValue(vMPerfQueries).ToString().Replace("[hostName]",hostName).Replace("[StartTime]",startTime).Replace("[EndTime]",endTime)),
+                    new JProperty("timespan","PT1H")
+                }),
+                new JProperty("method","POST"),
+                new JProperty("path","/query"),
+                new JProperty("workspace",WorkspaceID),
+                });
+            }
+            var queryPayLoad = new JObject();
+            queryPayLoad.Add("requests", jArray);
+            return queryPayLoad;
+        }
     }
 }

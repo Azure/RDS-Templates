@@ -277,8 +277,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                     userName = item["userName"].ToString(),
                     outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
-                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"].ToString() : null,
-                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"].ToString() : null,
+                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
+                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
                     ClientOS = (string)item["details"]["ClientOS"],
                     ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
                     Tenants = (string)item["details"]["Tenants"],
@@ -324,13 +324,11 @@ namespace MSFT.WVD.Monitoring.Common.Services
 
         private async Task<HttpResponseMessage> Request(HttpMethod httpMethod, string url, string accessToken)
         {
-
             var activityId = Guid.NewGuid().ToString();
             _logger.LogInformation($"Sending RDS Management request to {url}. ActivityId:{activityId}");
             using (var handler = new HttpClientHandler { })
             using (var client = new HttpClient())
             {
-
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.DefaultRequestHeaders.Add("x-ms-correlation-id", activityId);
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);

@@ -151,58 +151,143 @@
             @if (Model.ShowConnectedUser == false)
             {
             <div class="ms-Pivot-content" data-content="files" id="divVmContent">
-                <h4>VM Performance current state</h4> 
+                @*<h4>VM Performance current state</h4>
+        <table class="ms-Table activity-details-table">
+            <tr style="background-color:#dff6dd">
+                <td>Active Session</td>
+                <td>25</td>
+                <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
+            </tr>
+            <tr style="background-color:#dff6dd">
+                <td>Disk Queue Time</td>
+                <td>1</td>
+                <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
+            </tr>
+            <tr style="background-color:#dff6dd">
+                <td>Time to Service</td>
+                <td>0.98</td>
+                <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
+            </tr>
+            <tr style="background-color:#fed9cc">
+                <td>Memory Page faults</td>
+                <td>0.2</td>
+                <td> <i class="fa fa-times" style="color: #a80000;"></i></td>
+            </tr>
+            <tr style="background-color: #fed9cc">
+                <td>Response time for machine </td>
+                <td>0.1</td>
+                <td><i class="fa fa-times" style="color: #a80000;"></i></td>
+            </tr>
+        </table>*@
+                <h4> VM Performance current state </h4>
                 <table class="ms-Table activity-details-table">
-                    <tr style="background-color:#dff6dd">
-                        <td>Active Session</td>
-                        <td>25</td>
-                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
-                    </tr>
-                    <tr style="background-color:#dff6dd">
-                        <td>Disk Queue Time</td>
-                        <td>1</td>
-                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
-                    </tr>
-                    <tr style="background-color:#dff6dd">
-                        <td>Time to Service</td>
-                        <td>0.98</td>
-                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
-                    </tr>
-                    <tr style="background-color:#fed9cc">
-                        <td>Memory Page faults</td>
-                        <td>0.2</td>
-                        <td> <i class="fa fa-times" style="color: #a80000;"></i></td>
-                    </tr>
-                    <tr style="background-color: #fed9cc">
-                        <td>Response time for machine </td>
-                        <td>0.1</td>
-                        <td><i class="fa fa-times" style="color: #a80000;"></i></td>
-                    </tr>
+                    @foreach (var item in Model.VMPerformance.CurrentStateCounters)
+                    {
+                        var style = "";
+                        if (item.Status == true)
+                        {
+                            style = "background-color: #dff6dd";
+                        }
+                        else
+                        {
+                            style = "background-color: #fed9cc";
+
+                        }
+                        <tr style="@style">
+                            @if (item.ObjectName == "Processor Information" && item.CounterName == "% Processor Time")
+                            {
+                                <td>Processor Utilization</td>
+                            }
+                            else if (item.ObjectName == "LogicalDisk" && item.CounterName == "% Free Space")
+                            {
+                                <td>Disk Utilization</td>
+
+                            }
+                            else if (item.ObjectName == "Memory" && item.CounterName == "Available MBytes")
+                            {
+                                <td>Memory Utilization</td>
+
+                            }
+                            else if (item.ObjectName == "User Input Delay per Session" && item.CounterName == "Max Input Delay")
+                            {
+                                <td>Response time </td>
+
+                            }
+                            else if (item.ObjectName == "LogicalDisk" && item.CounterName == "Avg. Disk Queue Length")
+                            {
+                                <td>Disk Queue </td>
+
+                            }
+                            <td>@item.Value</td>
+                            <td>
+                                @if (item.Status)
+                                {
+                                    <i class="fa fa-check" style="color: #107c10;"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa fa-times" style="color: #a80000;"></i>
+                                }
+                            </td>
+                        </tr>
+                    }
+
+                  
                 </table>
                 <h4>VM Performance counter for selected session timeframe</h4>
                 <table class="ms-Table activity-details-table">
-                   
-                    <tr style="background-color: #dff6dd">
-                        <td>Disk Utilization</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
-                    </tr>
-                    <tr style="background-color:#dff6dd">
-                        <td>Processor Utilization</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
-                    </tr>
-                    <tr style="background-color:#fed9cc">
-                        <td>Memory Page faults</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td> <i class="fa fa-times" style="color: #a80000;"></i></td>
-                    </tr>
+                    @foreach (var item in Model.VMPerformance.TimeFrameCounters)
+                    {
+                        var style = "";
+                        if (item.Status == true)
+                        {
+                            style = "background-color: #dff6dd";
+                        }
+                        else
+                        {
+                            style = "background-color: #fed9cc";
+
+                        }
+                        <tr style="@style">
+                            @if (item.ObjectName == "Processor Information" && item.CounterName == "% Processor Time")
+                            {
+                                <td>Processor Utilization</td>
+                            }
+                            else if (item.ObjectName == "LogicalDisk" && item.CounterName == "% Free Space")
+                            {
+                                <td>Disk Utilization</td>
+
+                            }
+                            else if (item.ObjectName == "Memory" && item.CounterName == "Available MBytes")
+                            {
+                                <td>Memory Utilization</td>
+
+                            }
+                            else if (item.ObjectName == "User Input Delay per Session" && item.CounterName == "Max Input Delay")
+                            {
+                                <td>Response time </td>
+
+                            }
+                            else if (item.ObjectName == "LogicalDisk" && item.CounterName == "Avg. Disk Queue Length")
+                            {
+                                <td>Disk Queue </td>
+
+                            }
+                            <td>@item.Value</td>
+                            <td>
+                                @if (item.Status)
+                                {
+                                    <i class="fa fa-check" style="color: #107c10;"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa fa-times" style="color: #a80000;"></i>
+                                }
+                            </td>
+                        </tr>
+                    }
+
+                 
                 </table>
             </div>
             }
@@ -227,7 +312,7 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <input asp-for="@Model.UserSessions[i].IsSelected"  type="checkbox" id="@i-checkbox" class="chkbox"> <!---->
+                                                <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"> <!---->
                                                 <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
 
                                                 <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">

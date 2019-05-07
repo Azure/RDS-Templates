@@ -53,22 +53,18 @@ namespace MSFT.WVD.Monitoring.Controllers
             var viewData = new DiagonizePageViewModel();
             if (ModelState.IsValid)
             {
-                //var userInfo = _userService.GetUserDetails();
-                //var tenantGroupName = userInfo.tenantGroupName;
-                //var tenant = userInfo.tenant;
-                //var accessToken = userInfo.accessToken;
+              
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
                 accessToken = await HttpContext.GetTokenAsync("access_token");
-                var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
-
-                _logAnalyticsService.GetLogData(refreshToken);
+                string startDate = $"{data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-dd")}T00:00:00Z";
+                string endDate = $"{data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-dd")}T23:59:59Z";
 
                 if (data.DiagonizeQuery.ActivityType == ActivityType.Management)
                 {
                     _logger.LogInformation($"Service call to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
                     //call from service layer
-                    viewData.ManagementActivity = await _diagnozeService.GetManagementActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
+                    viewData.ManagementActivity = await _diagnozeService.GetManagementActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
                     if (viewData.ManagementActivity?.Count > 0 && viewData.ManagementActivity[0].ErrorDetails != null)
                     {
                         _logger.LogError($"Error Occured : {viewData.ManagementActivity[0].ErrorDetails.Message}");
@@ -81,7 +77,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     _logger.LogInformation($"Service Call  to get connection activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
 
                     //call from service layer
-                    viewData.ConnectionActivity = await _diagnozeService.GetConnectionActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
+                    viewData.ConnectionActivity = await _diagnozeService.GetConnectionActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
                     if (viewData.ConnectionActivity?.Count > 0 && viewData.ConnectionActivity[0].ErrorDetails != null)
                     {
                         _logger.LogError($"Error Occured : {viewData.ConnectionActivity[0].ErrorDetails.Message}");
@@ -94,7 +90,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 {
                     _logger.LogInformation($"Service call to get feed activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
 
-                    viewData.FeedActivity = await _diagnozeService.GetFeedActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"), data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
+                    viewData.FeedActivity = await _diagnozeService.GetFeedActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
                     if (viewData.FeedActivity?.Count > 0 && viewData.FeedActivity[0].ErrorDetails != null)
                     {
                         _logger.LogError($"Error Occured : {viewData.FeedActivity[0].ErrorDetails.Message}");
@@ -345,6 +341,10 @@ namespace MSFT.WVD.Monitoring.Controllers
             accessToken = await HttpContext.GetTokenAsync("access_token");
 
 
+           
+
+
+
             var ConnectionActivity = await _diagnozeService.GetActivityHostDetails(accessToken, tenantGroupName, tenant, id);
             if (ConnectionActivity?.Count > 0 && ConnectionActivity[0].ErrorDetails != null)
             {
@@ -354,6 +354,13 @@ namespace MSFT.WVD.Monitoring.Controllers
             else
             {
                 var userSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName);
+
+                //get vm performance 
+                var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
+                string startTime = ConnectionActivity[0].startTime != null ? Convert.ToDateTime(ConnectionActivity[0].startTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss"):null;
+                string endTime = ConnectionActivity[0].endTime != null ? Convert.ToDateTime(ConnectionActivity[0].endTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") :null;
+                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, ConnectionActivity[0].SessionHostName, startTime, endTime);
+
                 return View(new DiagnoseDetailPageViewModel()
                 {
                     ConnectionActivity = new ConnectionActivity
@@ -372,7 +379,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                     },
                     UserSessions = userSessions,
                     ShowConnectedUser = false,
-                    ShowMessageForm = true
+                    ShowMessageForm = true,
+                    VMPerformance=vMPerformance
                 });
             }
         }
