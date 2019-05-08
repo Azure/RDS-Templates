@@ -82,11 +82,14 @@ try
                 
                 #Static value of wvdInfra web appname/appid
                 $wvdinfraWebAppId = "5a0aa725-4958-4b0c-80a9-34562e23f3b7"
-                $serviceIdinfo = Get-AzureRmADServicePrincipal -ApplicationId $wvdinfraWebAppId
+                $serviceIdinfo = Get-AzureRmADServicePrincipal -ApplicationId $wvdinfraWebAppId -ErrorAction SilentlyContinue
                 
                 if(!$serviceIdinfo){
                 $wvdinfraWebApp = "Windows Virtual Desktop"
-                $serviceIdinfo = Get-AzureRmADServicePrincipal -DisplayName $wvdinfraWebApp
+                $serviceIdinfo = Get-AzureRmADServicePrincipal -DisplayName $wvdinfraWebApp -ErrorAction SilentlyContinue
+                }				
+				if(!$serviceIdinfo){
+                $serviceIdinfo = Get-AzureRmADServicePrincipal | Where-Object {$_.ApplicationId -eq $wvdinfraWebAppId}
                 }
 
                 $wvdInfraWebAppName = $serviceIdinfo.DisplayName
