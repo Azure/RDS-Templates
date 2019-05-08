@@ -195,10 +195,7 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<IActionResult> InitiateSendMessage(DiagnoseDetailPageViewModel data)
         {
-            //var userInfo = _userService.GetUserDetails();
-            //var tenantGroupName = userInfo.tenantGroupName;
-            //var tenant = userInfo.tenant;
-            //var accessToken = userInfo.accessToken;
+          
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             accessToken = await HttpContext.GetTokenAsync("access_token");
@@ -216,6 +213,12 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ShowMessageForm = false;
             }
 
+            var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
+            string startTime = data.ConnectionActivity.startTime != null ? Convert.ToDateTime(data.ConnectionActivity.startTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
+            string endTime = data.ConnectionActivity.endTime != null ? Convert.ToDateTime(data.ConnectionActivity.endTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
+            VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, startTime, endTime);
+
+
             return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
             {
                 Title = string.Empty,
@@ -224,6 +227,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ShowConnectedUser = true,
                 ShowMessageForm = ShowMessageForm,
                 UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
+                ,
+                VMPerformance = vMPerformance
             });
 
         }
@@ -236,17 +241,22 @@ namespace MSFT.WVD.Monitoring.Controllers
             {
                 var viewData = new SendMessageQuery();
                 var messageStatus = new List<MessageStatus>();
-                //var userInfo = _userService.GetUserDetails();
-                //var tenantGroupName = userInfo.tenantGroupName;
-                //var tenant = userInfo.tenant;
-                //var accessToken = userInfo.accessToken;
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
                 accessToken = await HttpContext.GetTokenAsync("access_token");
+                bool ShowConnectedUser = true;
+                bool ShowMessageForm = true;
+
+                var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
+                string startTime = data.ConnectionActivity.startTime != null ? Convert.ToDateTime(data.ConnectionActivity.startTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
+                string endTime = data.ConnectionActivity.endTime != null ? Convert.ToDateTime(data.ConnectionActivity.endTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
+                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, startTime, endTime);
+
 
                 if (string.IsNullOrEmpty(data.Title) )
                 {
                     ViewBag.TitleErrorMsg = "Title is required";
+                    
                 }
                 else if(string.IsNullOrEmpty(data.Message))
                 {
@@ -292,10 +302,13 @@ namespace MSFT.WVD.Monitoring.Controllers
                             }
                         }
                         ViewBag.ErrorMsg = "";
+                        ShowConnectedUser = false;
+                        ShowMessageForm = false;
                     }
                     else
                     {
-
+                        ShowConnectedUser = true;
+                        ShowMessageForm = true;
                         ViewBag.ErrorMsg = "Please select at least one user";
                     }
                 }
@@ -308,8 +321,9 @@ namespace MSFT.WVD.Monitoring.Controllers
                     Message = data.Message,
                     SendMsgStatuses = messageStatus,
                     ConnectionActivity = data.ConnectionActivity,
-                    ShowConnectedUser = true,
-                    ShowMessageForm = true
+                    ShowConnectedUser = ShowConnectedUser,
+                    ShowMessageForm = ShowMessageForm,
+                    VMPerformance= vMPerformance
                 });
 
             }
@@ -332,18 +346,10 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<IActionResult> ActivityHostDetails(string id)
         {
-            //var userInfo = _userService.GetUserDetails();
-            //var tenantGroupName = userInfo.tenantGroupName;
-            //var tenant = userInfo.tenant;
-            //var accessToken = userInfo.accessToken;
+         
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             accessToken = await HttpContext.GetTokenAsync("access_token");
-
-
-           
-
-
 
             var ConnectionActivity = await _diagnozeService.GetActivityHostDetails(accessToken, tenantGroupName, tenant, id);
             if (ConnectionActivity?.Count > 0 && ConnectionActivity[0].ErrorDetails != null)

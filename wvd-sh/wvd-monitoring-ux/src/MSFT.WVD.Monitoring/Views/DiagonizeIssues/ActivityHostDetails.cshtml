@@ -136,9 +136,11 @@
             <ul class="ms-Pivot-links">
 
                 @{
+                   // var vmPerfStyle = Model.ShowConnectedUser == true ? "display:none" : "display:block";
                     var vmstyle = Model.ShowConnectedUser == true ? "ms-Pivot-link" : "ms-Pivot-link is-selected";
                     var userStyle = Model.ShowConnectedUser == true ? "ms-Pivot-link is-selected" : "ms-Pivot-link";
-                    <li class="@vmstyle" data-content="files" title="My files" tabindex="1">
+
+                    <li class="@vmstyle" data-content="files" title="My files" tabindex="1" id="vmperformance">
                         VM Performance
                     </li>
                     <li class="@userStyle" data-content="recent" title="Recent" tabindex="2" id="UserConnected">
@@ -150,37 +152,11 @@
 
             @if (Model.ShowConnectedUser == false)
             {
-            <div class="ms-Pivot-content" data-content="files" id="divVmContent">
-                @*<h4>VM Performance current state</h4>
-        <table class="ms-Table activity-details-table">
-            <tr style="background-color:#dff6dd">
-                <td>Active Session</td>
-                <td>25</td>
-                <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
-            </tr>
-            <tr style="background-color:#dff6dd">
-                <td>Disk Queue Time</td>
-                <td>1</td>
-                <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
-            </tr>
-            <tr style="background-color:#dff6dd">
-                <td>Time to Service</td>
-                <td>0.98</td>
-                <td> <i class="fa fa-check" style="color: #107c10;"></i></td>
-            </tr>
-            <tr style="background-color:#fed9cc">
-                <td>Memory Page faults</td>
-                <td>0.2</td>
-                <td> <i class="fa fa-times" style="color: #a80000;"></i></td>
-            </tr>
-            <tr style="background-color: #fed9cc">
-                <td>Response time for machine </td>
-                <td>0.1</td>
-                <td><i class="fa fa-times" style="color: #a80000;"></i></td>
-            </tr>
-        </table>*@
+            <div class="ms-Pivot-content" data-content="files" id="divVmContent" >
+               
                 <h4> VM Performance current state </h4>
                 <table class="ms-Table activity-details-table">
+                    <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
                     @foreach (var item in Model.VMPerformance.CurrentStateCounters)
                     {
                         var style = "";
@@ -194,6 +170,7 @@
 
                         }
                         <tr style="@style">
+                           
                             @if (item.ObjectName == "Processor Information" && item.CounterName == "% Processor Time")
                             {
                                 <td>Processor Utilization</td>
@@ -389,8 +366,28 @@
         button.addEventListener("click", function () {
             if (paragraph.style.display == 'block') {
                 paragraph.style.display = 'none';
+               
             } else {
                 paragraph.style.display = 'none';
+              
+               
+
+            }
+        }, false);
+
+        var button1 = document.getElementById("vmperformance"),
+            divVmContent1 = document.getElementById("divVmContent");
+        console.log(divVmContent1.style.display);
+        button1.addEventListener("click", function () {
+            if (divVmContent1.style.display == 'block') {
+                divVmContent1.style.display = 'block';
+               // paragraph.style.display == 'none'
+
+
+            } else {
+              
+                divVmContent1.style.display = 'block';
+               // paragraph.style.display == 'none'
             }
         }, false);
 
