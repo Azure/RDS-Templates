@@ -1,14 +1,17 @@
 ﻿@model DiagnoseDetailPageViewModel
+@{
+    ViewData["Title"] = "Host Details : ";
 
+}
 <div class="width-100 content-section users-session">
     <div class="page-header">
         <h2>
-            <a asp-controller="DiagonizeIssues"
+            <a asp-controller="DiagnoseIssues"
                asp-action="SearchResults"><i class="fa fa-chevron-left" aria-hidden="false"></i></a>
             @Model.ConnectionActivity.SessionHostName Status
         </h2>
     </div>
-    <form asp-controller="DiagonizeIssues" method="post" id="msgForm">
+    <form asp-controller="DiagnoseIssues" method="post" id="msgForm">
         <div class="ms-Grid m-b-25" dir="ltr">
             <div class="ms-Grid-row">
                 <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
@@ -136,14 +139,14 @@
             <ul class="ms-Pivot-links">
 
                 @{
-                   // var vmPerfStyle = Model.ShowConnectedUser == true ? "display:none" : "display:block";
+                    var vmPerfStyle = Model.ShowConnectedUser == true ? "display:none;" : "display:block;";
                     var vmstyle = Model.ShowConnectedUser == true ? "ms-Pivot-link" : "ms-Pivot-link is-selected";
                     var userStyle = Model.ShowConnectedUser == true ? "ms-Pivot-link is-selected" : "ms-Pivot-link";
 
-                    <li class="@vmstyle" data-content="files" title="My files" tabindex="1" id="vmperformance">
+                    <li class="@vmstyle" data-content="files" title="VM Perfomance" tabindex="1" id="vmperformance">
                         VM Performance
                     </li>
-                    <li class="@userStyle" data-content="recent" title="Recent" tabindex="2" id="UserConnected">
+                    <li class="@userStyle" data-content="recent" title="User Sessions" tabindex="2" id="UserConnected">
                         Users Connected
                     </li>
                 }
@@ -152,125 +155,73 @@
 
             @if (Model.ShowConnectedUser == false)
             {
-            <div class="ms-Pivot-content" data-content="files" id="divVmContent" >
-               
-                <h4> VM Performance current state </h4>
-                <table class="ms-Table activity-details-table">
-                    <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
-                    @foreach (var item in Model.VMPerformance.CurrentStateCounters)
-                    {
-                        var style = "";
-                        if (item.Status == true)
+
+                <div class="ms-Pivot-content" data-content="files">
+
+                    <h4> VM Performance current state </h4>
+                    <table class="ms-Table activity-details-table">
+                        <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
+                        @foreach (var item in Model.VMPerformance.CurrentStateCounters)
                         {
-                            style = "background-color: #dff6dd";
-                        }
-                        else
-                        {
-                            style = "background-color: #fed9cc";
-
-                        }
-                        <tr style="@style">
-                           
-                            @if (item.ObjectName == "Processor Information" && item.CounterName == "% Processor Time")
+                            var style = "";
+                            if (item.Status == true)
                             {
-                                <td>Processor Utilization</td>
+                                style = "background-color: #dff6dd";
                             }
-                            else if (item.ObjectName == "LogicalDisk" && item.CounterName == "% Free Space")
+                            else
                             {
-                                <td>Disk Utilization</td>
+                                style = "background-color: #fed9cc";
 
                             }
-                            else if (item.ObjectName == "Memory" && item.CounterName == "Available MBytes")
-                            {
-                                <td>Memory Utilization</td>
+                            <tr style="@style">
 
-                            }
-                            else if (item.ObjectName == "User Input Delay per Session" && item.CounterName == "Max Input Delay")
-                            {
-                                <td>Response time </td>
-
-                            }
-                            else if (item.ObjectName == "LogicalDisk" && item.CounterName == "Avg. Disk Queue Length")
-                            {
-                                <td>Disk Queue </td>
-
-                            }
-                            <td>@item.Value</td>
-                            <td>
-                                @if (item.Status)
+                                @if (item.ObjectName == "Processor Information" && item.CounterName == "% Processor Time")
                                 {
-                                    <i class="fa fa-check" style="color: #107c10;"></i>
+                                    <td>Processor Utilization</td>
                                 }
-                                else
+                                else if (item.ObjectName == "LogicalDisk" && item.CounterName == "% Free Space")
                                 {
-                                    <i class="fa fa-times" style="color: #a80000;"></i>
-                                }
-                            </td>
-                        </tr>
-                    }
+                                    <td>Disk Utilization</td>
 
-                  
-                </table>
-                <h4>VM Performance counter for selected session timeframe</h4>
-                <table class="ms-Table activity-details-table">
-                    @foreach (var item in Model.VMPerformance.TimeFrameCounters)
-                    {
-                        var style = "";
-                        if (item.Status == true)
-                        {
-                            style = "background-color: #dff6dd";
+                                }
+                                else if (item.ObjectName == "Memory" && item.CounterName == "Available MBytes")
+                                {
+                                    <td>Memory Utilization</td>
+
+                                }
+                                else if (item.ObjectName == "User Input Delay per Session" && item.CounterName == "Max Input Delay")
+                                {
+                                    <td>Response time </td>
+
+                                }
+                                else if (item.ObjectName == "LogicalDisk" && item.CounterName == "Avg. Disk Queue Length")
+                                {
+                                    <td>Disk Queue </td>
+
+                                }
+                                <td>@item.Value</td>
+                                <td>
+                                    @if (item.Status)
+                                    {
+                                        <i class="fa fa-check" style="color: #107c10;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa fa-times" style="color: #a80000;"></i>
+                                    }
+                                </td>
+                            </tr>
                         }
-                        else
-                        {
-                            style = "background-color: #fed9cc";
 
-                        }
-                        <tr style="@style">
-                            @if (item.ObjectName == "Processor Information" && item.CounterName == "% Processor Time")
-                            {
-                                <td>Processor Utilization</td>
-                            }
-                            else if (item.ObjectName == "LogicalDisk" && item.CounterName == "% Free Space")
-                            {
-                                <td>Disk Utilization</td>
 
-                            }
-                            else if (item.ObjectName == "Memory" && item.CounterName == "Available MBytes")
-                            {
-                                <td>Memory Utilization</td>
+                    </table>
 
-                            }
-                            else if (item.ObjectName == "User Input Delay per Session" && item.CounterName == "Max Input Delay")
-                            {
-                                <td>Response time </td>
+                </div>
 
-                            }
-                            else if (item.ObjectName == "LogicalDisk" && item.CounterName == "Avg. Disk Queue Length")
-                            {
-                                <td>Disk Queue </td>
-
-                            }
-                            <td>@item.Value</td>
-                            <td>
-                                @if (item.Status)
-                                {
-                                    <i class="fa fa-check" style="color: #107c10;"></i>
-                                }
-                                else
-                                {
-                                    <i class="fa fa-times" style="color: #a80000;"></i>
-                                }
-                            </td>
-                        </tr>
-                    }
-
-                 
-                </table>
-            </div>
             }
 
 
-            <div class="ms-Pivot-content" data-content="recent">
+            <div class="ms-Pivot-content" data-content="recent" id="divSessionContent">
                 @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
                 {
                     <div>
@@ -364,32 +315,23 @@
         var button = document.getElementById("UserConnected"),
             paragraph = document.getElementById("sendmessagediv");
         button.addEventListener("click", function () {
-            if (paragraph.style.display == 'block') {
-                paragraph.style.display = 'none';
-               
-            } else {
-                paragraph.style.display = 'none';
-              
-               
+            //if (paragraph.style.display == 'block') {
+            //    paragraph.style.display = 'none';
 
-            }
+            //} else {
+            //    paragraph.style.display = 'none';
+            //}
+            //document.getElementById("divSessionContent").hidden = false;
+            document.getElementById("sendmessagediv").hidden = true;
         }, false);
 
-        var button1 = document.getElementById("vmperformance"),
-            divVmContent1 = document.getElementById("divVmContent");
-        console.log(divVmContent1.style.display);
-        button1.addEventListener("click", function () {
-            if (divVmContent1.style.display == 'block') {
-                divVmContent1.style.display = 'block';
-               // paragraph.style.display == 'none'
+        //var button1 = document.getElementById("vmperformance"),
+        //    divVmContent1 = document.getElementById("divVmContent");
 
-
-            } else {
-              
-                divVmContent1.style.display = 'block';
-               // paragraph.style.display == 'none'
-            }
-        }, false);
+        //button1.addEventListener("click", function () {
+        //    console.log(divVmContent1);
+        //  //  document.getElementById("divVmContent").hidden = false;
+        //}, false);
 
         var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
         for (var i = 0; i < CheckBoxElements.length; i++) {

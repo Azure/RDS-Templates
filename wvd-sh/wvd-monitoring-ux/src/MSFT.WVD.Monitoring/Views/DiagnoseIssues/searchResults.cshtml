@@ -1,13 +1,13 @@
 ﻿@model DiagonizePageViewModel
 @using MSFT.WVD.Monitoring.Common.Models
 @{
-    ViewData["Title"] = "Diagonize Issues";
+    ViewData["Title"] = "Diagnose Issues";
 
 }
 
 <div class="width-100 content-section">
     <br />
-    <form asp-controller="DiagonizeIssues" asp-action="Index" method="post" id="myform" asp-route-returnUrl="@Context.Request.Path" role="form">
+    <form asp-controller="DiagnoseIssues" asp-action="Index" method="post" id="myform" asp-route-returnUrl="@Context.Request.Path" role="form">
         <div class="ms-Grid" dir="ltr">
             <div class="ms-Grid-row">
                 <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
@@ -44,7 +44,7 @@
                         <span class="ms-Button-label">Search</span>
                         `
                     </button>
-                    <a asp-controller="DiagonizeIssues"
+                    <a asp-controller="DiagnoseIssues"
                        asp-action="Index" class="ms-Button secondary-btn"><span class="ms-Button-label">Clear</span></a>
                 </div>
             </div>
@@ -106,7 +106,7 @@
                                 <td>
                                     @if (!string.IsNullOrEmpty(d.SessionHostName))
                                     {
-                                        <a asp-controller="DiagonizeIssues"
+                                        <a asp-controller="DiagnoseIssues"
                                            asp-action="ActivityHostDetails"
                                            asp-route-id="@d.activityId" class="ms-ContextualMenu-item">View Status</a>
                                     }

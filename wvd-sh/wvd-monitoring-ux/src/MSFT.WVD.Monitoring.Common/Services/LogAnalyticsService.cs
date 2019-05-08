@@ -48,7 +48,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             queryPayLoad.Add("requests", jArray);
             return queryPayLoad;
         }
-        public async Task<List<Counter>> ExecuteLogAnalyticsQuery(string refreshToken, string hostName, bool isCurrent, string startTime=null, string endTime=null)
+        public async Task<List<Counter>> ExecuteLogAnalyticsQuery(string refreshToken, string hostName)
         {
 
             List<Counter> counters  = new List<Counter>();
@@ -59,16 +59,9 @@ namespace MSFT.WVD.Monitoring.Common.Services
             var accesstoken = (string)obj["access_token"];
             VMPerformance vMPerformance = new VMPerformance();
             var body= new JObject();
-            if (isCurrent)
-            {
+           
                  body = PrepareBatchQueryRequest(hostName);
-            }
-            else
-            {
-                body = PrepareBatchQueryRequestForTimeFrame(hostName, startTime,endTime);
-
-            }
-
+           
             string url = "https://api.loganalytics.io/v1/$batch";
             using (var client = new HttpClient())
             {
@@ -93,15 +86,10 @@ namespace MSFT.WVD.Monitoring.Common.Services
                                 Computer = (string)item["body"]["tables"][0]["rows"][0][4],
                                 Status = (bool)item["body"]["tables"][0]["rows"][0][5],
                             };
-                            if(isCurrent)
-                            {
+                           
                                counters.Add(counter);
 
-                            }
-                            else
-                            {
-                                counters.Add(counter);
-                            }
+                          
                         }
                     }
                 }
@@ -114,35 +102,11 @@ namespace MSFT.WVD.Monitoring.Common.Services
 
             return new VMPerformance()
             {
-                CurrentStateCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName, true),
-                TimeFrameCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName, false, startTime, endTime)
+                CurrentStateCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName)
+               
             };
         }
 
-        public JObject PrepareBatchQueryRequestForTimeFrame(string hostName, string startTime, string endTime)
-        {
-            string WorkspaceID = Configuration.GetSection("AzureAd").GetSection("WorkspaceID").Value;
-
-            VMPerfTimeFrameQueries vMPerfQueries = new VMPerfTimeFrameQueries();
-            JArray jArray = new JArray();
-            int id = 0;
-            foreach (FieldInfo item in vMPerfQueries.GetType().GetFields())
-            {
-                id++;
-                jArray.Add(new JObject() {
-                     new JProperty("id",id),
-                new JProperty("body",new JObject(){
-                    new JProperty("query", item.GetValue(vMPerfQueries).ToString().Replace("[hostName]",hostName).Replace("[StartTime]",startTime).Replace("[EndTime]",endTime)),
-                    new JProperty("timespan","PT1H")
-                }),
-                new JProperty("method","POST"),
-                new JProperty("path","/query"),
-                new JProperty("workspace",WorkspaceID),
-                });
-            }
-            var queryPayLoad = new JObject();
-            queryPayLoad.Add("requests", jArray);
-            return queryPayLoad;
-        }
+        
     }
 }

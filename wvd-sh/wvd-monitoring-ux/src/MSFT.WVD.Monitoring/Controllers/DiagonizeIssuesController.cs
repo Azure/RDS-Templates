@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 
 namespace MSFT.WVD.Monitoring.Controllers
 {
-    public class DiagonizeIssuesController : Controller
+    public class DiagnoseIssuesController : Controller
     {
         private readonly ILogger _logger;
         DiagnozeService _diagnozeService;
@@ -27,7 +27,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         LogAnalyticsService _logAnalyticsService;
 
         public string tenantGroupName, tenant, accessToken;
-        public DiagonizeIssuesController(ILogger<DiagonizeIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService,LogAnalyticsService logAnalyticsService)
+        public DiagnoseIssuesController(ILogger<DiagnoseIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService,LogAnalyticsService logAnalyticsService)
         {
             _logger = logger;
             _diagnozeService = diagnozeService;
@@ -244,16 +244,20 @@ namespace MSFT.WVD.Monitoring.Controllers
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
                 accessToken = await HttpContext.GetTokenAsync("access_token");
-                bool ShowConnectedUser = true;
-                bool ShowMessageForm = true;
+                //bool ShowConnectedUser = true;
+                //bool ShowMessageForm = true;
 
                 var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
                 string startTime = data.ConnectionActivity.startTime != null ? Convert.ToDateTime(data.ConnectionActivity.startTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
                 string endTime = data.ConnectionActivity.endTime != null ? Convert.ToDateTime(data.ConnectionActivity.endTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
                 VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, startTime, endTime);
 
-
-                if (string.IsNullOrEmpty(data.Title) )
+                if (string.IsNullOrEmpty(data.Message) && string.IsNullOrEmpty(data.Title))
+                {
+                    ViewBag.TitleErrorMsg = "Title is required";
+                    ViewBag.MessageErrorMsg = "Message is required";
+                }
+                else if (string.IsNullOrEmpty(data.Title) )
                 {
                     ViewBag.TitleErrorMsg = "Title is required";
                     
@@ -262,6 +266,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 {
                     ViewBag.MessageErrorMsg = "Message is required";
                 }
+                 
                 else
                 {
                     if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
@@ -302,13 +307,11 @@ namespace MSFT.WVD.Monitoring.Controllers
                             }
                         }
                         ViewBag.ErrorMsg = "";
-                        ShowConnectedUser = false;
-                        ShowMessageForm = false;
+                      
                     }
                     else
                     {
-                        ShowConnectedUser = true;
-                        ShowMessageForm = true;
+                      
                         ViewBag.ErrorMsg = "Please select at least one user";
                     }
                 }
@@ -321,8 +324,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                     Message = data.Message,
                     SendMsgStatuses = messageStatus,
                     ConnectionActivity = data.ConnectionActivity,
-                    ShowConnectedUser = ShowConnectedUser,
-                    ShowMessageForm = ShowMessageForm,
+                    ShowConnectedUser = false,
+                    ShowMessageForm = true,
                     VMPerformance= vMPerformance
                 });
 
@@ -363,9 +366,8 @@ namespace MSFT.WVD.Monitoring.Controllers
 
                 //get vm performance 
                 var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
-                string startTime = ConnectionActivity[0].startTime != null ? Convert.ToDateTime(ConnectionActivity[0].startTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss"):null;
-                string endTime = ConnectionActivity[0].endTime != null ? Convert.ToDateTime(ConnectionActivity[0].endTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") :null;
-                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, ConnectionActivity[0].SessionHostName, startTime, endTime);
+               
+                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, ConnectionActivity[0].SessionHostName);
 
                 return View(new DiagnoseDetailPageViewModel()
                 {

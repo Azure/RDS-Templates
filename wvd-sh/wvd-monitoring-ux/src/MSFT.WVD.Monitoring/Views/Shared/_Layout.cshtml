@@ -52,7 +52,7 @@
             &nbsp;
             &nbsp;
             <di class="app-title" id="Diagnosebreadcrumb">
-                <a class="app-title" asp-area="" asp-controller="DiagonizeIssues" asp-action="Index" style="color: whitesmoke;
+                <a class="app-title" asp-area="" asp-controller="DiagnoseIssues" asp-action="Index" style="color: whitesmoke;
     text-decoration: none;">
                   >  Diagnose Issues
                 </a>
@@ -116,7 +116,7 @@
                     </a>
                 </li>
                 <li>
-                    <a asp-area="" asp-controller="DiagonizeIssues" asp-action="Index" id="Diagnoseissuesnav">
+                    <a asp-area="" asp-controller="DiagnoseIssues" asp-action="Index" id="Diagnoseissuesnav">
                         <i class="fa fa-exclamation-triangle"></i>
                         <span>Diagnose Issues</span>
                     </a>
@@ -186,6 +186,12 @@
         <script type="text/javascript">
             var BreadcrumbHTML = document.querySelector('.ms-Breadcrumb');
             var Breadcrumb = new fabric['Breadcrumb'](BreadcrumbHTML);
+        </script>
+        <script type="text/javascript">
+            document.getElementById("Diagnosebreadcrumb").hidden = true;
+            document.getElementById("Diagnoseissuesnav").addEventListener("click", function () {
+                document.getElementById("Diagnosebreadcrumb").hidden = false;
+            }, false);
         </script>
     </environment>
     @RenderSection("Scripts", required: false)
