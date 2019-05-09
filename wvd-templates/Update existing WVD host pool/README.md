@@ -1,9 +1,9 @@
 [![Deploy](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fstaging%2Fwvd-templates%2FUpdate%20existing%20WVD%20host%20pool%2FmainTemplate.json)
 
-# ARM Template for WVD Hostpool Deployment
+# ARM Template for Windows Virtual Desktop Hostpool Deployment
 
-# Update Existing WVD Hostpool
-This template will remove or stop the old instance of WVD Hostpool session hosts and creates new virtual machines and registers them as session hosts to wvd host pool. There are different sets of parameters you must enter to successfully deploy the template:
+# Update Existing Windows Virtual Desktop Hostpool
+This template will remove or stop the old instance of Windows Virtual Desktop Hostpool session hosts and creates new virtual machines and registers them as session hosts to Windows Virtual Desktop host pool. There are different sets of parameters you must enter to successfully deploy the template:
 
 - ActionOnPreviousVirtualMachines
 - VM image Type
