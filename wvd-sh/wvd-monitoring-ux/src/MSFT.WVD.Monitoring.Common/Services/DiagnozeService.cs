@@ -100,7 +100,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
                         {
                             ErrorDetails= new ErrorDetails
                             {
-                                Message = result.ToString()
+                                StatusCode=(int)result.StatusCode,
+                                Message = result.ReasonPhrase.ToString()
                             }
                         }
                     };
@@ -171,7 +172,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
                         {
                             ErrorDetails= new ErrorDetails
                             {
-                                Message = result.ToString()
+                                  StatusCode=(int)result.StatusCode,
+                                Message = result.ReasonPhrase.ToString()
                             }
                         }
                     };
@@ -237,7 +239,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
                         {
                             ErrorDetails= new ErrorDetails
                             {
-                                Message = result.ToString()
+                                  StatusCode=(int)result.StatusCode,
+                                Message = result.ReasonPhrase.ToString()
                             }
                         }
                     };
@@ -295,7 +298,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
                         {
                             ErrorDetails= new ErrorDetails
                             {
-                                Message = result.ToString()
+                                  StatusCode=(int)result.StatusCode,
+                                Message = result.ReasonPhrase.ToString()
                             }
                         }
                     };

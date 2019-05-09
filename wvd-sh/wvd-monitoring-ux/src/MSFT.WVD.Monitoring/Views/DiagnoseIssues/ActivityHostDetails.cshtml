@@ -137,7 +137,6 @@
 
         <div class="ms-Pivot">
             <ul class="ms-Pivot-links">
-
                 @{
                     var vmPerfStyle = Model.ShowConnectedUser == true ? "display:none;" : "display:block;";
                     var vmstyle = Model.ShowConnectedUser == true ? "ms-Pivot-link" : "ms-Pivot-link is-selected";
@@ -146,78 +145,47 @@
                     <li class="@vmstyle" data-content="files" title="VM Perfomance" tabindex="1" id="vmperformance">
                         VM Performance
                     </li>
-                    <li class="@userStyle" data-content="recent" title="User Sessions" tabindex="2" id="UserConnected">
+                    <li class="@userStyle" data-content="recent" title="User Sessions" tabindex="1" id="UserConnected">
                         Users Connected
                     </li>
                 }
-
             </ul>
-
             @if (Model.ShowConnectedUser == false)
             {
-
                 <div class="ms-Pivot-content" data-content="files">
-
                     <h4> VM Performance current state </h4>
                     <table class="ms-Table activity-details-table">
                         <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
                         @foreach (var item in Model.VMPerformance.CurrentStateCounters)
                         {
-                            var style = "";
-                            if (item.Status == true)
-                            {
-                                style = "background-color: #dff6dd";
-                            }
-                            else
-                            {
-                                style = "background-color: #fed9cc";
+                            var style = "background-color: #fed9cc";
+                            //if (item.Status == true)
+                            //{
+                            //    style = "background-color: #dff6dd";
+                            //}
+                            //else
+                            //{
+                            //    style = "background-color: #fed9cc";
 
-                            }
+                            //}
                             <tr style="@style">
-
-                                @if (item.ObjectName == "Processor Information" && item.CounterName == "% Processor Time")
-                                {
-                                    <td>Processor Utilization</td>
-                                }
-                                else if (item.ObjectName == "LogicalDisk" && item.CounterName == "% Free Space")
-                                {
-                                    <td>Disk Utilization</td>
-
-                                }
-                                else if (item.ObjectName == "Memory" && item.CounterName == "Available MBytes")
-                                {
-                                    <td>Memory Utilization</td>
-
-                                }
-                                else if (item.ObjectName == "User Input Delay per Session" && item.CounterName == "Max Input Delay")
-                                {
-                                    <td>Response time </td>
-
-                                }
-                                else if (item.ObjectName == "LogicalDisk" && item.CounterName == "Avg. Disk Queue Length")
-                                {
-                                    <td>Disk Queue </td>
-
-                                }
+                                <td>@item.ObjectName</td>
                                 <td>@item.Value</td>
-                                <td>
-                                    @if (item.Status)
+                                <td>@item.Status
+                                    @*@if (item.Status)
                                     {
                                         <i class="fa fa-check" style="color: #107c10;"></i>
                                     }
                                     else
                                     {
                                         <i class="fa fa-times" style="color: #a80000;"></i>
-                                    }
+                                    }*@
+
                                 </td>
                             </tr>
                         }
-
-
                     </table>
-
                 </div>
-
             }
 
 
@@ -242,15 +210,10 @@
                                             <td>
                                                 <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"> <!---->
                                                 <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
-
                                                 <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
-
                                                 <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
-
                                                 <input asp-for="@Model.UserSessions[i].sessionHostName" type="hidden">
-
                                                 <input asp-for="@Model.UserSessions[i].userPrincipalName" type="hidden">
-
                                                 <input asp-for="@Model.UserSessions[i].sessionId" type="hidden">
                                             </td>
                                             <td>@Model.UserSessions[i].sessionId</td>

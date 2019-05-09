@@ -5,11 +5,14 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace MSFT.WVD.Monitoring.Common.Services
 {
@@ -22,46 +25,122 @@ namespace MSFT.WVD.Monitoring.Common.Services
         {
             Configuration = configuration;
             _logger = logger?.CreateLogger<LogAnalyticsService>() ?? throw new ArgumentNullException(nameof(logger));
+
+           // Environment.SetEnvironmentVariable("QueryPath", "D:\\Test\\metrics.xml");
         }
 
-        public JObject PrepareBatchQueryRequest(string hostName)
+        public JObject PrepareBatchQueryRequest(string hostName, out List<Counter> counters)
         {
+            string path = Environment.GetEnvironmentVariable("QueryPath1", EnvironmentVariableTarget.User);
+            counters = new List<Counter>();
             string WorkspaceID = Configuration.GetSection("AzureAd").GetSection("WorkspaceID").Value;
-            VMPerfCurrentStateQueries vMPerfQueries = new VMPerfCurrentStateQueries();
-            JArray jArray = new JArray();
-            int id = 0;
-            foreach (FieldInfo item in vMPerfQueries.GetType().GetFields())
+
+            JArray jArrayQry = new JArray();
+
+            //get queries from xml
+            XmlDocument xDoc = new XmlDocument();
+            xDoc.PreserveWhitespace = false;
+            // xDoc.Load(@"D:\\Github\\RDS-Templates\\wvd-sh\\wvd-monitoring-ux\\src\\MSFT.WVD.Monitoring\Query\metrics.xml"); // path should come from environment variable
+            xDoc.Load(path); // path should come from environment variable
+            foreach (XmlNode node in xDoc.DocumentElement.ChildNodes)
             {
-                id++;
-                jArray.Add(new JObject() {
-                     new JProperty("id",id),
-                new JProperty("body",new JObject(){
-                    new JProperty("query", item.GetValue(vMPerfQueries).ToString().Replace("[hostName]",hostName)),
-                    new JProperty("timespan","PT1H")
-                }),
-                new JProperty("method","POST"),
-                new JProperty("path","/query"),
-                new JProperty("workspace",WorkspaceID),
+                int id = 0;
+                // first node is the url ... have to go to nexted loc node 
+                foreach (XmlNode locNode in node)
+                {
+                    id++;
+                    string query = "", drillquery = "", timespan = "";
+                    foreach (XmlNode childnode in locNode)
+                    {
+                        if (childnode.Name == "Query")
+                        {
+                            query = childnode.InnerText.Replace(System.Environment.NewLine, "").Trim();
+
+                        }
+
+                        if (childnode.Name == "Drilldown")
+                        {
+
+                            drillquery = childnode.InnerText.Replace(System.Environment.NewLine, "").Trim();
+                        }
+
+                        if (childnode.Name == "timespan")
+                        {
+                            timespan = childnode.InnerText.Replace(System.Environment.NewLine, "").Trim();
+                        }
+                    }
+
+                    //    if(!string.IsNullOrEmpty(drillquery))
+                    //    {
+                    //        jArrayQry.Add(new JObject() {
+                    //        new JProperty("id",id++),
+                    //        new JProperty("body",new JObject(){
+                    //        new JProperty("query",String.Format(drillquery,"'"+hostName+"'")),
+                    //        new JProperty("timespan",timespan)
+                    //    }),
+                    //    new JProperty("method","POST"),
+                    //    new JProperty("path","/query"),
+                    //    new JProperty("workspace",WorkspaceID),
+                    //});
+                    // }
+
+                    jArrayQry.Add(new JObject() {
+                        new JProperty("id",id),
+                        new JProperty("body",new JObject(){
+                        new JProperty("query",String.Format(query,"'"+hostName+"'").Trim()),
+                        new JProperty("timespan",timespan)
+                    }),
+                    new JProperty("method","POST"),
+                    new JProperty("path","/query"),
+                    new JProperty("workspace",WorkspaceID),
                 });
+
+                    counters.Add(new Counter()
+                    {
+                        id = id,
+                        ObjectName = locNode.Name
+
+                    });
+
+                }
             }
+
+
+            //VMPerfCurrentStateQueries vMPerfQueries = new VMPerfCurrentStateQueries();
+            //JArray jArray = new JArray();
+            //int id = 0;
+            //foreach (FieldInfo item in vMPerfQueries.GetType().GetFields())
+            //{
+            //    id++;
+            //    jArray.Add(new JObject() {
+            //         new JProperty("id",id),
+            //    new JProperty("body",new JObject(){
+            //        new JProperty("query", item.GetValue(vMPerfQueries).ToString().Replace("[hostName]",hostName)),
+            //        new JProperty("timespan","PT1H")
+            //    }),
+            //    new JProperty("method","POST"),
+            //    new JProperty("path","/query"),
+            //    new JProperty("workspace",WorkspaceID),
+            //    });
+            //}
             var queryPayLoad = new JObject();
-            queryPayLoad.Add("requests", jArray);
+            queryPayLoad.Add("requests", jArrayQry);
             return queryPayLoad;
         }
         public async Task<List<Counter>> ExecuteLogAnalyticsQuery(string refreshToken, string hostName)
         {
 
-            List<Counter> counters  = new List<Counter>();
+            //  List<Counter> counters = new List<Counter>();
 
             string loganalyticUrl = Configuration.GetSection("configurations").GetSection("LogAnalytic_URL").Value;
             string tokenval = _commonService.GetAccessToken(refreshToken, loganalyticUrl);
             JObject obj = JObject.Parse(tokenval);
             var accesstoken = (string)obj["access_token"];
             VMPerformance vMPerformance = new VMPerformance();
-            var body= new JObject();
-           
-                 body = PrepareBatchQueryRequest(hostName);
-           
+            var body = new JObject();
+            List<Counter> counters = new List<Counter>();
+            body = PrepareBatchQueryRequest(hostName, out counters);
+
             string url = "https://api.loganalytics.io/v1/$batch";
             using (var client = new HttpClient())
             {
@@ -75,38 +154,36 @@ namespace MSFT.WVD.Monitoring.Common.Services
                 {
                     if (item["status"].ToString() == "200")
                     {
-                        if (item["body"]["tables"] != null && item["body"]["tables"][0]["rows"] != null && item["body"]["tables"][0]["rows"].ToString()!="[]" && item["body"]["tables"][0]["rows"][0] != null)
+                        if (item["body"]["tables"] != null && item["body"]["tables"][0]["rows"] != null && item["body"]["tables"][0]["rows"].ToString() != "[]" && item["body"]["tables"][0]["rows"].Count() > 0)
                         {
-                            var counter = new Counter()
-                            {
-                                ObjectName = item["body"]["tables"][0]["rows"][0][0].ToString(),
-                                CounterName = item["body"]["tables"][0]["rows"][0][1].ToString(),
-                                avg = (long)item["body"]["tables"][0]["rows"][0][2],
-                                Value = (long)item["body"]["tables"][0]["rows"][0][3],
-                                Computer = (string)item["body"]["tables"][0]["rows"][0][4],
-                                Status = (bool)item["body"]["tables"][0]["rows"][0][5],
-                            };
                            
-                               counters.Add(counter);
 
-                          
+                            decimal avg = (decimal)item["body"]["tables"][0]["rows"][0][0];
+                            counters.Where(x => x.id == (int)item["id"])
+               .Select(x => { x.avg = avg; x.Value = (decimal)item["body"]["tables"][0]["rows"][0][1]; x.Status = item["body"]["tables"][0]["rows"][0][3].ToString(); return x; })
+               .ToList();
+
                         }
+
+
+
+
                     }
                 }
             }
             return counters;
         }
-        public async Task<VMPerformance> GetSessionHostPerformance(string refreshToken, string hostName,  string startTime=null, string endTime=null)
+        public async Task<VMPerformance> GetSessionHostPerformance(string refreshToken, string hostName, string startTime = null, string endTime = null)
         {
             _logger.LogInformation($" Enter into GetSessionHostPerformance() to get log data for {hostName} ");
 
             return new VMPerformance()
             {
                 CurrentStateCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName)
-               
+
             };
         }
 
-        
+
     }
 }

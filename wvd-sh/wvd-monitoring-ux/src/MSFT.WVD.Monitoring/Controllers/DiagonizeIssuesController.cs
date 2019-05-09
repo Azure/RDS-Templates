@@ -68,7 +68,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     if (viewData.ManagementActivity?.Count > 0 && viewData.ManagementActivity[0].ErrorDetails != null)
                     {
                         _logger.LogError($"Error Occured : {viewData.ManagementActivity[0].ErrorDetails.Message}");
-                        return RedirectToAction("Error", "Home", new ErrorDetails() { Message = viewData.ManagementActivity[0].ErrorDetails.Message });
+                        return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ManagementActivity[0].ErrorDetails.StatusCode, Message = viewData.ManagementActivity[0].ErrorDetails.Message });
                     }
                     viewData.ActivityType = viewData.ManagementActivity?.Count() > 0 ? ActivityType.Management : ActivityType.None;
                 }
@@ -81,7 +81,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     if (viewData.ConnectionActivity?.Count > 0 && viewData.ConnectionActivity[0].ErrorDetails != null)
                     {
                         _logger.LogError($"Error Occured : {viewData.ConnectionActivity[0].ErrorDetails.Message}");
-                        return RedirectToAction("Error", "Home", new ErrorDetails() { Message = viewData.ConnectionActivity[0].ErrorDetails.Message });
+                        return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ConnectionActivity[0].ErrorDetails.StatusCode, Message = viewData.ConnectionActivity[0].ErrorDetails.Message });
                     }
 
                     viewData.ActivityType = viewData.ConnectionActivity?.Count() > 0 ? ActivityType.Connection : ActivityType.None;
@@ -94,7 +94,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     if (viewData.FeedActivity?.Count > 0 && viewData.FeedActivity[0].ErrorDetails != null)
                     {
                         _logger.LogError($"Error Occured : {viewData.FeedActivity[0].ErrorDetails.Message}");
-                        return RedirectToAction("Error", "Home", new ErrorDetails() { Message = viewData.FeedActivity[0].ErrorDetails.Message });
+                        return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.FeedActivity[0].ErrorDetails.StatusCode, Message = viewData.FeedActivity[0].ErrorDetails.Message });
                     }
                     viewData.ActivityType = viewData.FeedActivity?.Count() > 0 ? ActivityType.Feed : ActivityType.None;
                 }
