@@ -28,8 +28,7 @@ namespace MSFT.WVD.Monitoring
                 {
                     logging.AddConsole(options => options.IncludeScopes = true);
                     logging.AddDebug();
-                }).UseContentRoot(Directory.GetCurrentDirectory())
-              
+                })
                 .UseStartup<Startup>()
                 .Build();
     }

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.FileProviders;
 using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Models;
 using Newtonsoft.Json;
@@ -27,11 +28,11 @@ namespace MSFT.WVD.Monitoring.Controllers
     public class HomeController : Controller
     {
         private readonly IMemoryCache _cache;
-        private IHostingEnvironment _hostingEnvironment;
-        public HomeController(IMemoryCache cache, IHostingEnvironment environment)
+        private readonly IFileProvider _fileProvider;
+        public HomeController(IMemoryCache cache , IFileProvider fileProvider)
         {
             _cache = cache;
-            _hostingEnvironment = environment;
+            _fileProvider = fileProvider;
         }
         public IActionResult Index()
         {
@@ -51,8 +52,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 //get queries from xml
                 XmlDocument xDoc = new XmlDocument();
                 xDoc.PreserveWhitespace = false;
-                var path = Path.Combine(_hostingEnvironment.ContentRootPath, "metrics.xml");
-                xDoc.Load(path);
+                var path = _fileProvider.GetFileInfo("metrics.xml");
+                xDoc.Load(path.PhysicalPath);
                 HttpContext.Session.Set<XmlDocument>("LogAnalyticQuery", xDoc);
                 /****following code is for temporary***/
 
