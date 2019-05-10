@@ -12,7 +12,6 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "QueryFilePath": "D:\\Test\\metrics.xml",
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
