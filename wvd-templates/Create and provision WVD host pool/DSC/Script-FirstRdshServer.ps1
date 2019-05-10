@@ -117,7 +117,9 @@ else
 
     # Set context to the appropriate tenant group
     Write-Log "Running switching to the $definedTenantGroupName context"
-    Set-RdsContext -TenantGroupName $definedTenantGroupName
+    if ($definedTenantGroupName -ne "Default Tenant Group") {
+        Set-RdsContext -TenantGroupName $definedTenantGroupName
+    }
     try
     {
         $tenants = Get-RdsTenant -Name "$TenantName"
@@ -134,7 +136,7 @@ else
 
     # Checking if host pool exists. If not, create a new one with the given HostPoolName
     Write-Log -Message "Checking Hostpool exists inside the Tenant"
-    $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
+    $HostPool = Get-RdsHostPool -TenantName "$TenantName" | Where-Object { $_.HostPoolName -eq "$HostPoolName"}
     $ApplicationGroupName = "Desktop Application Group"
     if ($HostPool)
     {
