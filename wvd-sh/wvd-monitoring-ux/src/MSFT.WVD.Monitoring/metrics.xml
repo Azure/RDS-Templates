@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <PoolMetrics>
+    <Processor>
+      <Query>
+      Perf | where Computer in({0})
+      | where ObjectName == "Processor Information"
+      | where TimeGenerated > ago(5m)
+      | summarize Value = avg(CounterValue) by Computer
+      | project avg = 0, Value, Computer, Status = iff(Value> 80, 0,2)
+      </Query>
+      <timespan>PT2H</timespan>
+      <Tooltip>Unhealthy:More than 80% in the last 30 minutes.</Tooltip>
+    </Processor>
+    <Disk>
+      <Query>
+      Perf | where Computer in({0})
+      | where ObjectName == "LogicalDisk"
+      | where CounterName == "% Free Space"
+      | where InstanceName == "C:"
+      | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer
+      | project avg = 0, Value, Computer, Status = iff(Value &lt; 40, 0, 2)
+      </Query>
+      <timespan>PT2H</timespan>
+      <Tooltip>Unhealthy:Less than 80% in the last 15 minutes.</Tooltip>
+    </Disk>
+    <Memory>
+      <Query>
+      Perf | where Computer in({0})
+      | where ObjectName == "Memory"
+      | where CounterName == "Available MBytes"
+      | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer
+      | project avg = 0, Value, Computer, Status = case(Value &lt; 1000, 0, Value &lt; 2000,1, 2)
+      </Query>
+      <Drilldown>
+      Perf
+      | where Computer == {0}
+      | where ObjectName == "Memory"
+      | where CounterName == "Available MBytes"
+      </Drilldown>
+      <timespan>PT2H</timespan>
+      <Tooltip>Unhealthy:Less than 1GB in the last 15 minutes.</Tooltip>
+    </Memory>
+	<User>
+	<Query>
+	Perf | where Computer in({0}) | where ObjectName == 'User Input Delay per Session' | where CounterName == 'Max Input Delay' |  summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer  | project   avg = 0, Value, Computer, Status = iff(Value > 2000 , 0, 2)
+	</Query>
+	 <timespan>PT2H</timespan>
+	</User>
+	
+  </PoolMetrics>
+</configuration>

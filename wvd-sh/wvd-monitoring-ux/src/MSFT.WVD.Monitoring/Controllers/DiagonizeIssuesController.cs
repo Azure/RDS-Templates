@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -214,9 +215,8 @@ namespace MSFT.WVD.Monitoring.Controllers
             }
 
             var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
-            string startTime = data.ConnectionActivity.startTime != null ? Convert.ToDateTime(data.ConnectionActivity.startTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
-            string endTime = data.ConnectionActivity.endTime != null ? Convert.ToDateTime(data.ConnectionActivity.endTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
-            VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, startTime, endTime);
+            var xDoc = HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery");
+            VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, xDoc);
 
 
             return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
@@ -248,9 +248,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 //bool ShowMessageForm = true;
 
                 var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
-                string startTime = data.ConnectionActivity.startTime != null ? Convert.ToDateTime(data.ConnectionActivity.startTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
-                string endTime = data.ConnectionActivity.endTime != null ? Convert.ToDateTime(data.ConnectionActivity.endTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") : null;
-                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, startTime, endTime);
+                var xDoc = HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery");
+                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, xDoc);
 
                 if (string.IsNullOrEmpty(data.Message) && string.IsNullOrEmpty(data.Title))
                 {
@@ -366,8 +365,9 @@ namespace MSFT.WVD.Monitoring.Controllers
 
                 //get vm performance 
                 var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
-               
-                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, ConnectionActivity[0].SessionHostName);
+                var xDoc=HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery"); 
+
+                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, ConnectionActivity[0].SessionHostName, xDoc);
 
                 return View(new DiagnoseDetailPageViewModel()
                 {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -13,10 +14,12 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace MSFT.WVD.Monitoring.Controllers
 {
@@ -24,10 +27,11 @@ namespace MSFT.WVD.Monitoring.Controllers
     public class HomeController : Controller
     {
         private readonly IMemoryCache _cache;
-
-        public HomeController(IMemoryCache cache)
+        private IHostingEnvironment _hostingEnvironment;
+        public HomeController(IMemoryCache cache, IHostingEnvironment environment)
         {
             _cache = cache;
+            _hostingEnvironment = environment;
         }
         public IActionResult Index()
         {
@@ -43,7 +47,17 @@ namespace MSFT.WVD.Monitoring.Controllers
                 //    //HttpContext.Session.Set("tenantGroups", roleAssignments.Select(x => x.tenantGroupName));
                 //}
 
+
+                //get queries from xml
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.PreserveWhitespace = false;
+                var path = Path.Combine(_hostingEnvironment.ContentRootPath, "metrics.xml");
+                xDoc.Load(path);
+                HttpContext.Session.Set<XmlDocument>("LogAnalyticQuery", xDoc);
                 /****following code is for temporary***/
+
+
+
                 var roleassignment = new RoleAssignment
                 {
 

@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 
+
 namespace MSFT.WVD.Monitoring.Common.Services
 {
     public class LogAnalyticsService
@@ -26,22 +27,21 @@ namespace MSFT.WVD.Monitoring.Common.Services
             Configuration = configuration;
             _logger = logger?.CreateLogger<LogAnalyticsService>() ?? throw new ArgumentNullException(nameof(logger));
 
-           // Environment.SetEnvironmentVariable("QueryPath", "D:\\Test\\metrics.xml");
+          
         }
 
-        public JObject PrepareBatchQueryRequest(string hostName, out List<Counter> counters)
+        public JObject PrepareBatchQueryRequest(string hostName, out List<Counter> counters, XmlDocument xDoc)
         {
-            string path = Environment.GetEnvironmentVariable("QueryPath1", EnvironmentVariableTarget.User);
+           // string path = "";// Application.StartupPath.ToString();
             counters = new List<Counter>();
             string WorkspaceID = Configuration.GetSection("AzureAd").GetSection("WorkspaceID").Value;
 
             JArray jArrayQry = new JArray();
 
-            //get queries from xml
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.PreserveWhitespace = false;
-            // xDoc.Load(@"D:\\Github\\RDS-Templates\\wvd-sh\\wvd-monitoring-ux\\src\\MSFT.WVD.Monitoring\Query\metrics.xml"); // path should come from environment variable
-            xDoc.Load(path); // path should come from environment variable
+            ////get queries from xml
+            //XmlDocument xDoc = new XmlDocument();
+            //xDoc.PreserveWhitespace = false;
+            //xDoc.Load(path); // path should come from environment variable
             foreach (XmlNode node in xDoc.DocumentElement.ChildNodes)
             {
                 int id = 0;
@@ -127,11 +127,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
             queryPayLoad.Add("requests", jArrayQry);
             return queryPayLoad;
         }
-        public async Task<List<Counter>> ExecuteLogAnalyticsQuery(string refreshToken, string hostName)
+        public async Task<List<Counter>> ExecuteLogAnalyticsQuery(string refreshToken, string hostName, XmlDocument xmlDocument)
         {
-
-            //  List<Counter> counters = new List<Counter>();
-
             string loganalyticUrl = Configuration.GetSection("configurations").GetSection("LogAnalytic_URL").Value;
             string tokenval = _commonService.GetAccessToken(refreshToken, loganalyticUrl);
             JObject obj = JObject.Parse(tokenval);
@@ -139,7 +136,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             VMPerformance vMPerformance = new VMPerformance();
             var body = new JObject();
             List<Counter> counters = new List<Counter>();
-            body = PrepareBatchQueryRequest(hostName, out counters);
+            body = PrepareBatchQueryRequest(hostName, out counters, xmlDocument);
 
             string url = "https://api.loganalytics.io/v1/$batch";
             using (var client = new HttpClient())
@@ -164,22 +161,18 @@ namespace MSFT.WVD.Monitoring.Common.Services
                .ToList();
 
                         }
-
-
-
-
                     }
                 }
             }
             return counters;
         }
-        public async Task<VMPerformance> GetSessionHostPerformance(string refreshToken, string hostName, string startTime = null, string endTime = null)
+        public async Task<VMPerformance> GetSessionHostPerformance(string refreshToken, string hostName,  XmlDocument xmlDocument)
         {
             _logger.LogInformation($" Enter into GetSessionHostPerformance() to get log data for {hostName} ");
 
             return new VMPerformance()
             {
-                CurrentStateCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName)
+                CurrentStateCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName, xmlDocument)
 
             };
         }
