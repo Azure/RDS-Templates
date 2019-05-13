@@ -19,4 +19,10 @@
     <ProjectReference Include="..\MSFT.WVD.Monitoring.Common\MSFT.WVD.Monitoring.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="metrics.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

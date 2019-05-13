@@ -135,25 +135,29 @@
             }
         }
 
-        <div class="ms-Pivot">
-            <ul class="ms-Pivot-links">
-                @{
-                    var vmPerfStyle = Model.ShowConnectedUser == true ? "display:none;" : "display:block;";
-                    var vmstyle = Model.ShowConnectedUser == true ? "ms-Pivot-link" : "ms-Pivot-link is-selected";
-                    var userStyle = Model.ShowConnectedUser == true ? "ms-Pivot-link is-selected" : "ms-Pivot-link";
 
-                    <li class="@vmstyle" data-content="files" title="VM Perfomance" tabindex="1" id="vmperformance">
-                        VM Performance
-                    </li>
-                    <li class="@userStyle" data-content="recent" title="User Sessions" tabindex="1" id="UserConnected">
-                        Users Connected
-                    </li>
-                }
+
+        <section>
+            @{
+                var tab1Style = Model.ShowConnectedUser ? "" : "active";
+                var tabPan1Style = Model.ShowConnectedUser ? "tab-pane" : "tab-pane active";
+                var tab2Style = Model.ShowConnectedUser ? "active" : "";
+                var tabPan2Style = Model.ShowConnectedUser ? "tab-pane active" : "tab-pane";
+
+
+            }
+            <ul id="nav-tab" class="nav tab-links">
+                <li class="@tab1Style">
+                    <a href="#tab1">VM Performance</a>
+                </li>
+                <li class="@tab2Style">
+                    <a href="#tab2">User Connected</a>
+                </li>
             </ul>
-            @if (Model.ShowConnectedUser == false)
-            {
-                <div class="ms-Pivot-content" data-content="files">
-                    <h4> VM Performance current state </h4>
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div class="@tabPan1Style" id="tab1">
+                    <h4> VM Performance : Current state </h4>
                     <table class="ms-Table activity-details-table">
                         <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
                         @foreach (var item in Model.VMPerformance.CurrentStateCounters)
@@ -165,12 +169,12 @@
                             {
                                 style = "background-color: #dff6dd";
                             }
-                            if(item.Status == "1")
+                            if (item.Status == "1")
                             {
                                 style = "background-color: #ffca33";
 
                             }
-                            if(item.Status == "2")
+                            if (item.Status == "2")
                             {
                                 style = "background-color: #fed9cc";
                             }
@@ -192,129 +196,202 @@
                         }
                     </table>
                 </div>
-            }
-
-
-            <div class="ms-Pivot-content" data-content="recent" id="divSessionContent">
-                @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
-                {
-                    <div>
-                        <table class="ms-Table">
-                            <thead>
-                                <tr>
-                                    <th>Select</th>
-                                    <th>Session ID</th>
-                                    <th>User UPN</th>
-                                </tr>
-                            </thead>
-                            @{
-                                for (int i = 0; i < Model.UserSessions.Count; i++)
-                                {
-                                    bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"> <!---->
-                                                <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
-                                                <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
-                                                <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
-                                                <input asp-for="@Model.UserSessions[i].sessionHostName" type="hidden">
-                                                <input asp-for="@Model.UserSessions[i].userPrincipalName" type="hidden">
-                                                <input asp-for="@Model.UserSessions[i].sessionId" type="hidden">
-                                            </td>
-                                            <td>@Model.UserSessions[i].sessionId</td>
-                                            <td><label> @Model.UserSessions[i].userPrincipalName  </label></td>
-                                        </tr>
-                                    </tbody>
+                <div class="@tabPan2Style" id="tab2">
+                    <h4> User Sessions </h4>
+                    @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
+                    {
+                        <div>
+                            <table class="ms-Table">
+                                <thead>
+                                    <tr>
+                                        <th>Select</th>
+                                        <th>Session ID</th>
+                                        <th>User UPN</th>
+                                    </tr>
+                                </thead>
+                                @{
+                                    for (int i = 0; i < Model.UserSessions.Count; i++)
+                                    {
+                                        bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"> <!---->
+                                                    <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
+                                                    <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
+                                                    <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
+                                                    <input asp-for="@Model.UserSessions[i].sessionHostName" type="hidden">
+                                                    <input asp-for="@Model.UserSessions[i].userPrincipalName" type="hidden">
+                                                    <input asp-for="@Model.UserSessions[i].sessionId" type="hidden">
+                                                </td>
+                                                <td>@Model.UserSessions[i].sessionId</td>
+                                                <td><label> @Model.UserSessions[i].userPrincipalName  </label></td>
+                                            </tr>
+                                        </tbody>
+                                    }
                                 }
-                            }
-                        </table>
-                    </div>
-                    <div>
-                        <p class="error-msg">@ViewBag.ErrorMsg</p>
-                    </div>
-                    <div class="anchorlinksdiv" id="anchorlinksdiv">
-                        <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
-                            <span class="ms-Button-label labelcolor">Logoff user(s)</span>
-                        </button>
-                        <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
-                            <span class="ms-Button-label labelcolor">Message user(s)</span>
-                        </button>
-                    </div>
-                }
-                else
-                {
-                    <div>
-                        <h4>There is no active user sessions.</h4>
-                    </div>
-                }
-                @if (Model.ShowMessageForm)
-                {
-                    <div id="sendmessagediv">
-                        <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
-                        <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
-                        <span asp-validation-for="@Model.Title" id="validationtitle">@ViewBag.TitleErrorMsg</span>
-                        <br />
-                        <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
-                        <input asp-for="@Model.Message" class="form-control m-b-10 inputform" type="text" multiple="multiple" id="texterror" />
-                        <span asp-validation-for="@Model.Message" id="validationmsg"> @ViewBag.MessageErrorMsg </span>
-                        <br />
-                        <br />
-                        <button type="reset" class="ms-Button">
-                            <span class="ms-Button-label">Cancel</span>
-                        </button>
-                        <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
-                            <span class="ms-Button-label">Send</span>
-                        </button>
-                    </div>
-                }
+                            </table>
+                        </div>
+                        <div>
+                            <p class="error-msg">@ViewBag.ErrorMsg</p>
+                        </div>
+                        <div class="anchorlinksdiv" id="anchorlinksdiv">
+                            <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
+                                <span class="ms-Button-label labelcolor">Logoff user(s)</span>
+                            </button>
+                            <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
+                                <span class="ms-Button-label labelcolor">Message user(s)</span>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div>
+                            <h4>There is no active user sessions.</h4>
+                        </div>
+                    }
+                    @if (Model.ShowMessageForm)
+                    {
+                        <div id="sendmessagediv">
+                            <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
+                            <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
+                            <span asp-validation-for="@Model.Title" id="validationtitle">@ViewBag.TitleErrorMsg</span>
+                            <br />
+                            <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
+                            <input asp-for="@Model.Message" class="form-control m-b-10 inputform" type="text" multiple="multiple" id="texterror" />
+                            <span asp-validation-for="@Model.Message" id="validationmsg"> @ViewBag.MessageErrorMsg </span>
+                            <br />
+                            <br />
+                            <button type="reset" class="ms-Button">
+                                <span class="ms-Button-label">Cancel</span>
+                            </button>
+                            <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
+                                <span class="ms-Button-label">Send</span>
+                            </button>
+                        </div>
+                    }
+
+                </div>
             </div>
-        </div>
+
+        </section>
     </form>
 </div>
+<style>
+  
+</style>
 <script type="text/javascript" async>
 
     (function () {
-        document.getElementById("Diagnosebreadcrumb").style.display = "block";
-        var PivotElements = document.querySelectorAll(".ms-Pivot");
-        for (var i = 0; i < PivotElements.length; i++) {
-            new fabric['Pivot'](PivotElements[i]);
-        }
+        //document.getElementById("Diagnosebreadcrumb").style.display = "block";
+        //var PivotElements = document.querySelectorAll(".ms-Pivot");
+        //for (var i = 0; i < PivotElements.length; i++) {
+        //    new fabric['Pivot'](PivotElements[i]);
+        //}
 
-        var button = document.getElementById("UserConnected"),
-            paragraph = document.getElementById("sendmessagediv");
-        button.addEventListener("click", function () {
-            //if (paragraph.style.display == 'block') {
-            //    paragraph.style.display = 'none';
+        //var button = document.getElementById("UserConnected"),
+        //    paragraph = document.getElementById("sendmessagediv");
+        //button.addEventListener("click", function () {
+        //    //if (paragraph.style.display == 'block') {
+        //    //    paragraph.style.display = 'none';
 
-            //} else {
-            //    paragraph.style.display = 'none';
-            //}
-            //document.getElementById("divSessionContent").hidden = false;
-            document.getElementById("sendmessagediv").hidden = true;
-        }, false);
+        //    //} else {
+        //    //    paragraph.style.display = 'none';
+        //    //}
+        //    //document.getElementById("divSessionContent").hidden = false;
+        //    console.log(document.getElementById("divSessionContent").style.display, "before");
+        //    document.getElementById("divSessionContent").style.display = " block !important;";
+        //    document.getElementById("divSessionContent").hidden = false;
+        //    var myDiv = document.getElementById("divSessionContent");
+        //    myDiv.setAttribute("style", "display: block !important;");
+        //    console.log(document.getElementById("divSessionContent").style.display, "after");
+
+        //    document.getElementById("sendmessagediv").hidden = true;
+        //}, false);
 
         //var button1 = document.getElementById("vmperformance"),
-        //    divVmContent1 = document.getElementById("divVmContent");
+        //    divVmContent1 = document.getElementById("divVmPerformance");
 
         //button1.addEventListener("click", function () {
         //    console.log(divVmContent1);
-        //  //  document.getElementById("divVmContent").hidden = false;
+        //    document.getElementById("divVmPerformance").style.display = "block !important";
+        //    document.getElementById("divVmPerformance").hidden = false;
         //}, false);
+
+        //var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
+        //for (var i = 0; i < CheckBoxElements.length; i++) {
+        //    new fabric['CheckBox'](CheckBoxElements[i]);
+        //}
+
+        //document.getElementById("texttitle")
+        //    .addEventListener("focus", function () {
+        //        document.getElementById("validationtitle").hidden = true;
+        //    }, false);
+        //document.getElementById("texterror")
+        //    .addEventListener("focus", function () {
+        //        document.getElementById("validationmsg").hidden = true;
+        //    }, false);
+
+        //var msgbardiv = document.getElementById("msgbardiv");
+        //if (msgbardiv != null) {
+        //    var chk = document.getElementsByClassName("chkbox");
+        //    for (var i = 0; i < chk.length; i++) {
+        //        document.getElementById(i + '-checkbox').checked = false;
+        //    }
+        //    document.getElementById("texttitle").value = "";
+        //    document.getElementById("texterror").value = "";
+        //    document.getElementById("sendmessagediv").hidden = true;
+        //}
+
+
+
+    })();
+
+</script>
+<script type="text/javascript">
+
+    (function () {
+        document.getElementById("Diagnosebreadcrumb").style.display = "block";
+
+        function onTabClick(event) {
+
+
+            var actives = document.querySelectorAll('.active');
+
+            // deactivate existing active tab and panel
+            for (var i = 0; i < actives.length; i++) {
+                actives[i].className = actives[i].className.replace('active', '');
+            }
+
+            // activate new tab and panel
+            event.target.parentElement.className += ' active';
+            document.getElementById(event.target.href.split('#')[1]).className += ' active';
+
+            var activeId = document.getElementById(event.target.href.split('#')[1]).id;
+            if (activeId == "tab2") {
+                document.getElementById("sendmessagediv").style.display = "none";
+            }
+            else {
+                document.getElementById("sendmessagediv").style.display = "block";
+            }
+
+        }
+
+        var el = document.getElementById('nav-tab');
+
+        el.addEventListener('click', onTabClick, false);
+
+        var btnUser = document.getElementById("UserConnected");
+        if (btnUser != null || btnUser != undefined) {
+            btnUser.addEventListener("click", function () {
+                document.getElementById("sendmessagediv").style.display = "block";
+            });
+        }
 
         var CheckBoxElements = document.querySelectorAll(".ms-CheckBox");
         for (var i = 0; i < CheckBoxElements.length; i++) {
             new fabric['CheckBox'](CheckBoxElements[i]);
         }
-
-        document.getElementById("texttitle")
-            .addEventListener("focus", function () {
-                document.getElementById("validationtitle").hidden = true;
-            }, false);
-        document.getElementById("texterror")
-            .addEventListener("focus", function () {
-                document.getElementById("validationmsg").hidden = true;
-            }, false);
 
         var msgbardiv = document.getElementById("msgbardiv");
         if (msgbardiv != null) {
@@ -327,6 +404,14 @@
             document.getElementById("sendmessagediv").hidden = true;
         }
 
-    })();
+        document.getElementById("texttitle")
+            .addEventListener("focus", function () {
+                document.getElementById("validationtitle").hidden = true;
+            }, false);
+        document.getElementById("texterror")
+            .addEventListener("focus", function () {
+                document.getElementById("validationmsg").hidden = true;
+            }, false);
 
+    })();
 </script>

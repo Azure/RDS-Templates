@@ -323,7 +323,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     Message = data.Message,
                     SendMsgStatuses = messageStatus,
                     ConnectionActivity = data.ConnectionActivity,
-                    ShowConnectedUser = false,
+                    ShowConnectedUser = true,
                     ShowMessageForm = true,
                     VMPerformance= vMPerformance
                 });

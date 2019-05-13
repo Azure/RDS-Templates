@@ -52,7 +52,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 //get queries from xml
                 XmlDocument xDoc = new XmlDocument();
                 xDoc.PreserveWhitespace = false;
-                var path = _fileProvider.GetFileInfo("metrics.xml");
+                var path = _fileProvider.GetFileInfo("/metrics.xml");
                 xDoc.Load(path.PhysicalPath);
                 HttpContext.Session.Set<XmlDocument>("LogAnalyticQuery", xDoc);
                 /****following code is for temporary***/
