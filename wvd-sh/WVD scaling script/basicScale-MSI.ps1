@@ -1,4 +1,4 @@
-<#
+﻿<#
 Copyright 2018 Microsoft
 Version 1.0 June 2018
 .SYNOPSIS
@@ -15,10 +15,39 @@ PS C:\>Install-Module Microsoft.RDInfra.RDPowershell  -AllowClobber
 #>
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+#Function for convert from UTC to Local time
+function localtimeConvert{
+param(
+$timeDifferenceInHours
+)
+
+        $UniversalTime =(Get-Date).ToUniversalTime()
+        $TimeDifferenceMinutes = 0 
+        if($TimeDifferenceInHours -match ":")
+        {
+        $TimeDifferenceHours = $TimeDifferenceInHours.Split(":")[0]
+        $TimeDifferenceMinutes = $TimeDifferenceInHours.Split(":")[1]
+        }
+        else
+        {
+        $TimeDifferenceHours = $TimeDifferenceInHours
+        }
+        #Azure is using UTC time, justify it to the local time
+        $ConvertedTime = $UniversalTime.AddHours($TimeDifferenceHours).AddMinutes($TimeDifferenceMinutes)
+        return $ConvertedTime
+
+
+
+}
+
+
 <#
 .SYNOPSIS
 Function for writing the log
 #>
+
+
 function Write-Log {
   param(
     [int]$level
@@ -27,7 +56,7 @@ function Write-Log {
     ,[string]$logname = $rdmiTenantlog
     ,[string]$color = "white"
   )
-  $time = Get-Date
+  $time = localtimeConvert $timeDifferenceInHours
   Add-Content $logname -Value ("{0} - [{1}] {2}" -f $time,$severity,$Message)
   if ($interactive) {
     switch ($severity) {
@@ -70,7 +99,7 @@ function Write-UsageLog {
     [bool]$depthBool = $True,
     [string]$logfilename = $RdmiTenantUsagelog
   )
-  $time = Get-Date
+  $time = localtimeConvert $timeDifferenceInHours 
   if ($depthBool) {
 
 
@@ -128,7 +157,8 @@ $Variable = Get-Content $JsonPath | Out-String | ConvertFrom-Json
 $Variable.RDMIScale.Azure | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { SetScriptVariable -Name $_.Name -Value $_.Value }
 $Variable.RDMIScale.RdmiScaleSettings | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { SetScriptVariable -Name $_.Name -Value $_.Value }
 $Variable.RDMIScale.Deployment | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { SetScriptVariable -Name $_.Name -Value $_.Value }
-
+##### Construct Begin time and End time for the Peak period from utc to local time #####
+$CurrentDateTime = localtimeConvert $timeDifferenceInHours
 
 # Checking WVD Modules are existed or not
 $WVDModules = Get-Module -Name "Microsoft.RDInfra.RDPowershell" -ErrorAction SilentlyContinue
@@ -137,19 +167,28 @@ Install-Module "Microsoft.RDInfra.RDPowershell" -AllowClobber
 }
 
 Import-Module "Microsoft.RDInfra.RDPowershell"
-
 $isServicePrincipalBool = ($isServicePrincipal -eq "True")
 
-#Authenticating to WVD
+# MSI based authentication
+#    - In order to rely on this, please add the MSI accounts as VM contributors at resource group level
 Add-AzureRmAccount -Identity
+
+
+#select the current Azure Subscription specified in the config
+Select-AzureRmSubscription -SubscriptionId $currentAzureSubscriptionId
+
+#Authenticating to WVD
+
+# Building credentials from KeyVault
+$WVDServicePrincipalPwd = (Get-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecretName).SecretValue
+$WVDCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList($Username, $WVDServicePrincipalPwd)
+
 if (!$isServicePrincipalBool) {
   # if standard account is provided login in WVD with that account 
 
 
   try {
-	$WvdSecurepass = (Get-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $KeyName).SecretValue
-    $WvdCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList($Username, $WvdSecurepass)
-    $authentication = Add-RdsAccount -DeploymentUrl $RDBroker -Credential $WvdCredential
+	$authentication = Add-RdsAccount -DeploymentUrl $RDBroker -Credential $WVDCreds
 
   }
   catch {
@@ -166,9 +205,7 @@ else {
 
 
   try {
-    $wvdAppSecurepass = (Get-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $Username).SecretValue
-    $wvdAppCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList($Username, $wvdAppSecurepass)
-    $authentication = Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $AADTenantId -Credential $wvdAppCredential -ServicePrincipal
+    $authentication = Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $AADTenantId -Credential $wvdAppCreds -ServicePrincipal
 
   }
   catch {
@@ -181,58 +218,11 @@ else {
 }
 
 
-#Authenticating to Azure
-#Add-AzureRmAccount -Identity
-
-if (!$isServicePrincipalBool) {
-  # if standard account is provided login in Azure with that account 
-
-
-  try {
-  
-    $AzSecurepass = (Get-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $KeyName).SecretValue
-    $AzCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList($Username, $AzSecurepass)
-    $azureauthentication = Connect-AzureRmAccount -SubscriptionId $currentAzureSubscriptionId -Credential $AzCredential
-    
-  }
-  catch {
-    Write-Log 1 "Failed to authenticate with Azure with standard account: $($_.exception.message)" "Error"
-
-    exit 1
-
-  }
-  $azobj = $azureauthentication | Out-String
-  Write-Log 3 "Authenticating as standard account for Azure. Result: `n$azobj" "Info"
-}
-else {
-  # if service principal account is provided login in Azure with that account 
-  try {
-  
-    $AzAppSecurepass = (Get-AzureKeyVaultSecret -VaultName $KeyVaultName -Name $AADApplicationID).SecretValue
-    $AzAppCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList($AADApplicationID, $AzAppSecurepass)
-    $azureauthentication = Connect-AzureRmAccount -ServicePrincipal -Credential $AzAppCreds -TenantId $AADTenantId
-
-  }
-  catch {
-    Write-Log 1 "Failed to authenticate with Azure with service principal: $($_.exception.message)" "Error"
-
-    exit 1
-  }
-  $azobj = $azureauthentication | Out-String
-  Write-Log 3 "Authenticating as service principal account for Azure. Result:`n$azobj" "Info"
-}
-
-
-
 #Set context to the appropriate tenant group
 Write-Log 1 "Running switching to the $tenantGroupName context" "Info"
 Set-RdsContext -TenantGroupName $tenantGroupName
 
-#select the current Azure Subscription specified in the config
-Select-AzureRmSubscription -SubscriptionId $currentAzureSubscriptionId
-#Set-AzureRmContext -SubscriptionID $currentAzureSubscriptionId
-#Construct Begin time and End time for the Peak period
-$CurrentDateTime = Get-Date
+       
 
 #Splitting session load balancing peak hours
 $BeginPeakHour = $sessionLoadBalancingPeakHours.Split("-")[0]
@@ -247,7 +237,7 @@ $PeakEndDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' 
 
         #check the calculated end time is later than begin time in case of time zone
         if ($PeakEndDateTime -lt $PeakBeginDateTime) {
-          $PeakEndDateTime = $EndPeakDateTime.AddDays(1)
+          $PeakEndDateTime = $PeakEndDateTime.AddDays(1)
         }
 
 		$hostpoolInfo = Get-RdsHostPool -TenantName $tenantName -Name $hostPoolName
@@ -281,7 +271,7 @@ $PeakEndDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' 
 
         #check the calculated end time is later than begin time in case of time zone
         if ($OffPeakEndDateTime -lt $OffPeakBeginDateTime) {
-          $OffPeakEndDateTime = $EndPeakDateTime.AddDays(1)
+          $OffPeakEndDateTime = $OffPeakEndDateTime.AddDays(1)
         }
 
         #Compare session loadbalancing off peak hours and setting up appropriate load balacing type based on offPeakLoadBalancingType
@@ -296,7 +286,7 @@ $PeakEndDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' 
                 }
                 else
                 {
-                Write-Log 3 "Hostpool Load balancer Type in Session Load Balancing off Peak Hours is '$PeakLoadBalancingType Load Balancing'"
+                Write-Log 3 "Hostpool Load balancer Type in Session Load Balancing off Peak Hours is '$OffPeakLoadBalancingType Load Balancing'"
                 Set-RdsHostPool -TenantName $tenantName -Name $hostPoolName -BreadthFirstLoadBalancer -MaxSessionLimit $hostpoolInfo.MaxSessionLimit
                 }
             }
@@ -314,20 +304,7 @@ if ($EndPeakDateTime -lt $BeginPeakDateTime) {
 }
 $hostpoolInfo = Get-RdsHostPool -TenantName $tenantName -Name $hostPoolName
 if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
-  Write-Log 1 "$hostPoolName hostpool loadbalancer type is $($hostpoolInfo.LoadBalancerType)" "Info"
-  if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
-
-    Write-Log 1 "It is in peak hours now" "Info"
-    Write-Log 1 "Peak hours: starting session hosts as needed based on current workloads." "Info"
-    $hostpoolMaxSessionLimit = $hostpoolinfo.MaxSessionLimit
-    #Get the session hosts in the hostpool
-    try {
-      $getHosts = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname | Sort-Object $_.sessionhostname
-    }
-    catch {
-      Write-Log 1 "Failed to retrieve sessionhost in hostpool $($hostPoolName) : $($_.exception.message)" "Info"
-      exit
-    }
+Write-Log 1 "$hostPoolName hostpool loadbalancer type is $($hostpoolInfo.LoadBalancerType)" "Info"
     <#
     if ($hostpoolMaxSessionLimit -eq 2) {
       $sessionlimit = $hostpoolMaxSessionLimit - 1
@@ -338,6 +315,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
       $sessionlimit = [math]::Round($var)
     }
     #>
+     $hostpoolMaxSessionLimit = $hostpoolinfo.MaxSessionLimit
     if ($hostpoolMaxSessionLimit -le 10) {
       $sessionlimit = $hostpoolMaxSessionLimit - 1
     }
@@ -354,6 +332,25 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
     }
 
     Write-Log 1 "Hostpool Maximum Session Limit: $($hostpoolMaxSessionLimit)"
+
+  if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
+
+    Write-Log 1 "It is in peak hours now" "Info"
+    Write-Log 1 "Peak hours: starting session hosts as needed based on current workloads." "Info"
+   
+    #Get the session hosts in the hostpool
+    try {
+      $getHosts = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname | Sort-Object $_.sessionhostname
+    }
+    catch {
+      Write-Log 1 "Failed to retrieve sessionhost in hostpool $($hostPoolName) : $($_.exception.message)" "Info"
+      exit
+    }
+     if(Test-Path -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt)
+            {
+             remove-Item -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+             }
+    
 
     #check the number of running session hosts
     $numberOfRunningHost = 0
@@ -372,9 +369,9 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
         if ($numberOfRunningHost -lt $MinimumNumberOfRDSH) {
           $hostofsessions = $sessionHost.Sessions
           if ($hostpoolMaxSessionLimit -ne $hostofsessions) {
-            if ($sessionhost.Status -eq "UnAvailable") {
+            if ($sessionhost.Status -eq "NoHeartbeat") {
               $sessionhostname = $sessionhost.sessionhostname
-              #Check session host is in Drain Mode
+              #Check session host is in AllownewConnections Mode
               $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
               if (!($checkAllowNewSession.AllowNewSession)) {
                 Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname -AllowNewSession $true
@@ -415,10 +412,10 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
           if ($sessionHost.Sessions -ge $sessionlimit) {
             foreach ($sHost in $getHosts) {
               if ($sHost.Status -eq "Available" -and $sHost.Sessions -eq 0) { break }
-              if ($sHost.Status -eq "Unavailable") {
+              if ($sHost.Status -eq "NoHeartbeat") {
                 Write-Log 1 "Existing Sessionhost Sessions value reached near by hostpool maximumsession limit need to start the session host" "Info"
                 $sessionhostname = $sHost.sessionhostname
-                #Check session host is in Drain Mode
+                #Check session host is in allow new connection mode
                 $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
                 if (!($checkAllowNewSession.AllowNewSession)) {
                   Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname -AllowNewSession $true
@@ -456,12 +453,12 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
     $depthBool = $true
     Write-UsageLog $hostPoolName $numberOfRunningHost $depthBool
   }
-  else {
+else {
     Write-Log 1 "It is Off-peak hours" "Info"
     Write-Log 1 "It is off-peak hours. Starting to scale down RD session hosts..." "Info"
     Write-Log 1 ("Processing hostPool {0}" -f $hostPoolName) "Info"
     try {
-      $getHosts = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName | Sort-Object Sessions
+      $getHosts = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName | Sort-Object Sessions | Sort-Object Status
     }
     catch {
       Write-Log 1 "Failed to retrieve session hosts in hostPool: $($hostPoolName) with error: $($_.exception.message)" "Info"
@@ -474,6 +471,14 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
         $numberOfRunningHost = $numberOfRunningHost + 1
       }
     }
+
+    [int]$definedMinimumnumberofrdsh = $MinimumNumberOfRDSH
+
+     if(Test-Path -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt){
+      [int]$MinimumNumberOfRDSH = Get-Content $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+      }
+    
+      
     if ($numberOfRunningHost -gt $MinimumNumberOfRDSH) {
       foreach ($sessionHost in $getHosts.sessionhostname) {
         if ($numberOfRunningHost -gt $MinimumNumberOfRDSH) {
@@ -483,11 +488,10 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
 
             #ensure the running Azure VM is set as drain mode
             try {
-              #setting host in drain mode
               Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $false -ErrorAction SilentlyContinue
             }
             catch {
-              Write-Log 1 "Failed to set drain mode on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Info"
+              Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Info"
               exit
             }
             #notify user to log off session
@@ -562,26 +566,121 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
               }
             }
 
-            # Ensure the Azure VMs that are off have the AllowNewSession mode set to True
+            #Ensure the Azure VMs that are off have the AllowNewSession mode set to True
             try {
               Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true -ErrorAction SilentlyContinue
             }
             catch {
-              Write-Log 1 "Failed to set drain mode on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
+              Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
               exit 1
             }
 
-            #decrement the number of running session host
+            #Decrement the number of running session host
             $numberOfRunningHost = $numberOfRunningHost - 1
           }
         }
       }
     }
+
+
+    if(Test-Path -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt){
+      [int]$MinimumNumberOfRDSH = Get-Content $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+     $noConnectionsofhost = 0
+      if($numberOfRunningHost -le $MinimumNumberOfRDSH){
+      foreach ($sHost in $getHosts) {
+              if ($sHost.Status -eq "Available" -and $sHost.Sessions -eq 0) 
+               { 
+                $noConnectionsofhost = $noConnectionsofhost+1 
+                 
+                }
+                }
+      if($noconnectionsofhost -ge  2 -and $noconnectionsofhost -ge $definedMinimumnumberofrdsh){
+      [int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - 1
+      Clear-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+      Set-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt $MinimumNumberOfRDSH
+      }
+      }
+     }
+
+
+    $HostpoolMaxSessionLimit = $hostpoolInfo.MaxSessionLimit
+    $HostpoolSessionCount = (Get-RdsUserSession -TenantName $tenantName -HostPoolName $hostPoolName).count
+    if($HostpoolSessionCount -eq 0){
+     Write-Log 1 "HostpoolName:$hostpoolname, NumberofRunnighosts:$numberOfRunningHost" "Info"
+    $depthBool = $true
+    Write-UsageLog -hostpoolName $hostPoolName -vmcount $numberOfRunningHost -depthBool $depthBool
+    Write-Log 3 "End WVD Tenant Scale Optimization." "Info"
+    break
+    }else{
+    $totalSessionsAllowinOffPeak = [int]$MinimumNumberOfRDSH * $HostpoolMaxSessionLimit
+    $totalSessionsAllowinOffPeak = $totalSessionsAllowinOffPeak-$HostpoolMaxSessionLimit
+     
+
+     if($HostpoolSessionCount -ge $totalSessionsAllowinOffPeak){
+    
+      foreach ($sessionHost in $getHosts) {
+      if($sessionHost.Sessions -ge $sessionlimit){
+      
+      $getHosts = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname | Sort-Object Sessions | Sort-Object Status
+      foreach ($sessionhost in $getHosts) {
+        #if (!($sessionHost.Sessions -eq $hostpoolMaxSessionLimit)) {
+          #if ($sessionHost.Sessions -ge $sessionlimit) {
+          $noConnectionsofhost = 0
+            if ($sessionHost.Status -eq "Available" -and $sessionHost.Sessions -eq 0) 
+               { break }
+              if ($sessionHost.Status -eq "NoHeartbeat") {
+                Write-Log 1 "Existing Sessionhost Sessions value reached near by hostpool maximumsession limit need to start the session host" "Info"
+                $sessionhostname = $sessionHost.sessionhostname
+                #Check session host is in allow new connection mode
+                $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
+                if (!($checkAllowNewSession.AllowNewSession)) {
+                  Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname -AllowNewSession $true
+                }
+                $VMName = $sessionHostname.Split(".")[0]
+
+                #start the azureRM VM
+                try {
+                  Get-AzureRmVM | Where-Object { $_.Name -eq $VMName } | Start-AzureRmVM
+                }
+                catch {
+                  Write-Log 1 "Failed to start Azure VM: $($VMName) with error: $($_.exception.message)" "Info"
+                  exit
+                }
+                #wait for the sessionhost is available
+                $IsHostAvailable = $false
+                while (!$IsHostAvailable) {
+
+                  $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost.sessionhostname
+
+                  if ($hoststatus.Status -eq "Available") {
+                    $IsHostAvailable = $true
+                  }
+                }
+                $numberOfRunningHost = $numberOfRunningHost + 1
+                [int]$MinimumNumberOfRDSH = $MinimumNumberOfRDSH + 1
+                if(!(Test-Path -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt)){
+                New-Item -ItemType File -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+                Add-Content $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt $MinimumNumberOfRDSH
+                }else{
+                Clear-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+                Set-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt $MinimumNumberOfRDSH
+                }
+                break
+              }
+            }
+          #}
+        }
+      }
+      }
+      }
+
+
     Write-Log 1 "HostpoolName:$hostpoolname, NumberofRunnighosts:$numberOfRunningHost" "Info"
     $depthBool = $true
-    Write-UsageLog $hostPoolName $numberOfRunningHost $depthBool
+    Write-UsageLog -hostpoolName $hostPoolName -vmcount $numberOfRunningHost -depthBool $depthBool
   }
   Write-Log 3 "End WVD Tenant Scale Optimization." "Info"
+  
 }
 else {
   Write-Log 3 "$hostPoolName hostpool loadbalancer type is $($hostpoolInfo.LoadBalancerType)" "Info"
@@ -606,6 +705,10 @@ else {
       Write-Log 1 "Failed to retrieve user sessions in hostPool:$($hostPoolName) with error: $($_.exception.message)" "Error"
       exit 1
     }
+	
+	 if(Test-Path -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt){
+       remove-Item -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+      }
 
     #check the number of running session hosts
     $numberOfRunningHost = 0
@@ -667,7 +770,7 @@ else {
                   Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true
                 }
               }
-              # we need to calculate available capacity of sessions
+              # Calculate available capacity of sessions
               $vm = Get-AzureRmVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
               $roleSize = Get-AzureRmVMSize -Location $roleInstance.Location | Where-Object { $_.Name -eq $roleInstance.HardwareProfile.VmSize }
               $AvailableSessionCapacity = $AvailableSessionCapacity + $roleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -724,7 +827,7 @@ else {
                     Write-Log 3 "Waiting for Azure VM to start $($roleInstance.Name) ..." "Info"
                   }
                 }
-                # we need to calculate available capacity of sessions
+                # Calculate available capacity of sessions
                 $vm = Get-AzureRmVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
                 $roleSize = Get-AzureRmVMSize -Location $roleInstance.Location | Where-Object { $_.Name -eq $roleInstance.HardwareProfile.VmSize }
                 $AvailableSessionCapacity = $AvailableSessionCapacity + $roleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -755,7 +858,7 @@ else {
     Write-Log 3 "Processing hostPool $($hostPoolName)"
     #Get the Session Hosts in the hostPool
     try {
-      $RDSessionHost = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName
+      $RDSessionHost = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName | Sort-Object sessions | Sort-Object status
     }
     catch {
       Write-Log 1 "Failed to retrieve session hosts in hostPool: $($hostPoolName) with error: $($_.exception.message)" "Error"
@@ -766,6 +869,8 @@ else {
 
     #total of running cores
     $totalRunningCores = 0
+    
+
 
     foreach ($sessionHost in $RDSessionHost.sessionhostname) {
 
@@ -785,6 +890,13 @@ else {
         }
       }
     }
+
+    [int]$definedMinimumnumberofrdsh = $MinimumNumberOfRDSH
+    
+    if(Test-Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt){
+    [int]$MinimumNumberOfRDSH = Get-Content $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+    }
+
     if ($numberOfRunningHost -gt $MinimumNumberOfRDSH) {
       #shutdown VM to meet the minimum requirement
 
@@ -819,7 +931,7 @@ else {
                 }
                 catch {
 
-                  Write-Log 1 "Failed to set drain mode on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
+                  Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
                   exit 1
 
                 }
@@ -922,7 +1034,7 @@ else {
                     Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true -ErrorAction SilentlyContinue
                   }
                   catch {
-                    Write-Log 1 "Failed to set drain mode on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
+                    Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
                     exit 1
                   }
                   $vm = Get-AzureRmVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
@@ -937,7 +1049,110 @@ else {
         }
       }
 
-    }
+    }        
+
+   if(Test-Path -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt){
+      [int]$MinimumNumberOfRDSH = Get-Content $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+        $noConnectionsofhost = 0
+      if($numberOfRunningHost -le $MinimumNumberOfRDSH){
+      $MinimumNumberOfRDSH = $numberOfRunningHost
+      $RDSessionHost = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName | Sort-Object sessions | Sort-Object status
+      foreach ($sHost in $RDSessionHost) {
+              if ($sHost.Status -eq "Available" -and $sHost.Sessions -eq 0) 
+               { 
+                $noConnectionsofhost = $noConnectionsofhost+1 
+                 
+                }
+                }
+      if($noconnectionsofhost -ge  2 -and $noconnectionsofhost -ge $definedMinimumnumberofrdsh){
+      [int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - 1
+      Clear-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+      Set-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt $MinimumNumberOfRDSH
+      }
+      }
+     }
+    #Calculate the how many sessions will allow in minimum number of RDSH VMs in off peak hours
+    $HostpoolMaxSessionLimit = $hostpoolInfo.MaxSessionLimit
+    $HostpoolSessionCount = (Get-RdsUserSession -TenantName $tenantName -HostPoolName $hostPoolName).count
+    if($HostpoolSessionCount -eq 0){
+    Write-Log 1 "HostpoolName:$hostpoolName, TotalRunningCores:$totalRunningCores NumberOfRunningHost:$numberOfRunningHost" "Info"
+    #write to the usage log
+    $depthBool = $false
+    Write-UsageLog $hostPoolName $totalRunningCores $numberOfRunningHost $depthBool
+    Write-Log 3 "End WVD Tenant Scale Optimization." "Info"
+    break
+    }else{
+    $totalSessionsAllowinOffPeak = [int]$MinimumNumberOfRDSH * $HostpoolMaxSessionLimit
+    $totalSessionsAllowinOffPeak = $totalSessionsAllowinOffPeak-$HostpoolMaxSessionLimit
+     
+
+     if($HostpoolSessionCount -ge $totalSessionsAllowinOffPeak){
+   
+      #check if the available capacity meets the number of sessions or not
+      Write-Log 1 "Current total number of user sessions: $(($hostPoolUserSessions).Count)" "Info"
+      Write-Log 1 "Current available session capacity is less than demanded user sessions, starting session host" "Info"
+        #running out of capacity, we need to start more VMs if there are any 
+        foreach ($sessionHost in $RDSessionHost.sessionhostname) {
+            $VMName = $sessionHost.Split(".")[0]
+            $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
+
+            if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
+              #check if the Azure VM is running or not
+
+              if ($roleInstance.PowerState -ne "VM running") {
+                $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost
+                if ($getShsinfo.AllowNewSession -eq $false) {
+                  Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true
+
+                }
+                #start the Azure VM
+                try {
+                  Start-AzureRmVM -Name $roleInstance.Name -Id $roleInstance.Id -ErrorAction SilentlyContinue
+
+                }
+                catch {
+                  Write-Log 1 "Failed to start Azure VM: $($roleInstance.Name) with error: $($_.exception.message)" "Error"
+                  exit 1
+                }
+                #wait for the VM to start
+                $IsVMStarted = $false
+                while (!$IsVMStarted) {
+                  $vm = Get-AzureRmVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
+
+                  if ($vm.PowerState -eq "VM running" -and $vm.ProvisioningState -eq "Succeeded") {
+                    $IsVMStarted = $true
+                    Write-Log 1 "Azure VM has been started: $($roleInstance.Name) ..." "Info"
+                  }
+                  else {
+                    Write-Log 3 "Waiting for Azure VM to start $($roleInstance.Name) ..." "Info"
+                  }
+                }
+                # we need to calculate available capacity of sessions
+                $vm = Get-AzureRmVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
+                $roleSize = Get-AzureRmVMSize -Location $roleInstance.Location | Where-Object { $_.Name -eq $roleInstance.HardwareProfile.VmSize }
+                $AvailableSessionCapacity = $TotalAllowSessions + $hostpoolInfo.MaxSessionLimit
+                $numberOfRunningHost = $numberOfRunningHost + 1
+                $totalRunningCores = $totalRunningCores + $roleSize.NumberOfCores
+                Write-Log 1 "new available session capacity is: $AvailableSessionCapacity" "Info"
+
+                [int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH + 1
+                if(!(Test-Path -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt)){
+                New-Item -ItemType File -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+                Add-Content $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt $MinimumNumberOfRDSH
+                }else{
+                Clear-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
+                Set-Content $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt $MinimumNumberOfRDSH
+                }
+                break
+               }
+              #Break # break out of the inner foreach loop once a match is found and checked
+            }
+          }
+        }
+
+        }
+      
+    
     Write-Log 1 "HostpoolName:$hostpoolName, TotalRunningCores:$totalRunningCores NumberOfRunningHost:$numberOfRunningHost" "Info"
     #write to the usage log
     $depthBool = $false

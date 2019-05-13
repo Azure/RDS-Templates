@@ -5,63 +5,64 @@
 				{
 					"_Comments": "Tenant ID of the Azure Active Directory",
 					"Name": "AADTenantId",
-					"Value": "ad638926-c4fa-462d-8b20-1dd3f162028b"
-				},
-				{
-					"_Comments": "Key Vault key name of Azure Service Principal GUID",
-					"Name": "AADApplicationId",
-					"Value": "4e3b45f2-1ed3-4e08-a3ed-3efefb814d6c"
-				},
-				{
-					"_Comments": "use AADServicePrincipalSecret filed for testing only, set via New-StoredCredential",
-					"Name": "AADServicePrincipalSecret",
 					"Value": ""
 				},
 				{
+					"Name": "AADApplicationId",
+					"Value": ""
+				},				
+				{
 					"_Comments": "Subscription ID of the Azure",
 					"Name": "currentAzureSubscriptionId",
-					"Value": "c779fcf5-46e5-407b-ab0d-6c32c501782d"
+					"Value": ""
 				},
 				{
 					"_Comments": "Name of the WVD Tenant Group",
-					"Name": "tenantName",
-					"Value": "RdsIsmTenant1"
-				},
-				{
-					"_Comments": "Name of the WVD Tenant",
 					"Name": "tenantGroupName",
 					"Value": "Default Tenant Group"
 				},
 				{
+					"_Comments": "Name of the WVD Tenant",
+					"Name": "tenantName",
+					"Value": ""
+				},
+				
+				{
 					"_Comments": "Name of the WVD Host Pool",
 					"Name": "hostPoolName",
-					"Value": "WS2016-p"
+					"Value": ""
 				},
 				{
 					"_Comments": "Hostpool session Load Balancing Type",
 					"Name": "PeakLoadBalancingType",
-					"Value": "DepthFirst"
+					"Value": "BreadthFirst"
 				},
 				{
 					"_Comments": "Hostpool session Load Balancing Type",
 					"Name": "OffPeakLoadBalancingType",
-					"Value": "BreadthFirst"
+					"Value": "DepthFirst"
 				},
 				{
 					"_Comments": "Session Load Balancing Peak Hours",
 					"Name": "sessionLoadBalancingPeakHours",
-					"Value": "9:00-18:00"
+					"Value": "9:00-3:00"
 				},
 				{
 					"_Comments": "Session Load Balancing off Peak Hours",
 					"Name": "sessionLoadBalancingOffPeakHours",
-					"Value": "18:00-22:00"
+					"Value": "3:00-9:00"
 				},
 				{
-					"_Comments": "Key Vault Name",
+					"_Comments": "Keyvault name where the WVD Tenant Admin Account have stored secret",
 					"Name": "KeyVaultName",
-					"Value": "wvdmsikeyvault"
-				}
+					"Value": ""
+				},
+                {
+                    "_Comments": "Secret name to be retrieved",
+                    "Name": "KeyVaultSecretName",
+                    "Value": ""
+
+                }
 			]
 		},
 		"Deployment": {
@@ -71,25 +72,14 @@
 					"Name": "Rdbroker",
 					"Value": "https://rdbroker.wvd.microsoft.com"
 				},
-				{
-					"_Comments": "Is Service Principal Value is False then provide keyvault key name of the Password stored",
-					"Name": "KeyName",
-					"Value": "Keyvault key name of the Password stored"
-				},
-				{
-					"_Comments":"Is Service Principal is 'False' then provide username of WVD with fully qualified domain name else WVD Service Principal GUID of Keyvault Key Name",
+				{					
 					"Name": "Username",
-					"Value": "74e98113-e2ca-48c8-963d-fe33ae70c756"
-				},
-				{
-					"_Comments":"use Password filed for testing only, set via New-StoredCredential",
-					"Name": "Password",
 					"Value": ""
 				},
 				{
 					"_Comments":"Accepted values True/False, True indicate service principal is being used to authenticate to WVD",
 					"Name": "isServicePrincipal",
-					"Value": "True"
+					"Value": "False"
 				}
 			]
 		},
@@ -106,9 +96,9 @@
 					"Value": "18:00:00"
 				},
 				{
-					"_Comments":"Time difference between local time and UTC, in hours",
+					"_Comments":"Time difference between local time and UTC, in hours(Example: India Standard Time is +5:30)",
 					"Name": "TimeDifferenceInHours",
-					"Value": "0"
+					"Value": "+5:30"
 				},
 				{
 					"_Comments":"Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started ",
