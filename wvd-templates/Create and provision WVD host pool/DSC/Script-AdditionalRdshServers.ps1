@@ -105,7 +105,9 @@ else
 
     # Set context to the appropriate tenant group
     Write-Log "Running switching to the $definedTenantGroupName context"
-    Set-RdsContext -TenantGroupName $definedTenantGroupName
+    if ($definedTenantGroupName -ne "Default Tenant Group") {
+        Set-RdsContext -TenantGroupName $definedTenantGroupName
+    }
     try
     {
         $tenants = Get-RdsTenant -Name "$TenantName"
