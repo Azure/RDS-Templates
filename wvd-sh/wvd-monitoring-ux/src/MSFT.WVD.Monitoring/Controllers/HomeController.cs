@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Models;
 using Newtonsoft.Json;
@@ -29,10 +30,12 @@ namespace MSFT.WVD.Monitoring.Controllers
     {
         private readonly IMemoryCache _cache;
         private readonly IFileProvider _fileProvider;
-        public HomeController(IMemoryCache cache , IFileProvider fileProvider)
+        private readonly ILogger _logger;
+        public HomeController(IMemoryCache cache , IFileProvider fileProvider, ILogger<DiagnoseIssuesController> logger)
         {
             _cache = cache;
             _fileProvider = fileProvider;
+            _logger = logger;
         }
         public IActionResult Index()
         {
@@ -50,10 +53,12 @@ namespace MSFT.WVD.Monitoring.Controllers
 
 
                 //get queries from xml
+                _logger.LogInformation($"Get Log analytic queries from from xml file");
                 XmlDocument xDoc = new XmlDocument();
                 xDoc.PreserveWhitespace = false;
                 var path = _fileProvider.GetFileInfo("/metrics.xml");
                 xDoc.Load(path.PhysicalPath);
+                _logger.LogInformation($"save Log analytic queries in session storage ");
                 HttpContext.Session.Set<XmlDocument>("LogAnalyticQuery", xDoc);
                 /****following code is for temporary***/
 
@@ -67,6 +72,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 };
                 var roles = new List<RoleAssignment>();
                 roles.Add(roleassignment);
+                _logger.LogInformation($"save selected role in session storage");
+
                 HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleassignment);
                 HttpContext.Session.Set("WVDRoles", roles);
             }
@@ -81,6 +88,8 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         private async Task<HttpResponseMessage> InitialzeRoleInfomation()
         {
+            _logger.LogInformation("Call api to get role assignment details");
+
             string upn = User.Claims.First(claim => claim.Type.Contains("upn")).Value;
             string accessToken = await HttpContext.GetTokenAsync("access_token");
             string roleAssignments = string.Empty;
@@ -118,6 +127,8 @@ namespace MSFT.WVD.Monitoring.Controllers
         [HttpPost]
         public async Task Logout()
         {
+            _logger.LogInformation("Clear sessions and Logout from application");
+
             HttpContext.Session.Clear();
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
@@ -129,14 +140,13 @@ namespace MSFT.WVD.Monitoring.Controllers
         {
             if (ModelState.IsValid)
             {
+                _logger.LogInformation("Save tenant group name and tenant name in session storage.");
+
                 var submittedData = data.SubmitData;
                 HttpContext.Session.Set<string>("SelectedTenantGroupName", submittedData.TenantGroupName);
                 HttpContext.Session.Set<string>("SelectedTenantName", submittedData.TenantName);
 
-                string accessToken = await HttpContext.GetTokenAsync("access_token");
-                _cache.Set("SelectedTenantGroupName", submittedData.TenantGroupName);
-                _cache.Set("SelectedTenantName", submittedData.TenantName);
-                _cache.Set("AccessToken", accessToken);
+               
 
                 /***following line will have to use ***/
                 //HttpContext.Session.Set<RoleAssignment>("selectedRole", roles?.SingleOrDefault(x => x.tenantGroupName == submittedData.TenantGroupName));
@@ -175,8 +185,11 @@ namespace MSFT.WVD.Monitoring.Controllers
             else
             {
                 var exceptionFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+                _logger.LogError($"RouteOfException : { exceptionFeature.Path}. ErrorMessage : {exceptionFeature.Error.Message}");
+
                 return View(new ErrorViewModel()
                 {
+
                     ErrorDetails = new ErrorDetails
                     {
                         Message = $"RouteOfException : { exceptionFeature.Path}. ErrorMessage : {exceptionFeature.Error.Message}"
@@ -187,6 +200,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         }
         public IActionResult AppSettings()
         {
+            _logger.LogInformation("Open panel to set tenant group name and tenant name.");
             return View();
         }
     }

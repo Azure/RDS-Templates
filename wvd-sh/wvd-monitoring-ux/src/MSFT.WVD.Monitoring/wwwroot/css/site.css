@@ -25,7 +25,7 @@ html, body {
     -webkit-box-direction: normal;
     -ms-flex-flow: row nowrap;
     flex-flow: row nowrap;
-    height: 100%;
+    height: calc(100% - 50px);
 }
 
 /* Carousel */

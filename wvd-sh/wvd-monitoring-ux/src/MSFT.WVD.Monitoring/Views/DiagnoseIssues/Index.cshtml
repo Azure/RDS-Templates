@@ -14,7 +14,7 @@
                     <label asp-for="DiagonizeQuery.UPN" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2">User UPN<span class="red">*</span></label>
                     <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
                         <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" />
-                        <span asp-validation-for="DiagonizeQuery.UPN" class="error-msg validate"></span>
+                        <span asp-validation-for="DiagonizeQuery.UPN" id="validateUpn" class="error-msg validate"></span>
                     </div>
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
@@ -213,7 +213,7 @@
         }
         document.getElementById("upn")
             .addEventListener("keyup", function () {
-                document.getElementById("validate").hidden = true;
+                document.getElementById("validateUpn").style.display = "none";
             }, false);
         document.getElementById("loader1").hidden = true;
         document.getElementById("process").addEventListener("click", function () {

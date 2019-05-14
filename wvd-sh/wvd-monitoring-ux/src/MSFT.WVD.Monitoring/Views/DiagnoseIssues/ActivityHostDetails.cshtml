@@ -11,271 +11,274 @@
             @Model.ConnectionActivity.SessionHostName Status
         </h2>
     </div>
-    <form asp-controller="DiagnoseIssues" method="post" id="msgForm">
-        <div class="ms-Grid m-b-25" dir="ltr">
-            <div class="ms-Grid-row">
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.activityId" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">ActivityID:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.activityId</span>
-                        <input asp-for="@Model.ConnectionActivity.activityId" type="hidden">
+    <div lass="width-100 content-section users-session">
+        <form asp-controller="DiagnoseIssues" method="post" id="msgForm">
+            <div class="ms-Grid m-b-25" dir="ltr">
+                <div class="ms-Grid-row">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.activityId" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">ActivityID:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.activityId</span>
+                            <input asp-for="@Model.ConnectionActivity.activityId" type="hidden">
 
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.activityType" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Type:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 spanlabel">
-                        <span>@Model.ConnectionActivity.activityType</span>
-                        <input asp-for="@Model.ConnectionActivity.activityType" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.activityType" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Type:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 spanlabel">
+                            <span>@Model.ConnectionActivity.activityType</span>
+                            <input asp-for="@Model.ConnectionActivity.activityType" type="hidden">
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.userName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">UserName:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.userName</span>
-                        <input asp-for="@Model.ConnectionActivity.userName" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.userName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">UserName:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.userName</span>
+                            <input asp-for="@Model.ConnectionActivity.userName" type="hidden">
 
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.outcome" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Outcome:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.outcome</span>
-                        <input asp-for="@Model.ConnectionActivity.outcome" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.outcome" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Outcome:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.outcome</span>
+                            <input asp-for="@Model.ConnectionActivity.outcome" type="hidden">
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.startTime" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Start Time:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.startTime</span>
-                        <input asp-for="@Model.ConnectionActivity.startTime" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.startTime" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Start Time:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.startTime</span>
+                            <input asp-for="@Model.ConnectionActivity.startTime" type="hidden">
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.endTime" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">End Time:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.endTime</span>
-                        <input asp-for="@Model.ConnectionActivity.endTime" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.endTime" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">End Time:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.endTime</span>
+                            <input asp-for="@Model.ConnectionActivity.endTime" type="hidden">
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.ClientIPAddress" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Client IP:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.ClientIPAddress</span>
-                        <input asp-for="@Model.ConnectionActivity.ClientIPAddress" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.ClientIPAddress" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Client IP:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.ClientIPAddress</span>
+                            <input asp-for="@Model.ConnectionActivity.ClientIPAddress" type="hidden">
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.ClientOS" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Client:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.ClientOS</span>
-                        <input asp-for="@Model.ConnectionActivity.ClientOS" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.ClientOS" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Client:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.ClientOS</span>
+                            <input asp-for="@Model.ConnectionActivity.ClientOS" type="hidden">
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.SessionHostName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Session Host:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.SessionHostName</span>
-                        <input asp-for="@Model.ConnectionActivity.SessionHostName" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.SessionHostName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Session Host:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.SessionHostName</span>
+                            <input asp-for="@Model.ConnectionActivity.SessionHostName" type="hidden">
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.SessionHostPoolName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">SessionHostPoolName:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.SessionHostPoolName</span>
-                        <input asp-for="@Model.ConnectionActivity.SessionHostPoolName" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.SessionHostPoolName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">SessionHostPoolName:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.SessionHostPoolName</span>
+                            <input asp-for="@Model.ConnectionActivity.SessionHostPoolName" type="hidden">
+                        </div>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                    <label asp-for="ConnectionActivity.Tenants" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Tenant:</label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                        <span>@Model.ConnectionActivity.Tenants</span>
-                        <input asp-for="@Model.ConnectionActivity.Tenants" type="hidden">
+                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
+                        <label asp-for="ConnectionActivity.Tenants" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Tenant:</label>
+                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                            <span>@Model.ConnectionActivity.Tenants</span>
+                            <input asp-for="@Model.ConnectionActivity.Tenants" type="hidden">
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        @if (Model.SendMsgStatuses != null && Model.SendMsgStatuses.Count > 0)
-        {
-            @foreach (var d in Model.SendMsgStatuses)
+            @if (Model.SendMsgStatuses != null && Model.SendMsgStatuses.Count > 0)
             {
-
-                if (@d.Status == "Success")
+                @foreach (var d in Model.SendMsgStatuses)
                 {
-                    <div id="msgbardiv">
-                        <div class="ms-MessageBar ms-MessageBar--success">
-                            <div class="ms-MessageBar-content">
-                                <div class="ms-MessageBar-icon">
-                                    <i class="ms-Icon ms-Icon--Completed"></i>
-                                </div>
-                                <ul class="ms-MessageBar-text">
-                                    @d.Message
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div id="msgbardiv">
-                        <div class="ms-MessageBar ms-MessageBar--error">
-                            <div class="ms-MessageBar-content">
-                                <div class="ms-MessageBar-icon">
-                                    <i class="ms-Icon ms-Icon--ErrorBadge"></i>
-                                </div>
-                                <ul class="ms-MessageBar-text">
-                                    @d.Message
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                }
 
-            }
-        }
-
-
-
-        <section>
-            @{
-                var tab1Style = Model.ShowConnectedUser ? "" : "active";
-                var tabPan1Style = Model.ShowConnectedUser ? "tab-pane" : "tab-pane active";
-                var tab2Style = Model.ShowConnectedUser ? "active" : "";
-                var tabPan2Style = Model.ShowConnectedUser ? "tab-pane active" : "tab-pane";
-
-
-            }
-            <ul id="nav-tab" class="nav tab-links">
-                <li class="@tab1Style">
-                    <a href="#tab1">VM Performance</a>
-                </li>
-                <li class="@tab2Style">
-                    <a href="#tab2">User Connected</a>
-                </li>
-            </ul>
-            <!-- Tab panes -->
-            <div class="tab-content" style="position:fixed;width:100%" >
-                <div class="@tabPan1Style" id="tab1">
-                    <h4> VM Performance : Current state </h4>
-                    <table class="ms-Table activity-details-table">
-                        <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
-                        @foreach (var item in Model.VMPerformance.CurrentStateCounters)
-                        {
-                            var style = "background-color: #dff6dd";
-
-
-                            if (item.Status == "0")
-                            {
-                                style = "background-color: #dff6dd";
-                            }
-                            if (item.Status == "1")
-                            {
-                                style = "background-color: #ffca33";
-
-                            }
-                            if (item.Status == "2")
-                            {
-                                style = "background-color: #fed9cc";
-                            }
-
-                            <tr style="@style">
-                                <td>@item.ObjectName</td>
-                                <td>@item.Value</td>
-                                <td>
-                                    @if (item.Status == "0" || item.Status == null)
-                                    {
-                                        <i class="fa fa-check" style="color: #107c10;"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="fa fa-times" style="color: #a80000;"></i>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </table>
-                </div>
-                <div class="@tabPan2Style" id="tab2">
-                    <h4> User Sessions </h4>
-                    @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
+                    if (@d.Status == "Success")
                     {
-                        <div>
-                            <table class="ms-Table">
-                                <thead>
-                                    <tr>
-                                        <th>Select</th>
-                                        <th>Session ID</th>
-                                        <th>User UPN</th>
-                                    </tr>
-                                </thead>
-                                @{
-                                    for (int i = 0; i < Model.UserSessions.Count; i++)
-                                    {
-                                        bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"> <!---->
-                                                    <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
-                                                    <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
-                                                    <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
-                                                    <input asp-for="@Model.UserSessions[i].sessionHostName" type="hidden">
-                                                    <input asp-for="@Model.UserSessions[i].userPrincipalName" type="hidden">
-                                                    <input asp-for="@Model.UserSessions[i].sessionId" type="hidden">
-                                                </td>
-                                                <td>@Model.UserSessions[i].sessionId</td>
-                                                <td><label> @Model.UserSessions[i].userPrincipalName  </label></td>
-                                            </tr>
-                                        </tbody>
-                                    }
-                                }
-                            </table>
-                        </div>
-                        <div>
-                            <p class="error-msg">@ViewBag.ErrorMsg</p>
-                        </div>
-                        <div class="anchorlinksdiv" id="anchorlinksdiv">
-                            <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
-                                <span class="ms-Button-label labelcolor">Logoff user(s)</span>
-                            </button>
-                            <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
-                                <span class="ms-Button-label labelcolor">Message user(s)</span>
-                            </button>
+                        <div id="msgbardiv">
+                            <div class="ms-MessageBar ms-MessageBar--success">
+                                <div class="ms-MessageBar-content">
+                                    <div class="ms-MessageBar-icon">
+                                        <i class="ms-Icon ms-Icon--Completed"></i>
+                                    </div>
+                                    <ul class="ms-MessageBar-text">
+                                        @d.Message
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     }
                     else
                     {
-                        <div>
-                            <h4>There is no active user sessions.</h4>
-                        </div>
-                    }
-                    @if (Model.ShowMessageForm)
-                    {
-                        <div id="sendmessagediv">
-                            <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
-                            <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
-                            <span asp-validation-for="@Model.Title" id="validationtitle" class="error-msg">@ViewBag.TitleErrorMsg</span>
-                            <br />
-                            <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
-                            <textarea asp-for="@Model.Message" class="form-control m-b-10 inputform"   id="texterror" >
-                            </textarea>
-                            <span asp-validation-for="@Model.Message" id="validationmsg" class="error-msg"> @ViewBag.MessageErrorMsg </span>
-                            <br />
-                           
-                            <button type="reset" class="ms-Button">
-                                <span class="ms-Button-label">Cancel</span>
-                            </button>
-                            <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
-                                <span class="ms-Button-label">Send</span>
-                            </button>
+                        <div id="msgbardiv">
+                            <div class="ms-MessageBar ms-MessageBar--error">
+                                <div class="ms-MessageBar-content">
+                                    <div class="ms-MessageBar-icon">
+                                        <i class="ms-Icon ms-Icon--ErrorBadge"></i>
+                                    </div>
+                                    <ul class="ms-MessageBar-text">
+                                        @d.Message
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     }
 
+                }
+            }
+
+
+
+            <section>
+                @{
+                    var tab1Style = Model.ShowConnectedUser ? "" : "active";
+                    var tabPan1Style = Model.ShowConnectedUser ? "tab-pane" : "tab-pane active";
+                    var tab2Style = Model.ShowConnectedUser ? "active" : "";
+                    var tabPan2Style = Model.ShowConnectedUser ? "tab-pane active" : "tab-pane";
+
+
+                }
+                <ul id="nav-tab" class="nav tab-links">
+                    <li class="@tab1Style">
+                        <a href="#tab1">VM Performance</a>
+                    </li>
+                    <li class="@tab2Style">
+                        <a href="#tab2">User Connected</a>
+                    </li>
+                </ul>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div class="@tabPan1Style" id="tab1">
+                        <h4> VM Performance : Current state </h4>
+                        <table class="ms-Table activity-details-table">
+                            <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
+                            @foreach (var item in Model.VMPerformance.CurrentStateCounters)
+                            {
+                                var style = "background-color: #dff6dd";
+
+
+                                if (item.Status == "0")
+                                {
+                                    style = "background-color: #dff6dd";
+                                }
+                                if (item.Status == "1")
+                                {
+                                    style = "background-color: #ffca33";
+
+                                }
+                                if (item.Status == "2")
+                                {
+                                    style = "background-color: #fed9cc";
+                                }
+
+                                <tr style="@style">
+                                    <td>@item.ObjectName</td>
+                                    <td>@item.Value</td>
+                                    <td>
+                                        @if (item.Status == "0" || item.Status == null)
+                                        {
+                                            <i class="fa fa-check" style="color: #107c10;"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa fa-times" style="color: #a80000;"></i>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                    <div class="@tabPan2Style" id="tab2">
+                        <h4> User Sessions </h4>
+                        @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
+                        {
+                            <div>
+                                <table class="ms-Table">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Session ID</th>
+                                            <th>User UPN</th>
+                                        </tr>
+                                    </thead>
+                                    @{
+                                        for (int i = 0; i < Model.UserSessions.Count; i++)
+                                        {
+                                            bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"> <!---->
+                                                        <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
+                                                        <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
+                                                        <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
+                                                        <input asp-for="@Model.UserSessions[i].sessionHostName" type="hidden">
+                                                        <input asp-for="@Model.UserSessions[i].userPrincipalName" type="hidden">
+                                                        <input asp-for="@Model.UserSessions[i].sessionId" type="hidden">
+                                                    </td>
+                                                    <td>@Model.UserSessions[i].sessionId</td>
+                                                    <td><label> @Model.UserSessions[i].userPrincipalName  </label></td>
+                                                </tr>
+                                            </tbody>
+                                        }
+                                    }
+                                </table>
+                            </div>
+                            <div>
+                                <p class="error-msg">@ViewBag.ErrorMsg</p>
+                            </div>
+                            <div class="anchorlinksdiv" id="anchorlinksdiv">
+                                <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
+                                    <span class="ms-Button-label labelcolor">Logoff user(s)</span>
+                                </button>
+                                <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
+                                    <span class="ms-Button-label labelcolor">Message user(s)</span>
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div>
+                                <h4>There is no active user sessions.</h4>
+                            </div>
+                        }
+                        @if (Model.ShowMessageForm)
+                        {
+                            <div id="sendmessagediv">
+                                <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
+                                <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
+                                <span asp-validation-for="@Model.Title" id="validationtitle" class="error-msg validate-title">@ViewBag.TitleErrorMsg</span>
+                                <br />
+                                <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
+                                <textarea asp-for="@Model.Message" class="form-control m-b-10 inputform" id="texterror">
+                            </textarea>
+                                <span asp-validation-for="@Model.Message" id="validationmsg" class="error-msg validate-msg"> @ViewBag.MessageErrorMsg </span>
+                                <br />
+
+                                <button type="reset" class="ms-Button">
+                                    <span class="ms-Button-label">Cancel</span>
+                                </button>
+                                <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
+                                    <span class="ms-Button-label">Send</span>
+                                </button>
+                            </div>
+                        }
+
+                    </div>
                 </div>
-            </div>
-        </section>
-    </form>
+            </section>
+        </form>
+    </div>
+    
 </div>
 
 
@@ -335,12 +338,12 @@
         }
 
         document.getElementById("texttitle")
-            .addEventListener("focus", function () {
-                document.getElementById("validationtitle").hidden = true;
+            .addEventListener("keyup", function () {
+                document.getElementById("validationtitle").style.display = "none";
             }, false);
         document.getElementById("texterror")
-            .addEventListener("focus", function () {
-                document.getElementById("validationmsg").hidden = true;
+            .addEventListener("keyup", function () {
+                document.getElementById("validationmsg").style.display = "none";
             }, false);
 
     })();
