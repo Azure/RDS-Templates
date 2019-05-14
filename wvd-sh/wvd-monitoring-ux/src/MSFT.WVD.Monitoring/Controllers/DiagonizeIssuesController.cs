@@ -132,13 +132,14 @@ namespace MSFT.WVD.Monitoring.Controllers
         public async Task<IActionResult> LogOffUserSession(DiagnoseDetailPageViewModel data)
         {
             var viewData = new LogOffUserQuery();
-            //var userInfo = _userService.GetUserDetails();
-            //var tenantGroupName = userInfo.tenantGroupName;
-            //var tenant = userInfo.tenant;
-            //var accessToken = userInfo.accessToken;
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             accessToken = await HttpContext.GetTokenAsync("access_token");
+
+            var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
+            var xDoc = HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery");
+            VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, xDoc);
+
 
             var messageStatus = new List<MessageStatus>();
             if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
@@ -189,7 +190,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ConnectionActivity = data.ConnectionActivity,
                 ShowConnectedUser = true,
                 ShowMessageForm = false,
-                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
+                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName),
+                VMPerformance=vMPerformance
             });
         }
 
