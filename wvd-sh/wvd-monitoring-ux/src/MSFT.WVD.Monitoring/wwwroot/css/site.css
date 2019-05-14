@@ -338,8 +338,8 @@ html, body {
     overflow-x:auto
 }
 .norecordstable {
-    padding-top: 100px;
-    margin-left: 590px;
+    padding-top: 10%;
+    margin-left: 40%;
 }
 
 .form-group.required .control-label:after {
@@ -565,10 +565,10 @@ html, body {
     border-radius: 50%;
     width: 120px;
     height: 120px;
-    animation: spin 2s linear infinite;
-    position: relative;
-    left: 615px;
-    top: 126px;
+    animation: spin 5s linear infinite;
+    position: absolute;
+    left: 45%;
+    top: 50%;
 }
 #validationtitle {
     color: red;
@@ -663,8 +663,9 @@ html, body {
 }
 .error-msg{
     color:red;
-    margin-bottom:5px;
+    margin-bottom:2px;
     display:block;
+    font-size:small;
 }
 #validate {
     color: red;

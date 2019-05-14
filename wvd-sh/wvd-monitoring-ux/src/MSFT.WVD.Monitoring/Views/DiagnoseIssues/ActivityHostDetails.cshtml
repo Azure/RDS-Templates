@@ -155,7 +155,7 @@
                 </li>
             </ul>
             <!-- Tab panes -->
-            <div class="tab-content">
+            <div class="tab-content" style="position:fixed;width:100%" >
                 <div class="@tabPan1Style" id="tab1">
                     <h4> VM Performance : Current state </h4>
                     <table class="ms-Table activity-details-table">
@@ -255,13 +255,14 @@
                         <div id="sendmessagediv">
                             <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
                             <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
-                            <span asp-validation-for="@Model.Title" id="validationtitle">@ViewBag.TitleErrorMsg</span>
+                            <span asp-validation-for="@Model.Title" id="validationtitle" class="error-msg">@ViewBag.TitleErrorMsg</span>
                             <br />
                             <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
-                            <input asp-for="@Model.Message" class="form-control m-b-10 inputform" type="text" multiple="multiple" id="texterror" />
-                            <span asp-validation-for="@Model.Message" id="validationmsg"> @ViewBag.MessageErrorMsg </span>
+                            <textarea asp-for="@Model.Message" class="form-control m-b-10 inputform"   id="texterror" >
+                            </textarea>
+                            <span asp-validation-for="@Model.Message" id="validationmsg" class="error-msg"> @ViewBag.MessageErrorMsg </span>
                             <br />
-                            <br />
+                           
                             <button type="reset" class="ms-Button">
                                 <span class="ms-Button-label">Cancel</span>
                             </button>
@@ -273,7 +274,6 @@
 
                 </div>
             </div>
-
         </section>
     </form>
 </div>
@@ -285,8 +285,6 @@
         document.getElementById("Diagnosebreadcrumb").style.display = "block";
 
         function onTabClick(event) {
-
-
             var actives = document.querySelectorAll('.active');
 
             // deactivate existing active tab and panel
@@ -306,9 +304,7 @@
                 document.getElementById("sendmessagediv").style.display = "block";
             }
 
-            document.getElementById("Diagnosebreadcrumb").style.display = "block";
-
-
+          // document.getElementById("Diagnosebreadcrumb").style.display = "block";
         }
 
         var el = document.getElementById('nav-tab');

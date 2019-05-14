@@ -16,12 +16,12 @@
                         <div class="flyoutpanel-controls">
                             <label asp-for="SubmitData.TenantGroupName" class="control-label">TenantGroupName<span class="red">*</span></label>
                             <input asp-for="SubmitData.TenantGroupName" class="form-control m-b-10" id="tenantgrp" type="text" />
-                            <span asp-validation-for="SubmitData.TenantGroupName" id="validate"></span>
+                            <span asp-validation-for="SubmitData.TenantGroupName" id="validate" class="error-msg validate"></span>
                             <br />
 
                             <label asp-for="SubmitData.TenantName" class="control-label">TenantName<span class="red">*</span></label>
                             <input asp-for="SubmitData.TenantName" class="form-control m-b-10" id="tenant" type="text"/>
-                            <span asp-validation-for="SubmitData.TenantName" id="validatetenant"></span>
+                            <span asp-validation-for="SubmitData.TenantName" id="validatetenant" class="error-msg validatetenant"></span>
                         </div>
                     </div>
                     <div class="flyoutpanel-footer">
