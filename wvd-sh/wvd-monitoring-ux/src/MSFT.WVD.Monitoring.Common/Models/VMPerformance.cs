@@ -7,7 +7,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
     public class VMPerformance
     {
         public List<Counter> CurrentStateCounters { get; set; }
-    
+    public string Message { get; set; }
     }
 
     public class Counter

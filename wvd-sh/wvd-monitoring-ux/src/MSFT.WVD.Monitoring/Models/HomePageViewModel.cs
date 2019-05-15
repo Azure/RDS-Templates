@@ -13,6 +13,7 @@ namespace MSFT.WVD.Monitoring.Models
         public string SelectedTenantGroupName { get; set; }
         public bool ShowDialog { get; set; }
         public HomePageSubmitModel SubmitData { get; set; }
+        public string Message { get; set; }
     }
 
     public class HomePageSubmitModel

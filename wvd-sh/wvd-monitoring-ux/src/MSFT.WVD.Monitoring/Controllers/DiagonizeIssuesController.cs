@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -8,8 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Common.Services;
@@ -26,10 +27,12 @@ namespace MSFT.WVD.Monitoring.Controllers
         UserSessionService _userSessionService;
         private readonly HttpClient apiClient;
         LogAnalyticsService _logAnalyticsService;
+        private readonly IHostingEnvironment _hostingEnvironment;
 
         public string tenantGroupName, tenant, accessToken;
-        public DiagnoseIssuesController(ILogger<DiagnoseIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService,LogAnalyticsService logAnalyticsService)
+        public DiagnoseIssuesController( IHostingEnvironment hostingEnvironment,ILogger<DiagnoseIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService,LogAnalyticsService logAnalyticsService)
         {
+            _hostingEnvironment= hostingEnvironment;
             _logger = logger;
             _diagnozeService = diagnozeService;
             _userSessionService = userSessionService;
@@ -136,11 +139,6 @@ namespace MSFT.WVD.Monitoring.Controllers
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             accessToken = await HttpContext.GetTokenAsync("access_token");
 
-            var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
-            var xDoc = HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery");
-            VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, xDoc);
-
-
             var messageStatus = new List<MessageStatus>();
             if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
             {
@@ -191,7 +189,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ShowConnectedUser = true,
                 ShowMessageForm = false,
                 UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName),
-                VMPerformance=vMPerformance
+                VMPerformance=await GetVMPerformance(data.ConnectionActivity.SessionHostName)
             });
         }
 
@@ -216,11 +214,6 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ShowMessageForm = false;
             }
 
-            var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
-            var xDoc = HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery");
-            VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, xDoc);
-
-
             return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
             {
                 Title = string.Empty,
@@ -230,7 +223,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ShowMessageForm = ShowMessageForm,
                 UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
                 ,
-                VMPerformance = vMPerformance
+                VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName)
             });
 
         }
@@ -246,12 +239,6 @@ namespace MSFT.WVD.Monitoring.Controllers
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
                 accessToken = await HttpContext.GetTokenAsync("access_token");
-                //bool ShowConnectedUser = true;
-                //bool ShowMessageForm = true;
-
-                var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
-                var xDoc = HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery");
-                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, data.ConnectionActivity.SessionHostName, xDoc);
 
                 if (string.IsNullOrEmpty(data.Message) && string.IsNullOrEmpty(data.Title))
                 {
@@ -327,7 +314,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     ConnectionActivity = data.ConnectionActivity,
                     ShowConnectedUser = true,
                     ShowMessageForm = true,
-                    VMPerformance= vMPerformance
+                    VMPerformance= await GetVMPerformance(data.ConnectionActivity.SessionHostName)
                 });
 
             }
@@ -343,6 +330,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     ShowMessageForm = true,
                     Title = data.Title,
                     Message = data.Message,
+                    VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName)
                 });
             }
 
@@ -365,11 +353,6 @@ namespace MSFT.WVD.Monitoring.Controllers
             {
                 var userSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName);
 
-                //get vm performance 
-                var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
-                var xDoc=HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery"); 
-
-                VMPerformance vMPerformance = await _logAnalyticsService.GetSessionHostPerformance(refreshToken, ConnectionActivity[0].SessionHostName, xDoc);
 
                 return View(new DiagnoseDetailPageViewModel()
                 {
@@ -390,8 +373,27 @@ namespace MSFT.WVD.Monitoring.Controllers
                     UserSessions = userSessions,
                     ShowConnectedUser = false,
                     ShowMessageForm = true,
-                    VMPerformance=vMPerformance
+                    VMPerformance=await GetVMPerformance(ConnectionActivity[0].SessionHostName)
                 });
+            }
+        }
+
+        public async Task<VMPerformance> GetVMPerformance(string hostName)
+        {
+            var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
+            var xDoc = HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery");
+            if(xDoc != null)
+            {
+                return await _logAnalyticsService.GetSessionHostPerformance(refreshToken, hostName, xDoc);
+
+            }
+            else
+            {
+                string DirectoryNme = _hostingEnvironment.ContentRootPath;
+                return new VMPerformance
+                {
+                    Message= $"VM performance queries file does not exist. Please upload 'metrics.xml' file to '{DirectoryNme}' ."
+                };
             }
         }
     }

@@ -158,44 +158,57 @@
                 <!-- Tab panes -->
                 <div class="tab-content">
                     <div class="@tabPan1Style" id="tab1">
-                        <h4> VM Performance : Current state </h4>
-                        <table class="ms-Table activity-details-table">
-                            <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
-                            @foreach (var item in Model.VMPerformance.CurrentStateCounters)
-                            {
-                                var style = "background-color: #dff6dd";
 
-
-                                if (item.Status == "0")
+                        @if (Model.VMPerformance.Message != null && Model.VMPerformance.Message != "")
+                        {
+                        <div >
+                            <p>@Model.VMPerformance.Message</p>
+                        </div>
+                            
+                        }
+                        else
+                        {
+                            <h4> VM Performance : Current state </h4>
+                            <table class="ms-Table activity-details-table">
+                                <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
+                                @foreach (var item in Model.VMPerformance.CurrentStateCounters)
                                 {
-                                    style = "background-color: #dff6dd";
-                                }
-                                if (item.Status == "1")
-                                {
-                                    style = "background-color: #ffca33";
+                                    var style = "background-color: #dff6dd";
 
-                                }
-                                if (item.Status == "2")
-                                {
-                                    style = "background-color: #fed9cc";
-                                }
 
-                                <tr style="@style">
-                                    <td>@item.ObjectName</td>
-                                    <td>@item.Value</td>
-                                    <td>
-                                        @if (item.Status == "0" || item.Status == null)
-                                        {
-                                            <i class="fa fa-check" style="color: #107c10;"></i>
-                                        }
-                                        else
-                                        {
-                                            <i class="fa fa-times" style="color: #a80000;"></i>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </table>
+                                    if (item.Status == "0")
+                                    {
+                                        style = "background-color: #dff6dd";
+                                    }
+                                    if (item.Status == "1")
+                                    {
+                                        style = "background-color: #ffca33";
+
+                                    }
+                                    if (item.Status == "2")
+                                    {
+                                        style = "background-color: #fed9cc";
+                                    }
+
+                                    <tr style="@style">
+                                        <td>@item.ObjectName</td>
+                                        <td>@item.Value</td>
+                                        <td>
+                                            @if (item.Status == "0" || item.Status == null)
+                                            {
+                                                <i class="fa fa-check" style="color: #107c10;"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa fa-times" style="color: #a80000;"></i>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </table>
+                        }
+
+
                     </div>
                     <div class="@tabPan2Style" id="tab2">
                         <h4> User Sessions </h4>
@@ -307,7 +320,15 @@
                 document.getElementById("sendmessagediv").style.display = "block";
             }
 
-          // document.getElementById("Diagnosebreadcrumb").style.display = "block";
+            if (activeId == "tab1") {
+                document.getElementById("texttitle").value = "";
+                document.getElementById("texterror").value = "";
+                document.getElementById("sendmessagediv").hidden = true;
+                var chk = document.getElementsByClassName("chkbox");
+                for (var i = 0; i < chk.length; i++) {
+                    document.getElementById(i + '-checkbox').checked = false;
+                }
+            }
         }
 
         var el = document.getElementById('nav-tab');

@@ -31,15 +31,18 @@ namespace MSFT.WVD.Monitoring.Controllers
         private readonly IMemoryCache _cache;
         private readonly IFileProvider _fileProvider;
         private readonly ILogger _logger;
-        public HomeController(IMemoryCache cache , IFileProvider fileProvider, ILogger<DiagnoseIssuesController> logger)
+        private readonly IHostingEnvironment _hostingEnvironment;
+        public HomeController(IMemoryCache cache , IFileProvider fileProvider, ILogger<DiagnoseIssuesController> logger, IHostingEnvironment hostingEnvironment)
         {
             _cache = cache;
             _fileProvider = fileProvider;
             _logger = logger;
+            _hostingEnvironment = hostingEnvironment;
         }
         public IActionResult Index()
         {
             var role = new RoleAssignment();
+            var messsage = "";
             if (HttpContext.Session.Get<RoleAssignment>("SelectedRole") == null)
             {
                 //var response = await InitialzeRoleInfomation();
@@ -51,18 +54,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 //    //HttpContext.Session.Set("tenantGroups", roleAssignments.Select(x => x.tenantGroupName));
                 //}
 
-
-                //get queries from xml
-                _logger.LogInformation($"Get Log analytic queries from from xml file");
-                XmlDocument xDoc = new XmlDocument();
-                xDoc.PreserveWhitespace = false;
-                var path = _fileProvider.GetFileInfo("/metrics.xml");
-                xDoc.Load(path.PhysicalPath);
-                _logger.LogInformation($"save Log analytic queries in session storage ");
-                HttpContext.Session.Set<XmlDocument>("LogAnalyticQuery", xDoc);
-                /****following code is for temporary***/
-
-
+                /****following code is for temporary for role assignment***/
 
                 var roleassignment = new RoleAssignment
                 {
@@ -76,12 +68,36 @@ namespace MSFT.WVD.Monitoring.Controllers
 
                 HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleassignment);
                 HttpContext.Session.Set("WVDRoles", roles);
+
+                //get queries from xml
+                _logger.LogInformation($"Get Log analytic queries from from xml file");
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.PreserveWhitespace = false;
+                var path = _fileProvider.GetFileInfo("/metrics.xml");
+                if(path.Exists)
+                {
+                    xDoc.Load(path.PhysicalPath);
+                    _logger.LogInformation("save Log analytic queries in session storage ");
+                    HttpContext.Session.Set<XmlDocument>("LogAnalyticQuery", xDoc);
+                }
+                else
+                {
+                    string DirectoryNme = _hostingEnvironment.ContentRootPath;
+                    messsage = $"VM performance queries file does not exist. Please upload 'metrics.xml' file to '{DirectoryNme}' .";
+                    _logger.LogWarning("Log analytic query file is not exist.");
+                }
+          
+
+
+
+              
             }
             role = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles").FirstOrDefault();
             //var tenantGroups = HttpContext.Session.Get<IEnumerable<string>>("tenantGroups")
             return View(new HomePageViewModel()
             {
                 SelectedRole = role,
+                Message = messsage,
                 ShowDialog = HttpContext.Session.GetString("SelectedTenantGroupName") == null
             });
         }

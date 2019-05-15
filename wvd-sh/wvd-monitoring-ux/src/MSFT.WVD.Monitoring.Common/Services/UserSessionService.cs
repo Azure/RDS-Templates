@@ -18,7 +18,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
     public class UserSessionService
     {
         IConfiguration _config;
-        string _authResource;
         string _brokerUrl;
         ILogger _logger;
         IMemoryCache _cache;
