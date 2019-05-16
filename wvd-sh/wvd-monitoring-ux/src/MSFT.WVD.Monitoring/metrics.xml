@@ -43,9 +43,9 @@
     </Memory>
 	<User>
 	<Query>
-	Perf | where Computer in({0}) | where ObjectName == 'User Input Delay per Session' | where CounterName == 'Max Input Delay' |  summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer  | project   avg = 0, Value, Computer, Status = iff(Value > 2000 , 0, 2)
-	</Query>
-	 <timespan>PT2H</timespan>
+    Perf | where Computer in({0}) | where ObjectName == 'User Input Delay per Session' | where CounterName == 'Max Input Delay' |  summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer  | project   avg = 0, Value, Computer, Status = iff(Value > 2000 , 0, 2)
+  </Query>
+	 <timespan>PT15M</timespan>
 	</User>
 	
   </PoolMetrics>

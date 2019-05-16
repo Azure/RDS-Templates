@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
@@ -12,13 +11,9 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
@@ -28,13 +23,11 @@ namespace MSFT.WVD.Monitoring.Controllers
     [Authorize]
     public class HomeController : Controller
     {
-        private readonly IMemoryCache _cache;
         private readonly IFileProvider _fileProvider;
         private readonly ILogger _logger;
         private readonly IHostingEnvironment _hostingEnvironment;
         public HomeController(IMemoryCache cache , IFileProvider fileProvider, ILogger<DiagnoseIssuesController> logger, IHostingEnvironment hostingEnvironment)
         {
-            _cache = cache;
             _fileProvider = fileProvider;
             _logger = logger;
             _hostingEnvironment = hostingEnvironment;

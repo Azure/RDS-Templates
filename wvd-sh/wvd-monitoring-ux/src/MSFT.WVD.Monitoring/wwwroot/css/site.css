@@ -753,6 +753,7 @@ section {
         list-style-type: none;
         padding: 0;
         white-space: nowrap;
+        width:10%;
     }
 
      .nav .active a {

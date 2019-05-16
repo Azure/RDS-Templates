@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -22,21 +21,20 @@ namespace MSFT.WVD.Monitoring.Controllers
     public class DiagnoseIssuesController : Controller
     {
         private readonly ILogger _logger;
-        DiagnozeService _diagnozeService;
-        UserService _userService;
-        UserSessionService _userSessionService;
+        private readonly DiagnozeService _diagnozeService;
+        private readonly UserSessionService _userSessionService;
         private readonly HttpClient apiClient;
-        LogAnalyticsService _logAnalyticsService;
+        private readonly LogAnalyticsService _logAnalyticsService;
         private readonly IHostingEnvironment _hostingEnvironment;
-
+        private readonly CommonService _commonService;
         public string tenantGroupName, tenant, accessToken;
-        public DiagnoseIssuesController( IHostingEnvironment hostingEnvironment,ILogger<DiagnoseIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, UserService userService,LogAnalyticsService logAnalyticsService)
+        public DiagnoseIssuesController( IHostingEnvironment hostingEnvironment,ILogger<DiagnoseIssuesController> logger, DiagnozeService diagnozeService, UserSessionService userSessionService, LogAnalyticsService logAnalyticsService, CommonService commonService)
         {
-            _hostingEnvironment= hostingEnvironment;
+            _commonService = commonService;
+            _hostingEnvironment = hostingEnvironment;
             _logger = logger;
             _diagnozeService = diagnozeService;
             _userSessionService = userSessionService;
-            _userService = userService;
             _logAnalyticsService = logAnalyticsService;
             apiClient = new HttpClient();
             apiClient.Timeout = TimeSpan.FromMinutes(30);
@@ -60,7 +58,8 @@ namespace MSFT.WVD.Monitoring.Controllers
               
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-                accessToken = await HttpContext.GetTokenAsync("access_token");
+                var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+                accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
                 string startDate = $"{data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-dd")}T00:00:00Z";
                 string endDate = $"{data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-dd")}T23:59:59Z";
 
@@ -137,7 +136,8 @@ namespace MSFT.WVD.Monitoring.Controllers
             var viewData = new LogOffUserQuery();
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-            accessToken = await HttpContext.GetTokenAsync("access_token");
+            var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+            accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
 
             var messageStatus = new List<MessageStatus>();
             if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
@@ -196,17 +196,16 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<IActionResult> InitiateSendMessage(DiagnoseDetailPageViewModel data)
         {
-          
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-            accessToken = await HttpContext.GetTokenAsync("access_token");
+            var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+            accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
 
             bool ShowMessageForm = false;
             if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
             {
                 ShowMessageForm = true;
                 ViewBag.ErrorMsg = "";
-
             }
             else
             {
@@ -238,7 +237,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 var messageStatus = new List<MessageStatus>();
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-                accessToken = await HttpContext.GetTokenAsync("access_token");
+                var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+                accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
 
                 if (string.IsNullOrEmpty(data.Message) && string.IsNullOrEmpty(data.Title))
                 {
@@ -333,27 +333,23 @@ namespace MSFT.WVD.Monitoring.Controllers
                     VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName)
                 });
             }
-
         }
 
         public async Task<IActionResult> ActivityHostDetails(string id)
         {
-         
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-            accessToken = await HttpContext.GetTokenAsync("access_token");
-
+            var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+            accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
             var ConnectionActivity = await _diagnozeService.GetActivityHostDetails(accessToken, tenantGroupName, tenant, id);
             if (ConnectionActivity?.Count > 0 && ConnectionActivity[0].ErrorDetails != null)
             {
                 _logger.LogError($"Error Occured : {ConnectionActivity[0].ErrorDetails.Message}");
-                return RedirectToAction("Error", "Home", new ErrorDetails() { Message = ConnectionActivity[0].ErrorDetails.Message });
+                return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = ConnectionActivity[0].ErrorDetails.StatusCode,  Message = ConnectionActivity[0].ErrorDetails.Message });
             }
             else
             {
                 var userSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName);
-
-
                 return View(new DiagnoseDetailPageViewModel()
                 {
                     ConnectionActivity = new ConnectionActivity

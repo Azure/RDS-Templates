@@ -135,9 +135,6 @@
 
                 }
             }
-
-
-
             <section>
                 @{
                     var tab1Style = Model.ShowConnectedUser ? "" : "active";
@@ -161,10 +158,10 @@
 
                         @if (Model.VMPerformance.Message != null && Model.VMPerformance.Message != "")
                         {
-                        <div >
-                            <p>@Model.VMPerformance.Message</p>
-                        </div>
-                            
+                            <div>
+                                <p>@Model.VMPerformance.Message</p>
+                            </div>
+
                         }
                         else
                         {
@@ -291,7 +288,7 @@
             </section>
         </form>
     </div>
-    
+
 </div>
 
 

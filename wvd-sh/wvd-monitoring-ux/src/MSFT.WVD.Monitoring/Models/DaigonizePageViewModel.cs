@@ -2,15 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace MSFT.WVD.Monitoring.Models
 {
     public class DiagonizePageViewModel : IPageViewModel
     {
-
         public DiagonizeQuery DiagonizeQuery { get; set; }
         public List<ManagementActivity> ManagementActivity { get; set; }
         public List<ConnectionActivity> ConnectionActivity { get; set; }
@@ -36,7 +32,6 @@ namespace MSFT.WVD.Monitoring.Models
         public ActivityOutcome ActivityOutcome { get; set; }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-
             int result = DateTime.Compare(EndDate, StartDate);
             if (result < 0)
             {

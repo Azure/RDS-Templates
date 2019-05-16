@@ -17,11 +17,13 @@ namespace MSFT.WVD.Monitoring.Common.Services
 {
     public class LogAnalyticsService
     {
-        CommonService _commonService = new CommonService();
+        // CommonService _commonService = new CommonService();
+        CommonService _commonService;
         IConfiguration Configuration { get; }
         ILogger _logger;
-        public LogAnalyticsService(IConfiguration configuration, ILoggerFactory logger)
+        public LogAnalyticsService(IConfiguration configuration, ILoggerFactory logger, CommonService commonService)
         {
+            _commonService = commonService;
             Configuration = configuration;
             _logger = logger?.CreateLogger<LogAnalyticsService>() ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -44,7 +46,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
                         if (childnode.Name == "Query")
                         {
                             query = childnode.InnerText.Replace(System.Environment.NewLine, "").Trim();
-
                         }
 
                         if (childnode.Name == "timespan")
@@ -79,16 +80,13 @@ namespace MSFT.WVD.Monitoring.Common.Services
         }
         public async Task<List<Counter>> ExecuteLogAnalyticsQuery(string refreshToken, string hostName, XmlDocument xmlDocument)
         {
-            string loganalyticUrl = Configuration.GetSection("configurations").GetSection("LogAnalytic_URL").Value;
-            string tokenval = _commonService.GetAccessToken(refreshToken, loganalyticUrl);
-            JObject obj = JObject.Parse(tokenval);
-            var accesstoken = (string)obj["access_token"];
+            var loganalyticUrl = Configuration.GetSection("configurations").GetSection("LogAnalytic_URL").Value;
+            var accesstoken = _commonService.GetAccessTokenLogAnalytic(refreshToken);
             VMPerformance vMPerformance = new VMPerformance();
             var body = new JObject();
             List<Counter> counters = new List<Counter>();
             body = PrepareBatchQueryRequest(hostName, out counters, xmlDocument);
-
-            string url = $"{loganalyticUrl}/v1/$batch";
+            var url = $"{loganalyticUrl}/v1/$batch";
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accesstoken);

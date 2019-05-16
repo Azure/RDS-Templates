@@ -1,5 +1,4 @@
 using MSFT.WVD.Monitoring.Common.Models;
-using System;
 
 namespace MSFT.WVD.Monitoring.Models
 {

@@ -1,26 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using MSFT.WVD.Monitoring.Common.Models;
 using MSFT.WVD.Monitoring.Common.Services;
 
 namespace MSFT.WVD.Monitoring
@@ -40,15 +28,6 @@ namespace MSFT.WVD.Monitoring
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.configure<cookiepolicyoptions>(options =>
-            //{
-            //    // this lambda determines whether user consent for non-essential cookies is needed for a given request.
-            //    options.checkconsentneeded = context => true;
-            //    options.minimumsamesitepolicy = samesitemode.none;
-            //});
-
-
-           
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -66,9 +45,10 @@ namespace MSFT.WVD.Monitoring
                 options.TokenValidationParameters.ValidateIssuer = false;
                 options.SaveTokens = true;
                 options.Resource = Configuration.GetSection("configurations").GetSection("RESOURCE_URL").Value;
-               
+                options.UseTokenLifetime = true;
+                
             }).AddCookie();
-
+            
             IFileProvider physicalProvider = new PhysicalFileProvider(Directory.GetCurrentDirectory());
             services.AddSingleton<IFileProvider>(physicalProvider);
 
@@ -105,15 +85,13 @@ namespace MSFT.WVD.Monitoring
 
             services.AddSingleton<DiagnozeService>();
             services.AddSingleton<UserSessionService>();
-            services.AddSingleton<UserService>();
             services.AddSingleton<LogAnalyticsService>();
-
+            services.AddSingleton<CommonService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-          
             app.UseExceptionHandler("/Home/Error");
             app.UseStatusCodePagesWithRedirects("/Home/Error/{0}");
             app.UseHsts();
@@ -121,9 +99,7 @@ namespace MSFT.WVD.Monitoring
             app.UseStaticFiles();
             loggerFactory.AddFile($"Logs/wvdMonitoringLog-{DateTime.Now.ToString("MMddyyyyyhhmmss")}.txt");
             app.UseAuthentication();
-
             app.UseSession();
-
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
