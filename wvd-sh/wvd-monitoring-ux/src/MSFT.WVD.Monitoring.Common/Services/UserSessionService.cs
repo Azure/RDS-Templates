@@ -116,7 +116,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
         {
             var activityId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RDS Management api call to post request to url {url}. Activity Id:{activityId}");
-            using (var handler = new HttpClientHandler { })
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -133,7 +132,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
         {
             var activityId = Guid.NewGuid().ToString();
             _logger.LogInformation($"Sending RDS Management request to {url}. ActivityId:{activityId}");
-            using (var handler = new HttpClientHandler { })
             using (var client = new HttpClient())
             {
 

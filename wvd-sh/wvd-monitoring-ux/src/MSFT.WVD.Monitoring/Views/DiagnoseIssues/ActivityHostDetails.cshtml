@@ -97,8 +97,11 @@
                 </div>
             </div>
 
+            <div id="loader1" class="loader" ></div>
+
             @if (Model.SendMsgStatuses != null && Model.SendMsgStatuses.Count > 0)
             {
+
                 @foreach (var d in Model.SendMsgStatuses)
                 {
 
@@ -244,7 +247,7 @@
                                 </table>
                             </div>
                             <div>
-                                <p class="error-msg">@ViewBag.ErrorMsg</p>
+                                <p class="error-msg" id="userErrorMsg">@ViewBag.ErrorMsg</p>
                             </div>
                             <div class="anchorlinksdiv" id="anchorlinksdiv">
                                 <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
@@ -253,6 +256,9 @@
                                 <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
                                     <span class="ms-Button-label labelcolor">Message user(s)</span>
                                 </button>
+                                @*<button class="ms-Button message-user" type="button" id="msguserbtn">
+                                    <span class="ms-Button-label labelcolor">Message user(s)</span>
+                                </button>*@
                             </div>
                         }
                         else
@@ -346,6 +352,9 @@
 
         var msgbardiv = document.getElementById("msgbardiv");
         if (msgbardiv != null) {
+            console.log("testttttt");
+            document.getElementById("loader1").style.display = "none";
+
             var chk = document.getElementsByClassName("chkbox");
             for (var i = 0; i < chk.length; i++) {
                 document.getElementById(i + '-checkbox').checked = false;
@@ -364,5 +373,35 @@
                 document.getElementById("validationmsg").style.display = "none";
             }, false);
 
+      
+        document.getElementById("sendmsg").addEventListener("click", function () {
+
+          
+            document.getElementById("loader1").style.display = "block";
+
+        }, false);
+
+        document.getElementById("msguserbtn").addEventListener("click", function () {
+            var count = 0;
+            var chk = document.getElementsByClassName('.chkbox');
+            console.log(chk);
+            for (var i = 0; i < chk.length; i++) {
+                if (chk[i].checked == true) {
+                    count = count + 1;
+                }
+            }
+            if (count == 0) {
+                document.getElementById("sendmessagediv").style.display = "none";
+                document.getElementById("userErrorMsg").innerText = "Please select at least one user.";
+                return false;
+            }
+        });
+
+        document.getElementById("btnlogOff").addEventListener("click", function () {
+            document.getElementById("loader1").style.display = "block";
+
+        }, false);
+
+        document.getElementById("loader1").style.display = "none";
     })();
 </script>

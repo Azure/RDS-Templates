@@ -23,7 +23,6 @@ namespace MSFT.WVD.Monitoring.Controllers
         private readonly ILogger _logger;
         private readonly DiagnozeService _diagnozeService;
         private readonly UserSessionService _userSessionService;
-        private readonly HttpClient apiClient;
         private readonly LogAnalyticsService _logAnalyticsService;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly CommonService _commonService;
@@ -36,10 +35,6 @@ namespace MSFT.WVD.Monitoring.Controllers
             _diagnozeService = diagnozeService;
             _userSessionService = userSessionService;
             _logAnalyticsService = logAnalyticsService;
-            apiClient = new HttpClient();
-            apiClient.Timeout = TimeSpan.FromMinutes(30);
-            apiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-           
         }
         public IActionResult Index()
         {
@@ -125,7 +120,7 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<List<UserSession>> GetUserSessions(string accessToken, string tenantGroupName, string tenant, string hostPoolName, string hostName)
         {
-            var data = await _userSessionService.GetUserSessions(accessToken, tenantGroupName, tenant, hostPoolName, hostName);
+            var data = await _userSessionService.GetUserSessions(accessToken, tenantGroupName, tenant, hostPoolName, hostName).ConfigureAwait(false);
             return data;
         }
 
@@ -160,7 +155,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     {
                         messageStatus.Add(new MessageStatus()
                         {
-                            Message = $"Log off sucessfully for {item.userPrincipalName} user session.",
+                            Message = $"Log off successfully for {item.userPrincipalName} user session.",
                             Status = "Success"
                         });
                     }
@@ -172,6 +167,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                             Status = "Error"
                         });
                     }
+
                 }
                 ViewBag.ErrorMsg = "";
             }
@@ -179,6 +175,8 @@ namespace MSFT.WVD.Monitoring.Controllers
             {
                 ViewBag.ErrorMsg = "Please select at least one user";
             }
+            await Task.Delay(1500); // delay the process for 1.5 second to get current list of user sessions
+
 
             return View("ActivityHostDetails", new DiagnoseDetailPageViewModel()
             {
@@ -188,8 +186,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ConnectionActivity = data.ConnectionActivity,
                 ShowConnectedUser = true,
                 ShowMessageForm = false,
-                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName),
-                VMPerformance=await GetVMPerformance(data.ConnectionActivity.SessionHostName)
+                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName).ConfigureAwait(false),
+                VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName).ConfigureAwait(false)
             });
         }
 
@@ -220,8 +218,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ConnectionActivity = data.ConnectionActivity,
                 ShowConnectedUser = true,
                 ShowMessageForm = ShowMessageForm,
-                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)
-                ,
+                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)              ,
                 VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName)
             });
 
@@ -279,7 +276,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                             {
                                 messageStatus.Add(new MessageStatus()
                                 {
-                                    Message = $"Message sent sucessfully to {item.userPrincipalName}",
+                                    Message = $"Message sent successfully to {item.userPrincipalName}",
                                     Status = "Success"
                                 });
                                
@@ -314,7 +311,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     ConnectionActivity = data.ConnectionActivity,
                     ShowConnectedUser = true,
                     ShowMessageForm = true,
-                    VMPerformance= await GetVMPerformance(data.ConnectionActivity.SessionHostName)
+                    VMPerformance= await GetVMPerformance(data.ConnectionActivity.SessionHostName).ConfigureAwait(false)
                 });
 
             }
@@ -330,7 +327,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     ShowMessageForm = true,
                     Title = data.Title,
                     Message = data.Message,
-                    VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName)
+                    VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName).ConfigureAwait(false)
                 });
             }
         }
@@ -349,7 +346,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             }
             else
             {
-                var userSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName);
+                var userSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName).ConfigureAwait(false);
                 return View(new DiagnoseDetailPageViewModel()
                 {
                     ConnectionActivity = new ConnectionActivity
@@ -369,7 +366,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     UserSessions = userSessions,
                     ShowConnectedUser = false,
                     ShowMessageForm = true,
-                    VMPerformance=await GetVMPerformance(ConnectionActivity[0].SessionHostName)
+                    VMPerformance=await GetVMPerformance(ConnectionActivity[0].SessionHostName).ConfigureAwait(false)
                 });
             }
         }
@@ -380,8 +377,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             var xDoc = HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery");
             if(xDoc != null)
             {
-                return await _logAnalyticsService.GetSessionHostPerformance(refreshToken, hostName, xDoc);
-
+                return await _logAnalyticsService.GetSessionHostPerformance(refreshToken, hostName, xDoc).ConfigureAwait(false);
             }
             else
             {

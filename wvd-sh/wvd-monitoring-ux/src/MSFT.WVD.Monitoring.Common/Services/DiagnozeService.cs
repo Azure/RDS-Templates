@@ -313,7 +313,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
         private async Task<HttpResponseMessage> PostRequest(string url, string body, string accessToken)
         {
 
-            using (var handler = new HttpClientHandler { })
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -330,7 +329,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
         {
             var activityId = Guid.NewGuid().ToString();
             _logger.LogInformation($"Sending RDS Management request to {url}. ActivityId:{activityId}");
-            using (var handler = new HttpClientHandler { })
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
