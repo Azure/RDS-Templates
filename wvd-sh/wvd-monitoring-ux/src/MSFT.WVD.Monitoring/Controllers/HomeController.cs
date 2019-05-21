@@ -79,11 +79,6 @@ namespace MSFT.WVD.Monitoring.Controllers
                     messsage = $"VM performance queries file does not exist. Please upload 'metrics.xml' file to '{DirectoryNme}' .";
                     _logger.LogWarning("Log analytic query file is not exist.");
                 }
-          
-
-
-
-              
             }
             role = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles").FirstOrDefault();
             //var tenantGroups = HttpContext.Session.Get<IEnumerable<string>>("tenantGroups")
@@ -100,7 +95,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             _logger.LogInformation("Call api to get role assignment details");
 
             string upn = User.Claims.First(claim => claim.Type.Contains("upn")).Value;
-            string accessToken = await HttpContext.GetTokenAsync("access_token");
+            string accessToken = await HttpContext.GetTokenAsync("access_token").ConfigureAwait(false);
             string roleAssignments = string.Empty;
             HttpContext.Session.SetString("upn", upn);
             HttpContext.Session.SetString("accessToken", accessToken);

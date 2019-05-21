@@ -220,7 +220,7 @@
                                         <tr>
                                             <th>Select</th>
                                             <th>Session ID</th>
-                                            <th>User UPN</th>
+                                            <th>User Name</th>
                                         </tr>
                                     </thead>
                                     @{
@@ -235,11 +235,12 @@
                                                         <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].sessionHostName" type="hidden">
+                                                        <input asp-for="@Model.UserSessions[i].adUserName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].userPrincipalName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].sessionId" type="hidden">
                                                     </td>
                                                     <td>@Model.UserSessions[i].sessionId</td>
-                                                    <td><label> @Model.UserSessions[i].userPrincipalName  </label></td>
+                                                    <td><label> @Model.UserSessions[i].adUserName  </label></td>
                                                 </tr>
                                             </tbody>
                                         }

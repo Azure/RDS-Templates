@@ -239,7 +239,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
                         {
                             ErrorDetails= new ErrorDetails
                             {
-                                  StatusCode=(int)result.StatusCode,
+                                StatusCode=(int)result.StatusCode,
                                 Message = result.ReasonPhrase.ToString()
                             }
                         }
@@ -252,7 +252,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
         {
             _logger.LogInformation($"Service call to get activity details based on activityId {activityId}");
             // Here we will add user to the key
-            var key = new Tuple<string, string, string, string>(nameof(GetConnectionActivities), tenantGroupName, tenant, activityId);
+            var key = new Tuple<string, string, string, string>(nameof(GetActivityHostDetails), tenantGroupName, tenant, activityId);
 
             // Try to get from cache first
             var result = await _cache.GetOrCreateAsync(key, async entry =>
@@ -310,20 +310,20 @@ namespace MSFT.WVD.Monitoring.Common.Services
             return await Request(HttpMethod.Get, url, accessToken);
         }
 
-        private async Task<HttpResponseMessage> PostRequest(string url, string body, string accessToken)
-        {
+        //private async Task<HttpResponseMessage> PostRequest(string url, string body, string accessToken)
+        //{
 
-            using (var client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, url);
-                StringContent content = new StringContent(body);
-                content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                request.Content = content;
-                HttpResponseMessage response = await client.SendAsync(request);
-                return response;
-            }
-        }
+        //    using (var client = new HttpClient())
+        //    {
+        //        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        //        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, url);
+        //        StringContent content = new StringContent(body);
+        //        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        //        request.Content = content;
+        //        HttpResponseMessage response = await client.SendAsync(request);
+        //        return response;
+        //    }
+        //}
 
         private async Task<HttpResponseMessage> Request(HttpMethod httpMethod, string url, string accessToken)
         {

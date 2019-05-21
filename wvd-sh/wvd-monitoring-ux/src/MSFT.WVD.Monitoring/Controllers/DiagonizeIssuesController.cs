@@ -53,7 +53,7 @@ namespace MSFT.WVD.Monitoring.Controllers
               
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-                var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+                var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
                 accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
                 string startDate = $"{data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-dd")}T00:00:00Z";
                 string endDate = $"{data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-dd")}T23:59:59Z";
@@ -131,7 +131,7 @@ namespace MSFT.WVD.Monitoring.Controllers
             var viewData = new LogOffUserQuery();
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-            var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+            var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
             accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
 
             var messageStatus = new List<MessageStatus>();
@@ -145,17 +145,18 @@ namespace MSFT.WVD.Monitoring.Controllers
                         tenantName = item.tenantName,
                         hostPoolName = item.hostPoolName,
                         sessionHostName = item.sessionHostName,
-                        sessionId = item.sessionId
+                        sessionId = item.sessionId,
+                        adUserName = item.adUserName
                     };
                     var Content = new StringContent(JsonConvert.SerializeObject(logOffUserQuery), Encoding.UTF8, "application/json");
                     _logger.LogInformation($"Service Call to log off user session ");
                     // var response = await client.PostAsync($"SessionHost/LogOffUser", Content);
-                    var response = await _userSessionService.LogOffUserSession(accessToken, logOffUserQuery);
+                    var response = await _userSessionService.LogOffUserSession(accessToken, logOffUserQuery).ConfigureAwait(false);
                     if (response == HttpStatusCode.OK.ToString() || response == "Success")
                     {
                         messageStatus.Add(new MessageStatus()
                         {
-                            Message = $"Log off successfully for {item.userPrincipalName} user session.",
+                            Message = $"Log off successfully for {item.adUserName} user session.",
                             Status = "Success"
                         });
                     }
@@ -163,7 +164,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     {
                         messageStatus.Add(new MessageStatus()
                         {
-                            Message = $"Failed to logoff {item.userPrincipalName} user session.",
+                            Message = $"Failed to logoff {item.adUserName} user session.",
                             Status = "Error"
                         });
                     }
@@ -196,7 +197,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         {
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-            var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+            var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
             accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
 
             bool ShowMessageForm = false;
@@ -218,8 +219,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ConnectionActivity = data.ConnectionActivity,
                 ShowConnectedUser = true,
                 ShowMessageForm = ShowMessageForm,
-                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName)              ,
-                VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName)
+                UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName).ConfigureAwait(false),
+                VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName).ConfigureAwait(false)
             });
 
         }
@@ -234,7 +235,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 var messageStatus = new List<MessageStatus>();
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-                var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+                var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
                 accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
 
                 if (string.IsNullOrEmpty(data.Message) && string.IsNullOrEmpty(data.Title))
@@ -267,16 +268,18 @@ namespace MSFT.WVD.Monitoring.Controllers
                                 sessionId = item.sessionId,
                                 messageTitle = data.Title,
                                 messageBody = data.Message,
-                                userPrincipalName = item.userPrincipalName
+                                userPrincipalName = item.userPrincipalName,
+                                adUserName = item.adUserName
+
                             };
                             var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
                             _logger.LogInformation($"Call service to send message to {item.userPrincipalName}");
-                            var response = await _userSessionService.SendMessage(accessToken, sendMessageQuery);
+                            var response = await _userSessionService.SendMessage(accessToken, sendMessageQuery).ConfigureAwait(false);
                             if (response == HttpStatusCode.OK.ToString())
                             {
                                 messageStatus.Add(new MessageStatus()
                                 {
-                                    Message = $"Message sent successfully to {item.userPrincipalName}",
+                                    Message = $"Message sent successfully to {item.adUserName}",
                                     Status = "Success"
                                 });
                                
@@ -285,7 +288,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                             {
                                 messageStatus.Add(new MessageStatus()
                                 {
-                                    Message = $"Failed to send message to {item.userPrincipalName}",
+                                    Message = $"Failed to send message to {item.adUserName}",
                                     Status = "Error"
                                 });
                               
@@ -336,9 +339,9 @@ namespace MSFT.WVD.Monitoring.Controllers
         {
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-            var refreshtoken = await HttpContext.GetTokenAsync("refresh_token");
+            var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
             accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
-            var ConnectionActivity = await _diagnozeService.GetActivityHostDetails(accessToken, tenantGroupName, tenant, id);
+            var ConnectionActivity = await _diagnozeService.GetActivityHostDetails(accessToken, tenantGroupName, tenant, id).ConfigureAwait(false);
             if (ConnectionActivity?.Count > 0 && ConnectionActivity[0].ErrorDetails != null)
             {
                 _logger.LogError($"Error Occured : {ConnectionActivity[0].ErrorDetails.Message}");
@@ -373,7 +376,7 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<VMPerformance> GetVMPerformance(string hostName)
         {
-            var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
+            var refreshToken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
             var xDoc = HttpContext.Session.Get<XmlDocument>("LogAnalyticQuery");
             if(xDoc != null)
             {

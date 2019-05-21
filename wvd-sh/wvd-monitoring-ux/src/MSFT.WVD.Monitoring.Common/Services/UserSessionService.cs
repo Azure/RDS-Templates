@@ -62,7 +62,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     sessionHostName = (string)item["sessionHostName"],
                     userPrincipalName = (string)item["userPrincipalName"],
                     sessionId = (int)item["sessionId"],
-                    applicationType = (string)item["applicationType"]
+                    applicationType = (string)item["applicationType"],
+                    adUserName = (string)item["adUserName"]
                 }).ToList().Where(x => x.sessionHostName.ToString() == hostName).ToList();
             }
             else

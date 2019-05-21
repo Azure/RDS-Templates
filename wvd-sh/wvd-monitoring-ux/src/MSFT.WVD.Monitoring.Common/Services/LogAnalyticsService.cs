@@ -28,7 +28,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             _logger = logger?.CreateLogger<LogAnalyticsService>() ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public JObject PrepareBatchQueryRequest(string hostName, out List<Counter> counters, XmlDocument xDoc)
+        public JArray PrepareBatchQueryRequest(string hostName, out List<Counter> counters, XmlDocument xDoc)
         {
             counters = new List<Counter>();
             string WorkspaceID = Configuration.GetSection("AzureAd").GetSection("WorkspaceID").Value;
@@ -36,7 +36,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
             foreach (XmlNode node in xDoc.DocumentElement.ChildNodes)
             {
                 int id = 0;
-                // first node is the url ... have to go to nexted loc node 
                 foreach (XmlNode locNode in node)
                 {
                     id++;
@@ -74,53 +73,67 @@ namespace MSFT.WVD.Monitoring.Common.Services
                 }
             }
 
-            var queryPayLoad = new JObject();
-            queryPayLoad.Add("requests", jArrayQry);
-            return queryPayLoad;
+            return jArrayQry;
         }
-        public async Task<List<Counter>> ExecuteLogAnalyticsQuery(string refreshToken, string hostName, XmlDocument xmlDocument)
+        public async Task<VMPerformance> ExecuteLogAnalyticsQuery(string refreshToken, string hostName, XmlDocument xmlDocument)
         {
             var loganalyticUrl = Configuration.GetSection("configurations").GetSection("LogAnalytic_URL").Value;
             var accesstoken = _commonService.GetAccessTokenLogAnalytic(refreshToken);
-            VMPerformance vMPerformance = new VMPerformance();
-            var body = new JObject();
+            //VMPerformance vMPerformance = new VMPerformance();
             List<Counter> counters = new List<Counter>();
-            body = PrepareBatchQueryRequest(hostName, out counters, xmlDocument);
-            var url = $"{loganalyticUrl}/v1/$batch";
-            using (var client = new HttpClient())
+            var body = new JObject();
+            JArray jArray = PrepareBatchQueryRequest(hostName, out counters, xmlDocument);
+            if(jArray== null || jArray.Count == 0)
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accesstoken);
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
-                var content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
-                request.Content = content;
-                HttpResponseMessage response = await client.SendAsync(request);
-                var data = response.Content.ReadAsStringAsync().Result;
-                foreach (var item in JObject.Parse(data)["responses"])
+                return new VMPerformance()
                 {
-                    if (item["status"].ToString() == "200")
+                    Message = "Invalid Queries or Queries are no availble in metrics file."
+                };
+            }
+            else
+            {
+                body.Add("requests", jArray);
+                // var body = new JObject();
+                //  body = PrepareBatchQueryRequest(hostName, out counters, xmlDocument);
+                var url = $"{loganalyticUrl}/v1/$batch";
+                using (var client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accesstoken);
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
+                    var content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
+                    request.Content = content;
+                    HttpResponseMessage response = await client.SendAsync(request);
+                    var data = response.Content.ReadAsStringAsync().Result;
+                    foreach (var item in JObject.Parse(data)["responses"])
                     {
-                        if (item["body"]["tables"] != null && item["body"]["tables"][0]["rows"] != null && item["body"]["tables"][0]["rows"].ToString() != "[]" && item["body"]["tables"][0]["rows"].Count() > 0)
+                        if (item["status"].ToString() == "200")
                         {
-                            decimal avg = item["body"]["tables"][0]["rows"][0][0] != null ? (decimal)item["body"]["tables"][0]["rows"][0][0]:0;
-                            decimal value = item["body"]["tables"][0]["rows"][0][1]!=null ? (decimal)item["body"]["tables"][0]["rows"][0][1]:0;
-                            var status = item["body"]["tables"][0]["rows"][0][3].ToString();
-                            counters.Where(x => x.id == (int)item["id"])
-                            .Select(x => { x.avg = avg; x.Value = value; x.Status =status; return x; })
-                            .ToList();
+                            if (item["body"]["tables"] != null && item["body"]["tables"][0]["rows"] != null && item["body"]["tables"][0]["rows"].ToString() != "[]" && item["body"]["tables"][0]["rows"].Count() > 0)
+                            {
+                                decimal avg = item["body"]["tables"][0]["rows"][0][0] != null ? (decimal)item["body"]["tables"][0]["rows"][0][0] : 0;
+                                decimal value = item["body"]["tables"][0]["rows"][0][1] != null ? (decimal)item["body"]["tables"][0]["rows"][0][1] : 0;
+                                var status = item["body"]["tables"][0]["rows"][0][3].ToString();
+                                counters.Where(x => x.id == (int)item["id"])
+                                .Select(x => { x.avg = avg; x.Value = value; x.Status = status; return x; })
+                                .ToList();
+                            }
                         }
                     }
                 }
+                return new VMPerformance() {
+                    CurrentStateCounters= counters
+                }; 
             }
-            return counters;
+         
         }
         public async Task<VMPerformance> GetSessionHostPerformance(string refreshToken, string hostName, XmlDocument xmlDocument)
         {
             _logger.LogInformation($" Enter into GetSessionHostPerformance() to get log data for {hostName} ");
-
-            return new VMPerformance()
-            {
-                CurrentStateCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName, xmlDocument)
-            };
+            return await ExecuteLogAnalyticsQuery(refreshToken, hostName, xmlDocument);
+            //return new VMPerformance()
+            //{
+            //    CurrentStateCounters = await ExecuteLogAnalyticsQuery(refreshToken, hostName, xmlDocument)
+            //};
         }
 
 

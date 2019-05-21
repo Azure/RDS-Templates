@@ -13,7 +13,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string userPrincipalName { get; set; }
         public int sessionId { get; set; }
         public string applicationType { get; set; }
-
+        public string adUserName { get; set; }
         public bool IsSelected { get; set; }
         public ErrorDetails ErrorDetails { get; set; }
     }
@@ -28,6 +28,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string messageTitle { get; set; }
         public string messageBody { get; set; }
         public string userPrincipalName { get; set; }
+        public string adUserName { get; set; }
     }
 
     public class LogOffUserQuery
@@ -37,5 +38,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string hostPoolName { get; set; }
         public string sessionHostName { get; set; }
         public int sessionId { get; set; }
+        public string adUserName { get; set; }
+
     }
 }

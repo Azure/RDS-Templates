@@ -25,7 +25,7 @@ namespace MSFT.WVD.Monitoring.api
         {
             _logger.LogInformation($"Make api call to get user session of host {sessionHostName} within hostpool {hostPoolName},  tenant {tenant} and tenant group {tenantGroupName} ");
             string token = Request.Headers["Authorization"];
-            return await _userSessionService.GetUserSessions(token, tenantGroupName, tenant, hostPoolName, sessionHostName);
+            return await _userSessionService.GetUserSessions(token, tenantGroupName, tenant, hostPoolName, sessionHostName).ConfigureAwait(false);
         }
        
         // POST api/<controller>
@@ -34,7 +34,7 @@ namespace MSFT.WVD.Monitoring.api
         {
             _logger.LogInformation($"Make api call  get send message to user {sendMessageQuery.userPrincipalName}");
             string token = Request.Headers["Authorization"];
-            return await _userSessionService.SendMessage(token, sendMessageQuery);
+            return await _userSessionService.SendMessage(token, sendMessageQuery).ConfigureAwait(false);
         }
 
         [HttpPost("LogOffUser")]
@@ -42,7 +42,7 @@ namespace MSFT.WVD.Monitoring.api
         {
             _logger.LogInformation($"Make api call to log off user session of session id {logOffUserQuery.sessionId}");
             string token = Request.Headers["Authorization"];
-            return await _userSessionService.LogOffUserSession(token, logOffUserQuery);
+            return await _userSessionService.LogOffUserSession(token, logOffUserQuery).ConfigureAwait(false);
         }
     }
 }
