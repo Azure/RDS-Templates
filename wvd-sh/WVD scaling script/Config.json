@@ -8,14 +8,14 @@
 					"Value": "00000000-0000-0000-0000-000000000000"
 				},
 				{
-					"_Comments": "Stored Credentials of Azure Service Principal GUID",
+					"_Comments": "Stored Credentials of Azure Service Principal GUID or Username",
 					"Name": "AADApplicationId",
-					"Value": "00000000-0000-0000-0000-000000000000"
+					"Value": ""
 				},
 				{
 					"_Comments": "Subscription Id of the Azure",
 					"Name": "currentAzureSubscriptionId",
-					"Value": "00000000-0000-0000-0000-000000000000"
+					"Value": ""
 				},
 				{
 					"_Comments": "WVD tenant Group name",
@@ -35,22 +35,12 @@
 				{
 					"_Comments": "Hostpool session Load Balancing Type in Peak Hours",
 					"Name": "PeakLoadBalancingType",
-					"Value": "BreadthFirst"
-				},
-				{
-					"_Comments": "Hostpool session Load Balancing Type in OffPeak Hours",
-					"Name": "OffPeakLoadBalancingType",
 					"Value": "DepthFirst"
 				},
 				{
 					"_Comments": "Session Load Balancing Peak Hours",
 					"Name": "sessionLoadBalancingPeakHours",
 					"Value": "9:00-18:00"
-				},
-				{
-					"_Comments": "Session Load Balancing off Peak Hours",
-					"Name": "sessionLoadBalancingOffPeakHours",
-					"Value": "18:00-22:00"
 				}
 			]
 		},
@@ -64,7 +54,7 @@
 				{
 					"_Comments": "Stored Credentials of Username or WVD service Principal GUID",
 					"Name": "Username",
-					"Value": ""
+					"Value": "wvd.demo@peopletechcsp.onmicrosoft.com"
 				},
 				{
 					"_Comments": "use Password filed for testing only, set via New-StoredCredential",
