@@ -17,9 +17,9 @@ PS C:\>Install-Module Microsoft.RDInfra.RDPowershell  -AllowClobber
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 #Function for convert from UTC to Local time
-function localtimeConvert {
+function ConvertUTCtoLocal {
     param(
-        $timeDifferenceInHours
+       $timeDifferenceInHours
     )
 
     $UniversalTime = (Get-Date).ToUniversalTime()
@@ -36,6 +36,7 @@ function localtimeConvert {
     Return $ConvertedTime
 }
 
+
 <#
 .SYNOPSIS
 Function for writing the log
@@ -48,7 +49,7 @@ function Write-Log {
         , [string]$logname = $rdmiTenantlog
         , [string]$color = "white"
     )
-    $time = localtimeConvert $timeDifferenceInHours
+    $time = ConvertUTCtoLocal -timeDifferenceInHours $TimeDifference
     Add-Content $logname -Value ("{0} - [{1}] {2}" -f $time, $severity, $Message)
     if ($interactive) {
         switch ($severity) {
@@ -91,7 +92,7 @@ function Write-UsageLog {
         [bool]$depthBool = $True,
         [string]$logfilename = $RdmiTenantUsagelog
     )
-    $time = localtimeConvert $timeDifferenceInHours 
+    $time = ConvertUTCtoLocal -timeDifferenceInHours $TimeDifference 
     if ($depthBool) {
         Add-Content $logfilename -Value ("{0}, {1}, {2}" -f $time, $hostpoolName, $vmcount)
     }
@@ -103,7 +104,7 @@ function Write-UsageLog {
 }
 <#
 .SYNOPSIS
-Function for creating variable from XML
+Function for creating variable from JSON
 #>
 function SetScriptVariable ($Name, $Value) {
     Invoke-Expression ("`$Script:" + $Name + " = `"" + $Value + "`"")
@@ -147,12 +148,14 @@ $Variable.RDMIScale.Azure | ForEach-Object { $_.Variable } | Where-Object { $_.N
 $Variable.RDMIScale.RdmiScaleSettings | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { SetScriptVariable -Name $_.Name -Value $_.Value }
 $Variable.RDMIScale.Deployment | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { SetScriptVariable -Name $_.Name -Value $_.Value }
 ##### Construct Begin time and End time for the Peak period from utc to local time #####
-$CurrentDateTime = localtimeConvert $timeDifferenceInHours
+$TimeDifference = [string]$TimeDifferenceInHours
+$CurrentDateTime = ConvertUTCtoLocal -timeDifferenceInHours $TimeDifference
 
 # Checking WVD Modules are existed or not
 $WVDModules = Get-Module -Name "Microsoft.RDInfra.RDPowershell" -ErrorAction SilentlyContinue
 if (!$WVDModules) {
-    Install-Module "Microsoft.RDInfra.RDPowershell" -AllowClobber
+    Write-Log 1 "WVD Modules doesn't exist. Ensure WVD Modules are installed if not execute this command 'Install-Module Microsoft.RDInfra.RDPowershell  -AllowClobber' "
+	exit
 }
 
 Import-Module "Microsoft.RDInfra.RDPowershell"
@@ -174,15 +177,12 @@ $WVDCreds = New-Object -TypeName System.Management.Automation.PSCredential -Argu
 
 if (!$isServicePrincipalBool) {
     # if standard account is provided login in WVD with that account 
-
-
     try {
         $authentication = Add-RdsAccount -DeploymentUrl $RDBroker -Credential $WVDCreds
 
     }
     catch {
         Write-Log 1 "Failed to authenticate with WVD Tenant with standard account: $($_.exception.message)" "Error"
-
         exit 1
 
     }
@@ -191,16 +191,13 @@ if (!$isServicePrincipalBool) {
 }
 else {
     # if service principal account is provided login in WVD with that account 
-
-
     try {
-        $authentication = Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $AADTenantId -Credential $wvdAppCreds -ServicePrincipal
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBroker -TenantId $AADTenantId -Credential $wvdCreds -ServicePrincipal
 
     }
     catch {
-        #Write-Log 1 "Failed to authenticate with WVD Tenant with the service principal: $($_.exception.message)" "Error"
-
-        #exit 1
+        Write-Log 1 "Failed to authenticate with WVD Tenant with the service principal: $($_.exception.message)" "Error"
+        exit 1
     }
     $obj = $authentication | Out-String
     Write-Log 3 "Authenticating as service principal account for WVD. Result: `n$obj" "Info"
@@ -241,7 +238,8 @@ if ($hostpoolInfo -eq $null) {
 #Compare session loadbalancing peak hours and setting up appropriate load balacing type based on PeakLoadBalancingType
 if ($CurrentDateTime -ge $PeakBeginDateTime -and $CurrentDateTime -le $PeakEndDateTime) {
 
-    Write-Log 3 "Changing Hostpool Load Balance Type: Current Date Time is: $CurrentDateTime" "Info"
+if($hostpoolInfo.LoadBalancerType -ne $PeakLoadBalancingType){
+    Write-Log 3 "Changing Hostpool Load Balance Type:$PeakLoadBalancingType Current Date Time is: $CurrentDateTime" "Info"
 
     if ($PeakLoadBalancingType -eq "DepthFirst") {                
         Set-RdsHostPool -TenantName $tenantName -Name $hostPoolName -DepthFirstLoadBalancer -MaxSessionLimit $hostpoolInfo.MaxSessionLimit
@@ -249,7 +247,8 @@ if ($CurrentDateTime -ge $PeakBeginDateTime -and $CurrentDateTime -le $PeakEndDa
     else {
         Set-RdsHostPool -TenantName $tenantName -Name $hostPoolName -BreadthFirstLoadBalancer -MaxSessionLimit $hostpoolInfo.MaxSessionLimit
     }
-				Write-Log 3 "Hostpool Load balancer Type in Session Load Balancing Peak Hours is '$PeakLoadBalancingType Load Balancing'"
+    Write-Log 3 "Hostpool Load balancer Type in Session Load Balancing Peak Hours is '$PeakLoadBalancingType Load Balancing'"
+    }
 }
 
      
@@ -416,7 +415,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                 $numberOfRunningHost = $numberOfRunningHost + 1
             }
         }
-
+        #Defined minimum no of rdsh value from JSON file
         [int]$definedMinimumnumberofrdsh = $MinimumNumberOfRDSH
 
         #Check and Collecting dynamically stored MinimumNoOfRDSH Value																 
@@ -539,7 +538,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                  
                     }
                 }
-                if ($noconnectionsofhost -ge $definedMinimumnumberofrdsh) {
+                if ($noconnectionsofhost -gt $definedMinimumnumberofrdsh) {
                     [int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - $noconnectionsofhost
                     Clear-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
                     Set-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt $MinimumNumberOfRDSH
@@ -831,14 +830,14 @@ else {
                 if ($roleInstance.PowerState -eq "VM running") {
                     $numberOfRunningHost = $numberOfRunningHost + 1
 
-                    # we need to calculate available capacity of sessions  
+                    # Calculate available capacity of sessions  
                     $roleSize = Get-AzureRmVMSize -Location $roleInstance.Location | Where-Object { $_.Name -eq $roleInstance.HardwareProfile.VmSize }
 
                     $totalRunningCores = $totalRunningCores + $roleSize.NumberOfCores
                 }
             }
         }
-
+        #Defined minimum no of rdsh value from JSON file
         [int]$definedMinimumnumberofrdsh = $MinimumNumberOfRDSH
     
         #Check and Collecting dynamically stored MinimumNoOfRDSH Value																 
@@ -1014,7 +1013,7 @@ else {
                  
                     }
                 }
-                if ($noconnectionsofhost -ge $definedMinimumnumberofrdsh) {
+                if ($noconnectionsofhost -gt $definedMinimumnumberofrdsh) {
                     [int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - $noConnectionsofhost
                     Clear-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
                     Set-Content -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt $MinimumNumberOfRDSH
@@ -1043,13 +1042,16 @@ else {
             if ($HostpoolSessionCount -ge $ScaleFactor) {
    
                 #check if the available capacity meets the number of sessions or not
-                Write-Log 1 "Current total number of user sessions: $(($hostPoolUserSessions).Count)" "Info"
+                Write-Log 1 "Current total number of user sessions: $HostpoolSessionCount" "Info"
                 Write-Log 1 "Current available session capacity is less than demanded user sessions, starting session host" "Info"
                 #running out of capacity, we need to start more VMs if there are any 
-                foreach ($sessionHost in $RDSessionHost.sessionhostname) {
+                foreach ($sessionHosts in $RDSessionHost) {
+                    $sessionHost = $sessionHosts.SessionHostname
                     $VMName = $sessionHost.Split(".")[0]
                     $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
 
+                     if ($sessionHosts.Status -eq "Available" -and $sessionHosts.Sessions -eq 0) 
+                            { break }
                     if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
                         #check if the Azure VM is running or not
 
