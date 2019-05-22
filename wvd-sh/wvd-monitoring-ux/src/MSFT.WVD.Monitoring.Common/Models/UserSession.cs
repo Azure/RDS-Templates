@@ -39,6 +39,5 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string sessionHostName { get; set; }
         public int sessionId { get; set; }
         public string adUserName { get; set; }
-
     }
 }

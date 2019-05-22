@@ -17,9 +17,10 @@ namespace MSFT.WVD.Monitoring.Common.Services
     public class DiagnozeService
     {
         IConfiguration _config;
-        string _brokerUrl;
         ILogger _logger;
         IMemoryCache _cache;
+        string _brokerUrl;
+
 
         public DiagnozeService(IConfiguration configuration, ILoggerFactory logger, IMemoryCache memoryCache)
         {
@@ -27,7 +28,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _cache = memoryCache ?? throw new ArgumentException(nameof(memoryCache));
 
-         
+
             _brokerUrl = _config["configurations:RDBROKER_URL"];
             if (string.IsNullOrEmpty(_brokerUrl))
             {
@@ -83,7 +84,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     userName = item["userName"].ToString(),
                     outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
                     isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
-                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"]: null,
+                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
                     ClientOS = (string)item["details"]["ClientOS"],
                     ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
                     Tenants = (string)item["details"]["Tenants"],
@@ -159,7 +160,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     ObjectsDeleted = (string)item["ObjectsDeleted"] == null || (string)item["ObjectsDeleted"] == "" ? 0 : (int)item["ObjectsDeleted"],
                     ObjectsFetched = (string)item["ObjectsFetched"] == null || (string)item["ObjectsFetched"] == "" ? 0 : (int)item["ObjectsFetched"],
                     ObjectsUpdated = (string)item["ObjectsUpdated"] == null || (string)item["ObjectsUpdated"] == "" ? 0 : (int)item["ObjectsUpdated"],
-                    Tenants=(string)item["details"]["Tenants"]
+                    Tenants = (string)item["details"]["Tenants"]
                 }).ToList();
 
             }
@@ -245,7 +246,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
                         }
                     };
             }
-           
         }
 
         public async Task<List<ConnectionActivity>> GetActivityHostDetails(string accessToken, string tenantGroupName, string tenant, string activityId)
@@ -309,21 +309,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
         {
             return await Request(HttpMethod.Get, url, accessToken);
         }
-
-        //private async Task<HttpResponseMessage> PostRequest(string url, string body, string accessToken)
-        //{
-
-        //    using (var client = new HttpClient())
-        //    {
-        //        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        //        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, url);
-        //        StringContent content = new StringContent(body);
-        //        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-        //        request.Content = content;
-        //        HttpResponseMessage response = await client.SendAsync(request);
-        //        return response;
-        //    }
-        //}
 
         private async Task<HttpResponseMessage> Request(HttpMethod httpMethod, string url, string accessToken)
         {

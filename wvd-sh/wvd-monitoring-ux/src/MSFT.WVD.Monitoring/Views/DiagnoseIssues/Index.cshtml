@@ -32,11 +32,11 @@
                 <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
                     <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2"></label>
                     <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
-                        <select asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>().Where(x=> x.Text != ActivityType.None.ToString() ).ToList()" class="form-control width-100" id="activityType"></select>
+                        <select asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>().Where(x=> x.Text != ActivityType.None.ToString() ).ToList()" class="form-control  width-100 " id="activityType"></select>
                     </div>
                     <label asp-for="DiagonizeQuery.ActivityOutcome" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2">Outcome</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
-                        <select asp-for="DiagonizeQuery.ActivityOutcome" asp-items="Html.GetEnumSelectList<ActivityOutcome>().OrderBy(x=>x.Text)"  class="form-control width-100" id="activityOutcome"></select>
+                        <select asp-for="DiagonizeQuery.ActivityOutcome" asp-items="Html.GetEnumSelectList<ActivityOutcome>().OrderBy(x=>x.Text)"  class="form-control bottom  width-100" id="activityOutcome"></select>
                     </div>
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 ms-smPush2 p-l-r-15 m-b-20">
@@ -95,7 +95,7 @@
                                 <td>@d.startTime</td>
                                 <td>@d.endTime</td>
                                 <td>@d.ClientOS</td>
-                                <td>@d.ClientIPAddress</td>
+                                <td class="not-active">@d.ClientIPAddress</td>
                                 <td>@d.SessionHostName</td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(d.SessionHostName))
@@ -184,7 +184,7 @@
                                 <td>@d.outcome </td>
                                 <td>@(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")</td>
                                 <td>@d.errorMessage </td>
-                                <td>@d.ClientIPAddress </td>
+                                <td class="not-active">@d.ClientIPAddress </td>
                                 <td>@d.ClientOS </td>
                             </tr>
                         </tbody>
@@ -210,7 +210,7 @@
             new fabric['Table'](TableElements[i]);
         }
         document.getElementById("upn")
-            .addEventListener("keyup", function () {
+            .addEventListener("change", function () {
                 document.getElementById("validateUpn").style.display = "none";
             }, false);
         document.getElementById("loader1").hidden = true;

@@ -17,7 +17,6 @@ namespace MSFT.WVD.Monitoring.Common.Services
 {
     public class LogAnalyticsService
     {
-        // CommonService _commonService = new CommonService();
         CommonService _commonService;
         IConfiguration Configuration { get; }
         ILogger _logger;
@@ -36,24 +35,26 @@ namespace MSFT.WVD.Monitoring.Common.Services
             foreach (XmlNode node in xDoc.DocumentElement.ChildNodes)
             {
                 int id = 0;
-                foreach (XmlNode locNode in node)
+                foreach (XmlNode childNode in node)
                 {
                     id++;
                     string query = "", timespan = "";
-                    foreach (XmlNode childnode in locNode)
+                    foreach (XmlNode childnode in childNode)
                     {
                         if (childnode.Name == "Query")
                         {
                             query = childnode.InnerText.Replace(System.Environment.NewLine, "").Trim();
                         }
 
-                        if (childnode.Name == "timespan")
+                        if (!string.IsNullOrEmpty(query) && childnode.Name == "timespan")
                         {
                             timespan = childnode.InnerText.Replace(System.Environment.NewLine, "").Trim();
                         }
                     }
 
-                    jArrayQry.Add(new JObject() {
+                    if (!string.IsNullOrEmpty(query) && !string.IsNullOrEmpty(timespan))
+                    {
+                        jArrayQry.Add(new JObject() {
                         new JProperty("id",id),
                         new JProperty("body",new JObject(){
                         new JProperty("query",String.Format(query,"'"+hostName+"'").Trim()),
@@ -62,12 +63,12 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     new JProperty("method","POST"),
                     new JProperty("path","/query"),
                     new JProperty("workspace",WorkspaceID),
-                });
-
+                    });
+                    }
                     counters.Add(new Counter()
                     {
                         id = id,
-                        ObjectName = locNode.Name
+                        ObjectName = childNode.Name
 
                     });
                 }
@@ -83,11 +84,11 @@ namespace MSFT.WVD.Monitoring.Common.Services
             List<Counter> counters = new List<Counter>();
             var body = new JObject();
             JArray jArray = PrepareBatchQueryRequest(hostName, out counters, xmlDocument);
-            if(jArray== null || jArray.Count == 0)
+            if (jArray == null || jArray.Count == 0)
             {
                 return new VMPerformance()
                 {
-                    Message = "Invalid Queries or Queries are no availble in metrics file."
+                    Message = "Invalid Queries or Queries are not availble in metrics file. Please ckeck 'metrics.xml' file. "
                 };
             }
             else
@@ -120,11 +121,12 @@ namespace MSFT.WVD.Monitoring.Common.Services
                         }
                     }
                 }
-                return new VMPerformance() {
-                    CurrentStateCounters= counters
-                }; 
+                return new VMPerformance()
+                {
+                    CurrentStateCounters = counters
+                };
             }
-         
+
         }
         public async Task<VMPerformance> GetSessionHostPerformance(string refreshToken, string hostName, XmlDocument xmlDocument)
         {

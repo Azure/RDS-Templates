@@ -13,8 +13,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
     {
         IConfiguration _config;
         ILogger _logger;
-        //private const string tokenUrl = "https://login.microsoftonline.com//common/oauth2/token";
-      
+
         public CommonService(IConfiguration configuration, ILoggerFactory logger)
         {
             _logger = logger?.CreateLogger<DiagnozeService>() ?? throw new ArgumentNullException(nameof(logger));
@@ -28,7 +27,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             Dictionary<string, string> requestdata = new Dictionary<string, string>();
             var url = _config["configurations:AAD_Token_URL"];
             requestdata.Add("grant_type", "refresh_token");
-            requestdata.Add("resource", _config["configurations:LogAnalytic_URL"] );
+            requestdata.Add("resource", _config["configurations:LogAnalytic_URL"]);
             requestdata.Add("refresh_token", refreshToken);
             using (HttpClient client = new HttpClient())
             {

@@ -62,7 +62,7 @@
                     <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
                         <label asp-for="ConnectionActivity.ClientIPAddress" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Client IP:</label>
                         <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                            <span>@Model.ConnectionActivity.ClientIPAddress</span>
+                            <span class="not-active">@Model.ConnectionActivity.ClientIPAddress</span>
                             <input asp-for="@Model.ConnectionActivity.ClientIPAddress" type="hidden">
                         </div>
                     </div>
@@ -366,11 +366,11 @@
         }
 
         document.getElementById("texttitle")
-            .addEventListener("keyup", function () {
+            .addEventListener("change", function () {
                 document.getElementById("validationtitle").style.display = "none";
             }, false);
         document.getElementById("texterror")
-            .addEventListener("keyup", function () {
+            .addEventListener("change", function () {
                 document.getElementById("validationmsg").style.display = "none";
             }, false);
 

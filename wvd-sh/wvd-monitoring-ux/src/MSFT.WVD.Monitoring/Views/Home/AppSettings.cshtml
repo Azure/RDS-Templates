@@ -33,7 +33,7 @@
 <script type="text/javascript">
     (function () {
         document.getElementById("tenantgrp")
-            .addEventListener("keyup", function () {
+            .addEventListener("change", function () {
               
                 if (document.getElementById("tenantgrp").value.length > 0 && document.getElementById("tenant").value.length > 0) {
                     document.getElementById("save").removeAttribute("disabled");
@@ -43,7 +43,7 @@
               
             }, false);
         document.getElementById("tenant")
-            .addEventListener("keyup", function () {
+            .addEventListener("change", function () {
                 if (document.getElementById("tenantgrp").value.length > 0 && document.getElementById("tenant").value.length > 0) {
                     document.getElementById("save").removeAttribute("disabled");
                     document.getElementById("save").className = "ms-Button primary-btn";

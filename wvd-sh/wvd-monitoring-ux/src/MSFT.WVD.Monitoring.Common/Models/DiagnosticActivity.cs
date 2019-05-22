@@ -20,8 +20,6 @@ namespace MSFT.WVD.Monitoring.Common.Models
         All = 2,
     }
 
-    /***Activity class for each activity*****/
-
     public class ConnectionActivity
     {
         public string activityId { get; set; }

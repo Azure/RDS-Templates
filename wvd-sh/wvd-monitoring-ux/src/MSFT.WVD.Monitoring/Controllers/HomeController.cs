@@ -69,14 +69,23 @@ namespace MSFT.WVD.Monitoring.Controllers
                 var path = _fileProvider.GetFileInfo("/metrics.xml");
                 if(path.Exists)
                 {
-                    xDoc.Load(path.PhysicalPath);
-                    _logger.LogInformation("save Log analytic queries in session storage ");
-                    HttpContext.Session.Set<XmlDocument>("LogAnalyticQuery", xDoc);
+                    try
+                    {
+                        xDoc.Load(path.PhysicalPath);
+                        _logger.LogInformation("save Log analytic queries in session storage ");
+                        HttpContext.Session.Set<XmlDocument>("LogAnalyticQuery", xDoc);
+                    }
+                    catch (System.Xml.XmlException ex)
+                    {
+                        _logger.LogError($"Failed to load 'metrics.xml' .{ex.Message}");
+                        messsage = $"Failed to load 'metrics.xml' .{ex.Message}";
+                    }
+                  
                 }
                 else
                 {
                     string DirectoryNme = _hostingEnvironment.ContentRootPath;
-                    messsage = $"VM performance queries file does not exist. Please upload 'metrics.xml' file to '{DirectoryNme}' .";
+                    messsage = $"VM performance queries file does not exist or invalid format. Please upload/correct 'metrics.xml' file to '{DirectoryNme}' .";
                     _logger.LogWarning("Log analytic query file is not exist.");
                 }
             }

@@ -9,7 +9,6 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public const string invalidToken = "invalid token";
         public const string invalidCode = "invalid code";
         public const string tenantGroupName = "Default Tenant Group";
-
     }
 
 
