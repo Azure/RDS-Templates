@@ -254,10 +254,21 @@ Configuration SelfhostConfig {
                         ValueType   = "DWORD"
 		}
 
-		Script OutlookCacheMode {
+				Script OutlookCacheMode {
 
 			SetScript = {
-				reg load HKLM\TempDefault C:\Users\Default\NTUSER.DAT
+                $defaultProf = @(@{path="HKU:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="2"},
+		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="enable"; value = 1},
+		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
+		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
+		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="syncwindowsetting"; value=1})
+                reg unload HKU\TempDefault 2> $null
+                Start-Sleep -Seconds 1
+				reg load HKU\TempDefault C:\Users\Default\NTUSER.DAT 2> $null 
+                Start-Sleep -Seconds 1 
+
+                New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
+                Start-Sleep -Milliseconds 500
 
 					foreach ($a in $defaultProf)
 					{
@@ -268,26 +279,38 @@ Configuration SelfhostConfig {
 						else
 						{
 							New-Item -Path $a.path -Force
-								New-ItemProperty -Path $a.path -Name $a.name -Value $a.value    
+							New-ItemProperty -Path $a.path -Name $a.name -Value $a.value    
 						}
 					}
 
 					Start-Sleep -Seconds 5
 
-					reg unload HKLM\TempDefault
+                    Remove-PSDrive -PSProvider Registry -Name HKU
+					reg unload HKU\TempDefault 2> $null
 			}
 
 			TestScript = {
-				reg load HKLM\TempDefault C:\Users\Default\NTUSER.DAT
+                $defaultProf = @(@{path="HKU:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="2"},
+		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="enable"; value = 1},
+		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
+		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
+		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="syncwindowsetting"; value=1})
+                reg unload HKU\TempDefault 2> $null
+                Start-Sleep -Seconds 1
+				reg load HKU\TempDefault C:\Users\Default\NTUSER.DAT 2> $null 
+                Start-Sleep -Seconds 1 
 
-					$result = $true
+                New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
+                Start-Sleep -Milliseconds 500
+
+				$result = $true
 
 					foreach ($a in $defaultProf)
 					{
 						if(!(Test-Path $a.path))
 						{
 							Write-Information -message '$($s.path) not found'
-								$result = $false
+							$result = $false
 						}
 						else
 						{
@@ -295,7 +318,7 @@ Configuration SelfhostConfig {
 								if($value -ne $a.value)
 								{ 
 									Write-Information -message '$($s.path) has no compliant value $($a.name):$value'
-																											  $result = $false
+									$result = $false
 								}
 								else
 								{
@@ -306,25 +329,27 @@ Configuration SelfhostConfig {
 					}
 					Start-Sleep -Seconds 5
 
-					reg unload HKLM\TempDefault
+
+                    Remove-PSDrive -PSProvider Registry -Name HKU
+					reg unload HKU\TempDefault 2> $null
 
 					$result
 			}
 			GetScript = {@{Result="Ok"}}
 		}
 
-                Script RestartFSLogix {
-                    SetScript = {
-                        Restart-Service -Name frxsvc
-                    }
+        Script RestartFSLogix {
+            SetScript = {
+                Restart-Service -Name frxsvc
+            }
 
-                    TestScript = {
-                        $result = $false
-                        Get-Service -Name frxsvc
-                        $result
-                    }
-                    GetScript = {@{Result="Ok"}}
-                    DependsOn = "[Registry]LogLocation"
-                } 
+            TestScript = {
+                $result = $false
+                Get-Service -Name frxsvc
+                $result
+            }
+            GetScript = {@{Result="Ok"}}
+            DependsOn = "[Registry]LogLocation"
+        } 
 	}
 }
