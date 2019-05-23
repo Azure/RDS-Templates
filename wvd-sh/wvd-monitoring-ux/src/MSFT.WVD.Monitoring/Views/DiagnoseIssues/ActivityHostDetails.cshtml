@@ -361,7 +361,6 @@
 
         var msgbardiv = document.getElementById("msgbardiv");
         if (msgbardiv != null) {
-            console.log("testttttt");
             document.getElementById("loader1").style.display = "none";
 
             var chk = document.getElementsByClassName("chkbox");
@@ -374,15 +373,21 @@
         }
 
         document.getElementById("texttitle")
-            .addEventListener("change", function () {
-                document.getElementById("validationtitle").style.display = "none";
-            }, false);
+            .addEventListener("change", TitleChange , false);
+        document.getElementById("texttitle")
+            .addEventListener("keyup", TitleChange, false);
         document.getElementById("texterror")
-            .addEventListener("change", function () {
-                document.getElementById("validationmsg").style.display = "none";
-            }, false);
+            .addEventListener("change", MessageChange, false);
+        document.getElementById("texterror")
+            .addEventListener("keyup", MessageChange, false);
 
-      
+        function TitleChange(event) {
+            document.getElementById("validationtitle").style.display = "none";
+        }
+        function MessageChange(event) {
+            document.getElementById("validationmsg").style.display = "none";
+        }
+
         document.getElementById("sendmsg").addEventListener("click", function () {
             document.getElementById("loader1").style.display = "block";
         }, false);

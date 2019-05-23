@@ -53,49 +53,58 @@ namespace MSFT.WVD.Monitoring.Controllers
               
                 tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
-                var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
-                accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
-                string startDate = $"{data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-dd")}T00:00:00Z";
-                string endDate = $"{data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-dd")}T23:59:59Z";
-
-                if (data.DiagonizeQuery.ActivityType == ActivityType.Management)
+                if(string.IsNullOrEmpty(tenantGroupName) || string.IsNullOrEmpty(tenant))
                 {
-                    _logger.LogInformation($"Service call to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
-                    //call from service layer
-                    viewData.ManagementActivity = await _diagnozeService.GetManagementActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
-                    if (viewData.ManagementActivity?.Count > 0 && viewData.ManagementActivity[0].ErrorDetails != null)
-                    {
-                        _logger.LogError($"Error Occured : {viewData.ManagementActivity[0].ErrorDetails.Message}");
-                        return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ManagementActivity[0].ErrorDetails.StatusCode, Message = viewData.ManagementActivity[0].ErrorDetails.Message });
-                    }
-                    viewData.ActivityType = viewData.ManagementActivity?.Count() > 0 ? ActivityType.Management : ActivityType.None;
+                    return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)HttpStatusCode.Forbidden, Message = "Invalid tennat group name or tenant name." });
                 }
-                else if (data.DiagonizeQuery.ActivityType == ActivityType.Connection)
+                else
                 {
-                    _logger.LogInformation($"Service Call  to get connection activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+                    var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
+                    accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
+                    string startDate = $"{data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-dd")}T00:00:00Z";
+                    string endDate = $"{data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-dd")}T23:59:59Z";
 
-                    //call from service layer
-                    viewData.ConnectionActivity = await _diagnozeService.GetConnectionActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
-                    if (viewData.ConnectionActivity?.Count > 0 && viewData.ConnectionActivity[0].ErrorDetails != null)
+                    if (data.DiagonizeQuery.ActivityType == ActivityType.Management)
                     {
-                        _logger.LogError($"Error Occured : {viewData.ConnectionActivity[0].ErrorDetails.Message}");
-                        return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ConnectionActivity[0].ErrorDetails.StatusCode, Message = viewData.ConnectionActivity[0].ErrorDetails.Message });
+                        _logger.LogInformation($"Service call to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+                        //call from service layer
+                        viewData.ManagementActivity = await _diagnozeService.GetManagementActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
+                        if (viewData.ManagementActivity?.Count > 0 && viewData.ManagementActivity[0].ErrorDetails != null)
+                        {
+                            _logger.LogError($"Error Occured : {viewData.ManagementActivity[0].ErrorDetails.Message}");
+                            return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ManagementActivity[0].ErrorDetails.StatusCode, Message = viewData.ManagementActivity[0].ErrorDetails.Message });
+                        }
+                        viewData.ActivityType = viewData.ManagementActivity?.Count() > 0 ? ActivityType.Management : ActivityType.None;
                     }
-
-                    viewData.ActivityType = viewData.ConnectionActivity?.Count() > 0 ? ActivityType.Connection : ActivityType.None;
-                }
-                else if (data.DiagonizeQuery.ActivityType == ActivityType.Feed)
-                {
-                    _logger.LogInformation($"Service call to get feed activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
-
-                    viewData.FeedActivity = await _diagnozeService.GetFeedActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
-                    if (viewData.FeedActivity?.Count > 0 && viewData.FeedActivity[0].ErrorDetails != null)
+                    else if (data.DiagonizeQuery.ActivityType == ActivityType.Connection)
                     {
-                        _logger.LogError($"Error Occured : {viewData.FeedActivity[0].ErrorDetails.Message}");
-                        return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.FeedActivity[0].ErrorDetails.StatusCode, Message = viewData.FeedActivity[0].ErrorDetails.Message });
+                        _logger.LogInformation($"Service Call  to get connection activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+
+                        //call from service layer
+                        viewData.ConnectionActivity = await _diagnozeService.GetConnectionActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
+                        if (viewData.ConnectionActivity?.Count > 0 && viewData.ConnectionActivity[0].ErrorDetails != null)
+                        {
+                            _logger.LogError($"Error Occured : {viewData.ConnectionActivity[0].ErrorDetails.Message}");
+                            return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ConnectionActivity[0].ErrorDetails.StatusCode, Message = viewData.ConnectionActivity[0].ErrorDetails.Message });
+                        }
+
+                        viewData.ActivityType = viewData.ConnectionActivity?.Count() > 0 ? ActivityType.Connection : ActivityType.None;
                     }
-                    viewData.ActivityType = viewData.FeedActivity?.Count() > 0 ? ActivityType.Feed : ActivityType.None;
+                    else if (data.DiagonizeQuery.ActivityType == ActivityType.Feed)
+                    {
+                        _logger.LogInformation($"Service call to get feed activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
+
+                        viewData.FeedActivity = await _diagnozeService.GetFeedActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
+                        if (viewData.FeedActivity?.Count > 0 && viewData.FeedActivity[0].ErrorDetails != null)
+                        {
+                            _logger.LogError($"Error Occured : {viewData.FeedActivity[0].ErrorDetails.Message}");
+                            return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.FeedActivity[0].ErrorDetails.StatusCode, Message = viewData.FeedActivity[0].ErrorDetails.Message });
+                        }
+                        viewData.ActivityType = viewData.FeedActivity?.Count() > 0 ? ActivityType.Feed : ActivityType.None;
+                    }
                 }
+
+              
             }
             HttpContext.Session.Set<DiagonizeQuery>("SearchQuery", data.DiagonizeQuery);
             viewData.DiagonizeQuery = data.DiagonizeQuery;

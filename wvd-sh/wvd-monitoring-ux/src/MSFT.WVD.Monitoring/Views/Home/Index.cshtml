@@ -49,24 +49,30 @@
 <script type="text/javascript">
     (function () {
         document.getElementById("tenantgrp")
-            .addEventListener("change", function () {
-             
-                if (document.getElementById("tenantgrp").value.length > 0 && document.getElementById("tenant").value.length > 0) {
-                    document.getElementById("save").removeAttribute("disabled");
-                    document.getElementById("save").className = "ms-Button primary-btn";
-                }
-                document.getElementById("validateTenantGrp").style.display = "none";
-
-
-            }, false);
+            .addEventListener('change', TenantGroupChange, false);
+        document.getElementById("tenantgrp")
+            .addEventListener('keyup', TenantGroupChange, false);
         document.getElementById("tenant")
-            .addEventListener("change", function () {
-                if (document.getElementById("tenantgrp").value.length > 0 && document.getElementById("tenant").value.length > 0) {
-                    document.getElementById("save").removeAttribute("disabled");
-                    document.getElementById("save").className = "ms-Button primary-btn";
-                }
-                document.getElementById("validatetenant").style.display = "none";
-            }, false);
+            .addEventListener('keyup', TenantChange, false);
+        document.getElementById("tenant")
+            .addEventListener('change', TenantChange, false);
+
+        function TenantGroupChange(event) {
+            if (document.getElementById("tenantgrp").value.length > 0 && document.getElementById("tenant").value.length > 0) {
+                document.getElementById("save").removeAttribute("disabled");
+                document.getElementById("save").className = "ms-Button primary-btn";
+            }
+            document.getElementById("validateTenantGrp").style.display = "none";
+        };
+
+        function TenantChange(event) {
+            if (document.getElementById("tenantgrp").value.length > 0 && document.getElementById("tenant").value.length > 0) {
+                document.getElementById("save").removeAttribute("disabled");
+                document.getElementById("save").className = "ms-Button primary-btn";
+            }
+            document.getElementById("validatetenant").style.display = "none";
+        };
+
         var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
         for (var i = 0; i < ContextualMenuElements.length; i++) {
             var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");

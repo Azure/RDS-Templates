@@ -95,7 +95,7 @@
                                 <td>@d.startTime</td>
                                 <td>@d.endTime</td>
                                 <td>@d.ClientOS</td>
-                                <td class="not-active">@d.ClientIPAddress</td>
+                                <td><a href="" class="not-active">@d.ClientIPAddress </a></td>
                                 <td>@d.SessionHostName</td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(d.SessionHostName))
@@ -184,7 +184,7 @@
                                 <td>@d.outcome </td>
                                 <td>@(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")</td>
                                 <td>@d.errorMessage </td>
-                                <td class="not-active">@d.ClientIPAddress </td>
+                                <td><a href="" class="not-active"> @d.ClientIPAddress </a> </td>
                                 <td>@d.ClientOS </td>
                             </tr>
                         </tbody>
@@ -211,6 +211,10 @@
         }
         document.getElementById("upn")
             .addEventListener("change", function () {
+                document.getElementById("validateUpn").style.display = "none";
+            }, false);
+        document.getElementById("upn")
+            .addEventListener("keyup", function () {
                 document.getElementById("validateUpn").style.display = "none";
             }, false);
         document.getElementById("loader1").hidden = true;
