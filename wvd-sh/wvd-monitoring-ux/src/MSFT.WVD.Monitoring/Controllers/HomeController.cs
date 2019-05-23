@@ -28,9 +28,9 @@ namespace MSFT.WVD.Monitoring.Controllers
         private readonly IHostingEnvironment _hostingEnvironment;
         public HomeController(IMemoryCache cache , IFileProvider fileProvider, ILogger<DiagnoseIssuesController> logger, IHostingEnvironment hostingEnvironment)
         {
-            _fileProvider = fileProvider;
-            _logger = logger;
-            _hostingEnvironment = hostingEnvironment;
+                _fileProvider = fileProvider;
+                _logger = logger;
+                _hostingEnvironment = hostingEnvironment;
         }
         public IActionResult Index()
         {

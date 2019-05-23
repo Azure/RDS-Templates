@@ -159,7 +159,7 @@
                 <div class="tab-content">
                     <div class="@tabPan1Style" id="tab1">
 
-                        @if (Model.VMPerformance.Message != null && Model.VMPerformance.Message != "")
+                        @if (Model.VMPerformance != null &&  Model.VMPerformance.Message != null && Model.VMPerformance.Message != "")
                         {
                             <div>
                                 <p>@Model.VMPerformance.Message</p>
@@ -170,7 +170,15 @@
                         {
                             <h4> VM Performance : Current state </h4>
                             <table class="ms-Table activity-details-table">
-                                <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
+                                @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
+                                {
+                                    <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
+
+                                }
+                                else
+                                {
+                                    <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">0</td></tr>
+                                }
                                 @foreach (var item in Model.VMPerformance.CurrentStateCounters)
                                 {
                                     var style = "background-color: #dff6dd";
