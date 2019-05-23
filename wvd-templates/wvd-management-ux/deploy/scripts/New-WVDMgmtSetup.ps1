@@ -82,13 +82,19 @@ try
                 
                 #Static value of wvdInfra web appname/appid
                 $wvdinfraWebAppId = "5a0aa725-4958-4b0c-80a9-34562e23f3b7"
-                $serviceIdinfo = Get-AzureRmADServicePrincipal | Where-Object {$_.ApplicationId -eq $wvdinfraWebAppId}
+                $serviceIdinfo = Get-AzureRmADServicePrincipal -ErrorAction SilentlyContinue | Where-Object {$_.ApplicationId -eq $wvdinfraWebAppId}
                 
                 if(!$serviceIdinfo){
                 $wvdinfraWebApp = "Windows Virtual Desktop"
-                $serviceIdinfo = Get-AzureRmADServicePrincipal -DisplayName $wvdinfraWebApp -ErrorAction SilentlyContinue
-                }				
-				
+                
+                $serviceIdinformation = Get-AzureRmADServicePrincipal -DisplayName $wvdinfraWebApp -ErrorAction SilentlyContinue
+                foreach($servicePName in $serviceIdinformation){
+                if($servicePName.ApplicationId -eq $wvdinfraWebAppId){
+                $serviceIdinfo = $servicePName
+                }                
+                }
+                }
+                	
                 $wvdInfraWebAppName = $serviceIdinfo.DisplayName
                 #generate unique ID based on subscription ID
                 $unique_subscription_id = ($subscriptionid).Replace('-', '').substring(0, 19)
