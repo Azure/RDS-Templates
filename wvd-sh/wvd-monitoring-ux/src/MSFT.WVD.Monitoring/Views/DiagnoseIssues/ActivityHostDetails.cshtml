@@ -265,9 +265,6 @@
                                 <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
                                     <span class="ms-Button-label labelcolor">Message user(s)</span>
                                 </button>
-                                @*<button class="ms-Button message-user" type="button" id="msguserbtn">
-                                    <span class="ms-Button-label labelcolor">Message user(s)</span>
-                                </button>*@
                             </div>
                         }
                         else
@@ -395,7 +392,10 @@
 
         document.getElementById("btnlogOff").addEventListener("click", function () {
             document.getElementById("loader1").style.display = "block";
+        }, false);
 
+        document.getElementById("msguserbtn").addEventListener("click", function () {
+            document.getElementById("loader1").style.display = "block";
         }, false);
 
         document.getElementById("loader1").style.display = "none";

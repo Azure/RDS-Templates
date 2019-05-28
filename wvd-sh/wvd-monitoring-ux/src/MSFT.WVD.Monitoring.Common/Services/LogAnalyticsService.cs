@@ -68,7 +68,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     counters.Add(new Counter()
                     {
                         id = id,
-                        ObjectName = childNode.Name
+                        ObjectName = childNode.Name.Replace('_', ' ')
 
                     });
                 }
