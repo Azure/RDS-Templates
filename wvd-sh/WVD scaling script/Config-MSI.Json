@@ -1,5 +1,5 @@
 {
-	"RDMIScale": {
+	"WVDScale": {
 		"Azure": {
 			"Variable": [
 				{
@@ -13,12 +13,12 @@
 					"Value": ""
 				},
 				{
-					"_Comments": "Name of the WVD Tenant Group",
+					"_Comments": "The name of the tenant group in the Windows Virtual Desktop deployment",
 					"Name": "tenantGroupName",
 					"Value": "Default Tenant Group"
 				},
 				{
-					"_Comments": "Name of the WVD Tenant",
+					"_Comments": "The name of the tenant in the Windows Virtual Desktop deployment.",
 					"Name": "tenantName",
 					"Value": ""
 				},
@@ -38,7 +38,7 @@
 					"Value": "9:00-3:00"
 				},
 				{
-					"_Comments": "Keyvault name where the WVD Tenant Admin Account have stored secret",
+					"_Comments": "Keyvault name where the WVD Tenant Admin Account or Service Principal GUID have stored secret",
 					"Name": "KeyVaultName",
 					"Value": ""
 				},
@@ -57,7 +57,7 @@
 					"Value": "https://rdbroker.wvd.microsoft.com"
 				},
 				{
-					"Name": "Username",
+					"Name": "Username of Windows Virtual Desktop Tenant Admin or Windows Virtual Desktop Service Principal GUID",
 					"Value": ""
 				},
 				{
@@ -67,7 +67,7 @@
 				}
 			]
 		},
-		"RdmiScaleSettings": {
+		"WVDScaleSettings": {
 			"Variable": [
 				{
 					"_Comments": "Begin of the peak usage time",

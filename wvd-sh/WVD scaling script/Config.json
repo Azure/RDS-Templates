@@ -1,5 +1,5 @@
 {
-	"RDMIScale": {
+	"WVDScale": {
 		"Azure": {
 			"Variable": [
 				{
@@ -13,22 +13,28 @@
 					"Value": ""
 				},
 				{
+					"_Comments": "use AADServicePrincipalSecret filed for testing only, set via New-StoredCredential",
+					"Name": "AADServicePrincipalSecret",
+					"Value": ""
+
+				},
+				{
 					"_Comments": "Subscription Id of the Azure",
 					"Name": "currentAzureSubscriptionId",
 					"Value": ""
 				},
 				{
-					"_Comments": "WVD tenant Group name",
+					"_Comments": "The name of the tenant group in the Windows Virtual Desktop deployment",
 					"Name": "tenantGroupName",
 					"Value": "Default Tenant Group"
 				},
 				{
-					"_Comments": "Name of the WVD Tenant",
+					"_Comments": "The name of the tenant in the Windows Virtual Desktop deployment.",
 					"Name": "tenantName",
 					"Value": ""
 				},
 				{
-					"_Comments": "Name of the WVD Host Pool",
+					"_Comments": "The name of the WVD Host Pool",
 					"Name": "hostPoolName",
 					"Value": ""
 				},
@@ -54,7 +60,7 @@
 				{
 					"_Comments": "Stored Credentials of Username or WVD service Principal GUID",
 					"Name": "Username",
-					"Value": "wvd.demo@peopletechcsp.onmicrosoft.com"
+					"Value": ""
 				},
 				{
 					"_Comments": "use Password filed for testing only, set via New-StoredCredential",
@@ -68,7 +74,7 @@
 				}
 			]
 		},
-		"RdmiScaleSettings": {
+		"WVDScaleSettings": {
 			"Variable": [
 				{
 					"_Comments": "Begin of the peak usage time",
