@@ -57,7 +57,8 @@
 					"Value": "https://rdbroker.wvd.microsoft.com"
 				},
 				{
-					"Name": "Username of Windows Virtual Desktop Tenant Admin or Windows Virtual Desktop Service Principal GUID",
+					"_Comments": "Username of Windows Virtual Desktop Tenant Admin or Windows Virtual Desktop Service Principal GUID",
+					"Name": "Username",
 					"Value": ""
 				},
 				{
