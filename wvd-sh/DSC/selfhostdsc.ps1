@@ -141,6 +141,25 @@ Configuration SelfhostConfig {
                         ValueData   = 1
                         ValueType   = "DWORD"
 		}
+
+# Multimedia Redirection
+
+		Registry AllowRdpMultimediaRedirection 
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server"
+                        ValueName   = "AllowRdpMultimediaRedirection "
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+		Registry TSMMRemotingAllowedApps_wmp
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp\TSMMRemotingAllowedApps"
+                        ValueName   = "wmplayer.exe"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
                 
 # 5k resolution
 #		Registry MaxMonitors
