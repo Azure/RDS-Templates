@@ -641,11 +641,11 @@ html, body {
     width:40%;
     margin-top:10px;
 }
-.users-session .ms-PanelExample .ms-Button {
+/*.users-session .ms-PanelExample .ms-Button {
     background:transparent;
     border:none;
     margin-left:20px;
-}
+}*/
 .users-session .ms-Pivot-content{
     padding:0 8px;
 }
@@ -1429,11 +1429,11 @@ html, body {
     width:40%;
     margin-top:10px;
 }
-.users-session .ms-PanelExample .ms-Button {
+/*.users-session .ms-PanelExample .ms-Button {
     background:transparent;
     border:none;
     margin-left:20px;
-}
+}*/
 .users-session .ms-Pivot-content{
     padding:0 8px;
 }

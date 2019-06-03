@@ -97,7 +97,7 @@
                 </div>
             </div>
 
-            <div id="loader1" class="loader" style="display:none;" ></div>
+            <div id="loader1" class="loader" style="display:none;"></div>
 
             @if (Model.SendMsgStatuses != null && Model.SendMsgStatuses.Count > 0)
             {
@@ -159,7 +159,7 @@
                 <div class="tab-content">
                     <div class="@tabPan1Style" id="tab1">
 
-                        @if (Model.VMPerformance != null &&  Model.VMPerformance.Message != null && Model.VMPerformance.Message != "")
+                        @if (Model.VMPerformance != null && Model.VMPerformance.Message != null && Model.VMPerformance.Message != "")
                         {
                             <div>
                                 <p>@Model.VMPerformance.Message</p>
@@ -275,23 +275,54 @@
                         }
                         @if (Model.ShowMessageForm)
                         {
-                            <div id="sendmessagediv">
-                                <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
-                                <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
-                                <span asp-validation-for="@Model.Title" id="validationtitle" class="error-msg validate-title">@ViewBag.TitleErrorMsg</span>
-                                <br />
-                                <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
-                                <textarea asp-for="@Model.Message" class="form-control m-b-10 inputform" id="texterror">
-                            </textarea>
-                                <span asp-validation-for="@Model.Message" id="validationmsg" class="error-msg validate-msg"> @ViewBag.MessageErrorMsg </span>
-                                <br />
+                            @*<div id="sendmessagediv">
+                                    <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
+                                    <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
+                                    <span asp-validation-for="@Model.Title" id="validationtitle" class="error-msg validate-title">@ViewBag.TitleErrorMsg</span>
+                                    <br />
+                                    <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
+                                    <textarea asp-for="@Model.Message" class="form-control m-b-10 inputform" id="texterror">
+                                </textarea>
+                                    <span asp-validation-for="@Model.Message" id="validationmsg" class="error-msg validate-msg"> @ViewBag.MessageErrorMsg </span>
+                                    <br />
 
-                                <button type="reset" class="ms-Button">
-                                    <span class="ms-Button-label">Cancel</span>
-                                </button>
-                                <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
-                                    <span class="ms-Button-label">Send</span>
-                                </button>
+                                    <button type="reset" class="ms-Button">
+                                        <span class="ms-Button-label">Cancel</span>
+                                    </button>
+                                    <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
+                                        <span class="ms-Button-label">Send</span>
+                                    </button>
+                                </div>*@
+
+                            <div class="ms-PanelExample" id="sendmessagediv">
+                                <div class="flyoutpanel ms-Panel is-open">
+                                    <div class="flyoutpanel-content-wrap">
+                                        <div class="flyoutpanel-header">
+                                            <h4>Send Message</h4>
+                                            <button class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
+                                        </div>
+                                        <div class="flyoutpanel-content">
+                                            <div class="flyoutpanel-controls">
+                                                <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
+                                                <input asp-for="@Model.Title" class="form-control" type="text" id="texttitle" />
+                                                <span asp-validation-for="@Model.Title" id="validationtitle" class="error-msg validate-title">@ViewBag.TitleErrorMsg</span>
+                                                <br />
+                                                <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
+                                                <textarea asp-for="@Model.Message" class="form-control"  id="texterror"></textarea>
+                                                <span asp-validation-for="@Model.Message" id="validationmsg" class="error-msg validate-msg"> @ViewBag.MessageErrorMsg </span>
+                                            </div>
+                                        </div>
+                                        <div class="flyoutpanel-footer ">
+                                            <button type="reset" class="ms-Button"  >
+                                                <span class="ms-Button-label">Cancel</span>
+                                            </button>
+                                            <button asp-action="SendMessage" type="submit"  class="ms-Button primary-btn" id="sendmsg"  >
+                                                <span class="ms-Button-label">Send</span>
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         }
 
@@ -370,7 +401,7 @@
         }
 
         document.getElementById("texttitle")
-            .addEventListener("change", TitleChange , false);
+            .addEventListener("change", TitleChange, false);
         document.getElementById("texttitle")
             .addEventListener("keyup", TitleChange, false);
         document.getElementById("texterror")
@@ -396,8 +427,16 @@
 
         document.getElementById("msguserbtn").addEventListener("click", function () {
             document.getElementById("loader1").style.display = "block";
+            document.getElementById("texttitle").value = "";
+            document.getElementById("texterror").value = "";
         }, false);
 
         document.getElementById("loader1").style.display = "none";
+
+        document.getElementById("btnSlideClose").addEventListener("click", function () {
+            document.getElementById("sendmessagediv").hidden = true;
+            document.getElementById("texttitle").value = "";
+            document.getElementById("texterror").value = "";
+        });
     })();
 </script>

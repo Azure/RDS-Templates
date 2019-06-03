@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace MSFT.WVD.Monitoring
 {
@@ -23,6 +25,16 @@ namespace MSFT.WVD.Monitoring
                     logging.AddConsole(options => options.IncludeScopes = true);
                     logging.AddDebug();
                 })
+            .UseContentRoot(Directory.GetCurrentDirectory())
+        .ConfigureAppConfiguration((hostingContext, config) =>
+        {
+            var env = hostingContext.HostingEnvironment;
+            config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                  .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
+            config.AddEnvironmentVariables();
+
+
+        })
                 .UseStartup<Startup>()
                 .Build();
     }

@@ -149,7 +149,7 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Save(HomePageViewModel data)
+        public  IActionResult Save(HomePageViewModel data)
         {
             if (ModelState.IsValid)
             {
