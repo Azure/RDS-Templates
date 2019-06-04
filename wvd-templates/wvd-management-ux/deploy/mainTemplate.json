@@ -2,33 +2,26 @@
     "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
     "contentVersion": "1.0",
     "parameters": {
-        "RDBrokerURL": {
+        "rdBrokerURL": {
             "defaultValue": "https://rdbroker.wvd.microsoft.com",
             "type": "string",
             "metadata": {
                 "description": "RDBroker URL of the infrastructure.   Ex: https://rdbroker.wvd.microsoft.com"
             }
         },
-        "ResourceURL": {
-            "defaultValue": "https://mrs-prod.ame.gbl/mrs-RDInfra-prod",
-            "type": "string",
-            "metadata": {
-                "description": "Enterprise application location…"
-            }
-        },
-        "AzureADUserPrincipalName": {
+        "azureADUserPrincipalName": {
             "type": "string",
             "metadata": {
                 "description": "User must have RDS Owner on the WVD tenant and must have Contributor on the Azure subscription"
             }
         },
-        "AzureLoginPassword": {
+        "azureLoginPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the AzureAD UserPrincipalName."
             }
         },
-        "ApplicationName": {
+        "applicationName": {
             "type": "string",
             "metadata": {
                 "description": "Provide a unique name of the web app that you wish to create"
@@ -36,26 +29,27 @@
         }
     },
     "variables": {
+        "resourceURL": "https://mrs-prod.ame.gbl/mrs-RDInfra-prod",
 		"uniquestr": "[uniqueString(resourceGroup().id, deployment().name)]",
         "accountName": "[concat('wvdsaas-autoAccount','-',variables('uniquestr'))]",
         "credentialName": "DefaultAzureCredential",
         "runbookName": "[concat('msftsaasbook','-',variables('uniquestr'))]",
-        "webAPIAppName": "[concat(parameters('ApplicationName'),'-API')]",
-        "hostingPlanName": "[concat(parameters('ApplicationName'),'-SPlan')]",
+        "webAPIAppName": "[concat(parameters('applicationName'),'-API')]",
+        "hostingPlanName": "[concat(parameters('applicationName'),'-SPlan')]",
         "serviceplansku": "S1",
         "workerSize": "0",
-        "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/scripts/",
-        "scriptUri": "[concat(variables('baseURL'),'New-WVDMgmtSetup.ps1')]",
-        "fileURI": "[concat(variables('baseURL'),'/msft-wvd-saas-offering.zip')]",
+        "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy",
+        "scriptUri": "[concat(variables('baseURL'),'/scripts/New-WVDMgmtSetup.ps1')]",
+        "fileURI": "[concat(variables('baseURL'),'/scripts/msft-wvd-saas-offering.zip')]",
         "sku": "Free",
         "automationVariables": [
             {
                 "name": "Username",
-                "value": "[concat('\"',parameters('AzureADUserPrincipalName'),'\"')]"
+                "value": "[concat('\"',parameters('azureADUserPrincipalName'),'\"')]"
             },
             {
                 "name": "password",
-                "value": "[concat('\"',parameters('AzureLoginPassword'),'\"')]"
+                "value": "[concat('\"',parameters('azureLoginPassword'),'\"')]"
             },
             {
                 "name": "subscriptionid",
@@ -63,7 +57,7 @@
             },
             {
                 "name": "webApp",
-                "value": "[concat('\"',parameters('ApplicationName'),'\"')]"
+                "value": "[concat('\"',parameters('applicationName'),'\"')]"
             },
             {
                 "name": "apiApp",
@@ -79,11 +73,11 @@
             },
             {
                 "name": "RDBrokerURL",
-                "value": "[concat('\"',parameters('RDBrokerURL'),'\"')]"
+                "value": "[concat('\"',parameters('rdBrokerURL'),'\"')]"
             },
             {
                 "name": "ResourceURL",
-                "value": "[concat('\"',parameters('ResourceURL'),'\"')]"
+                "value": "[concat('\"',variables('resourceURL'),'\"')]"
             },
             {
                 "name": "accountName",
@@ -94,7 +88,7 @@
                 "value": "[concat('\"',variables('fileURI'),'\"')]"
             }
         ],
-        "uniqueBase": "[toLower(uniquestring(parameters('ApplicationName'), resourceGroup().id, deployment().name,variables('accountName')))]",
+        "uniqueBase": "[toLower(uniquestring(parameters('applicationName'), resourceGroup().id, deployment().name,variables('accountName')))]",
         "newGuid": "[guid(variables('uniqueBase'))]"
     },
     "resources": [
@@ -113,7 +107,7 @@
         },
         {
             "type": "Microsoft.Web/sites",
-            "name": "[parameters('ApplicationName')]",
+            "name": "[parameters('applicationName')]",
             "kind": "app",
             "apiVersion": "2016-03-01",
             "location": "[resourceGroup().location]",
@@ -151,7 +145,7 @@
             },
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('accountname'))]",
-                "[resourceId('Microsoft.Web/Sites', parameters('ApplicationName'))]",
+                "[resourceId('Microsoft.Web/Sites', parameters('applicationName'))]",
                 "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                 "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
             ]
@@ -163,7 +157,7 @@
             "location": "[resourceGroup().location]",
             "tags": {},
 			"dependsOn": [
-                "[resourceId('Microsoft.Web/Sites', parameters('ApplicationName'))]",
+                "[resourceId('Microsoft.Web/Sites', parameters('applicationName'))]",
                 "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                 "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
             ],
@@ -190,7 +184,7 @@
                     },
                     "dependsOn": [
                         "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
-                        "[resourceId('Microsoft.Web/Sites', parameters('ApplicationName'))]",
+                        "[resourceId('Microsoft.Web/Sites', parameters('applicationName'))]",
                         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                         "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
                     ]
@@ -202,12 +196,12 @@
                     "location": "[resourceGroup().location]",
                     "tags": {},
                     "properties": {
-                        "userName": "[parameters('AzureADUserPrincipalName')]",
-                        "password": "[parameters('AzureLoginPassword')]"
+                        "userName": "[parameters('azureADUserPrincipalName')]",
+                        "password": "[parameters('azureLoginPassword')]"
                     },
                     "dependsOn": [
                         "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
-                        "[resourceId('Microsoft.Web/Sites', parameters('ApplicationName'))]",
+                        "[resourceId('Microsoft.Web/Sites', parameters('applicationName'))]",
                         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                         "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
                     ]
@@ -228,7 +222,7 @@
                     "dependsOn": [
                         "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
                         "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'), '/runbooks/',variables('runbookName'))]",
-                        "[resourceId('Microsoft.Web/Sites', parameters('ApplicationName'))]",
+                        "[resourceId('Microsoft.Web/Sites', parameters('applicationName'))]",
                         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                         "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
                     ]
