@@ -41,7 +41,7 @@ function Write-Log {
         [int]$level
         , [string]$Message
         , [ValidateSet("Info", "Warning", "Error")] [string]$severity = 'Info'
-        , [string]$logname = $rdmiTenantlog
+        , [string]$logname = $WVDTenantlog
         , [string]$color = "white"
     )
     $time = ConvertUTCtoLocal -timeDifferenceInHours $TimeDifference
@@ -85,7 +85,7 @@ function Write-UsageLog {
         [int]$corecount,
         [int]$vmcount,
         [bool]$depthBool = $True,
-        [string]$logfilename = $RdmiTenantUsagelog
+        [string]$logfilename = $WVDTenantUsagelog
     )
     $time = ConvertUTCtoLocal -timeDifferenceInHours $TimeDifference
     if ($depthBool) {
@@ -110,10 +110,10 @@ $CurrentPath = Split-Path $script:MyInvocation.MyCommand.Path
 $JsonPath = "$CurrentPath\Config.Json"
 
 ##### Log path #####
-$rdmiTenantlog = "$CurrentPath\WVDTenantScale.log"
+$WVDTenantlog = "$CurrentPath\WVDTenantScale.log"
 
 ##### Usage log path #####
-$RdmiTenantUsagelog = "$CurrentPath\WVDTenantUsage.log"
+$WVDTenantUsagelog = "$CurrentPath\WVDTenantUsage.log"
 
 ###### Verify Json file ######
 if (Test-Path $JsonPath) {
@@ -138,9 +138,9 @@ else {
 ##### Load Json Configuration values as variables #########
 Write-Verbose "Loading values from Config.Json"
 $Variable = Get-Content $JsonPath | Out-String | ConvertFrom-Json
-$Variable.RDMIScale.Azure | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-ScriptVariable -Name $_.Name -Value $_.Value }
-$Variable.RDMIScale.RdmiScaleSettings | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-ScriptVariable -Name $_.Name -Value $_.Value }
-$Variable.RDMIScale.Deployment | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-ScriptVariable -Name $_.Name -Value $_.Value }
+$Variable.WVDScale.Azure | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-ScriptVariable -Name $_.Name -Value $_.Value }
+$Variable.WVDScale.WVDScaleSettings | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-ScriptVariable -Name $_.Name -Value $_.Value }
+$Variable.WVDScale.Deployment | ForEach-Object { $_.Variable } | Where-Object { $_.Name -ne $null } | ForEach-Object { Set-ScriptVariable -Name $_.Name -Value $_.Value }
 ##### Construct Begin time and End time for the Peak period from utc to local time #####
 $TimeDifference = [string]$TimeDifferenceInHours
 $CurrentDateTime = ConvertUTCtoLocal -timeDifferenceInHours $TimeDifference
@@ -148,7 +148,7 @@ $CurrentDateTime = ConvertUTCtoLocal -timeDifferenceInHours $TimeDifference
 ##### Load functions/module #####
 . $CurrentPath\Functions-PSStoredCredentials.ps1
 # Checking WVD Modules are existed or not
-$WVDModules = Get-Module -Name "Microsoft.RDInfra.RDPowershell" -ErrorAction SilentlyContinue
+$WVDModules = Get-InstalledModule -Name "Microsoft.RDInfra.RDPowershell" -ErrorAction SilentlyContinue
 if (!$WVDModules) {
     Write-Log 1 "WVD Modules doesn't exist. Ensure WVD Modules are installed if not execute this command 'Install-Module Microsoft.RDInfra.RDPowershell  -AllowClobber'"
 	exit
