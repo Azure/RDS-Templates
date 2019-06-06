@@ -2,6 +2,20 @@
     "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
     "contentVersion": "1.0",
     "parameters": {
+	"_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located."
+            },
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-management-ux/deploy"
+        },
+	"_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
+            },
+            "defaultValue": ""
+        },    
         "rdBrokerURL": {
             "defaultValue": "https://rdbroker.wvd.microsoft.com",
             "type": "string",
@@ -39,8 +53,8 @@
         "serviceplansku": "S1",
         "workerSize": "0",
         "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy",
-        "scriptUri": "[concat(variables('baseURL'),'/scripts/New-WVDMgmtSetup.ps1')]",
-        "fileURI": "[concat(variables('baseURL'),'/scripts/msft-wvd-saas-offering.zip')]",
+        "scriptUri": "[concat(parameters('_artifactsLocation'),'/scripts/New-WVDMgmtSetup.ps1')]",
+        "fileURI": "[concat(parameters('_artifactsLocation'),'/scripts/msft-wvd-saas-offering.zip')]",
         "sku": "Free",
         "automationVariables": [
             {
