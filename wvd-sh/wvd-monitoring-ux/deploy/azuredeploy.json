@@ -1,0 +1,227 @@
+{
+    "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
+    "contentVersion": "1.0",
+    "parameters": {
+        "Client-Id": {
+            "type": "string",
+            "metadata": {
+                "description": "Client Id/ Application Id"
+            }
+        },
+        "Client-Secret": {
+            "type": "string",
+            "metadata": {
+                "description": "App Secret key"
+            }
+        },
+        "AzureLoginUserName": {
+            "type": "string",
+            "metadata": {
+                "description": "User must have RDS Owner on the WVD tenant and must have Contributor on the Azure subscription"
+            }
+        },
+        "AzureLoginPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password that corresponds to the AzureAD UserPrincipalName."
+            }
+        },
+        "WebAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the web app that you wish to create. Provide unique name"
+            },
+            "defaultValue": "WVDMonitorUXWeb"
+        },
+        "WorkspaceID": {
+            "type": "string",
+            "metadata": {
+                "description": "Log Analytics Workspace Id"
+            }
+        }
+    },
+    "variables": {
+        "accountName": "monitorux-automationAccount",
+        "credentialName": "DefaultAzureCredential",
+        "runbookName": "monitoruxbook",
+        "hostingPlanName": "[concat(parameters('WebAppName'),'-SPlan')]",
+        "serviceplansku": "S1",
+        "workerSize": "0",
+        "baseURL": "https://raw.githubusercontent.com/phanikumarsharma/mytestrepo/master",
+        "scriptUri": "https://raw.githubusercontent.com/phanikumarsharma/mytestrepo/master/New-monitoruxSetup.ps1",
+        "fileURI": "[concat(variables('baseURL'),'/wvd-monitoring-ux.zip')]",
+        "AzureModulefileURI": "[concat(variables('baseURL'),'/AzureModules.zip')]",
+        "sku": "Free",
+        "automationVariables": [
+            {
+                "name": "Username",
+                "value": "[concat('\"',parameters('AzureLoginUserName'),'\"')]"
+            },
+            {
+                "name": "password",
+                "value": "[concat('\"',parameters('AzureLoginPassword'),'\"')]"
+            },
+            {
+                "name": "subscriptionid",
+                "value": "[concat('\"',subscription().subscriptionId,'\"')]"
+            },
+            {
+                "name": "webApp",
+                "value": "[concat('\"',parameters('WebAppName'),'\"')]"
+            },
+            {
+                "name": "resourceGroupName",
+                "value": "[concat('\"',resourceGroup().name,'\"')]"
+            },
+            {
+                "name": "Location",
+                "value": "[concat('\"',resourceGroup().location,'\"')]"
+            },
+            {
+                "name": "accountName",
+                "value": "[concat('\"',variables('accountName'),'\"')]"
+            },
+            {
+                "name": "fileURI",
+                "value": "[concat('\"',variables('fileURI'),'\"')]"
+            },
+            {
+                "name": "AzureModulefileURI",
+                "value": "[concat('\"',variables('AzureModulefileURI'),'\"')]"
+            },
+            {
+                "name": "ClientId",
+                "value": "[concat('\"',parameters('Client-Id'),'\"')]"
+            },
+            {
+                "name": "ClientSecret",
+                "value": "[concat('\"',parameters('Client-Secret'),'\"')]"
+            },
+            {
+                "name": "WorkspaceID",
+                "value": "[concat('\"',parameters('WorkspaceID'),'\"')]"
+            }
+        ],
+        "uniqueBase": "[toLower(uniquestring(parameters('WebAppName'), resourceGroup().id, deployment().name))]",
+        "newGuid": "[guid(variables('uniqueBase'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "[variables('serviceplansku')]",
+                "capacity": "[variables('workerSize')]"
+            },
+            "name": "[variables('hostingPlanName')]",
+            "apiVersion": "2015-08-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('hostingPlanName')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('WebAppName')]",
+            "kind": "app",
+            "apiVersion": "2015-08-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "serverFarmId": "[variables('hostingPlanName')]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/variables",
+            "name": "[concat(variables('accountname'), '/', variables('automationVariables')[copyIndex()].name)]",
+            "apiVersion": "2015-10-31",
+            "copy": {
+                "name": "variableLoop",
+                "count": "[length(variables('automationVariables'))]"
+            },
+            "tags": {},
+            "properties": {
+                "value": "[variables('automationVariables')[copyIndex()].value]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('accountname'))]",
+                "[resourceId('Microsoft.Web/Sites', parameters('WebAppName'))]",
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts",
+            "name": "[variables('accountName')]",
+            "apiVersion": "2015-01-01-preview",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "sku": {
+                    "name": "[variables('sku')]"
+                }
+            },
+            "resources": [
+                {
+                    "type": "runbooks",
+                    "name": "[variables('runbookName')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {},
+                    "properties": {
+                        "runbookType": "PowerShell",
+                        "logProgress": "false",
+                        "logVerbose": "false",
+                        "publishContentLink": {
+                            "uri": "[variables('scriptUri')]",
+                            "version": "1.0.0.0"
+                        }
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
+                        "[resourceId('Microsoft.Web/Sites', parameters('WebAppName'))]",
+                        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+                    ]
+                },
+                {
+                    "type": "credentials",
+                    "name": "[variables('credentialName')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {},
+                    "properties": {
+                        "userName": "[parameters('AzureLoginUserName')]",
+                        "password": "[parameters('AzureLoginPassword')]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
+                        "[resourceId('Microsoft.Web/Sites', parameters('WebAppName'))]",
+                        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+                    ]
+                },
+                {
+                    "type": "jobs",
+                    "name": "[variables('newGuid')]",
+                    "apiVersion": "2015-01-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "tags": {
+                        "key": "value"
+                    },
+                    "properties": {
+                        "runbook": {
+                            "name": "[variables('runbookName')]"
+                        }
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'))]",
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('accountName'), '/runbooks/',variables('runbookName'))]",
+                        "[resourceId('Microsoft.Web/Sites', parameters('WebAppName'))]",
+                        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+                    ]
+                }
+            ],
+            "dependsOn": []
+        }
+    ],
+    "outputs": {}
+}
