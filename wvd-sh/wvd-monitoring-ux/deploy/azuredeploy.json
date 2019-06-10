@@ -17,13 +17,13 @@
         "AzureLoginUserName": {
             "type": "string",
             "metadata": {
-                "description": "User must have RDS Owner on the WVD tenant and must have Contributor on the Azure subscription"
+                "description": "Azure Login Username"
             }
         },
         "AzureLoginPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "The password that corresponds to the AzureAD UserPrincipalName."
+                "description": "Azure Login Password"
             }
         },
         "WebAppName": {
@@ -47,10 +47,9 @@
         "hostingPlanName": "[concat(parameters('WebAppName'),'-SPlan')]",
         "serviceplansku": "S1",
         "workerSize": "0",
-        "baseURL": "https://raw.githubusercontent.com/phanikumarsharma/mytestrepo/master",
-        "scriptUri": "https://raw.githubusercontent.com/phanikumarsharma/mytestrepo/master/New-monitoruxSetup.ps1",
+        "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts",
+        "scriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts/New-monitoruxSetup.ps1",
         "fileURI": "[concat(variables('baseURL'),'/wvd-monitoring-ux.zip')]",
-        "AzureModulefileURI": "[concat(variables('baseURL'),'/AzureModules.zip')]",
         "sku": "Free",
         "automationVariables": [
             {
@@ -84,10 +83,6 @@
             {
                 "name": "fileURI",
                 "value": "[concat('\"',variables('fileURI'),'\"')]"
-            },
-            {
-                "name": "AzureModulefileURI",
-                "value": "[concat('\"',variables('AzureModulefileURI'),'\"')]"
             },
             {
                 "name": "ClientId",
