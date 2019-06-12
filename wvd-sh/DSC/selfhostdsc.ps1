@@ -8,7 +8,7 @@ Configuration SelfhostConfig {
 
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 
-	$defaultProf = @(@{path="HKLM:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="1"},
+	$defaultProf = @(@{path="HKLM:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="2"},
 			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="enable"; value = 1},
 			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
 			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
@@ -276,18 +276,10 @@ Configuration SelfhostConfig {
 				Script OutlookCacheMode {
 
 			SetScript = {
-                $defaultProf = @(@{path="HKU:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="2"},
-		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="enable"; value = 1},
-		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
-		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
-		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="syncwindowsetting"; value=1})
-                reg unload HKU\TempDefault 2> $null
-                Start-Sleep -Seconds 1
-				reg load HKU\TempDefault C:\Users\Default\NTUSER.DAT 2> $null 
-                Start-Sleep -Seconds 1 
 
-                New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
-                Start-Sleep -Milliseconds 500
+                                        reg load HKLM\TempDefault C:\Users\Default\NTUSER.DAT
+
+                                        Start-Sleep -Seconds  1
 
 					foreach ($a in $defaultProf)
 					{
@@ -304,23 +296,14 @@ Configuration SelfhostConfig {
 
 					Start-Sleep -Seconds 5
 
-                    Remove-PSDrive -PSProvider Registry -Name HKU
-					reg unload HKU\TempDefault 2> $null
+                                        reg unload HKLM\TempDefault
 			}
 
 			TestScript = {
-                $defaultProf = @(@{path="HKU:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="2"},
-		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="enable"; value = 1},
-		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
-		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
-		            @{path="HKU:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="syncwindowsetting"; value=1})
-                reg unload HKU\TempDefault 2> $null
-                Start-Sleep -Seconds 1
-				reg load HKU\TempDefault C:\Users\Default\NTUSER.DAT 2> $null 
-                Start-Sleep -Seconds 1 
+                                        reg load HKLM\TempDefault C:\Users\Default\NTUSER.DAT
 
-                New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
-                Start-Sleep -Milliseconds 500
+                                        Start-Sleep -Seconds  1
+
 
 				$result = $true
 
@@ -349,8 +332,7 @@ Configuration SelfhostConfig {
 					Start-Sleep -Seconds 5
 
 
-                    Remove-PSDrive -PSProvider Registry -Name HKU
-					reg unload HKU\TempDefault 2> $null
+					reg unload HKLM\TempDefault
 
 					$result
 			}
