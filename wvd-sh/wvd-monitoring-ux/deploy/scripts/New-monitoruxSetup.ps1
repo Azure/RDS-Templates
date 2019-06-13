@@ -1,5 +1,4 @@
-﻿
-$subscriptionid = Get-AutomationVariable -Name 'subscriptionid'
+﻿$subscriptionid = Get-AutomationVariable -Name 'subscriptionid'
 $ResourceGroupName = Get-AutomationVariable -Name 'ResourceGroupName'
 $fileURI = Get-AutomationVariable -Name 'fileURI'
 $Username = Get-AutomationVariable -Name 'Username'
@@ -58,21 +57,13 @@ $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0
 $userAgent = "powershell/1.0"
 Invoke-RestMethod -Uri $apiURL -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)} -UserAgent $userAgent -Method POST -InFile $filePath -ContentType "multipart/form-data"
 
-# Adding Application Settings to WebApp
-Write-Output "Adding App settings to Web-App"
-$WebAppSettings = @{"AzureAd:ClientId" = "$ClientId"
-"AzureAd:ClientSecret" = "$ClientSecret"
-"AzureAd:WorkspaceID" = "$WorkspaceID"
-}
-Set-AzureRmWebApp -AppSettings $WebAppSettings -Name $WebApp -ResourceGroupName $ResourceGroupName
-
 # Get Url of Web-App
 $GetWebApp = Get-AzureRmWebApp -Name $WebApp -ResourceGroupName $ResourceGroupName
 $WebURL = $GetWebApp.DefaultHostName
 
 $redirectURL="https://"+"$WebURL"
 
-Connect-AzureAD -AzureEnvironmentName AzureCloud -Credential $Credential
+Connect-AzureAD -AzureEnvironmentName AzureCloud -Credential $Cred
 
 # Create a new App registration with service principal
 $createappregistrationURI=$fileuri.Replace('wvd-monitoring-ux.zip','CreateAAdAppregistration.ps1')
