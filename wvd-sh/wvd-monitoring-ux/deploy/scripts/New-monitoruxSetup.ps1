@@ -78,7 +78,7 @@ Connect-AzureAD -AzureEnvironmentName AzureCloud -Credential $Credential
 $createappregistrationURI=$fileuri.Replace('wvd-monitoring-ux.zip','CreateAAdAppregistration.ps1')
 Invoke-WebRequest -Uri $createappregistrationURI -OutFile "C:\CreateAAdAppregistration.ps1"
 Set-Location "C:\"
-.\testappreg1106.ps1 -subscriptionid $subscriptionid -Username $Username -Password $Password -WebApp $WebApp -redirectURL $redirectURL
+.\CreateAAdAppregistration.ps1 -subscriptionid $subscriptionid -Username $Username -Password $Password -WebApp $WebApp -redirectURL $redirectURL
 $appreg=Get-AzureADApplication -SearchString $WebApp
 
 $ClientId=$appreg.AppId
