@@ -2,18 +2,6 @@
     "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
     "contentVersion": "1.0",
     "parameters": {
-        "Client-Id": {
-            "type": "string",
-            "metadata": {
-                "description": "Client Id/ Application Id"
-            }
-        },
-        "Client-Secret": {
-            "type": "string",
-            "metadata": {
-                "description": "App Secret key"
-            }
-        },
         "AzureLoginUserName": {
             "type": "string",
             "metadata": {
@@ -48,7 +36,8 @@
         "serviceplansku": "S1",
         "workerSize": "0",
         "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts",
-        "scriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts/New-monitoruxSetup.ps1",
+        "monitoruxsetupscriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts/New-monitoruxSetup.ps1",
+        "aadscriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts/CreateAAdAppregistration.ps1",
         "fileURI": "[concat(variables('baseURL'),'/wvd-monitoring-ux.zip')]",
         "sku": "Free",
         "automationVariables": [
@@ -83,14 +72,6 @@
             {
                 "name": "fileURI",
                 "value": "[concat('\"',variables('fileURI'),'\"')]"
-            },
-            {
-                "name": "ClientId",
-                "value": "[concat('\"',parameters('Client-Id'),'\"')]"
-            },
-            {
-                "name": "ClientSecret",
-                "value": "[concat('\"',parameters('Client-Secret'),'\"')]"
             },
             {
                 "name": "WorkspaceID",
@@ -168,7 +149,7 @@
                         "logProgress": "false",
                         "logVerbose": "false",
                         "publishContentLink": {
-                            "uri": "[variables('scriptUri')]",
+                            "uri": "[variables('monitoruxsetupscriptUri')]",
                             "version": "1.0.0.0"
                         }
                     },

@@ -6,8 +6,6 @@ $Username = Get-AutomationVariable -Name 'Username'
 $Password = Get-AutomationVariable -Name 'Password'
 $automationAccountName = Get-AutomationVariable -Name 'accountName'
 $WebApp = Get-AutomationVariable -Name 'webApp'
-$ClientId = Get-AutomationVariable -Name 'ClientId'
-$ClientSecret = Get-AutomationVariable -Name 'ClientSecret'
 $WorkspaceID = Get-AutomationVariable -Name 'WorkspaceID'
 
 Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
@@ -74,10 +72,24 @@ $WebURL = $GetWebApp.DefaultHostName
 
 $redirectURL="https://"+"$WebURL"
 
-$Psswd = $Password | ConvertTo-SecureString -asPlainText -Force
-$Credential = New-Object System.Management.Automation.PSCredential($Username,$Psswd)
-Install-Module -Name AzureAD
 Connect-AzureAD -AzureEnvironmentName AzureCloud -Credential $Credential
+
+# Create a new App registration with service principal
+$createappregistrationURI=$fileuri.Replace('wvd-monitoring-ux.zip','CreateAAdAppregistration.ps1')
+Invoke-WebRequest -Uri $createappregistrationURI -OutFile "C:\CreateAAdAppregistration.ps1"
+Set-Location "C:\"
+.\testappreg1106.ps1 -subscriptionid $subscriptionid -Username $Username -Password $Password -WebApp $WebApp -redirectURL $redirectURL
+$appreg=Get-AzureADApplication -SearchString $WebApp
+
+$ClientId=$appreg.AppId
+
+# Adding App Settings to WebApp
+Write-Output "Adding App settings to Web-App"
+$WebAppSettings = @{
+    "AzureAd:ClientID"="$ClientId"
+    "AzureAd:WorkspaceID" = "$WorkspaceID"
+}
+Set-AzureRmWebApp -AppSettings $WebAppSettings -Name $WebApp -ResourceGroupName $ResourceGroupName
 
 $newReplyUrl = "$redirectURL/security/signin-callback"
 # Get Azure AD App
@@ -91,7 +103,21 @@ if ($replyUrls -NotContains $newReplyUrl) {
     $replyUrls.Add($newReplyUrl)
     Set-AzureADApplication -ObjectId $app.ObjectId -ReplyUrls $replyUrls -PublicClient $true -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
 }
-
+#set windows virtual desktop API permission to Client App Registration
+$resourceAppId = Get-AzureADServicePrincipal -SearchString "Windows Virtual Desktop" | Where-Object {$_.DisplayName -eq "Windows Virtual Desktop"}
+$AzureWVDApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
+$AzureWVDApiAccess.ResourceAppId = $resourceAppId.AppId
+foreach($permission in $resourceAppId.Oauth2Permissions){
+    $AzureWVDApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
+}
+#set Log Analytics API permission to Client App Registration
+$AzureLogAnalyticsApiPrincipal = Get-AzureADServicePrincipal -SearchString "Log Analytics API"
+$AzureLogAnalyticsApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
+$AzureLogAnalyticsApiAccess.ResourceAppId = $AzureLogAnalyticsApiPrincipal.AppId
+foreach($permission in $AzureLogAnalyticsApiPrincipal.Oauth2Permissions){
+    $AzureLogAnalyticsApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
+}
+Set-AzureADApplication -ObjectId $app.ObjectId -RequiredResourceAccess $AzureLogAnalyticsApiAccess,$AzureWVDApiAccess -ErrorAction Stop
 
 New-PSDrive -Name RemoveAccount -PSProvider FileSystem -Root "C:\" | Out-Null
 @"
