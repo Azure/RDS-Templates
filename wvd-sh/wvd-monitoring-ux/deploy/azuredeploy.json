@@ -2,28 +2,16 @@
     "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
     "contentVersion": "1.0",
     "parameters": {
-        "Client-Id": {
-            "type": "string",
-            "metadata": {
-                "description": "Client Id/ Application Id"
-            }
-        },
-        "Client-Secret": {
-            "type": "string",
-            "metadata": {
-                "description": "App Secret key"
-            }
-        },
         "AzureLoginUserName": {
             "type": "string",
             "metadata": {
-                "description": "User must have RDS Owner on the WVD tenant and must have Contributor on the Azure subscription"
+                "description": "Azure Login Username"
             }
         },
         "AzureLoginPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "The password that corresponds to the AzureAD UserPrincipalName."
+                "description": "Azure Login Password"
             }
         },
         "WebAppName": {
@@ -33,7 +21,7 @@
             },
             "defaultValue": "WVDMonitorUXWeb"
         },
-        "WorkspaceID": {
+        "LogAnalyticsWorkspaceID": {
             "type": "string",
             "metadata": {
                 "description": "Log Analytics Workspace Id"
@@ -47,10 +35,10 @@
         "hostingPlanName": "[concat(parameters('WebAppName'),'-SPlan')]",
         "serviceplansku": "S1",
         "workerSize": "0",
-        "baseURL": "https://raw.githubusercontent.com/phanikumarsharma/mytestrepo/master",
-        "scriptUri": "https://raw.githubusercontent.com/phanikumarsharma/mytestrepo/master/New-monitoruxSetup.ps1",
+        "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts",
+        "monitoruxsetupscriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts/New-monitoruxSetup.ps1",
+        "aadscriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts/CreateAAdAppregistration.ps1",
         "fileURI": "[concat(variables('baseURL'),'/wvd-monitoring-ux.zip')]",
-        "AzureModulefileURI": "[concat(variables('baseURL'),'/AzureModules.zip')]",
         "sku": "Free",
         "automationVariables": [
             {
@@ -86,20 +74,8 @@
                 "value": "[concat('\"',variables('fileURI'),'\"')]"
             },
             {
-                "name": "AzureModulefileURI",
-                "value": "[concat('\"',variables('AzureModulefileURI'),'\"')]"
-            },
-            {
-                "name": "ClientId",
-                "value": "[concat('\"',parameters('Client-Id'),'\"')]"
-            },
-            {
-                "name": "ClientSecret",
-                "value": "[concat('\"',parameters('Client-Secret'),'\"')]"
-            },
-            {
                 "name": "WorkspaceID",
-                "value": "[concat('\"',parameters('WorkspaceID'),'\"')]"
+                "value": "[concat('\"',parameters('LogAnalyticsWorkspaceID'),'\"')]"
             }
         ],
         "uniqueBase": "[toLower(uniquestring(parameters('WebAppName'), resourceGroup().id, deployment().name))]",
@@ -173,7 +149,7 @@
                         "logProgress": "false",
                         "logVerbose": "false",
                         "publishContentLink": {
-                            "uri": "[variables('scriptUri')]",
+                            "uri": "[variables('monitoruxsetupscriptUri')]",
                             "version": "1.0.0.0"
                         }
                     },
