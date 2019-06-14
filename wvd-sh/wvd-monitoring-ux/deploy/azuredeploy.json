@@ -21,7 +21,7 @@
             },
             "defaultValue": "WVDMonitorUXWeb"
         },
-        "WorkspaceID": {
+        "LogAnalyticsWorkspaceID": {
             "type": "string",
             "metadata": {
                 "description": "Log Analytics Workspace Id"
@@ -75,7 +75,7 @@
             },
             {
                 "name": "WorkspaceID",
-                "value": "[concat('\"',parameters('WorkspaceID'),'\"')]"
+                "value": "[concat('\"',parameters('LogAnalyticsWorkspaceID'),'\"')]"
             }
         ],
         "uniqueBase": "[toLower(uniquestring(parameters('WebAppName'), resourceGroup().id, deployment().name))]",
