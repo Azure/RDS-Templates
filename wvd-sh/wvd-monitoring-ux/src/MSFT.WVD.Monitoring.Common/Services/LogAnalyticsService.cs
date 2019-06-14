@@ -123,7 +123,8 @@ namespace MSFT.WVD.Monitoring.Common.Services
                 }
                 return new VMPerformance()
                 {
-                    CurrentStateCounters = counters
+                    CurrentStateCounters = counters,
+                    isHealthy = counters.Where(x => x.Status == "2").ToList().Count > 1 ? false : true
                 };
             }
 

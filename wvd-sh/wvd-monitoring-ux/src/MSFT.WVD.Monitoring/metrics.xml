@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <configuration>
   <PoolMetrics>
-    <Processor>
+    <Time_to_Service>
       <Query>
         Perf | where Computer in ({0})
         | where ObjectName == "Processor Information"
@@ -11,7 +11,7 @@
       </Query>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:More than 80% in the last 30 minutes.</Tooltip>
-    </Processor>
+    </Time_to_Service>
     <LogicalDisk_FreeSpace>
       <Query>
       Perf | where Computer in ({0})
@@ -23,7 +23,7 @@
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 80% in the last 30 minutes.</Tooltip>
     </LogicalDisk_FreeSpace>
-    <LogicalDisk_Avg_DiskQueue_Length>
+    <Disk_Queue_Time>
       <Query>
         Perf | where Computer in ({0})
         | where ObjectName == "LogicalDisk"
@@ -34,8 +34,8 @@
       </Query>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 80% in the last 30 minutes.</Tooltip>
-    </LogicalDisk_Avg_DiskQueue_Length>
-    <Memory>
+    </Disk_Queue_Time>
+    <Memory_Page_Faults>
       <Query>
         Perf | where Computer in ({0})
         | where ObjectName == "Memory"
@@ -51,8 +51,8 @@
       </Drilldown>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 1GB in the last 30 minutes.</Tooltip>
-    </Memory>
-	<User_Input_Delay>
+    </Memory_Page_Faults>
+	<Response_time_for_machine>
 	<Query>
     Perf | where Computer in ({0})
     | where ObjectName == 'User Input Delay per Session'
@@ -62,7 +62,7 @@
     | project   avg = 0, Value, Computer, Status = iff(Value > 2000 , 0, 2)
   </Query>
 	 <timespan>PT30M</timespan>
-	</User_Input_Delay>
+	</Response_time_for_machine>
 	
   </PoolMetrics>
 </configuration>
