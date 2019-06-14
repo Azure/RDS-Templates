@@ -11,11 +11,12 @@ namespace MSFT.WVD.Monitoring.Models
         public List<ManagementActivity> ManagementActivity { get; set; }
         public List<ConnectionActivity> ConnectionActivity { get; set; }
         public ActivityType ActivityType { get; set; }
+        public startDateEnum startDateEnum { get; set; }
         public List<FeedActivity> FeedActivity { get; set; }
         public RoleAssignment SelectedRole { get; set; }
         public bool isExisting { get; set; }
     }
-
+  
     public class DiagonizeQuery : IValidatableObject
     {
         [Required]
@@ -29,6 +30,7 @@ namespace MSFT.WVD.Monitoring.Models
             "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime EndDate { get; set; }
         public ActivityType ActivityType { get; set; }
+        public startDateEnum startDateEnum { get; set; }
         public ActivityOutcome ActivityOutcome { get; set; }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

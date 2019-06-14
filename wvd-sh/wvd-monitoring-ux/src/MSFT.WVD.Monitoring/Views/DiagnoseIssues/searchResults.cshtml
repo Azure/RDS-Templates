@@ -6,19 +6,20 @@
 }
 
 <div class="width-100 content-section">
+    <h2>Activity feed</h2>
     <br />
-    <form asp-controller="DiagnoseIssues" asp-action="Index" method="post" id="myform" asp-route-returnUrl="@Context.Request.Path" role="form">
+    <form asp-controller="DiagnoseIssues" asp-action="returnToIndex" method="post" id="myform" asp-route-returnUrl="@Context.Request.Path" role="form">
         <div class="ms-Grid" dir="ltr">
             <div class="ms-Grid-row">
-                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
-                    <label asp-for="DiagonizeQuery.UPN" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2">User UPN<span class="red">*</span></label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
-                        <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" />
-                        <span asp-validation-for="DiagonizeQuery.UPN" id="validateUpn" class="error-msg"></span>
+                <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl3 ms-xl12 m-b-20">
+                    <label asp-for="DiagonizeQuery.UPN" class="control-label ms-xxxl2 ms-xxl2 ms-xl2">User UPN<span class="red">*</span></label>
+                    <div class="input-wrap ms-xxxl10 ms-xxl12 ms-xl12">
+                        <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" value="@Model.DiagonizeQuery.UPN" />
+                        <span asp-validation-for="DiagonizeQuery.UPN" id="validateUpn" class="error-msg validate"></span>
                     </div>
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
-                    <label asp-for="DiagonizeQuery.StartDate" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2" style="margin-top: 10px;">Issue Interval From</label>
+                @*<div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
+                    <label asp-for="DiagonizeQuery.StartDate" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2">Issue Interval From</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
                         <input asp-for="DiagonizeQuery.StartDate" class="form-control" type="date" id="startDate" />
                         <span asp-validation-for="DiagonizeQuery.StartDate" class="error-msg"></span>
@@ -28,112 +29,249 @@
                         <input asp-for="DiagonizeQuery.EndDate" class="form-control enddate" type="date" id="endDate" />
                         <span asp-validation-for="DiagonizeQuery.EndDate" class="error-msg"></span>
                     </div>
-                </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
-                    <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2"></label>
-                    <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
-                        <select size="1" asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>().Where(x=> x.Text != ActivityType.None.ToString() ).ToList()" class="form-control width-100" id="activityType"></select>
+                </div>*@
+                <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl3 ms-xl12 m-b-20">
+                    <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-xxxl2 ms-xxl2 ms-xl2"></label>
+                    <div class="input-wrap ms-xxxl10 ms-xxl12 ms-xl12">
+                        <select size="1" asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>().Where(x=> x.Text != ActivityType.None.ToString() ).ToList()" class="form-control  width-100 " id="activityType"></select>
                     </div>
-                    <label asp-for="DiagonizeQuery.ActivityOutcome" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2">Outcome</label>
+                    @*<label asp-for="DiagonizeQuery.ActivityOutcome" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2">Outcome</label>
                     <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
-                        <select size="1" asp-for="DiagonizeQuery.ActivityOutcome" asp-items="Html.GetEnumSelectList<ActivityOutcome>().OrderBy(x=>x.Text)"   class="form-control width-100" id="activityOutcome"></select>
-                    </div>
+                        <select size="1" asp-for="DiagonizeQuery.ActivityOutcome" asp-items="Html.GetEnumSelectList<ActivityOutcome>().OrderBy(x=>x.Text)"  class="form-control bottom  width-100" id="activityOutcome"></select>
+                    </div>*@
                 </div>
-                <div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 ms-smPush2 p-l-r-15 m-b-20">
+                <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl4 ms-xl12 p-l-r-15 m-b-20">
                     <button type="submit" class="ms-Button primary-btn" id="process">
                         <span class="ms-Button-label">Search</span>
-                        `
                     </button>
-                    <a asp-controller="DiagnoseIssues"
-                       asp-action="Index" class="ms-Button secondary-btn"><span class="ms-Button-label">Clear</span></a>
+                    @*<button type="reset" class="ms-Button secondary-btn">
+                        <span class="ms-Button-label">Clear</span>
+                    </button>*@
                 </div>
             </div>
         </div>
+       
+        
+       
+        <hr />
+        <div class="ContextualMenuWrap">
+            <div class="ms-ContextualMenuExample export-btn float-left">
+                <button class="ms-Button ms-Button--default">
+                    <span class="ms-Button-label">Export</span>
+                </button>
+                <ul class="ms-ContextualMenu is-hidden">
+                    <li class="ms-ContextualMenu-item">
+                        <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoPDF" asp-controller="DiagnoseIssues">PDF</a>
+                    </li>
+                    <li class="ms-ContextualMenu-item">
+                        <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoExcel" asp-controller="DiagnoseIssues">Excel</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="ms-ContextualMenuExample filter-btn float-right">
+                <button class="ms-Button ms-Button--default">
+                    <span class="ms-Button-label">Filter</span>
+                </button>
+                <ul class="ms-ContextualMenu is-hidden ms-ContextualMenu--multiselect">
+                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">clear all filters</li>
 
+                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--divider"></li>
+                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Issues from</li>
+                    <li class="ms-ContextualMenu-item">
+                        @{
+                            IDictionary<string, string> routeData = new Dictionary<string, string>();
+                            routeData.Add("interval", "Lastonehour");
+                            routeData.Add("upn", Model.DiagonizeQuery.UPN);
+                        }
+                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData">Last hour</a>
+                    </li>
+                    <li class="ms-ContextualMenu-item">
+                        @{
+                            IDictionary<string, string> routeData1 = new Dictionary<string, string>();
+                            routeData1.Add("interval", "Lastonehour");
+                            routeData1.Add("upn", Model.DiagonizeQuery.UPN);
+                        }
+                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData1">6 hours ago</a>
+                    </li>
+                    <li class="ms-ContextualMenu-item">
+                        @{
+                            IDictionary<string, string> routeData2 = new Dictionary<string, string>();
+                            routeData2.Add("interval", "onedayago");
+                            routeData2.Add("upn", Model.DiagonizeQuery.UPN);
+                        }
+                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData2">1 day ago</a>
+                    </li>
+                    <li class="ms-ContextualMenu-item">
+                        @{
+                            IDictionary<string, string> routeData3 = new Dictionary<string, string>();
+                            routeData3.Add("interval", "onweekago");
+                            routeData3.Add("upn", Model.DiagonizeQuery.UPN);
+                        }
+                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData3">1 week ago</a>
+                    </li>
+                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--divider"></li>
+                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Outcome</li>
+                    <li class="ms-ContextualMenu-item">
+                        @{
+                            IDictionary<string, string> routeData4 = new Dictionary<string, string>();
+                            routeData4.Add("outcome", "Failure");
+                            routeData4.Add("upn", Model.DiagonizeQuery.UPN);
+                        }
+                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData4">Failed</a>
+                    </li>
+                    <li class="ms-ContextualMenu-item">
+                        @{
+                            IDictionary<string, string> routeData5 = new Dictionary<string, string>();
+                            routeData5.Add("outcome", "Success");
+                            routeData5.Add("upn", Model.DiagonizeQuery.UPN);
+                        }
+                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData5">Success</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="clear"></div>
+        </div>
         @if (Model.ConnectionActivity == null || Model.ManagementActivity == null || Model.FeedActivity == null || Model.ConnectionActivity.Count == 0 || Model.ManagementActivity.Count == 0 || Model.FeedActivity.Count == 0)
         {
+
             <div id="loader1" class="loader"></div>
         }
         <div class="activitytable" id="table">
 
-            @if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.ConnectionActivity != null)
-            {
-                <table class="ms-Table">
-                    <thead>
-                        <tr>
-                            <th asp-for="Activity ID">Activity ID</th>
-                            <th asp-for="Type">Type</th>
-                            <th asp-for="Outcome">Outcome</th>
-                            <th asp-for="isInternalError">Internal Error</th>
-                            <th asp-for="Error">Error</th>
-                            <th asp-for="Tenant">Tenant</th>
-                            <th asp-for="HostPoolname">HostPoolname</th>
-                            <th asp-for="UserName">UserName</th>
-                            <th asp-for="Start Time">Start Time</th>
-                            <th asp-for="End Time">End Time</th>
-                            <th asp-for="Client">Client</th>
-                            <th asp-for="Client Ip">Client Ip</th>
-                            <th asp-for="Session Host">Session Host</th>
-                            <th asp-for="Details">Details</th>
-                        </tr>
-                    </thead>
 
-                    @foreach (var d in Model.ConnectionActivity)
+            <table class="ms-Table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th asp-for="Start Time">Start Time</th>
+                        <th asp-for="End Time">End Time</th>
+                        <th asp-for="Outcome">Outcome</th>
+
+                        <th asp-for="ErrorType">Error Type</th>
+                        <th asp-for="Error">Error Code</th>
+                        <th asp-for="Session Host">Session Host</th>
+                        <th asp-for="Client">Client</th>
+                        <th asp-for="Client Ip">Client Ip</th>
+                        <th asp-for="HostPoolname">HostPoolname</th>
+                        <th asp-for="Tenant">Tenant</th>
+                        @*<th asp-for="Activity ID">Activity ID</th>*@
+                        @*<th asp-for="isInternalError">Internal Error</th>
+                        <th asp-for="UserName">UserName</th>
+                        <th asp-for="Details">Details</th>*@
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <button type="button" id="copy" style="display: none;">Copy to clipboard</button>
+                    @if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.ConnectionActivity != null)
                     {
-                        <tbody>
-                            <tr>
-                                <td class="word-break">@d.activityId</td>
-                                <td>@d.activityType</td>
-                                <td>@d.outcome</td>
-                                <td>
-                                    @(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")
-                                </td>
-                                <td>@d.errorMessage</td>
-                                <td>@d.Tenants</td>
-                                <td>@d.SessionHostPoolName</td>
-                                <td class="word-break">@d.userName</td>
-                                <td>@d.startTime</td>
-                                <td>@d.endTime</td>
-                                <td>@d.ClientOS</td>
-                                <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
-                                <td>@d.SessionHostName</td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(d.SessionHostName))
+                        var index = 0;
+                        @foreach (var d in Model.ConnectionActivity)
+                        {
+                            index = index + 1;
+                            //check nof errors
+                            if (d.errors != null && d.errors.Count > 0)
+                            {
+                                var count = 0;
+                                @foreach (var err in d.errors)
+                                {
+                                    count = count + 1;
+                                    if (count == 1)
                                     {
+                                        <tr onclick="{errorrowclick(event)}" onmouseover="document.getElementById('copy').style.display = 'block';" onmouseout="document.getElementById('copy').style.display = 'none';">
+                                            <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span><i class="ms-Icon ms-Icon--ChevronDown" aria-hidden="true"></i></span></button></td>
+                                            <td>@d.startTime</td>
+                                            <td>@d.endTime</td>
+                                            <td>@d.outcome</td>
+                                            <td>@err["errorInternal"]</td>
+                                            <td>@err["errorCodeSymbolic"]</td>
+                                            <td>
+                                                <a asp-controller="DiagnoseIssues"
+                                                   asp-action="ActivityHostDetails"
+                                                   asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
+                                            </td>
+                                            <td>@d.ClientOS</td>
+                                            <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
+                                            <td>@d.SessionHostPoolName</td>
+                                            <td>@d.Tenants</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        <tr class="trData-@index" style="visibility:visible;" onclick="{errorrowclick(event)}">
+                                            <div class="ms-PanelExample">
+                                                <div class="flyoutpanel ms-Panel" id="errordetailspanel">
+                                                    <div class="flyoutpanel-content-wrap">
+                                                        <div class="flyoutpanel-header header-col">
+                                                            <div class="header-btns">
+                                                                <button type="button"><span><i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i></span></button>
+                                                                <button class="close" href="" id="btnSlideClose"><i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i></button>
+                                                            </div>
+                                                            <h4>Error details</h4>
+                                                        </div>
+                                                        <div class="flyoutpanel-content">
+                                                            <div class="flyoutpanel-controls">
+                                                                <label class="control-label">Error Code:</label>
+                                                                <span>@err["errorCode"]</span>
+                                                                <label class="control-label">Internal:</label>
+                                                                <span>@err["errorInternal"]</span>
+                                                                <label class="control-label">Message:</label>
+                                                                <span>@err["errorMessage"]</span>
+                                                                <label class="control-label">Time:</label>
+                                                                <span>@err["time"]</span>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td>@err["errorInternal"]</td>
+                                            <td>@err["errorCodeSymbolic"]</td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+
+                                    }
+
+                                }
+
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td></td>
+                                    <td>@d.startTime</td>
+                                    <td>@d.endTime</td>
+                                    <td>@d.outcome</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
                                         <a asp-controller="DiagnoseIssues"
                                            asp-action="ActivityHostDetails"
-                                           asp-route-id="@d.activityId" class="ms-ContextualMenu-item">View Status</a>
-                                    }
-                                </td>
-                            </tr>
-                        </tbody>
-                    }
-                </table>
-            }
-            else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Management)
-            {
-                <table class="ms-Table">
-                    <thead>
-                        <tr>
-                            <th asp-for="Activity ID">Activity ID</th>
-                            <th asp-for="Type">Type</th>
-                            <th asp-for="Outcome">Outcome</th>
-                            <th asp-for="isInternalError">Internal Error</th>
-                            <th asp-for="Error">Error</th>
-                            <th asp-for="Tenant">Tenant</th>
-                            <th asp-for="UserName">UserName</th>
-                            <th asp-for="Start Time">Start Time</th>
-                            <th asp-for="End Time">End Time</th>
-                            <th asp-for="Objects Created">Objects Created</th>
-                            <th asp-for="Objects Deleted">Objects Deleted</th>
-                            <th asp-for="Objects Fetched">Objects Fetched</th>
-                            <th asp-for="Objects Updated">Objects Updated</th>
-                        </tr>
-                    </thead>
+                                           asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
+                                    </td>
+                                    <td>@d.ClientOS</td>
+                                    <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
+                                    <td>@d.SessionHostPoolName</td>
+                                    <td>@d.Tenants</td>
+                                </tr>
+                            }
 
-                    @foreach (var d in Model.ManagementActivity)
+
+                        }
+                    }
+
+                    else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Management)
                     {
-                        <tbody>
+                        @foreach (var d in Model.ManagementActivity)
+                        {
                             <tr>
                                 <td>@d.activityId</td>
                                 <td>@d.activityType</td>
@@ -152,32 +290,12 @@
 
                                 <td>@d.ObjectsUpdated</td>
                             </tr>
-                        </tbody>
-
+                        }
                     }
-                </table>
-            }
-            else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
-            {
-                <table class="ms-Table">
-                    <thead>
-                        <tr>
-                            <th asp-for="Activity ID">Activity ID</th>
-                            <th asp-for="Activity Type">Activity Type</th>
-                            <th asp-for="Start Time">Start Time</th>
-                            <th asp-for="End Time">End Time</th>
-                            <th asp-for="UserName">UserName</th>
-                            <th asp-for="Outcome">Outcome</th>
-                            <th asp-for="Internal Error">Internal Error </th>
-                            <th asp-for="Error Message">Error Message</th>
-                            <th asp-for="ClientIPAddress">ClientIPAddress </th>
-                            <th asp-for="ClientOS">ClientOS </th>
-                        </tr>
-                    </thead>
-
-                    @foreach (var d in Model.FeedActivity)
+                    else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
                     {
-                        <tbody>
+                        @foreach (var d in Model.FeedActivity)
+                        {
                             <tr>
                                 <td>@d.activityId </td>
                                 <td>@d.activityType </td>
@@ -190,18 +308,27 @@
                                 <td><a href="" class="not-active">@d.ClientIPAddress </a></td>
                                 <td>@d.ClientOS </td>
                             </tr>
-                        </tbody>
+                        }
+                    }
+                    else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.None)
+                    {
+                        <tr>
+                            <td>
+                                <div class="norecordstable">
+                                    <h3 class="text-center">No records found for the search criteria</h3>
+                                </div>
+                            </td>
+
+                        </tr>
 
                     }
-                </table>
-            }
-            else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.None)
-            {
-                <div class="norecordstable">
-                    <h3 class="text-center">No records found for the search criteria</h3>
-                </div>
-            }
+                </tbody>
+
+            </table>
+
+
         </div>
+
     </form>
 </div>
 
@@ -211,7 +338,7 @@
         var TableElements = document.querySelectorAll(".ms-Table");
         for (var i = 0; i < TableElements.length; i++) {
             new fabric['Table'](TableElements[i]);
-        } 
+        }
         document.getElementById("upn")
             .addEventListener("change", function () {
                 document.getElementById("validateUpn").style.display = "none";
@@ -224,5 +351,88 @@
         document.getElementById("process").addEventListener("click", function () {
             document.getElementById("loader1").hidden = false;
         }, false);
+
+       
+        //var el = document.getElementById("btnRowHide");
+
+        //el.addEventListener('click', rowClick, false);
+
+       
+
+
     })();
+</script>
+<script type="text/javascript">
+    var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+    for (var i = 0; i < ContextualMenuElements.length; i++) {
+        var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+        var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+        new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+    }
+    function errorrowclick(event) {
+        console.log(event);
+        var value = document.getElementById("errordetailspanel").style.display;
+        console.log(value, "fdggg");
+        document.getElementById("errordetailspanel").style.display = "block";
+   
+    }
+    
+    function copyToClipboard() {
+        document.querySelector('table tr').select();
+        document.execCommand('copy');
+
+        //clear selection
+        if (document.selection) {
+            document.selection.empty();
+        } else if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        }
+
+    }
+
+    document.querySelector('#copy').addEventListener('click', function () {
+        copyToClipboard()
+    });  
+    function rowClick(index) {
+        console.log(index);
+        //var value = document.getElementById("trData").style.visibility;
+        //console.log(value);
+
+        //if (value == "visible") {
+        //    document.getElementById("trData").style.visibility = "hidden"
+        //}
+        //else {
+        //    document.getElementById("trData").style.visibility = "visible"
+        //}
+
+        var lst = document.getElementsByClassName("trData-" + index);
+        console.log(lst, "lst");
+        for (var i = 0; i < lst.length; ++i) {
+            console.log(lst[i].style.visibility, "lst[i].style.visibility");
+            var value = lst[i].style.visibility;
+            if (value == "visible") {
+                lst[i].style.visibility = "hidden";
+                lst[i].style.display = "none";
+            }
+            else {
+                lst[i].style.visibility = "visible";
+                lst[i].style.display = "table-row";
+
+            }
+            //lst[i].style.visibility=  lst[i].style.visibility = "visible" ? "hidden" : "visible";
+        }
+
+    }
+</script>
+<script type="text/javascript">
+    var PanelExamples = document.getElementsByClassName("ms-PanelExample");
+    for (var i = 0; i < PanelExamples.length; i++) {
+        (function () {
+            var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
+            var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
+            PanelExampleButton.addEventListener("click", function (i) {
+                new fabric['Panel'](PanelExamplePanel);
+            });
+        }());
+    }
 </script>

@@ -83,9 +83,11 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                     userName = item["userName"].ToString(),
                     outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
-                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
-                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
-                    ClientOS = (string)item["details"]["ClientOS"],
+                  //  isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
+                  //  errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
+                    //errors= errors.OfType<JObject>().ToList(),
+                    errors= item["errors"].OfType<JObject>().ToList(),
+                ClientOS = (string)item["details"]["ClientOS"],
                     ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
                     Tenants = (string)item["details"]["Tenants"],
                     SessionHostName = (string)item["details"]["SessionHostName"],
@@ -192,6 +194,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             var result = await _cache.GetOrCreateAsync(key, async entry =>
             {
                 int activityType = (int)ActivityType.Feed;
+       
                 outcome = outcome == ActivityOutcome.All.ToString() ? null : outcome;
                 var url = "";
                 if (outcome == null)
@@ -280,8 +283,9 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                     userName = item["userName"].ToString(),
                     outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
-                    isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
-                    errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
+                    //isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
+                   // errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
+                   errors= item["errors"].OfType<JObject>().ToList(),
                     ClientOS = (string)item["details"]["ClientOS"],
                     ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
                     Tenants = (string)item["details"]["Tenants"],

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,14 +13,25 @@ namespace MSFT.WVD.Monitoring.Common.Models
         Feed = 2,
         None = 3
     }
-
+  
     public enum ActivityOutcome
     {
         Success = 0,
         Failure = 1,
         All = 2,
     }
-
+    public enum startDateEnum
+    {
+        Lastonehour=1,
+        sixhoursago=6,
+        onedayago=24,
+        onweekago=168,
+    }
+    //public class Errors
+    //{
+    //    public string isInternalError { get; set; }
+    //    public string errorMessage { get; set; }
+    //}
     public class ConnectionActivity
     {
         public string activityId { get; set; }
@@ -31,8 +43,7 @@ namespace MSFT.WVD.Monitoring.Common.Models
         public string Tenants { get; set; }
         public string SessionHostPoolName { get; set; }
         public string SessionHostName { get; set; }
-        public string isInternalError { get; set; }
-        public string errorMessage { get; set; }
+        public List<JObject> errors { get; set; }
         public string ClientIPAddress { get; set; }
         public string ClientOS { get; set; }
         public ErrorDetails ErrorDetails { get; set; }

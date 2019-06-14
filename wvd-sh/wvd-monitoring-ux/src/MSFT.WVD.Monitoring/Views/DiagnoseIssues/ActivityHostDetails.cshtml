@@ -12,84 +12,33 @@
         </h2>
     </div>
     <div lass="width-100 content-section users-session">
-        <form asp-controller="DiagnoseIssues" method="post" id="msgForm">
-            <div class="ms-Grid m-b-25" dir="ltr">
+        <form asp-controller="DiagnoseIssues" method="post" id="msgForm" class="ms-Grid-row">
+            <div class="ms-Grid m-b-25 ms-Grid-col ms-xxxl4 ms-xxl6 ms-xl12 border-right" dir="ltr">
                 <div class="ms-Grid-row">
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.activityId" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">ActivityID:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                            <span>@Model.ConnectionActivity.activityId</span>
-                            <input asp-for="@Model.ConnectionActivity.activityId" type="hidden">
-
-                        </div>
-                    </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.activityType" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Type:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 spanlabel">
-                            <span>@Model.ConnectionActivity.activityType</span>
-                            <input asp-for="@Model.ConnectionActivity.activityType" type="hidden">
-                        </div>
-                    </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.userName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">UserName:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                    <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl0 ms-xl12 m-b-25">
+                        <label asp-for="ConnectionActivity.userName" class="control-label">Current User UPN:</label>
+                        <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.userName</span>
                             <input asp-for="@Model.ConnectionActivity.userName" type="hidden">
-
                         </div>
                     </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.outcome" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Outcome:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                            <span>@Model.ConnectionActivity.outcome</span>
-                            <input asp-for="@Model.ConnectionActivity.outcome" type="hidden">
-                        </div>
-                    </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.startTime" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Start Time:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                            <span>@Model.ConnectionActivity.startTime</span>
-                            <input asp-for="@Model.ConnectionActivity.startTime" type="hidden">
-                        </div>
-                    </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.endTime" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">End Time:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                            <span>@Model.ConnectionActivity.endTime</span>
-                            <input asp-for="@Model.ConnectionActivity.endTime" type="hidden">
-                        </div>
-                    </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.ClientIPAddress" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Client IP:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                            <span class="not-active">@Model.ConnectionActivity.ClientIPAddress</span>
-                            <input asp-for="@Model.ConnectionActivity.ClientIPAddress" type="hidden">
-                        </div>
-                    </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.ClientOS" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Client:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
-                            <span>@Model.ConnectionActivity.ClientOS</span>
-                            <input asp-for="@Model.ConnectionActivity.ClientOS" type="hidden">
-                        </div>
-                    </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.SessionHostName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Session Host:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                    <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl10 ms-xl12 m-b-25">
+                        <label asp-for="ConnectionActivity.SessionHostName" class="control-label">Session Host:</label>
+                        <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.SessionHostName</span>
                             <input asp-for="@Model.ConnectionActivity.SessionHostName" type="hidden">
                         </div>
                     </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.SessionHostPoolName" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">SessionHostPoolName:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                    <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl10 ms-xl12 m-b-25">
+                        <label asp-for="ConnectionActivity.SessionHostPoolName" class="control-label">SessionHostPoolName:</label>
+                        <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.SessionHostPoolName</span>
                             <input asp-for="@Model.ConnectionActivity.SessionHostPoolName" type="hidden">
                         </div>
                     </div>
-                    <div class="form-wrap ms-Grid-col ms-xxxl6 ms-xxl6 ms-xl12">
-                        <label asp-for="ConnectionActivity.Tenants" class="control-label ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">Tenant:</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl8 ms-xxl8 ms-xl8 spanlabel">
+                    <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl10 ms-xl12 m-b-25">
+                        <label asp-for="ConnectionActivity.Tenants" class="control-label">Tenant:</label>
+                        <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.Tenants</span>
                             <input asp-for="@Model.ConnectionActivity.Tenants" type="hidden">
                         </div>
@@ -97,48 +46,8 @@
                 </div>
             </div>
 
-            <div id="loader1" class="loader" style="display:none;"></div>
-
-            @if (Model.SendMsgStatuses != null && Model.SendMsgStatuses.Count > 0)
-            {
-
-                @foreach (var d in Model.SendMsgStatuses)
-                {
-
-                    if (@d.Status == "Success")
-                    {
-                        <div id="msgbardiv">
-                            <div class="ms-MessageBar ms-MessageBar--success">
-                                <div class="ms-MessageBar-content">
-                                    <div class="ms-MessageBar-icon">
-                                        <i class="ms-Icon ms-Icon--Completed"></i>
-                                    </div>
-                                    <ul class="ms-MessageBar-text">
-                                        @d.Message
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div id="msgbardiv">
-                            <div class="ms-MessageBar ms-MessageBar--error">
-                                <div class="ms-MessageBar-content">
-                                    <div class="ms-MessageBar-icon">
-                                        <i class="ms-Icon ms-Icon--ErrorBadge"></i>
-                                    </div>
-                                    <ul class="ms-MessageBar-text">
-                                        @d.Message
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    }
-
-                }
-            }
-            <section>
+           
+            <section class="ms-Grid-col ms-xxxl4 ms-xxl6 ms-xl12">
                 @{
                     var tab1Style = Model.ShowConnectedUser ? "" : "active";
                     var tabPan1Style = Model.ShowConnectedUser ? "tab-pane" : "tab-pane active";
@@ -155,6 +64,7 @@
                         <a href="#tab2">User Connected</a>
                     </li>
                 </ul>
+              
                 <!-- Tab panes -->
                 <div class="tab-content">
                     <div class="@tabPan1Style" id="tab1">
@@ -168,49 +78,41 @@
                         }
                         else
                         {
-                            <h4> VM Performance : Current state </h4>
+                            var status = "";
+                            @if (Model.VMPerformance != null && Model.VMPerformance.isHealthy)
+                            {
+                                status = "Healthy";
+                            }
+                            else
+                            {
+                                status = "Unhealthy";
+
+                            }
+                            @if (@status == "Healthy")
+                            {
+                                <h4> VM Health State -  @*<i class="fa fa-check" style="color: #107c10;"></i>*@ <i class="ms-Icon ms-Icon--CheckMark green-circled-check" aria-hidden="true"></i> </h4>
+                            }
+                            else
+                            {
+                                <h4> VM Health State -  @*<i class="fa fa-check" style="color: #107c10;"></i>*@ <i class="ms-Icon ms-Icon--CheckMark green-circled-check" aria-hidden="true"></i> </h4>
+                            }
+                            <h4> VM Performance Current state </h4>
                             <table class="ms-Table activity-details-table">
                                 @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
                                 {
-                                    <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">@Model.UserSessions.Count</td></tr>
+                                    <tr><td>Active sessions:</td><td colspan="2">@Model.UserSessions.Count</td></tr>
 
                                 }
                                 else
                                 {
-                                    <tr style="background-color: #dff6dd"><td>Active sessions</td><td colspan="2">0</td></tr>
+                                    <tr><td>Active sessions:</td><td colspan="2">0</td></tr>
                                 }
                                 @foreach (var item in Model.VMPerformance.CurrentStateCounters)
                                 {
-                                    var style = "background-color: #dff6dd";
-
-
-                                    if (item.Status == "0")
-                                    {
-                                        style = "background-color: #dff6dd";
-                                    }
-                                    if (item.Status == "1")
-                                    {
-                                        style = "background-color: #ffca33";
-
-                                    }
-                                    if (item.Status == "2")
-                                    {
-                                        style = "background-color: #fed9cc";
-                                    }
-
-                                    <tr style="@style">
+                                   
+                                    <tr>
                                         <td>@item.ObjectName</td>
                                         <td>@item.Value</td>
-                                        <td>
-                                            @if (item.Status == "0" || item.Status == null)
-                                            {
-                                                <i class="fa fa-check" style="color: #107c10;"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="fa fa-times" style="color: #a80000;"></i>
-                                            }
-                                        </td>
                                     </tr>
                                 }
                             </table>
@@ -219,15 +121,83 @@
 
                     </div>
                     <div class="@tabPan2Style" id="tab2">
-                        <h4> User Sessions </h4>
+                        <div id="loader1" class="loader" style="display:none;"></div>
+                        @if (Model.SendMsgStatuses != null && Model.SendMsgStatuses.Count > 0)
+                        {
+
+                            @foreach (var d in Model.SendMsgStatuses)
+                            {
+
+                                if (@d.Status == "Success")
+                                {
+                                    <div id="msgbardiv">
+                                        <div class="ms-MessageBar ms-MessageBar--success">
+                                            <div class="ms-MessageBar-content">
+                                                <div class="ms-MessageBar-icon">
+                                                    <i class="ms-Icon ms-Icon--Completed"></i>
+                                                </div>
+                                                <ul class="ms-MessageBar-text">
+                                                    @d.Message
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div id="msgbardiv">
+                                        <div class="ms-MessageBar ms-MessageBar--error">
+                                            <div class="ms-MessageBar-content">
+                                                <div class="ms-MessageBar-icon">
+                                                    <i class="ms-Icon ms-Icon--ErrorBadge"></i>
+                                                </div>
+                                                <ul class="ms-MessageBar-text">
+                                                    @d.Message
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                            }
+                        }
+                       
                         @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
                         {
-                            <div>
+
+                                    <div class="anchorlinksdiv m-b-25" id="anchorlinksdiv">
+                                        <div class="docs-DialogExample-default">
+                                            <div class="ms-Dialog">
+                                                <div class="ms-Dialog-title">Log Off Users</div>
+                                                <div class="ms-Dialog-content">
+                                                    <p class="ms-Dialog-subText">You are about to logoff 1 users(s).Are you sure you want to continue?</p>
+                                                </div>
+                                                <div class="ms-Dialog-actions">
+                                                    <button class="ms-Button message-user ms-Dialog-action ms-Button--primary" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
+                                                        <span class="ms-Button-label">Continue</span>
+                                                    </button>
+                                                    <button class="ms-Button ms-Dialog-action">
+                                                        <span class="ms-Button-label">Cancel</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <button class="ms-Button docs-DialogExample-button" type="button"><span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--SignOut"></i>Logoff</span></button>
+                                            <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
+                                                <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Mail"></i>Message</span>
+                                            </button>
+                                            <label class="docs-DialogExample-label"></label>
+                                        </div>
+                                        @*<button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
+            <span class="ms-Button-label labelcolor">Logoff</span>
+        </button>*@
+                                        
+                                    </div>
+                            <div class="tab-table">
                                 <table class="ms-Table">
                                     <thead>
                                         <tr>
                                             <th>Select</th>
-                                            <th>Session ID</th>
+                                            @*<th>Session ID</th>*@
                                             <th>User Name</th>
                                         </tr>
                                     </thead>
@@ -247,7 +217,7 @@
                                                         <input asp-for="@Model.UserSessions[i].userPrincipalName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].sessionId" type="hidden">
                                                     </td>
-                                                    <td>@Model.UserSessions[i].sessionId</td>
+                                                    @*<td>@Model.UserSessions[i].sessionId</td>*@
                                                     <td><label> @Model.UserSessions[i].adUserName  </label></td>
                                                 </tr>
                                             </tbody>
@@ -258,14 +228,7 @@
                             <div>
                                 <p class="error-msg" id="userErrorMsg">@ViewBag.ErrorMsg</p>
                             </div>
-                            <div class="anchorlinksdiv" id="anchorlinksdiv">
-                                <button class="ms-Button message-user" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
-                                    <span class="ms-Button-label labelcolor">Logoff user(s)</span>
-                                </button>
-                                <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
-                                    <span class="ms-Button-label labelcolor">Message user(s)</span>
-                                </button>
-                            </div>
+
                         }
                         else
                         {
@@ -275,25 +238,6 @@
                         }
                         @if (Model.ShowMessageForm)
                         {
-                            @*<div id="sendmessagediv">
-                                    <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
-                                    <input asp-for="@Model.Title" class="form-control m-b-10 inputform" type="text" id="texttitle" />
-                                    <span asp-validation-for="@Model.Title" id="validationtitle" class="error-msg validate-title">@ViewBag.TitleErrorMsg</span>
-                                    <br />
-                                    <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
-                                    <textarea asp-for="@Model.Message" class="form-control m-b-10 inputform" id="texterror">
-                                </textarea>
-                                    <span asp-validation-for="@Model.Message" id="validationmsg" class="error-msg validate-msg"> @ViewBag.MessageErrorMsg </span>
-                                    <br />
-
-                                    <button type="reset" class="ms-Button">
-                                        <span class="ms-Button-label">Cancel</span>
-                                    </button>
-                                    <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
-                                        <span class="ms-Button-label">Send</span>
-                                    </button>
-                                </div>*@
-
                             <div class="ms-PanelExample" id="sendmessagediv">
                                 <div class="flyoutpanel ms-Panel is-open">
                                     <div class="flyoutpanel-content-wrap">
@@ -303,21 +247,23 @@
                                         </div>
                                         <div class="flyoutpanel-content">
                                             <div class="flyoutpanel-controls">
-                                                <label asp-for="Title" class="control-label">Title<span class="red">*</span></label>
+                                                <label asp-for="ConnectionActivity.userName" class="control-label">User UPN<span class="red">*</span></label>
+                                                <input asp-for="@Model.ConnectionActivity.userName" class="form-control" type="text" id="texttitle" value="@Model.ConnectionActivity.userName" />
+                                                <span asp-validation-for="@Model.ConnectionActivity.userName" id="validationtitle" class="error-msg validate-title"></span>
+                                                <br />
+                                                <label asp-for="Title" class="control-label">Subject<span class="red">*</span></label>
                                                 <input asp-for="@Model.Title" class="form-control" type="text" id="texttitle" />
                                                 <span asp-validation-for="@Model.Title" id="validationtitle" class="error-msg validate-title">@ViewBag.TitleErrorMsg</span>
                                                 <br />
                                                 <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
-                                                <textarea asp-for="@Model.Message" class="form-control"  id="texterror"></textarea>
+                                                <textarea asp-for="@Model.Message" class="form-control" id="texterror"></textarea>
                                                 <span asp-validation-for="@Model.Message" id="validationmsg" class="error-msg validate-msg"> @ViewBag.MessageErrorMsg </span>
                                             </div>
                                         </div>
                                         <div class="flyoutpanel-footer ">
-                                            <button type="reset" class="ms-Button"  >
-                                                <span class="ms-Button-label">Cancel</span>
-                                            </button>
-                                            <button asp-action="SendMessage" type="submit"  class="ms-Button primary-btn" id="sendmsg"  >
-                                                <span class="ms-Button-label">Send</span>
+                                           
+                                            <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
+                                                <span class="ms-Button-label">Send Message</span>
                                             </button>
 
                                         </div>
@@ -421,9 +367,9 @@
         }, false);
 
 
-        document.getElementById("btnlogOff").addEventListener("click", function () {
-            document.getElementById("loader1").style.display = "block";
-        }, false);
+        //document.getElementById("btnlogOff").addEventListener("click", function () {
+        //    document.getElementById("loader1").style.display = "block";
+        //}, false);
 
         document.getElementById("msguserbtn").addEventListener("click", function () {
             document.getElementById("loader1").style.display = "block";
@@ -439,4 +385,45 @@
             document.getElementById("texterror").value = "";
         });
     })();
+</script>
+<script type="text/javascript">
+    (function () {
+        var example = document.querySelector(".docs-DialogExample-default");
+        var button = example.querySelector(".docs-DialogExample-button");
+        var dialog = example.querySelector(".ms-Dialog");
+        var label = example.querySelector(".docs-DialogExample-label")
+        var checkBoxElements = example.querySelectorAll(".ms-CheckBox");
+        var actionButtonElements = example.querySelectorAll(".ms-Dialog-action");
+        var checkBoxComponents = [];
+        var actionButtonComponents = [];
+        // Wire up the dialog
+        var dialogComponent = new fabric['Dialog'](dialog);
+        // Wire up the checkBoxes
+        for (var i = 0; i < checkBoxElements.length; i++) {
+            checkBoxComponents[i] = new fabric['CheckBox'](checkBoxElements[i]);
+        }
+        // Wire up the buttons
+        for (var i = 0; i < actionButtonElements.length; i++) {
+            actionButtonComponents[i] = new fabric['Button'](actionButtonElements[i], actionHandler);
+        }
+        // When clicking the button, open the dialog
+        button.onclick = function () {
+            openDialog(dialog);
+        };
+        function actionHandler(event) {
+            var labelText = "";
+            var counter = 0;
+            for (var i = 0; i < checkBoxComponents.length; i++) {
+                if (checkBoxComponents[i].getValue()) {
+                    counter++;
+                }
+            }
+            labelText += counter + " option(s) selected. " + this.innerText.trim() + " clicked";
+            label.innerText = labelText;
+        }
+        function openDialog(dialog) {
+            // Open the dialog
+            dialogComponent.open();
+        }
+    }());
 </script>

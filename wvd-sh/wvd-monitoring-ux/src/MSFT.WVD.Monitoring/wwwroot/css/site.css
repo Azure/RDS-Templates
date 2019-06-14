@@ -241,11 +241,15 @@ html, body {
     align-items: flex-start;
 }
 
-.flyoutpanel-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 20px;
-}
+    .flyoutpanel-header.header-col {
+        flex-flow: column nowrap !important;
+    }
+
+    .flyoutpanel-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 20px;
+    }
 
     .flyoutpanel-content .flyoutpanel-controls {
         margin: 15px 0;
@@ -261,8 +265,9 @@ html, body {
 
 .flyoutpanel-header h4 {
     margin: 0;
-    font-weight: 500;
+    font-weight: 600;
     display: inline-block;
+    font-size: 24px;
 }
 
 .flyoutpanel-header button {
@@ -275,7 +280,20 @@ html, body {
     -webkit-appearance: none;
     font-size: 21px;
     font-weight: bold;
-    margin-left: auto;
+    /*margin-left: auto;*/
+}
+
+    .flyoutpanel-header button.close {
+        margin-left: auto;
+    }
+
+    /*.flyoutpanel-header button span .ms-Icon--Back {
+        margin-right: auto;
+    }*/
+
+.flyoutpanel-header .header-btns {
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 .overlay {
@@ -399,52 +417,55 @@ html, body {
         padding-right: 0;
     }
 
-.ms-ContextualHost.is-positioned {
-    top: 50px !important;
-    left: auto !important;
-    right: 0 !important;
-}
+    .nav-bar-right .ms-ContextualHost.is-positioned {
+        top: 50px !important;
+        left: auto !important;
+        right: 0 !important;
+    }
 
-.ms-ContextualHost .ms-ContextualHost-main {
+.nav-bar-right-menu .ms-ContextualHost .ms-ContextualHost-main {
     background-color: rgb(72, 72, 72);
     color: #fff;
     padding: 10px 20px;
 }
 
-.ms-ContextualHost .ms-ContextualMenu {
+.nav-bar-right-menu.ms-ContextualMenu {
     min-width: 300px;
     max-width: 300px;
     background-color: rgb(72, 72, 72);
     color: #fff;
+    background-color: rgb(72, 72, 72);
+    color: #fff;
+    padding: 10px 20px;
 }
 
-.ms-ContextualHost .ms-ContextualMenu-item .ms-Button {
-    background-color: transparent;
-    border: 0;
-    padding: 0;
-}
+    .nav-bar-right .ms-ContextualHost .ms-ContextualMenu-item .ms-Button {
+        background-color: transparent;
+        border: 0;
+        padding: 0;
+    }
 
-.ms-ContextualHost .ms-ContextualMenu-item:first-child {
-    padding: 0 0 10px 0;
-}
+    .nav-bar-right .ms-ContextualHost .ms-ContextualMenu-item:first-child {
+        padding: 0 0 10px 0;
+    }
 
-.ms-ContextualHost .ms-ContextualMenu-item p strong {
-    font-size: 16px;
-}
+    .nav-bar-right .ms-ContextualHost .ms-ContextualMenu-item p strong {
+        font-size: 16px;
+    }
 
-.ms-ContextualHost .ms-ContextualMenu-item form {
-    text-align: right;
-}
+    .nav-bar-right .ms-ContextualHost .ms-ContextualMenu-item form {
+        text-align: right;
+    }
 
-.ms-ContextualHost .ms-ContextualMenu-item .ms-Button .ms-Button-label {
-    color: #9d9d9d;
-}
+    .nav-bar-right .ms-ContextualHost .ms-ContextualMenu-item .ms-Button .ms-Button-label {
+        color: #9d9d9d;
+    }
 
-.ms-ContextualHost .ms-ContextualMenu-item hr {
-    border-top: 1px solid #666;
-    margin: 5px 0;
-    height: 0;
-}
+    .nav-bar-right .ms-ContextualHost .ms-ContextualMenu-item hr {
+        border-top: 1px solid #666;
+        margin: 5px 0;
+        height: 0;
+    }
 
 .m-0 {
     margin: 0;
@@ -455,6 +476,10 @@ html, body {
 }
 .m-b-20 {
     margin-bottom: 20px;
+}
+
+.border-right {
+    border-right: 2px solid #aaa;
 }
 
 .p-l-r-15 {
@@ -494,6 +519,10 @@ html, body {
         line-height: 34px;
     }
 
+    .body-content .content-section form .form-wrap .primary-btn {
+        margin-top: 34px;
+    }
+
     .body-content .content-section form .form-wrap .primary-btn, .flyoutpanel-footer .primary-btn {
         background-color: #00a3ec;
         border-color: #00a3ec;
@@ -519,6 +548,37 @@ html, body {
     .flyoutpanel-footer .primary-btn {
         margin-left: 8px;
     }
+
+.body-content .content-section form .ContextualMenuWrap {
+    margin-bottom: 30px;
+}
+
+    .body-content .content-section form .ContextualMenuWrap .export-btn, .body-content .content-section form .ContextualMenuWrap .filter-btn {
+        position: relative;
+    }
+
+        .body-content .content-section form .ContextualMenuWrap .export-btn .ms-ContextualMenu, .body-content .content-section form .ContextualMenuWrap .filter-btn .ms-ContextualMenu {
+            position: absolute;
+        }
+
+    .body-content .content-section form .ContextualMenuWrap .ms-Button {
+        background: none;
+        border: none;
+        padding: 0;
+        min-width: auto;
+    }
+
+    .float-left {
+        float: left;
+    }
+
+.float-right {
+    float: right;
+}
+
+.clear {
+    clear: both;
+}
 
 .ms-Table {
     border: 1px solid #eaeaea;
@@ -661,11 +721,17 @@ html, body {
     padding: 16px 0;
     margin-top: 5px;
 }
-.error-msg{
-    color:red;
-    margin-bottom:2px;
-    display:block;
-    font-size:small;
+
+    #sendmessagediv .flyoutpanel {
+        width: 500px;
+        max-width: 500px;
+        position: fixed;
+    }
+.error-msg {
+    color: red;
+    margin-bottom: 2px;
+    display: block;
+    font-size: small;
 }
 #validate {
     color: red;
@@ -726,6 +792,19 @@ html, body {
  .users-session form {
     margin-bottom: 50px;
 }
+
+.users-session form section {
+    padding-top: 0;
+    padding-left: 50px;
+}
+
+    .users-session form section .nav a {
+        padding-top: 0;
+        padding-left: 0;
+    }
+    .users-session form section .nav li {
+        margin-left: 0;
+    }
 #sendmessagediv {
     margin-top: 25px;
 }
@@ -780,6 +859,10 @@ section {
 .tab-pane.active {
     display: block;
 }
+
+        .tab-pane .tab-table .ms-Table thead th, .tab-pane .tab-table .ms-Table tbody td {
+            border-bottom: none;
+        }
 
 .not-active {
     pointer-events: none;
@@ -1039,6 +1122,22 @@ html, body {
         margin: 15px 0;
     }
 
+        .flyoutpanel-content .flyoutpanel-controls label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+            .flyoutpanel-content .flyoutpanel-controls label + span {
+                font-size: 14px;
+                margin-bottom: 30px;
+                word-break: break-all;
+            }
+
+            .flyoutpanel-content .flyoutpanel-controls label, .flyoutpanel-content .flyoutpanel-controls span {
+                display: block;
+            }
+
 .flyoutpanel-header label, .flyoutpanel-header select {
     display: block;
 }
@@ -1049,8 +1148,9 @@ html, body {
 
 .flyoutpanel-header h4 {
     margin: 0;
-    font-weight: 500;
+    font-weight: 600;
     display: inline-block;
+    font-size: 24px;
 }
 
 .flyoutpanel-header button {
@@ -1061,9 +1161,9 @@ html, body {
     background: transparent;
     border: 0;
     -webkit-appearance: none;
-    font-size: 21px;
+    font-size: 16px;
     font-weight: bold;
-    margin-left: auto;
+    /*margin-left: auto;*/
 }
 
 .overlay {
@@ -1138,7 +1238,7 @@ html, body {
 
 /* Layout Styles */
 
-.nav-bar {
+/*.nav-bar {
     background-color: #222;
     color: #fff;
     height: 50px;
@@ -1232,7 +1332,7 @@ html, body {
     border-top: 1px solid #666;
     margin: 5px 0;
     height: 0;
-}
+}*/
 
 .m-0 {
     margin: 0;
@@ -1428,6 +1528,7 @@ html, body {
 .users-session .ms-Table{
     width:40%;
     margin-top:10px;
+    border: none;
 }
 /*.users-session .ms-PanelExample .ms-Button {
     background:transparent;
@@ -1574,4 +1675,34 @@ section {
     cursor: default;
     text-decoration: none;
     color: black;
+}
+#Indexnodata {
+    margin-top: 200px;
+}
+
+.chevron-btn {
+    background: none;
+    border: none;
+}
+
+.green-circled-check {
+    background: #107c10;
+    color: #fff;
+    padding: 3px;
+    border-radius: 50%;
+    font-size: 11px;
+}
+
+.ms-Icon--Export::before {
+    content: '\EDE1';
+}
+
+.flex-row-center {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+}
+
+.flex-row-center .ms-Icon {
+    margin-right: 5px;
 }

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MSFT.WVD.Monitoring.Common.Models;
@@ -43,7 +44,13 @@ namespace MSFT.WVD.Monitoring.Controllers
             var viewData = new DiagonizePageViewModel() { SelectedRole = role, DiagonizeQuery = new DiagonizeQuery() { StartDate = DateTime.Now.AddDays(-2), EndDate = DateTime.Now } };
             return View(viewData);
         }
+        public IActionResult returnToIndex()
+        {
 
+            var role = HttpContext.Session.Get<RoleAssignment>("SelectedRole");
+            var viewData = new DiagonizePageViewModel() { SelectedRole = role, DiagonizeQuery = new DiagonizeQuery() { StartDate = DateTime.Now.AddDays(-2), EndDate = DateTime.Now } };
+            return View(viewData);
+        }
         [HttpPost]
         public async Task<IActionResult> Index(DiagonizePageViewModel data)
         {
@@ -59,16 +66,29 @@ namespace MSFT.WVD.Monitoring.Controllers
                 }
                 else
                 {
+
                     var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
                     accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
-                    string startDate = $"{data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-dd")}T00:00:00Z";
-                    string endDate = $"{data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-dd")}T23:59:59Z";
+                    string startDate, endDate = "";
+                    if (data.DiagonizeQuery.StartDate == null)
+                    {
+                         startDate = $"{DateTime.Now.ToUniversalTime().AddMinutes(-60).ToString("yyyy-MM-dd")}T00:00:00Z";
+                         endDate = $"{DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd")}T00:00:00Z";
+                    }
+                    else
+                    {
+                        startDate = data.DiagonizeQuery.StartDate.ToString("yyyy-MM-dd")+"T00:00:00Z";
+                        endDate = data.DiagonizeQuery.EndDate.ToString("yyyy-MM-dd")+"T00: 00:00Z";
+                    }
 
+                    
+                       
+                    string activityoutcome = data.DiagonizeQuery.ActivityOutcome.ToString();
                     if (data.DiagonizeQuery.ActivityType == ActivityType.Management)
                     {
                         _logger.LogInformation($"Service call to get management activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
                         //call from service layer
-                        viewData.ManagementActivity = await _diagnozeService.GetManagementActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
+                        viewData.ManagementActivity = await _diagnozeService.GetManagementActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, activityoutcome).ConfigureAwait(false);
                         if (viewData.ManagementActivity?.Count > 0 && viewData.ManagementActivity[0].ErrorDetails != null)
                         {
                             _logger.LogError($"Error Occured : {viewData.ManagementActivity[0].ErrorDetails.Message}");
@@ -81,7 +101,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                         _logger.LogInformation($"Service Call  to get connection activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
 
                         //call from service layer
-                        viewData.ConnectionActivity = await _diagnozeService.GetConnectionActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
+                        viewData.ConnectionActivity = await _diagnozeService.GetConnectionActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, activityoutcome).ConfigureAwait(false);
                         if (viewData.ConnectionActivity?.Count > 0 && viewData.ConnectionActivity[0].ErrorDetails != null)
                         {
                             _logger.LogError($"Error Occured : {viewData.ConnectionActivity[0].ErrorDetails.Message}");
@@ -94,7 +114,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     {
                         _logger.LogInformation($"Service call to get feed activity details for selected tenant group {tenantGroupName} and tenant {tenant}");
 
-                        viewData.FeedActivity = await _diagnozeService.GetFeedActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, data.DiagonizeQuery.ActivityOutcome.ToString()).ConfigureAwait(false);
+                        viewData.FeedActivity = await _diagnozeService.GetFeedActivities(accessToken, data.DiagonizeQuery.UPN, tenantGroupName, tenant, startDate, endDate, activityoutcome).ConfigureAwait(false);
                         if (viewData.FeedActivity?.Count > 0 && viewData.FeedActivity[0].ErrorDetails != null)
                         {
                             _logger.LogError($"Error Occured : {viewData.FeedActivity[0].ErrorDetails.Message}");
@@ -399,6 +419,85 @@ namespace MSFT.WVD.Monitoring.Controllers
                     Message= $"VM performance queries file does not exist. Please upload 'metrics.xml' file to '{DirectoryNme}' ."
                 };
             }
+        }
+        public ActionResult ExporttoPDF()
+        {
+            return View();
+        }
+     
+        public async Task<IActionResult> IssuesInterval(DiagonizePageViewModel diagonizePageViewModel,  string interval=null,string outcome=null, string upn=null  )
+        {
+            //DiagonizePageViewModel diagonizePageViewModel = new DiagonizePageViewModel();
+           // diagonizePageViewModel.DiagonizeQuery = new DiagonizeQuery();
+           if(diagonizePageViewModel.DiagonizeQuery==null)
+            {
+                diagonizePageViewModel.DiagonizeQuery = new DiagonizeQuery();
+                diagonizePageViewModel.DiagonizeQuery.UPN = upn;
+            }
+           
+            try
+            {
+                if (!string.IsNullOrEmpty(interval))
+                {
+                    HttpContext.Session.Set<string>("SelectedInterval", interval);
+
+                }
+                else
+                {
+                    diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddMinutes(-60);
+                    diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
+                    interval = HttpContext.Session.Get<string>("SelectedInterval");
+                }
+
+                if (!string.IsNullOrEmpty(outcome))
+                {
+                    HttpContext.Session.Set<string>("SelectedOutcome", outcome);
+                }
+                else
+                {
+                    outcome = HttpContext.Session.Get<string>("SelectedOutcome");
+                }
+
+
+              
+               diagonizePageViewModel.DiagonizeQuery.ActivityOutcome = outcome!=null? (ActivityOutcome)Enum.Parse(typeof(ActivityOutcome), outcome) : ActivityOutcome.All;
+                if (interval == startDateEnum.Lastonehour.ToString())
+                {
+                    diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddMinutes(-60);
+                    diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
+                }
+                else if (interval == startDateEnum.sixhoursago.ToString())
+                {
+
+                    diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddHours(-6);
+                    diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
+                   
+                }
+                else if (interval == startDateEnum.onedayago.ToString())
+                {
+
+                    diagonizePageViewModel.DiagonizeQuery.StartDate =  DateTime.Now.AddDays(-1);
+                    diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
+                  
+                }
+                else if (interval == startDateEnum.onweekago.ToString())
+                {
+
+                    diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddDays(-7);
+                    diagonizePageViewModel.DiagonizeQuery.EndDate   = DateTime.Now;
+                  
+                }
+                return await Index(diagonizePageViewModel);
+            }
+            catch (Exception ex )
+            {
+
+                return null;
+            }
+
+          
+
+         
         }
     }
 }
