@@ -50,27 +50,20 @@
                 </div>
             </div>
         </div>
-       
-        
-       
+
+
+
         <hr />
+
         <div class="ContextualMenuWrap">
             <div class="ms-ContextualMenuExample export-btn float-left">
-                <button class="ms-Button ms-Button--default">
-                    <span class="ms-Button-label">Export</span>
+                <button class="ms-Button ms-Button--default" onclick="download_csv()">
+                    <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
                 </button>
-                <ul class="ms-ContextualMenu is-hidden">
-                    <li class="ms-ContextualMenu-item">
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoPDF" asp-controller="DiagnoseIssues">PDF</a>
-                    </li>
-                    <li class="ms-ContextualMenu-item">
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoExcel" asp-controller="DiagnoseIssues">Excel</a>
-                    </li>
-                </ul>
             </div>
             <div class="ms-ContextualMenuExample filter-btn float-right">
                 <button class="ms-Button ms-Button--default">
-                    <span class="ms-Button-label">Filter</span>
+                    <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Filter" aria-hidden="true"></i>Filter</span>
                 </button>
                 <ul class="ms-ContextualMenu is-hidden ms-ContextualMenu--multiselect">
                     <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">clear all filters</li>
@@ -136,10 +129,9 @@
 
             <div id="loader1" class="loader"></div>
         }
+      
         <div class="activitytable" id="table">
-
-
-            <table class="ms-Table">
+            <table class="ms-Table" id="activityTabledata">
                 <thead>
                     <tr>
                         <th></th>
@@ -162,7 +154,7 @@
                 </thead>
 
                 <tbody>
-                    <button type="button" id="copy" style="display: none;">Copy to clipboard</button>
+
                     @if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Connection && Model.ConnectionActivity != null)
                     {
                         var index = 0;
@@ -178,7 +170,7 @@
                                     count = count + 1;
                                     if (count == 1)
                                     {
-                                        <tr onclick="{errorrowclick(event)}" onmouseover="document.getElementById('copy').style.display = 'block';" onmouseout="document.getElementById('copy').style.display = 'none';">
+                                        <tr onclick="{errorrowclick(event)}" onmouseover="document.getElementById('copy').style.display = 'block';" onmouseout="document.getElementById('copy').style.display = 'block';">
                                             <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span><i class="ms-Icon ms-Icon--ChevronDown" aria-hidden="true"></i></span></button></td>
                                             <td>@d.startTime</td>
                                             <td>@d.endTime</td>
@@ -202,10 +194,14 @@
                                             <div class="ms-PanelExample">
                                                 <div class="flyoutpanel ms-Panel" id="errordetailspanel">
                                                     <div class="flyoutpanel-content-wrap">
+                                                       
+                                                            
                                                         <div class="flyoutpanel-header header-col">
+
                                                             <div class="header-btns">
-                                                                <button type="button"><span><i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i></span></button>
-                                                                <button class="close" href="" id="btnSlideClose"><i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i></button>
+                                                                <button type="submit" asp-controller="DiagnoseIssues" asp-action="SearchResults"><span><i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i></span></button>
+                                                                <button type="submit" class="close" asp-controller="DiagnoseIssues" asp-action="SearchResults"><span><i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i></span></button>
+                                                               
                                                             </div>
                                                             <h4>Error details</h4>
                                                         </div>
@@ -351,15 +347,6 @@
         document.getElementById("process").addEventListener("click", function () {
             document.getElementById("loader1").hidden = false;
         }, false);
-
-       
-        //var el = document.getElementById("btnRowHide");
-
-        //el.addEventListener('click', rowClick, false);
-
-       
-
-
     })();
 </script>
 <script type="text/javascript">
@@ -374,37 +361,10 @@
         var value = document.getElementById("errordetailspanel").style.display;
         console.log(value, "fdggg");
         document.getElementById("errordetailspanel").style.display = "block";
-   
-    }
-    
-    function copyToClipboard() {
-        document.querySelector('table tr').select();
-        document.execCommand('copy');
-
-        //clear selection
-        if (document.selection) {
-            document.selection.empty();
-        } else if (window.getSelection) {
-            window.getSelection().removeAllRanges();
-        }
 
     }
-
-    document.querySelector('#copy').addEventListener('click', function () {
-        copyToClipboard()
-    });  
     function rowClick(index) {
         console.log(index);
-        //var value = document.getElementById("trData").style.visibility;
-        //console.log(value);
-
-        //if (value == "visible") {
-        //    document.getElementById("trData").style.visibility = "hidden"
-        //}
-        //else {
-        //    document.getElementById("trData").style.visibility = "visible"
-        //}
-
         var lst = document.getElementsByClassName("trData-" + index);
         console.log(lst, "lst");
         for (var i = 0; i < lst.length; ++i) {
@@ -417,22 +377,75 @@
             else {
                 lst[i].style.visibility = "visible";
                 lst[i].style.display = "table-row";
-
             }
-            //lst[i].style.visibility=  lst[i].style.visibility = "visible" ? "hidden" : "visible";
         }
+    }
+    function download_csv() {
+        var jsonData = [];
+        var jsonHeaderData = '';
+        var myTab = document.getElementById('activityTabledata');
+        for (var j = 1; j < myTab.rows[0].cells.length; j++) {
+            var objheaers = myTab.rows[0].cells[j].innerText;
+            if (j == 1) {
+                jsonHeaderData = objheaers;
+            }
+            else {
+                jsonHeaderData = jsonHeaderData + "," + objheaers;
+            }
+        }
+        for (i = 1; i < myTab.rows.length; i++) {
+            var jsonRowData = [];
+            for (var j = 1; j < myTab.rows[i].cells.length; j++) {
+                var objCells = myTab.rows[i].cells[j].innerText;
 
+                jsonRowData.push(objCells);
+            }
+            jsonData.push(jsonRowData);
+        }
+        var csv = jsonHeaderData + '\n';
+        jsonData.forEach(function (row) {
+            csv += row.join(',');
+            csv += "\n";
+        });
+        console.log(csv);
+        var hiddenElement = document.createElement('a');
+        hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+        hiddenElement.target = '_blank';
+        hiddenElement.download = 'people.csv';
+        hiddenElement.click();
     }
 </script>
-<script type="text/javascript">
-    var PanelExamples = document.getElementsByClassName("ms-PanelExample");
-    for (var i = 0; i < PanelExamples.length; i++) {
-        (function () {
-            var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
-            var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
-            PanelExampleButton.addEventListener("click", function (i) {
-                new fabric['Panel'](PanelExamplePanel);
-            });
-        }());
-    }
+    <script>
+    const copytoclipboard = document.querySelectorAll('table tr');
+
+    copytoclipboard.forEach(color => {
+        color.addEventListener('click', () => {
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(color);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            try {
+                document.execCommand('copy');
+                selection.removeAllRanges();
+
+                const original = color.textContent;
+                color.textContent = 'Copied!';
+                color.classList.add('success');
+
+                setTimeout(() => {
+                    color.textContent = original;
+                    color.classList.remove('success');
+                }, 1200);
+            } catch (e) {
+                const errorMsg = document.querySelector('.error-msg');
+                errorMsg.classList.add('show');
+
+                setTimeout(() => {
+                    errorMsg.classList.remove('show');
+                }, 1200);
+            }
+        });
+    });
 </script>

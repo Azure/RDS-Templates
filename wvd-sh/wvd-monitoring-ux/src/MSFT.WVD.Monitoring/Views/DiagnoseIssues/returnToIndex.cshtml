@@ -31,146 +31,118 @@
                 </div>
             </div>
         </div>
-        <hr />
-        <div class="ContextualMenuWrap">
-            <div class="ms-ContextualMenuExample export-btn float-left">
-                <button class="ms-Button ms-Button--default">
-                    <span class="ms-Button-label">Export</span>
-                </button>
-                <ul class="ms-ContextualMenu is-hidden">
-                    <li class="ms-ContextualMenu-item">
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoPDF" asp-controller="DiagnoseIssues">PDF</a>
-                    </li>
-                    <li class="ms-ContextualMenu-item">
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoExcel" asp-controller="DiagnoseIssues">Excel</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="ms-ContextualMenuExample filter-btn float-right">
-                <button class="ms-Button ms-Button--default">
-                    <span class="ms-Button-label">Filter</span>
-                </button>
-                <ul class="ms-ContextualMenu is-hidden ms-ContextualMenu--multiselect">
-                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">clear all filters</li>
-
-                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--divider"></li>
-                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Issues from</li>
-                    <li class="ms-ContextualMenu-item">
-                        @{
-                            IDictionary<string, string> routeData = new Dictionary<string, string>();
-                            routeData.Add("interval", "Lastonehour");
-                            routeData.Add("upn", Model.DiagonizeQuery.UPN);
-                        }
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData">Last hour</a>
-                    </li>
-                    <li class="ms-ContextualMenu-item">
-                        @{
-                            IDictionary<string, string> routeData1 = new Dictionary<string, string>();
-                            routeData1.Add("interval", "Lastonehour");
-                            routeData1.Add("upn", Model.DiagonizeQuery.UPN);
-                        }
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData1">6 hours ago</a>
-                    </li>
-                    <li class="ms-ContextualMenu-item">
-                        @{
-                            IDictionary<string, string> routeData2 = new Dictionary<string, string>();
-                            routeData2.Add("interval", "onedayago");
-                            routeData2.Add("upn", Model.DiagonizeQuery.UPN);
-                        }
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData2">1 day ago</a>
-                    </li>
-                    <li class="ms-ContextualMenu-item">
-                        @{
-                            IDictionary<string, string> routeData3 = new Dictionary<string, string>();
-                            routeData3.Add("interval", "onweekago");
-                            routeData3.Add("upn", Model.DiagonizeQuery.UPN);
-                        }
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData3">1 week ago</a>
-                    </li>
-                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--divider"></li>
-                    <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Outcome</li>
-                    <li class="ms-ContextualMenu-item">
-                        @{
-                            IDictionary<string, string> routeData4 = new Dictionary<string, string>();
-                            routeData4.Add("outcome", "Failure");
-                            routeData4.Add("upn", Model.DiagonizeQuery.UPN);
-                        }
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData4">Failed</a>
-                    </li>
-                    <li class="ms-ContextualMenu-item">
-                        @{
-                            IDictionary<string, string> routeData5 = new Dictionary<string, string>();
-                            routeData5.Add("outcome", "Success");
-                            routeData5.Add("upn", Model.DiagonizeQuery.UPN);
-                        }
-                        <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData5">Success</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="clear"></div>
+    </form>
+    <hr />
+    <div class="ContextualMenuWrap">
+        <div class="ms-ContextualMenuExample export-btn float-left">
+            <button class="ms-Button ms-Button--default">
+                <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
+            </button>
+            <ul class="ms-ContextualMenu is-hidden">
+                <li class="ms-ContextualMenu-item">
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoPDF" asp-controller="DiagnoseIssues">PDF</a>
+                </li>
+                <li class="ms-ContextualMenu-item">
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoExcel" asp-controller="DiagnoseIssues">Excel</a>
+                </li>
+            </ul>
         </div>
-        @*<div class="ms-ContextualMenuExample">
-            <button class="ms-Button ms-Button--primary">
-                <span class="ms-Button-label">Filter</span>
+        <div class="ms-ContextualMenuExample filter-btn float-right">
+            <button class="ms-Button ms-Button--default">
+                <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Filter" aria-hidden="true"></i>Filter</span>
             </button>
             <ul class="ms-ContextualMenu is-hidden ms-ContextualMenu--multiselect">
-                <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Clear All Filters</li>
+                <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">clear all filters</li>
 
                 <li class="ms-ContextualMenu-item ms-ContextualMenu-item--divider"></li>
-                <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Issues From</li>
+                <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Issues from</li>
                 <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link" asp-for="DiagonizeQuery.StartDate" items="viewBag.menuitems" tabindex="1">Last Hour</a>
+                    @{
+                        IDictionary<string, string> routeData = new Dictionary<string, string>();
+                        routeData.Add("interval", "Lastonehour");
+                        routeData.Add("upn", Model.DiagonizeQuery.UPN);
+                    }
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData">Last hour</a>
                 </li>
                 <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link" asp-for="DiagonizeQuery.StartDate" tabindex="1">6 hours ago</a>
+                    @{
+                        IDictionary<string, string> routeData1 = new Dictionary<string, string>();
+                        routeData1.Add("interval", "Lastonehour");
+                        routeData1.Add("upn", Model.DiagonizeQuery.UPN);
+                    }
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData1">6 hours ago</a>
                 </li>
                 <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link" asp-for="DiagonizeQuery.StartDate" tabindex="1">1 day ago</a>
+                    @{
+                        IDictionary<string, string> routeData2 = new Dictionary<string, string>();
+                        routeData2.Add("interval", "onedayago");
+                        routeData2.Add("upn", Model.DiagonizeQuery.UPN);
+                    }
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData2">1 day ago</a>
                 </li>
                 <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link" asp-for="DiagonizeQuery.StartDate" tabindex="1">1 week ago</a>
+                    @{
+                        IDictionary<string, string> routeData3 = new Dictionary<string, string>();
+                        routeData3.Add("interval", "onweekago");
+                        routeData3.Add("upn", Model.DiagonizeQuery.UPN);
+                    }
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData3">1 week ago</a>
                 </li>
                 <li class="ms-ContextualMenu-item ms-ContextualMenu-item--divider"></li>
                 <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Outcome</li>
                 <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link"  tabindex="1">Failed</a>
+                    @{
+                        IDictionary<string, string> routeData4 = new Dictionary<string, string>();
+                        routeData4.Add("outcome", "Failure");
+                        routeData4.Add("upn", Model.DiagonizeQuery.UPN);
+                    }
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData4">Failed</a>
                 </li>
                 <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link" asp-for="DiagonizeQuery.ActivityOutcome" tabindex="1">Success</a>
+                    @{
+                        IDictionary<string, string> routeData5 = new Dictionary<string, string>();
+                        routeData5.Add("outcome", "Success");
+                        routeData5.Add("upn", Model.DiagonizeQuery.UPN);
+                    }
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData5">Success</a>
                 </li>
             </ul>
-        </div>*@
-        <table class="ms-Table">
-            <thead>
-                <tr>
-                    <th asp-for="Start Time">Start Time</th>
-                    <th asp-for="End Time">End Time</th>
-                    <th asp-for="Outcome">Outcome</th>
-                    <th asp-for="Type">Type</th>
-                    <th asp-for="Error">Error</th>
-                    <th asp-for="Session Host">Session Host</th>
-                    <th asp-for="Client">Client</th>
-                    <th asp-for="Client Ip">Client Ip</th>
-                    <th asp-for="HostPoolname">HostPoolname</th>
-                    <th asp-for="Tenant">Tenant</th>
-                    @*<th asp-for="Activity ID">Activity ID</th>*@
-                    @*<th asp-for="isInternalError">Internal Error</th>
-                    <th asp-for="UserName">UserName</th>
-                    <th asp-for="Details">Details</th>*@
-                </tr>
-            </thead>
-        </table>
-        <p>No data yet.Please search User UPN to see data</p>
-        @if (Model.ConnectionActivity == null || Model.ManagementActivity == null || Model.FeedActivity == null || Model.ConnectionActivity.Count == 0 || Model.ManagementActivity.Count == 0 || Model.FeedActivity.Count == 0)
-        {
-            <div id="loader1" class="loader"></div>
-        }
-    </form>
+        </div>
+        <div class="clear"></div>
+    </div>
+    <table class="ms-Table">
+        <thead>
+            <tr>
+                <th asp-for="Start Time">Start Time</th>
+                <th asp-for="End Time">End Time</th>
+                <th asp-for="Outcome">Outcome</th>
+                <th asp-for="Type">Type</th>
+                <th asp-for="Error">Error</th>
+                <th asp-for="Session Host">Session Host</th>
+                <th asp-for="Client">Client</th>
+                <th asp-for="Client Ip">Client Ip</th>
+                <th asp-for="HostPoolname">HostPoolname</th>
+                <th asp-for="Tenant">Tenant</th>
+            </tr>
+        </thead>
+    </table>
+    <div id="Indexnodata">
+        <h5 style="text-align:center">No data yet.</h5><p style="text-align:center">Please search User UPN to see data</p>
+    </div>
+    @if (Model.ConnectionActivity == null || Model.ManagementActivity == null || Model.FeedActivity == null || Model.ConnectionActivity.Count == 0 || Model.ManagementActivity.Count == 0 || Model.FeedActivity.Count == 0)
+    {
+        <div id="loader1" class="loader"></div>
+    }
 </div>
-
 <script>
     (function () {
         document.getElementById("Diagnosebreadcrumb").style.display = "block";
+        var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+        for (var i = 0; i < ContextualMenuElements.length; i++) {
+            var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+            var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+            new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+        }
         var TableElements = document.querySelectorAll(".ms-Table");
         for (var i = 0; i < TableElements.length; i++) {
             new fabric['Table'](TableElements[i]);
@@ -189,11 +161,4 @@
         }, false);
     })();
 </script>
-<script type="text/javascript">
-    var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
-    for (var i = 0; i < ContextualMenuElements.length; i++) {
-        var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
-        var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
-        new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
-    }
-</script>
+

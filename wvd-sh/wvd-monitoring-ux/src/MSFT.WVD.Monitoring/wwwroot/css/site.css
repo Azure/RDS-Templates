@@ -561,7 +561,7 @@ html, body {
             position: absolute;
         }
 
-    .body-content .content-section form .ContextualMenuWrap .ms-Button {
+    .body-content .content-section .ContextualMenuWrap .ms-Button {
         background: none;
         border: none;
         padding: 0;
@@ -722,11 +722,11 @@ html, body {
     margin-top: 5px;
 }
 
-    #sendmessagediv .flyoutpanel {
-        width: 500px;
-        max-width: 500px;
-        position: fixed;
-    }
+#sendmessagediv .flyoutpanel, .activitytable .flyoutpanel {
+    width: 500px;
+    max-width: 500px;
+    position: fixed;
+}
 .error-msg {
     color: red;
     margin-bottom: 2px;
@@ -1234,10 +1234,12 @@ html, body {
     content: "*";
     color: red;
 }
-
-
+.sendmessage {
+    position: absolute;
+    top: 35%;
+    left: -8px;
+}
 /* Layout Styles */
-
 /*.nav-bar {
     background-color: #222;
     color: #fff;
@@ -1333,7 +1335,6 @@ html, body {
     margin: 5px 0;
     height: 0;
 }*/
-
 .m-0 {
     margin: 0;
 }
@@ -1706,3 +1707,14 @@ section {
 .flex-row-center .ms-Icon {
     margin-right: 5px;
 }
+
+#activityTabledata tbody tr td a {
+    color: #00a3ec;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+    #activityTabledata tbody tr td a.not-active {
+        color: #333;
+        font-weight: 500;
+    }

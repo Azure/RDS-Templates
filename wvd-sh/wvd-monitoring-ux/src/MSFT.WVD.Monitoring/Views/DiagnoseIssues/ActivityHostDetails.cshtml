@@ -247,20 +247,20 @@
                                         </div>
                                         <div class="flyoutpanel-content">
                                             <div class="flyoutpanel-controls">
-                                                <label asp-for="ConnectionActivity.userName" class="control-label">User UPN<span class="red">*</span></label>
+                                                <label asp-for="ConnectionActivity.userName" class="control-label">User UPN<i class="red">*</i></label>
                                                 <input asp-for="@Model.ConnectionActivity.userName" class="form-control" type="text" id="texttitle" value="@Model.ConnectionActivity.userName" />
                                                 <span asp-validation-for="@Model.ConnectionActivity.userName" id="validationtitle" class="error-msg validate-title"></span>
                                                 <br />
-                                                <label asp-for="Title" class="control-label">Subject<span class="red">*</span></label>
+                                                <label asp-for="Title" class="control-label">Subject<i class="red">*</i></label>
                                                 <input asp-for="@Model.Title" class="form-control" type="text" id="texttitle" />
                                                 <span asp-validation-for="@Model.Title" id="validationtitle" class="error-msg validate-title">@ViewBag.TitleErrorMsg</span>
                                                 <br />
-                                                <label asp-for="Message" class="control-label">Message<span class="red">*</span></label>
+                                                <label asp-for="Message" class="control-label">Message<i class="red">*</i></label>
                                                 <textarea asp-for="@Model.Message" class="form-control" id="texterror"></textarea>
                                                 <span asp-validation-for="@Model.Message" id="validationmsg" class="error-msg validate-msg"> @ViewBag.MessageErrorMsg </span>
                                             </div>
                                         </div>
-                                        <div class="flyoutpanel-footer ">
+                                        <div class="flyoutpanel-footer sendmessage">
                                            
                                             <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
                                                 <span class="ms-Button-label">Send Message</span>
