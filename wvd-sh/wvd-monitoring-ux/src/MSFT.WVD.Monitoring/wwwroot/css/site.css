@@ -570,6 +570,8 @@ html, body {
 
     .float-left {
         float: left;
+        background-color:white;
+        border: 1px solid white;
     }
 
 .float-right {
@@ -1341,6 +1343,11 @@ html, body {
     margin: 5px 0;
     height: 0;
 }*/
+
+.ms-ContextualHost.is-positioned {
+    right: 5px;
+    left: unset !important;
+}
 .m-0 {
     margin: 0;
 }

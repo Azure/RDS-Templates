@@ -54,14 +54,26 @@
     </form>
 
     <hr />
-
+    <div class="export-btn">
+        <button class="ms-Button ms-Button--default float-left" onclick="download_csv()">
+            <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
+        </button>
+    </div>
+  
     <div class="ContextualMenuWrap">
-        <div class="ms-ContextualMenuExample export-btn float-left">
-            <button class="ms-Button ms-Button--default" onclick="download_csv()">
+        @*<div class="ms-ContextualMenuExample export-btn float-left">
+            <button class="ms-Button ms-Button--default">
                 <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
             </button>
-           
-        </div>
+            <ul class="ms-ContextualMenu is-hidden">
+                <li class="ms-ContextualMenu-item">
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoPDF" asp-controller="DiagnoseIssues">PDF</a>
+                </li>
+                <li class="ms-ContextualMenu-item">
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoExcel" asp-controller="DiagnoseIssues">Excel</a>
+                </li>
+            </ul>
+        </div>*@
         <div class="ms-ContextualMenuExample filter-btn float-right">
             <button class="ms-Button ms-Button--default">
                 <span class="ms-Button-label"><i class="ms-Icon ms-Icon--Filter" aria-hidden="true"></i>Filter</span>
@@ -170,7 +182,7 @@
                                 count = count + 1;
                                 if (count == 1)
                                 {
-                                    <tr onclick="{errorrowclick(event)}" onmouseover="document.getElementById('copy').style.display = 'block';" onmouseout="document.getElementById('copy').style.display = 'block';">
+                                    <tr onclick="{errorrowclick(event)}" >
                                         <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span><i class="ms-Icon ms-Icon--ChevronDown" aria-hidden="true"></i></span></button></td>
                                         <td>@d.startTime</td>
                                         <td>@d.endTime</td>
@@ -364,7 +376,6 @@
     function errorrowclick(event) {
         console.log(event);
         var value = document.getElementById("errordetailspanel").style.display;
-        console.log(value, "fdggg");
         document.getElementById("errordetailspanel").style.display = "block";
 
     }
@@ -422,7 +433,6 @@
 </script>
     <script>
     const copytoclipboard = document.querySelectorAll('table tr');
-
     copytoclipboard.forEach(color => {
         color.addEventListener('click', () => {
             const selection = window.getSelection();
