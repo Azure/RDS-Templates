@@ -148,7 +148,7 @@ Configuration SelfhostConfig {
 		{
 			Ensure      = "Present"
                         Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server"
-                        ValueName   = "AllowRdpMultimediaRedirection "
+                        ValueName   = "AllowRdpMultimediaRedirection"
                         ValueData   = 1
                         ValueType   = "DWORD"
 		}
