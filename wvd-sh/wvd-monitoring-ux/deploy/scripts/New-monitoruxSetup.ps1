@@ -25,17 +25,21 @@ Import-Module Azure
 Import-Module AzureRM.Automation
 Import-Module AzureAD
    
-#The name of the Automation Credential Asset this runbook will use to authenticate to Azure.
+# Name of the Automation Credential Asset,runbook will use to authenticate to Azure.
 $CredentialAssetName = 'DefaultAzureCredential'
 
-#Get the credential with the above name from the Automation Asset store
+# Get the credential using the above name from the Automation Asset store
 $Cred = Get-AutomationPSCredential -Name $CredentialAssetName
 
-#Authenticate to Azure and select the subscriptionId
+# Authenticate to Azure
 Add-AzureRmAccount -Environment 'AzureCloud' -Credential $Cred
+
+# Select the subscription using subscriptionID
 Select-AzureRmSubscription -SubscriptionId $subscriptionid
 
 Write-Output "Getting the Publishing profile information from Web-App"
+
+# Get the Publish Profile
 $WebAppXML = (Get-AzureRmWebAppPublishingProfile -Name $WebApp `
 -ResourceGroupName $ResourceGroupName  `
 -OutputFile null)
@@ -61,14 +65,18 @@ $GetWebApp = Get-AzureRmWebApp -Name $WebApp -ResourceGroupName $ResourceGroupNa
 $WebURL = $GetWebApp.DefaultHostName
 $redirectURL="https://"+"$WebURL"
 
-#Authenticate to AzureAD
+# Authenticate to AzureAD
 Connect-AzureAD -AzureEnvironmentName AzureCloud -Credential $Cred
 
 # Create a new App registration with service principal
 $createappregistrationURI=$fileuri.Replace('wvd-monitoring-ux.zip','CreateAAdAppregistration.ps1')
 Invoke-WebRequest -Uri $createappregistrationURI -OutFile "C:\CreateAAdAppregistration.ps1"
 Set-Location "C:\"
+
+# Create new app registration and service principal using the CreateAAdAppregistration.ps1 script
 .\CreateAAdAppregistration.ps1 -subscriptionid $subscriptionid -Username $Username -Password $Password -WebApp $WebApp -redirectURL $redirectURL
+
+# Get the app registration
 $appreg=Get-AzureADApplication -SearchString $WebApp
 
 #Get the ClientId/ApplicationID
@@ -82,13 +90,13 @@ $WebAppSettings = @{
 }
 Set-AzureRmWebApp -AppSettings $WebAppSettings -Name $WebApp -ResourceGroupName $ResourceGroupName
 
-#RedirectURL to add to Appregistration
+# RedirectURL to add to Appregistration
 $newReplyUrl = "$redirectURL/security/signin-callback"
 
 # Get AzureAD App
 $app = Get-AzureADApplication -Filter "AppId eq '$($ClientId)'"
 
-#Get the ReplyURL
+# Get the ReplyURL
 $replyUrls = $app.ReplyUrls
 
 # Add Reply URL if not already in the list 
@@ -97,7 +105,7 @@ if ($replyUrls -NotContains $newReplyUrl) {
     Set-AzureADApplication -ObjectId $app.ObjectId -ReplyUrls $replyUrls -PublicClient $true -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
 }
 
-#set windows virtual desktop API permission to Client App Registration
+# Set windows virtual desktop API permission to Client App Registration
 $resourceAppId = Get-AzureADServicePrincipal -SearchString "Windows Virtual Desktop" | Where-Object {$_.DisplayName -eq "Windows Virtual Desktop"}
 $AzureWVDApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
 $AzureWVDApiAccess.ResourceAppId = $resourceAppId.AppId
@@ -105,7 +113,7 @@ foreach($permission in $resourceAppId.Oauth2Permissions){
     $AzureWVDApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
 }
 
-#set Log Analytics API permission to Client App Registration
+# Set Log Analytics API permission to Client App Registration
 $AzureLogAnalyticsApiPrincipal = Get-AzureADServicePrincipal -SearchString "Log Analytics API"
 $AzureLogAnalyticsApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
 $AzureLogAnalyticsApiAccess.ResourceAppId = $AzureLogAnalyticsApiPrincipal.AppId
@@ -113,7 +121,7 @@ foreach($permission in $AzureLogAnalyticsApiPrincipal.Oauth2Permissions){
     $AzureLogAnalyticsApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
 }
 
-#Add the API permissions to the app registration
+# Add the API permissions to the app registration
 Set-AzureADApplication -ObjectId $app.ObjectId -RequiredResourceAccess $AzureLogAnalyticsApiAccess,$AzureWVDApiAccess -ErrorAction Stop
 
 New-PSDrive -Name RemoveAccount -PSProvider FileSystem -Root "C:\" | Out-Null
@@ -140,22 +148,23 @@ Remove-AzureRmAutomationAccount -Name `$automationAccountName -ResourceGroupName
 "@| Out-File -FilePath RemoveAccount:\RemoveAccount.ps1 -Force
 
     $runbookName='removemonitoruxacctbook'
-    #Create a Run Book
+
+    # Create a Run Book
     New-AzureRmAutomationRunbook -Name $runbookName -Type PowerShell -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName
 
-    #Import modules to Automation Account
+    # Import modules to an Automation Account
     $modules="AzureRM.profile,Azurerm.compute,azurerm.resources"
     $modulenames=$modules.Split(",")
     foreach($modulename in $modulenames){
     Set-AzureRmAutomationModule -Name $modulename -AutomationAccountName $automationAccountName -ResourceGroupName $ResourcegroupName
     }
 
-    #Importe powershell file to Runbooks
+    # Import powershell file to Runbooks
     Import-AzureRmAutomationRunbook -Path "C:\RemoveAccount.ps1" -Name $runbookName -Type PowerShell -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName -Force
 
-    #Publishing Runbook
+    # Publishing Runbook
     Publish-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName
 
-    #Providing parameter values to powershell script file
+    # Providing parameter values to powershell script file
     $params=@{"UserName"=$UserName;"Password"=$Password;"ResourcegroupName"=$ResourcegroupName;"SubscriptionId"=$subscriptionid;"automationAccountName"=$automationAccountName}
     Start-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName -Parameters $params | Out-Null
