@@ -1239,6 +1239,12 @@ html, body {
     top: 35%;
     left: -8px;
 }
+.countitems {
+    float: right;
+    position: relative;
+    left: -101px;
+    top: -27px;
+}
 /* Layout Styles */
 /*.nav-bar {
     background-color: #222;

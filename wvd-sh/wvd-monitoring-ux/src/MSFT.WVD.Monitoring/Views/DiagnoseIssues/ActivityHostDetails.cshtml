@@ -208,7 +208,8 @@
                                             <tbody>
                                                 <tr>
                                                     <td>
-                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"> <!---->
+                                                     @{ var UserName = @Model.UserSessions[i].adUserName; }
+                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox" onchange="oncheckboxchecked(event,this)" > <!---->
                                                         <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
@@ -236,20 +237,28 @@
                                 <h4>There is no active user sessions.</h4>
                             </div>
                         }
-                        @if (Model.ShowMessageForm)
+                        @if (Model.ShowMessageForm ==true)
                         {
                             <div class="ms-PanelExample" id="sendmessagediv">
                                 <div class="flyoutpanel ms-Panel is-open">
                                     <div class="flyoutpanel-content-wrap">
                                         <div class="flyoutpanel-header">
                                             <h4>Send Message</h4>
-                                            <button class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
+                                            <button type="button" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
                                         </div>
                                         <div class="flyoutpanel-content">
                                             <div class="flyoutpanel-controls">
-                                                <label asp-for="ConnectionActivity.userName" class="control-label">User UPN<i class="red">*</i></label>
-                                                <input asp-for="@Model.ConnectionActivity.userName" class="form-control" type="text" id="texttitle" value="@Model.ConnectionActivity.userName" />
-                                                <span asp-validation-for="@Model.ConnectionActivity.userName" id="validationtitle" class="error-msg validate-title"></span>
+                                                <label class="control-label">User UPN<i class="red">*</i></label>
+                                                @if (Model.selectedUsername != null && Model.selectedUsername.Count>0)
+                                                {
+                                                    @foreach (var item in Model.selectedUsername)
+                                                    {
+                                                <label asp-for="@item.adUserName" class="form-control">@item.adUserName</label>   
+                                                    }
+                                                }
+
+
+                                              
                                                 <br />
                                                 <label asp-for="Title" class="control-label">Subject<i class="red">*</i></label>
                                                 <input asp-for="@Model.Title" class="form-control" type="text" id="texttitle" />
@@ -425,5 +434,30 @@
             // Open the dialog
             dialogComponent.open();
         }
+      
+           
+       
     }());
+</script>
+<script>
+ 
+    function oncheckboxchecked(event) {
+        var data = document.getElementsByClassName("chkbox");
+        var tableData = document.getElementsByClassName("ms-Table");
+        var checkData = [];
+        for (var i = 0; i < data.length; i++) {
+            if (data[i].checked == true) {
+               var username=tableData[1].rows[i + 1].cells[1].innerText;
+                // checkData.push(username);
+                document.getElementById("textusername").value = username;
+                console.log(document.getElementById("textusername").value, "value")   
+            }
+        }
+        console.log(username, "username")
+       
+      
+       
+       
+    }
+
 </script>

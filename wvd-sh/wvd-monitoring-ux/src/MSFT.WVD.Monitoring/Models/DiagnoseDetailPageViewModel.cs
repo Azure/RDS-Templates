@@ -15,5 +15,6 @@ namespace MSFT.WVD.Monitoring.Models
         public bool ShowConnectedUser { get; set; }
         public bool ShowMessageForm { get; set; }
         public VMPerformance VMPerformance { get; set; }
+        public List<UserSession> selectedUsername { get; set; }
     }
 }

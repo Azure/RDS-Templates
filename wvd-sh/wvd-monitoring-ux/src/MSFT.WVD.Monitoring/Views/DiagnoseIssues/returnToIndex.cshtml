@@ -14,7 +14,7 @@
                 <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl3 ms-xl12 m-b-20">
                     <label asp-for="DiagonizeQuery.UPN" class="control-label ms-xxxl2 ms-xxl2 ms-xl2">User UPN<span class="red">*</span></label>
                     <div class="input-wrap ms-xxxl10 ms-xxl12 ms-xl12">
-                        <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" value="@Model.DiagonizeQuery.UPN" />
+                        <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn"  placeholder="Enter User UPN"/>
                         <span asp-validation-for="DiagonizeQuery.UPN" id="validateUpn" class="error-msg validate"></span>
                     </div>
                 </div>

@@ -224,16 +224,18 @@ namespace MSFT.WVD.Monitoring.Controllers
 
         public async Task<IActionResult> InitiateSendMessage(DiagnoseDetailPageViewModel data)
         {
+            bool ShowMessageForm = false;
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
             accessToken = _commonService.GetAccessTokenWVD(refreshtoken); //await HttpContext.GetTokenAsync("access_token");
 
-            bool ShowMessageForm = false;
+            
             if (data.UserSessions.Where(x => x.IsSelected == true).ToList().Count > 0)
             {
                 ShowMessageForm = true;
                 ViewBag.ErrorMsg = "";
+              
             }
             else
             {
@@ -249,6 +251,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 ShowConnectedUser = true,
                 ShowMessageForm = ShowMessageForm,
                 UserSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, data.ConnectionActivity.SessionHostPoolName, data.ConnectionActivity.SessionHostName).ConfigureAwait(false),
+                selectedUsername = data.UserSessions.Where(x => x.IsSelected == true).ToList(),
                 VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName).ConfigureAwait(false)
             });
 
@@ -433,8 +436,9 @@ namespace MSFT.WVD.Monitoring.Controllers
             {
                 diagonizePageViewModel.DiagonizeQuery = new DiagonizeQuery();
                 diagonizePageViewModel.DiagonizeQuery.UPN = upn;
+               
             }
-           
+          
             try
             {
                 if (!string.IsNullOrEmpty(interval))
