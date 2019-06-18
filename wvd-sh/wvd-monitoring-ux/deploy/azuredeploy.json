@@ -17,9 +17,8 @@
         "WebAppName": {
             "type": "string",
             "metadata": {
-                "description": "The name of the web app that you wish to create. Provide unique name"
-            },
-            "defaultValue": "WVDMonitorUXWeb"
+                "description": "The name of the web app that you wish to create, provide an unique name"
+            }
         },
         "LogAnalyticsWorkspaceID": {
             "type": "string",
@@ -29,9 +28,10 @@
         }
     },
     "variables": {
-        "accountName": "monitorux-automationAccount",
+		"uniquestring": "[uniqueString(resourceGroup().id, deployment().name)]",
+        "accountName": "[concat('monitorux-automationAccount','-',variables('uniquestring'))]",
         "credentialName": "DefaultAzureCredential",
-        "runbookName": "monitoruxbook",
+        "runbookName": "monitoruxrunbook",
         "hostingPlanName": "[concat(parameters('WebAppName'),'-SPlan')]",
         "serviceplansku": "S1",
         "workerSize": "0",

@@ -20,7 +20,7 @@
     [string] $redirectURL
 )
 
-#Initialize
+#Initialize the variables
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "SilentlyContinue"
 $homePage = "$redirectURL"
@@ -28,11 +28,14 @@ $identifierUri = $homePage
 $spnRole = "contributor"
 
 $securedPassword = ConvertTo-SecureString $Password -AsPlainText -Force
+
 #Create a Credentials Object
 $credentials = New-Object System.Management.Automation.PSCredential ($Username, $securedPassword)
 
 #Authenticate to Azure
 Login-AzureRmAccount -SubscriptionId $subscriptionId -Credential $credentials
+
+#Get the subscription
 $azureSubscription = Get-AzureRmSubscription -SubscriptionId $subscriptionId
 
 #Get the subscription name
@@ -40,6 +43,7 @@ $connectionName = $azureSubscription.SubscriptionName
 
 #Check if AD Application Identifier URI is unique
 Write-Output "Verifying App URI is unique ($identifierUri)" -Verbose
+
 $existingApplication = Get-AzureRmADApplication -IdentifierUri $identifierUri
 if ($existingApplication -ne $null) {
     $appId = $existingApplication.ApplicationId
@@ -49,7 +53,6 @@ if ($existingApplication -ne $null) {
 
 $startDate = Get-Date
 $endDate = $startDate.AddYears($script:yearsOfExpiration)
-#$aadAppKeyPwd = New-AzureADApplicationPasswordCredential -ObjectId $existingApplication.ObjectId -CustomKeyIdentifier "Primary" -StartDate $startDate -EndDate $endDate
 $Guid = New-Guid
 $PasswordCredential = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordCredential
 $PasswordCredential.StartDate = $startDate
@@ -58,16 +61,21 @@ $PasswordCredential.KeyId = $Guid
 $PasswordCredential.Value = ([System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(($Guid))))+"="
 $appPassword=$PasswordCredential.Value
 
+#Unique string for AAD Application Display Name
+$uniquesubscriptionid = ($subscriptionid).Replace('-', '').substring(0, 19)
+$clientappdisplayname = $WebApp.ToLowerInvariant() + $uniquesubscriptionid.ToLowerInvariant()
+
+
 #Create a new AD Application
 Write-Output "Creating a new Application in AAD (App URI - $identifierUri)" -Verbose
 $secureAppPassword = $appPassword | ConvertTo-SecureString -AsPlainText -Force
+$azureAdApplication=New-AzureADApplication -DisplayName $clientappdisplayname -ReplyUrls $redirectURL -PublicClient $true -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
 
-#$azureAdApplication = New-AzureRmADApplication -DisplayName $WebApp -HomePage $homePage -IdentifierUris $identifierUri -Password $secureAppPassword -Verbose
-$azureAdApplication=New-AzureADApplication -DisplayName $WebApp -ReplyUrls $redirectURL -PublicClient $true -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
+#Get the ClientId/ApplicationId
 $appId = $azureAdApplication.ApplicationId
 Write-Output "Azure AAD Application creation completed successfully...Application Id: $appId" -Verbose
 
-#Create new Service Principal
+#Create new Azure AD Service Principal
 Write-Output "Creating a new SPN" -Verbose
 $spn = New-AzureRmADServicePrincipal -ApplicationId $appId
 $spnName = $spn.ServicePrincipalNames
@@ -81,6 +89,5 @@ New-AzureRmRoleAssignment -RoleDefinitionName $spnRole -ServicePrincipalName $ap
 Write-Output "SPN role assignment completed successfully" -Verbose
 
 #Print Application ID and App Secret
-Write-Output "`nCopy and Paste below values for Service Connection" -Verbose
 Write-Output "Service Principal Id: $appId"
 Write-Output "Service Principal Key: $appPassword"
