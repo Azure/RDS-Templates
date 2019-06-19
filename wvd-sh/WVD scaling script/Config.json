@@ -40,7 +40,7 @@
 				},
 				{
 					"_Comments": "Hostpool session Load Balancing Type in Peak Hours",
-					"Name": "PeakLoadBalancingType",
+					"Name": "peakLoadBalancingType",
 					"Value": "DepthFirst"
 				},
 				{
@@ -54,17 +54,17 @@
 			"Variable": [
 				{
 					"_Comments": "RDbroker URL",
-					"Name": "Rdbroker",
+					"Name": "rdBroker",
 					"Value": "https://rdbroker.wvd.microsoft.com"
 				},
 				{
 					"_Comments": "Stored Credentials of Username or WVD service Principal GUID",
-					"Name": "Username",
+					"Name": "userName",
 					"Value": ""
 				},
 				{
 					"_Comments": "use Password filed for testing only, set via New-StoredCredential",
-					"Name": "Password",
+					"Name": "password",
 					"Value": ""
 				},
 				{
@@ -78,42 +78,42 @@
 			"Variable": [
 				{
 					"_Comments": "Begin of the peak usage time",
-					"Name": "BeginPeakTime",
+					"Name": "beginPeakTime",
 					"Value": "09:00:00"
 				},
 				{
 					"_Comments": "End of the peak usage time",
-					"Name": "EndPeakTime",
+					"Name": "endPeakTime",
 					"Value": "18:00:00"
 				},
 				{
 					"_Comments": "Time difference between local time and UTC, in hours(Example: India Standard Time is +5:30)",
-					"Name": "TimeDifferenceInHours",
+					"Name": "timeDifferenceInHours",
 					"Value": "+5:30"
 				},
 				{
 					"_Comments": "Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started ",
-					"Name": "SessionThresholdPerCPU",
+					"Name": "sessionThresholdPerCPU",
 					"Value": "1"
 				},
 				{
 					"_Comments": "Minimum number of host pool VMs to keep running during off-peak usage time",
-					"Name": "MinimumNumberOfRDSH",
+					"Name": "minimumNumberOfRDSH",
 					"Value": "1"
 				},
 				{
 					"_Comments": "Number of seconds to wait before forcing users to logoff. If 0, don't force users to logoff",
-					"Name": "LimitSecondsToForceLogOffUser",
+					"Name": "limitSecondsToForceLogOffUser",
 					"Value": "5"
 				},
 				{
 					"_Comments": "Message title sent to a user before forcing logoff",
-					"Name": "LogOffMessageTitle",
+					"Name": "logOffMessageTitle",
 					"Value": "System Under Maintenance"
 				},
 				{
 					"_Comments": "Message body to send to a user before forcing logoff",
-					"Name": "LogOffMessageBody",
+					"Name": "logOffMessageBody",
 					"Value": "Please save your work and logoff!"
 				}
 			]

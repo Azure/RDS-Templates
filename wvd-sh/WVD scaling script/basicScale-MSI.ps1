@@ -7,7 +7,7 @@ This is a sample script for automatically scaling Tenant Environment WVD Host Se
 This script will start/stop Tenant WVD host VMs based on the number of user sessions and peak/off-peak time period specified in the configuration file.
 During the peak hours, the script will start necessary session hosts in the Hostpool to meet the demands of users.
 During the off-peak hours, the script will shut down session hosts and only keep the minimum number of session hosts.
-This script depends on 2 powershell modules: Azure RM and WVD Module to get modules execute following commands.
+This script depends on two powershell modules: Azure RM and WVD Module to get modules execute following commands.
 Use "-AllowClobber" parameter if you have more than one version of PS modules installed.
 PS C:\>Install-Module AzureRM  -AllowClobber
 PS C:\>Install-Module Microsoft.RDInfra.RDPowershell  -AllowClobber
@@ -19,7 +19,7 @@ PS C:\>Install-Module Microsoft.RDInfra.RDPowershell  -AllowClobber
 #Function for convert from UTC to Local time
 function ConvertUTCtoLocal {
     param(
-       $timeDifferenceInHours
+        $timeDifferenceInHours
     )
 
     $UniversalTime = (Get-Date).ToUniversalTime()
@@ -155,7 +155,7 @@ $CurrentDateTime = ConvertUTCtoLocal -timeDifferenceInHours $TimeDifference
 $WVDModules = Get-InstalledModule -Name "Microsoft.RDInfra.RDPowershell" -ErrorAction SilentlyContinue
 if (!$WVDModules) {
     Write-Log 1 "WVD Modules doesn't exist. Ensure WVD Modules are installed if not execute this command 'Install-Module Microsoft.RDInfra.RDPowershell  -AllowClobber' "
-	exit
+    exit
 }
 
 Import-Module "Microsoft.RDInfra.RDPowershell"
@@ -203,16 +203,12 @@ else {
     Write-Log 3 "Authenticating as service principal account for WVD. Result: `n$obj" "Info"
 }
 
-
 #Set context to the appropriate tenant group
-
 $currentTenantGroupName = (Get-RdsContext).TenantGroupName
 if ( $tenantGroupName -ne $currentTenantGroupName ) {
     Write-Log 1 "Running switching to the $tenantGroupName context" "Info"
     Set-RdsContext -TenantGroupName $tenantGroupName
-}
-
-       
+}      
 
 #Splitting session load balancing peak hours
 $BeginPeakHour = $sessionLoadBalancingPeakHours.Split("-")[0]
@@ -222,12 +218,7 @@ $EndPeakHour = $sessionLoadBalancingPeakHours.Split("-")[1]
 $PeakBeginDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakHour)
 
 $PeakEndDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakHour)
-<#
-        #check the calculated end time is later than begin time in case of time zone
-        if ($PeakEndDateTime -lt $PeakBeginDateTime) {
-          $PeakEndDateTime = $PeakEndDateTime.AddDays(1)
-        }
-#>
+
 #Getting Hostpool information
 $hostpoolInfo = Get-RdsHostPool -TenantName $tenantName -Name $hostPoolName
 if ($hostpoolInfo -eq $null) {
@@ -238,47 +229,38 @@ if ($hostpoolInfo -eq $null) {
 #Compare session loadbalancing peak hours and setting up appropriate load balacing type based on PeakLoadBalancingType
 if ($CurrentDateTime -ge $PeakBeginDateTime -and $CurrentDateTime -le $PeakEndDateTime) {
 
-if($hostpoolInfo.LoadBalancerType -ne $PeakLoadBalancingType){
-    Write-Log 3 "Changing Hostpool Load Balance Type:$PeakLoadBalancingType Current Date Time is: $CurrentDateTime" "Info"
+    if ($hostpoolInfo.LoadBalancerType -ne $PeakLoadBalancingType) {
+        Write-Log 3 "Changing Hostpool Load Balance Type:$PeakLoadBalancingType Current Date Time is: $CurrentDateTime" "Info"
 
-    if ($PeakLoadBalancingType -eq "DepthFirst") {                
-        Set-RdsHostPool -TenantName $tenantName -Name $hostPoolName -DepthFirstLoadBalancer -MaxSessionLimit $hostpoolInfo.MaxSessionLimit
-    }
-    else {
-        Set-RdsHostPool -TenantName $tenantName -Name $hostPoolName -BreadthFirstLoadBalancer -MaxSessionLimit $hostpoolInfo.MaxSessionLimit
-    }
-    Write-Log 3 "Hostpool Load balancer Type in Session Load Balancing Peak Hours is '$PeakLoadBalancingType Load Balancing'"
+        if ($PeakLoadBalancingType -eq "DepthFirst") {                
+            Set-RdsHostPool -TenantName $tenantName -Name $hostPoolName -DepthFirstLoadBalancer -MaxSessionLimit $hostpoolInfo.MaxSessionLimit
+        }
+        else {
+            Set-RdsHostPool -TenantName $tenantName -Name $hostPoolName -BreadthFirstLoadBalancer -MaxSessionLimit $hostpoolInfo.MaxSessionLimit
+        }
+        Write-Log 3 "Hostpool Load balancer Type in Session Load Balancing Peak Hours is '$PeakLoadBalancingType Load Balancing'"
     }
 }
-
      
 Write-Log 3 "Starting WVD Tenant Hosts Scale Optimization: Current Date Time is: $CurrentDateTime" "Info"
 
 $BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 
 $EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
-<#
-#check the calculated end time is later than begin time in case of time zone
-if ($EndPeakDateTime -lt $BeginPeakDateTime) {
-  $EndPeakDateTime = $EndPeakDateTime.AddDays(1)
-}
-#> 
+
 $hostpoolInfo = Get-RdsHostPool -TenantName $tenantName -Name $hostPoolName
 if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
     Write-Log 1 "$hostPoolName hostpool loadbalancer type is $($hostpoolInfo.LoadBalancerType)" "Info"
     
-	
     #Gathering hostpool maximum session and calculating Scalefactor for each host.										  
     $hostpoolMaxSessionLimit = $hostpoolinfo.MaxSessionLimit
     $ScaleFactorEachHost = $hostpoolMaxSessionLimit * 0.80
     $SessionhostLimit = [math]::floor($ScaleFactorEachHost)
     
-	
-	
     Write-Log 1 "Hostpool Maximum Session Limit: $($hostpoolMaxSessionLimit)"
 
     if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
-
+        Write-output "It is in peak hours now"
         Write-Log 1 "It is in peak hours now" "Info"
         Write-Log 1 "Peak hours: starting session hosts as needed based on current workloads." "Info"
    
@@ -294,7 +276,6 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
             remove-Item -Path $CurrentPath\OffPeakUsage-MinimumNoOfRDSH.txt
         }
     
-
         #check the number of running session hosts
         $numberOfRunningHost = 0
         foreach ($sessionHost in $getHosts) {
@@ -312,14 +293,15 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                 if ($numberOfRunningHost -lt $MinimumNumberOfRDSH) {
                     $hostofsessions = $sessionHost.Sessions
                     if ($hostpoolMaxSessionLimit -ne $hostofsessions) {
-                        if ($sessionhost.Status -eq "NoHeartbeat") {
-                            $sessionhostname = $sessionhost.sessionhostname
+                        #Check the session host status and session host is healthy or not before starting the host
+                        if ($sessionhost.Status -eq "NoHeartbeat" -and $sessionhost.UpdateState -eq "Succeeded") {
+                            $sessionhostname = $sessionhost.sessionhostname | out-string
                             #Check session host is in AllownewConnections Mode
                             $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
                             if (!($checkAllowNewSession.AllowNewSession)) {
                                 Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname -AllowNewSession $true
                             }
-                            $VMName = $sessionHostname.Split(".")[0]
+                            $VMName = $sessionhostname.Split(".")[0]
                             #start the azureRM VM
                             try {
                                 Get-AzureRmVM | Where-Object { $_.Name -eq $VMName } | Start-AzureRmVM
@@ -333,7 +315,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                             $IsHostAvailable = $false
                             while (!$IsHostAvailable) {
 
-                                $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost.sessionhostname
+                                $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
 
                                 if ($hoststatus.Status -eq "Available") {
                                     $IsHostAvailable = $true
@@ -355,9 +337,10 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                     if ($sessionHost.Sessions -ge $SessionhostLimit) {
                         foreach ($sHost in $getHosts) {
                             if ($sHost.Status -eq "Available" -and $sHost.Sessions -eq 0) { break }
-                            if ($sHost.Status -eq "NoHeartbeat") {
+                            #Check the session host status and session host is healthy or not before starting the host
+                            if ($sHost.Status -eq "NoHeartbeat" -and $sHost.UpdateState -eq "Succeeded") {
                                 Write-Log 1 "Existing Sessionhost Sessions value reached near by hostpool maximumsession limit need to start the session host" "Info"
-                                $sessionhostname = $sHost.sessionhostname
+                                $sessionhostname = $sHost.sessionhostname | out-string
                                 #Check session host is in allow new connection mode
                                 $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
                                 if (!($checkAllowNewSession.AllowNewSession)) {
@@ -377,7 +360,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                                 $IsHostAvailable = $false
                                 while (!$IsHostAvailable) {
 
-                                    $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sHost.sessionhostname
+                                    $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
 
                                     if ($hoststatus.Status -eq "Available") {
                                         $IsHostAvailable = $true
@@ -398,13 +381,13 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
     }
     else {
         Write-Log 1 "It is Off-peak hours" "Info"
+        Write-Output "It is Off-peak hours"
         Write-Log 1 "It is off-peak hours. Starting to scale down RD session hosts..." "Info"
         Write-Log 1 ("Processing hostPool {0}" -f $hostPoolName) "Info"
         ### Getting Sessionhosts of Hostpool
         $getHosts = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName | Sort-Object Sessions
         if ($getHosts -eq $null) {
             Write-Log 1 "Hosts are does not exist in the Hostpool of '$hostpoolname'. Ensure that hostpool have hosts or not?." "Info"
-																															 
             exit
         }
 	
@@ -428,8 +411,8 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
             foreach ($sessionHost in $getHosts.sessionhostname) {
                 if ($numberOfRunningHost -gt $MinimumNumberOfRDSH) {
 
-                    $sessionHostinfo1 = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost
-                    if ($sessionHostinfo1.Status -eq "Available") {
+                    $sessionHostinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost
+                    if ($sessionHostinfo.Status -eq "Available") {
 
                         #ensure the running Azure VM is set as drain mode
                         try {
@@ -511,13 +494,16 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                             }
                         }
 
-                        #Ensure the Azure VMs that are off have the AllowNewSession mode set to True
-                        try {
-                            Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true -ErrorAction SilentlyContinue
-                        }
-                        catch {
-                            Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
-                            exit 1
+                        #Check the session host server is healthy or not before enabling allow new session property true
+                        if ($sessionHostinfo.UpdateState -eq "Succeeded") {
+                            #Ensure the Azure VMs that are off have the AllowNewSession mode set to True
+                            try {
+                                Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true -ErrorAction SilentlyContinue
+                            }
+                            catch {
+                                Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
+                                exit 1
+                            }
                         }
 
                         #Decrement the number of running session host
@@ -571,14 +557,12 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
       
                         $getHosts = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname | Sort-Object Sessions | Sort-Object Status
                         foreach ($sessionhost in $getHosts) {
-                            #if (!($sessionHost.Sessions -eq $hostpoolMaxSessionLimit)) {
-                            #if ($sessionHost.Sessions -ge $SessionhostLimit) {
-          
                             if ($sessionHost.Status -eq "Available" -and $sessionHost.Sessions -eq 0) 
                             { break }
-                            if ($sessionHost.Status -eq "NoHeartbeat") {
+                            #Check the session host status and session host is healthy or not before starting the host
+                            if ($sessionHost.Status -eq "NoHeartbeat" -and $sessionhost.UpdateState -eq "Succeeded") {
                                 Write-Log 1 "Existing Sessionhost Sessions value reached near by hostpool maximumsession limit need to start the session host" "Info"
-                                $sessionhostname = $sessionHost.sessionhostname
+                                $sessionhostname = $sessionHost.sessionhostname | Out-String
                                 #Check session host is in allow new connection mode
                                 $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
                                 if (!($checkAllowNewSession.AllowNewSession)) {
@@ -598,7 +582,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                                 $IsHostAvailable = $false
                                 while (!$IsHostAvailable) {
 
-                                    $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost.sessionhostname
+                                    $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
 
                                     if ($hoststatus.Status -eq "Available") {
                                         $IsHostAvailable = $true
@@ -636,9 +620,10 @@ else {
     #check if it is during the peak or off-peak time
     if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
         Write-Output "It is in peak hours now"
+        Write-log 1 "It is in peak hours now" "Info"
         Write-Log 3 "Peak hours: starting session hosts as needed based on current workloads." "Info"
         #Get the Session Hosts in the hostPool		
-        $RDSessionHost = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -ErrorAction SilentlyContinue
+        $RDSessionHost = Get-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -ErrorAction SilentlyContinue | Sort-Object SessionHostName
         if ($RDSessionHost -eq $null) {
             Write-Log 1 "Hosts are does not exist in the Hostpool of '$hostpoolname'. Ensure that hostpool have hosts or not?." "Info"
             exit
@@ -667,12 +652,12 @@ else {
         #total capacity of sessions of running VMs
         $AvailableSessionCapacity = 0
 
-        foreach ($sessionHost in $RDSessionHost.sessionhostname) {
-            Write-Log 1 "Checking session host: $($sessionHost)" "Info"
-
-            $VMName = $sessionHost.Split(".")[0]
+        foreach ($sessionHost in $RDSessionHost) {
+            Write-Log 1 "Checking session host:$($sessionHost.SessionHostName | Out-String)  of sessions:$($sessionHost.Sessions) and status:$($sessionHost.Status)" "Info"
+            $hostName = $sessionHost.SessionHostName | Out-String
+            $VMName = $hostName.Split(".")[0]
             $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
-            if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
+            if ($hostName.ToLower().Contains($roleInstance.Name.ToLower())) {
                 #check the azure vm is running or not      
                 if ($roleInstance.PowerState -eq "VM running") {
                     $numberOfRunningHost = $numberOfRunningHost + 1
@@ -693,9 +678,11 @@ else {
                     $VMName = $sessionHost.Split(".")[0]
                     $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
                     if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
-                        #check if the azure VM is running or not
-                        if ($roleInstance.PowerState -ne "VM running") {
-                            $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName
+                        
+                        #Check if the Azure VM is running or not and session host is healthy or not
+                        $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost
+                        if ($roleInstance.PowerState -ne "VM running" -and $getShsinfo.UpdateState -eq "Succeeded") {
+                            #Check the session host is allowing new sessions or not
                             if ($getShsinfo.AllowNewSession -eq $false) {
                                 Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true
                             }
@@ -745,13 +732,12 @@ else {
                         $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
 
                         if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
-                            #check if the Azure VM is running or not
-
-                            if ($roleInstance.PowerState -ne "VM running") {
-                                $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName
+                            #check if the Azure VM is running or not and session host is healthy or not
+                            $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost
+                            if ($roleInstance.PowerState -ne "VM running" -and $getShsinfo.UpdateState -eq "Succeeded") {
+                                #Check the session host is allowing new sessions or not
                                 if ($getShsinfo.AllowNewSession -eq $false) {
                                     Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true
-
                                 }
                                 #start the Azure VM
                                 try {
@@ -799,6 +785,7 @@ else {
     }
     #} #Peak or not peak hour
     else {
+        Write-Log 1 "It is Off-peak hours" "Info"
         Write-Output "It is Off-peak hours"
         Write-Log 3 "It is off-peak hours. Starting to scale down RD session hosts..." "Info"
         Write-Output ("Processing hostPool {0}" -f $hostPoolName)
@@ -814,11 +801,9 @@ else {
         #check the number of running session hosts
         $numberOfRunningHost = 0
 
-        #total of running cores
+        #Total number of running cores
         $totalRunningCores = 0
     
-
-
         foreach ($sessionHost in $RDSessionHost.sessionhostname) {
 
             $VMName = $sessionHost.Split(".")[0]
@@ -865,9 +850,7 @@ else {
                             while (!$isInstanceReady -and $numOfRetries -le 3) {
                                 $numOfRetries = $numOfRetries + 1
                                 $instance = Get-AzureRmVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
-                                if ($instance.ProvisioningState -eq "Succeeded" -and $instance) {
-
-
+                                if ($instance.ProvisioningState -eq "Succeeded" -and $instance -ne $null) {
                                     $isInstanceReady = $true
                                 }
 
@@ -878,18 +861,13 @@ else {
                                     Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $false -ErrorAction SilentlyContinue
                                 }
                                 catch {
-
                                     Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
                                     exit 1
-
                                 }
-
                                 #notify user to log off session
                                 #Get the user sessions in the hostPool
                                 try {
-
                                     $hostPoolUserSessions = Get-RdsUserSession -TenantName $tenantName -HostPoolName $hostPoolName
-
                                 }
                                 catch {
                                     Write-Log 1 "Failed to retrieve user sessions in hostPool: $($hostPoolName) with error: $($_.exception.message)" "Error"
@@ -978,13 +956,16 @@ else {
                                             Write-Log 3 "Waiting for Azure VM to stop $($roleInstance.Name) ..." "Info"
                                         }
                                     }
-                                    # Ensure the Azure VMs that are off have AllowNewSession mode set to True
-                                    try {
-                                        Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true -ErrorAction SilentlyContinue
-                                    }
-                                    catch {
-                                        Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
-                                        exit 1
+                                    $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost
+                                    if ($getShsinfo.UpdateState -eq "Succeeded") {
+                                        # Ensure the Azure VMs that are off have AllowNewSession mode set to True
+                                        try {
+                                            Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true -ErrorAction SilentlyContinue
+                                        }
+                                        catch {
+                                            Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
+                                            exit 1
+                                        }
                                     }
                                     $vm = Get-AzureRmVM -Status | Where-Object { $_.Name -eq $roleInstance.Name }
                                     $roleSize = Get-AzureRmVMSize -Location $roleInstance.Location | Where-Object { $_.Name -eq $roleInstance.HardwareProfile.VmSize }
@@ -1036,35 +1017,30 @@ else {
             $totalAllowSessionsinOffPeak = [int]$MinimumNumberOfRDSH * $HostpoolMaxSessionLimit
             $SessionsScaleFactor = $totalAllowSessionsinOffPeak * 0.90
             $ScaleFactor = [math]::Floor($SessionsScaleFactor)
-     											  
-     
-
+     		
             if ($HostpoolSessionCount -ge $ScaleFactor) {
    
                 #check if the available capacity meets the number of sessions or not
                 Write-Log 1 "Current total number of user sessions: $HostpoolSessionCount" "Info"
                 Write-Log 1 "Current available session capacity is less than demanded user sessions, starting session host" "Info"
                 #running out of capacity, we need to start more VMs if there are any 
-                foreach ($sessionHosts in $RDSessionHost) {
-                    $sessionHost = $sessionHosts.SessionHostname
-                    $VMName = $sessionHost.Split(".")[0]
+                foreach ($sessionHost in $RDSessionHost) {
+                    $hostname = $sessionHost.SessionHostname | out-string
+                    $VMName = $hostname.Split(".")[0]
                     $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
 
-                     if ($sessionHosts.Status -eq "Available" -and $sessionHosts.Sessions -eq 0) 
-                            { break }
-                    if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
-                        #check if the Azure VM is running or not
-
-                        if ($roleInstance.PowerState -ne "VM running") {
-                            $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost
+                    if ($sessionHost.Status -eq "Available" -and $sessionHost.Sessions -eq 0) 
+                    { break }
+                    if ($hostname.ToLower().Contains($roleInstance.Name.ToLower())) {
+                        #check if the Azure VM is running or not and session host is healthy or not
+                        $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $hostname
+                        if ($roleInstance.PowerState -ne "VM running" -and $getShsinfo.UpdateState -eq "Succeeded") {
                             if ($getShsinfo.AllowNewSession -eq $false) {
-                                Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true
-
+                                Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $hostname -AllowNewSession $true
                             }
                             #start the Azure VM
                             try {
                                 Start-AzureRmVM -Name $roleInstance.Name -Id $roleInstance.Id -ErrorAction SilentlyContinue
-
                             }
                             catch {
                                 Write-Log 1 "Failed to start Azure VM: $($roleInstance.Name) with error: $($_.exception.message)" "Error"
@@ -1109,7 +1085,6 @@ else {
 
         }
       
-    
         Write-Log 1 "HostpoolName:$hostpoolName, TotalRunningCores:$totalRunningCores NumberOfRunningHost:$numberOfRunningHost" "Info"
         #write to the usage log
         $depthBool = $false
