@@ -14,7 +14,7 @@
                 <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl3 ms-xl12 m-b-20">
                     <label asp-for="DiagonizeQuery.UPN" class="control-label ms-xxxl2 ms-xxl2 ms-xl2">User UPN<span class="red">*</span></label>
                     <div class="input-wrap ms-xxxl10 ms-xxl12 ms-xl12">
-                        <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn"  placeholder="Enter User UPN"/>
+                        <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" placeholder="Enter User UPN" />
                         <span asp-validation-for="DiagonizeQuery.UPN" id="validateUpn" class="error-msg validate"></span>
                     </div>
                 </div>
@@ -33,12 +33,16 @@
         </div>
     </form>
     <hr />
+    @*@if (Model.ConnectionActivity == null || Model.ManagementActivity == null || Model.FeedActivity == null || Model.ConnectionActivity.Count == 0 || Model.ManagementActivity.Count == 0 || Model.FeedActivity.Count == 0)
+    {
+        <div id="loader1" class="loader"></div>
+    }*@
     <div class="ContextualMenuWrap">
         <div class="ms-ContextualMenuExample export-btn float-left">
             <button class="ms-Button ms-Button--default">
                 <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
             </button>
-           
+
         </div>
         <div class="ms-ContextualMenuExample filter-btn float-right">
             <button class="ms-Button ms-Button--default">
@@ -122,10 +126,7 @@
     <div id="Indexnodata">
         <h5 style="text-align:center">No data yet.</h5><p style="text-align:center">Please search User UPN to see data</p>
     </div>
-    @if (Model.ConnectionActivity == null || Model.ManagementActivity == null || Model.FeedActivity == null || Model.ConnectionActivity.Count == 0 || Model.ManagementActivity.Count == 0 || Model.FeedActivity.Count == 0)
-    {
-        <div id="loader1" class="loader"></div>
-    }
+
 </div>
 <script>
     (function () {

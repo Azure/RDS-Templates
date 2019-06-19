@@ -32,20 +32,11 @@
         </div>
     </form>
     <hr />
+    @if (Model.ConnectionActivity == null || Model.ManagementActivity == null || Model.FeedActivity == null || Model.ConnectionActivity.Count == 0 || Model.ManagementActivity.Count == 0 || Model.FeedActivity.Count == 0)
+    {
+        <div id="loader1" class="loader"></div>
+    }
     <div class="ContextualMenuWrap">
-        @*<div class="ms-ContextualMenuExample export-btn float-left">
-            <button class="ms-Button ms-Button--default">
-                <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
-            </button>
-            <ul class="ms-ContextualMenu is-hidden">
-                <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoPDF" asp-controller="DiagnoseIssues">PDF</a>
-                </li>
-                <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoExcel" asp-controller="DiagnoseIssues">Excel</a>
-                </li>
-            </ul>
-        </div>*@
         <div class="ms-ContextualMenuExample filter-btn float-right">
             <button class="ms-Button ms-Button--default">
                 <span class="ms-Button-label"><i class="ms-Icon ms-Icon--Filter" aria-hidden="true"></i>Filter</span>
@@ -128,10 +119,7 @@
         <h5 style="text-align:center">No data yet.</h5><p style="text-align:center">Please search User UPN to see data</p>
     </div>
 
-    @if (Model.ConnectionActivity == null || Model.ManagementActivity == null || Model.FeedActivity == null || Model.ConnectionActivity.Count == 0 || Model.ManagementActivity.Count == 0 || Model.FeedActivity.Count == 0)
-    {
-        <div id="loader1" class="loader"></div>
-    }
+
 
 </div>
 

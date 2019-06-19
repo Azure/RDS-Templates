@@ -219,7 +219,7 @@ html, body {
     padding-bottom: 50px;
     box-sizing: border-box;
     background: #fff;
-    width: 400px;
+    max-width: 475px !important;
     z-index: 9;
     top: 50px !important;
 }

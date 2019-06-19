@@ -272,7 +272,8 @@ namespace MSFT.WVD.Monitoring.Controllers
 
                 if (string.IsNullOrEmpty(data.Message) && string.IsNullOrEmpty(data.Title))
                 {
-                    ViewBag.TitleErrorMsg = "Title is required";
+                   
+                    ViewBag.TitleErrorMsg = "Subject is required";
                     ViewBag.MessageErrorMsg = "Message is required";
                 }
                 else if (string.IsNullOrEmpty(data.Title) )
@@ -346,7 +347,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                     ConnectionActivity = data.ConnectionActivity,
                     ShowConnectedUser = true,
                     ShowMessageForm = true,
-                    VMPerformance= await GetVMPerformance(data.ConnectionActivity.SessionHostName).ConfigureAwait(false)
+                    selectedUsername = data.UserSessions.Where(x => x.IsSelected == true).ToList(),
+                    VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName).ConfigureAwait(false)
                 });
 
             }
@@ -362,6 +364,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     ShowMessageForm = true,
                     Title = data.Title,
                     Message = data.Message,
+                    selectedUsername = data.UserSessions.Where(x => x.IsSelected == true).ToList(),
                     VMPerformance = await GetVMPerformance(data.ConnectionActivity.SessionHostName).ConfigureAwait(false)
                 });
             }

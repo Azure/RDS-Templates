@@ -14,39 +14,20 @@
                 <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl3 ms-xl12 m-b-20">
                     <label asp-for="DiagonizeQuery.UPN" class="control-label ms-xxxl2 ms-xxl2 ms-xl2">User UPN<span class="red">*</span></label>
                     <div class="input-wrap ms-xxxl10 ms-xxl12 ms-xl12">
-                        <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" value="@Model.DiagonizeQuery.UPN" />
+                        <input asp-for="@Model.DiagonizeQuery.UPN" class="form-control" id="upn" value="@Model.DiagonizeQuery.UPN" disabled />
                         <span asp-validation-for="DiagonizeQuery.UPN" id="validateUpn" class="error-msg validate"></span>
                     </div>
                 </div>
-                @*<div class="form-wrap ms-Grid-col ms-xxxl12 ms-xxl12 ms-xl12 m-b-20">
-                        <label asp-for="DiagonizeQuery.StartDate" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2">Issue Interval From</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
-                            <input asp-for="DiagonizeQuery.StartDate" class="form-control" type="date" id="startDate" />
-                            <span asp-validation-for="DiagonizeQuery.StartDate" class="error-msg"></span>
-                        </div>
-                        <label asp-for="DiagonizeQuery.EndDate" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2">To</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
-                            <input asp-for="DiagonizeQuery.EndDate" class="form-control enddate" type="date" id="endDate" />
-                            <span asp-validation-for="DiagonizeQuery.EndDate" class="error-msg"></span>
-                        </div>
-                    </div>*@
                 <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl3 ms-xl12 m-b-20">
                     <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-xxxl2 ms-xxl2 ms-xl2"></label>
                     <div class="input-wrap ms-xxxl10 ms-xxl12 ms-xl12">
-                        <select size="1" asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>().Where(x => x.Text != ActivityType.None.ToString()).ToList()" class="form-control  width-100 " id="activityType"></select>
+                        <select size="1" asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>().Where(x => x.Text != ActivityType.None.ToString()).ToList()" class="form-control  width-100 " id="activityType" disabled></select>
                     </div>
-                    @*<label asp-for="DiagonizeQuery.ActivityOutcome" class="control-label ms-Grid-col ms-xxxl2 ms-xxl2 ms-xl2">Outcome</label>
-                        <div class="input-wrap ms-Grid-col ms-xxxl4 ms-xxl4 ms-xl4">
-                            <select size="1" asp-for="DiagonizeQuery.ActivityOutcome" asp-items="Html.GetEnumSelectList<ActivityOutcome>().OrderBy(x=>x.Text)"  class="form-control bottom  width-100" id="activityOutcome"></select>
-                        </div>*@
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl4 ms-xl12 p-l-r-15 m-b-20">
                     <button type="submit" class="ms-Button primary-btn" id="process" asp-action="returnToIndex">
                         <span class="ms-Button-label">New Search</span>
                     </button>
-                    @*<button type="reset" class="ms-Button secondary-btn">
-                            <span class="ms-Button-label">Clear</span>
-                        </button>*@
                 </div>
             </div>
         </div>
@@ -59,21 +40,8 @@
             <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
         </button>
     </div>
-  
+
     <div class="ContextualMenuWrap">
-        @*<div class="ms-ContextualMenuExample export-btn float-left">
-            <button class="ms-Button ms-Button--default">
-                <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
-            </button>
-            <ul class="ms-ContextualMenu is-hidden">
-                <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoPDF" asp-controller="DiagnoseIssues">PDF</a>
-                </li>
-                <li class="ms-ContextualMenu-item">
-                    <a class="ms-ContextualMenu-link" tabindex="1" asp-action="ExporttoExcel" asp-controller="DiagnoseIssues">Excel</a>
-                </li>
-            </ul>
-        </div>*@
         <div class="ms-ContextualMenuExample filter-btn float-right">
             <button class="ms-Button ms-Button--default">
                 <span class="ms-Button-label"><i class="ms-Icon ms-Icon--Filter" aria-hidden="true"></i>Filter</span>
@@ -143,9 +111,11 @@
     }
     <span class="countitems">@Model.ConnectionActivity.Count items</span>
     <div class="activitytable" id="table">
+
         <table class="ms-Table" id="activityTabledata">
             <thead>
                 <tr>
+                    <th></th>
                     <th></th>
                     <th asp-for="Start Time">Start Time</th>
                     <th asp-for="End Time">End Time</th>
@@ -153,15 +123,14 @@
 
                     <th asp-for="ErrorType">Error Type</th>
                     <th asp-for="Error">Error Code</th>
+                    <th asp-for="Error" style="display: none;"></th>
+                    <th asp-for="Error" style="display: none;"></th>
+                    <th asp-for="Error" style="display: none;"></th>
                     <th asp-for="Session Host">Session Host</th>
                     <th asp-for="Client">Client</th>
                     <th asp-for="Client Ip">Client Ip</th>
                     <th asp-for="HostPoolname">HostPoolname</th>
                     <th asp-for="Tenant">Tenant</th>
-                    @*<th asp-for="Activity ID">Activity ID</th>*@
-                    @*<th asp-for="isInternalError">Internal Error</th>
-                        <th asp-for="UserName">UserName</th>
-                        <th asp-for="Details">Details</th>*@
                 </tr>
             </thead>
 
@@ -173,7 +142,7 @@
                     @foreach (var d in Model.ConnectionActivity)
                     {
                         index = index + 1;
-                    
+
                         if (d.errors != null && d.errors.Count > 0)
                         {
                             var count = 0;
@@ -182,59 +151,74 @@
                                 count = count + 1;
                                 if (count == 1)
                                 {
-                                    <tr onclick="{errorrowclick(event)}" >
-                                        <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span><i class="ms-Icon ms-Icon--ChevronDown" aria-hidden="true"></i></span></button></td>
-                                        <td>@d.startTime</td>
-                                        <td>@d.endTime</td>
-                                        <td>@d.outcome</td>
-                                        <td>@err["errorInternal"]</td>
-                                        <td>@err["errorCodeSymbolic"]</td>
-                                        <td>
-                                            <a asp-controller="DiagnoseIssues"
-                                               asp-action="ActivityHostDetails"
-                                               asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
-                                        </td>
-                                        <td>@d.ClientOS</td>
-                                        <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
-                                        <td>@d.SessionHostPoolName</td>
-                                        <td>@d.Tenants</td>
-                                    </tr>
+                <tr >
+                    <td>
+                            
+                    </td>
+                   
+
+                    <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span><i class="ms-Icon ms-Icon--ChevronDown" aria-hidden="true"></i></span></button></td>
+
+                    <td>@d.startTime</td>
+                    <td>@d.endTime</td>
+                    <td>@d.outcome</td>
+                    <td>@err["errorInternal"]</td>
+                    <td>@err["errorCodeSymbolic"]</td>
+                    <td style="display: none;">@err["errorCode"]</td>
+                    <td style="display: none;">@err["errorMessage"]</td>
+                    <td style="display: none;">@err["time"]</td>
+                    <td>
+                        <a asp-controller="DiagnoseIssues"
+                           asp-action="ActivityHostDetails"
+                           asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
+                    </td>
+                    <td>@d.ClientOS</td>
+                    <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
+                    <td>@d.SessionHostPoolName</td>
+                    <td>@d.Tenants</td>
+
+                </tr>
                                 }
                                 else
                                 {
-                                    <tr class="trData-@index" style="visibility:visible;" onclick="{errorrowclick(event)}">
-                                        <div class="ms-PanelExample" id="closepanel">
-                                            <div class="flyoutpanel ms-Panel" id="errordetailspanel">
-                                                <div class="flyoutpanel-content-wrap">
+                                    <tr class="trData-@index" style="visibility:visible;">
+                                        <td>
+                                            @*<div class="ms-PanelExample" id="closepanel">
+
+                                                <div class="flyoutpanel ms-Panel" id="errordetailspanel" style="visibility:visible;">
+                                                    <div class="flyoutpanel-content-wrap">
 
 
-                                                    <div class="flyoutpanel-header header-col">
+                                                        <div class="flyoutpanel-header header-col">
 
-                                                        <div class="header-btns">
-                                                            <form>
-                                                                <button type="submit"><span><i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i></span></button>
-                                                                <button type="submit" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
-                                                            </form>
-                                                           
+                                                            <div class="header-btns">
+                                                                <form>
+                                                                    <button type="submit"><span><i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i></span></button>
+                                                                    <button type="button" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
+                                                                </form>
+
+                                                            </div>
+                                                            <h4>Error details</h4>
                                                         </div>
-                                                        <h4>Error details</h4>
-                                                    </div>
-                                                    <div class="flyoutpanel-content">
-                                                        <div class="flyoutpanel-controls">
-                                                            <label class="control-label">Error Code:</label>
-                                                            <span>@err["errorCode"]</span>
-                                                            <label class="control-label">Internal:</label>
-                                                            <span>@err["errorInternal"]</span>
-                                                            <label class="control-label">Message:</label>
-                                                            <span>@err["errorMessage"]</span>
-                                                            <label class="control-label">Time:</label>
-                                                            <span>@err["time"]</span>
+                                                        <div class="flyoutpanel-content">
+                                                            <p>vbvcbvn57568</p>
+                                                            <div class="flyoutpanel-controls">
+                                                                <label class="control-label">Error Code:</label>
+                                                                <span>@err["errorCode"]</span>
+                                                                <label class="control-label">Internal:</label>
+                                                                <span>@err["errorInternal"]</span>
+                                                                <label class="control-label">Message:</label>
+                                                                <span>@err["errorMessage"]</span>
+                                                                <label class="control-label">Time:</label>
+                                                                <span>@err["time"]</span>
+                                                            </div>
                                                         </div>
-                                                    </div>
 
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
+                                            </div>*@
+                                        </td>
+
                                         <td></td>
                                         <td></td>
                                         <td></td>
@@ -256,6 +240,7 @@
                         else
                         {
                             <tr>
+
                                 <td></td>
                                 <td>@d.startTime</td>
                                 <td>@d.endTime</td>
@@ -323,7 +308,7 @@
                 else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.None)
                 {
                     <tr>
-                        <td>
+                        <td colspan="14">
                             <div class="norecordstable">
                                 <h3 class="text-center">No records found for the search criteria</h3>
                             </div>
@@ -339,7 +324,38 @@
 
     </div>
 
+    <div class="ms-PanelExample" id="closepanel">
+        <div class="flyoutpanel ms-Panel" id="errordetailspanel" style="visibility:visible;" is-open>
+            <div class="flyoutpanel-content-wrap">
 
+
+                <div class="flyoutpanel-header header-col">
+
+                    <div class="header-btns">
+                        <form>
+                            <button type="submit"><span><i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i></span></button>
+                            @*<button type="button" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>*@
+                        </form>
+
+                    </div>
+                    <h4>Error details</h4>
+                </div>
+                <div class="flyoutpanel-content">
+                    <div class="flyoutpanel-controls">
+                        <label class="control-label">Error Code:</label>
+                        <input type="text" class="form-control" id="errorcode" style="border: none;box-shadow: none;" />
+                        <label class="control-label">Internal:</label>
+                        <input type="text" class="form-control" id="Internal" style="border: none;box-shadow: none;" />
+                        <label class="control-label">Message:</label>
+                        <textarea rows="14" cols="10" wrap="soft" class="form-control" id="Message" style="border: none;box-shadow: none;resize:none"></textarea>
+                        <label class="control-label">Time:</label>
+                        <input type="text" class="form-control" id="Time" style="border: none;box-shadow: none;" />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -359,7 +375,7 @@
             }, false);
         document.getElementById("loader1").hidden = true;
         document.getElementById("process").addEventListener("click", function () {
-            document.getElementById("loader1").hidden = false;
+            document.getElementById("loader1").hidden = true;
         }, false);
     })();
 </script>
@@ -372,13 +388,8 @@
         new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
     }
 
-   
-    function errorrowclick(event) {
-        console.log(event);
-        var value = document.getElementById("errordetailspanel").style.display;
-        document.getElementById("errordetailspanel").style.display = "block";
 
-    }
+  
     function rowClick(index) {
         console.log(index);
         var lst = document.getElementsByClassName("trData-" + index);
@@ -430,8 +441,12 @@
         hiddenElement.download = 'people.csv';
         hiddenElement.click();
     }
+    var btnSlideClose = document.getElementsByClassName("close");
+    btnSlideClose.addEventListener("click", function () {
+        document.getElementById("errordetailspanel").style.visibility = "hidden";
+    });
 </script>
-    <script>
+<script>
     const copytoclipboard = document.querySelectorAll('table tr');
     copytoclipboard.forEach(color => {
         color.addEventListener('click', () => {
@@ -446,12 +461,8 @@
                 selection.removeAllRanges();
 
                 const original = color.textContent;
-                color.textContent = 'Copied!';
-                color.classList.add('success');
 
                 setTimeout(() => {
-                    color.textContent = original;
-                    color.classList.remove('success');
                 }, 1200);
             } catch (e) {
                 const errorMsg = document.querySelector('.error-msg');
@@ -463,4 +474,22 @@
             }
         });
     });
+</script>
+<script>
+    var table = document.getElementById('activityTabledata');
+    console.log(document.getElementById('activityTabledata'), "table")
+
+    for ( var i = 0; i < activityTabledata.rows.length; i++)
+    {
+        console.log(activityTabledata.rows.length, "table22")
+        activityTabledata.rows[i].onclick = function () {
+        var value = document.getElementById("errordetailspanel").style.display;
+        document.getElementById("errordetailspanel").style.display = "block";
+        document.getElementById("errordetailspanel").style.visibility = "visible";
+            document.getElementById('errorcode').value = this.cells[6].innerText;
+            document.getElementById('Internal').value = this.cells[5].innerText;
+            document.getElementById('Message').value = this.cells[8].innerText;
+            document.getElementById('Time').value = this.cells[9].innerText;
+        }
+    }
 </script>

@@ -130,7 +130,7 @@
 
                                 if (@d.Status == "Success")
                                 {
-                                    <div id="msgbardiv">
+                                    <div id="msgbardiv" style="margin-top:10px;">
                                         <div class="ms-MessageBar ms-MessageBar--success">
                                             <div class="ms-MessageBar-content">
                                                 <div class="ms-MessageBar-icon">
@@ -145,7 +145,7 @@
                                 }
                                 else
                                 {
-                                    <div id="msgbardiv">
+                                    <div id="msgbardiv" style="margin-top:10px;">
                                         <div class="ms-MessageBar ms-MessageBar--error">
                                             <div class="ms-MessageBar-content">
                                                 <div class="ms-MessageBar-icon">
@@ -253,7 +253,7 @@
                                                 {
                                                     @foreach (var item in Model.selectedUsername)
                                                     {
-                                                <label asp-for="@item.adUserName" class="form-control">@item.adUserName</label>   
+                                                <label class="control-label" asp-for="@item.adUserName" disabled>@item.adUserName</label>   
                                                     }
                                                 }
 
