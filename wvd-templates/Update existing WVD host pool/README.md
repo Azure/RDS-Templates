@@ -13,6 +13,9 @@ This template will remove or stop the old instance of Windows Virtual Desktop Ho
 
 Follow the guidance below for entering the appropriate parameters for your scenario.
 
+> **Reporting issues:**
+> Microsoft Support is not handling issues for any published tools in this repository. These tools are published as is with no implied support. However, we would like to welcome you to open issues using GitHub issues to collaborate and improve these tools. You can open [an issue](https://github.com/Azure/rds-templates/issues) and add the label **2-Update-existing-WVD-host-pool** to associate it with this tool.
+
 ## ActionOnPreviousVirtualMachines
 When you take action on previous virtual machines, you have two options:
 
