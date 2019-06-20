@@ -23,7 +23,7 @@
                         </div>
                     </div>
                     <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl10 ms-xl12 m-b-25">
-                        <label asp-for="ConnectionActivity.SessionHostName" class="control-label">Session Host:</label>
+                        <label asp-for="ConnectionActivity.SessionHostName" class="control-label">Session Host Name:</label>
                         <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.SessionHostName</span>
                             <input asp-for="@Model.ConnectionActivity.SessionHostName" type="hidden">
@@ -198,7 +198,7 @@
                                         <tr>
                                             <th>Select</th>
                                             @*<th>Session ID</th>*@
-                                            <th>User Name</th>
+                                            <th>User UPN</th>
                                         </tr>
                                     </thead>
                                     @{

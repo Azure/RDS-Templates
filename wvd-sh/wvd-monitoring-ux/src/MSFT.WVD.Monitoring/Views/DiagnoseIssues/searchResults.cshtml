@@ -19,7 +19,7 @@
                     </div>
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl3 ms-xl12 m-b-20">
-                    <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-xxxl2 ms-xxl2 ms-xl2"></label>
+                    <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-xxxl2 ms-xxl2 ms-xl2">Activity Type<span class="red">*</span></label>
                     <div class="input-wrap ms-xxxl10 ms-xxl12 ms-xl12">
                         <select size="1" asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>().Where(x => x.Text != ActivityType.None.ToString()).ToList()" class="form-control  width-100 " id="activityType" disabled></select>
                     </div>
@@ -157,7 +157,7 @@
                     </td>
                    
 
-                    <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span><i class="ms-Icon ms-Icon--ChevronDown" aria-hidden="true"></i></span></button></td>
+                    <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span><i onclick="icontoggle(this)" class="ms-Icon ms-Icon--ChevronDown" aria-hidden="true"></i></span></button></td>
 
                     <td>@d.startTime</td>
                     <td>@d.endTime</td>
@@ -167,7 +167,7 @@
                     <td style="display: none;">@err["errorCode"]</td>
                     <td style="display: none;">@err["errorMessage"]</td>
                     <td style="display: none;">@err["time"]</td>
-                    <td>
+                    <td >
                         <a asp-controller="DiagnoseIssues"
                            asp-action="ActivityHostDetails"
                            asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
@@ -183,40 +183,7 @@
                                 {
                                     <tr class="trData-@index" style="visibility:visible;">
                                         <td>
-                                            @*<div class="ms-PanelExample" id="closepanel">
-
-                                                <div class="flyoutpanel ms-Panel" id="errordetailspanel" style="visibility:visible;">
-                                                    <div class="flyoutpanel-content-wrap">
-
-
-                                                        <div class="flyoutpanel-header header-col">
-
-                                                            <div class="header-btns">
-                                                                <form>
-                                                                    <button type="submit"><span><i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i></span></button>
-                                                                    <button type="button" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
-                                                                </form>
-
-                                                            </div>
-                                                            <h4>Error details</h4>
-                                                        </div>
-                                                        <div class="flyoutpanel-content">
-                                                            <p>vbvcbvn57568</p>
-                                                            <div class="flyoutpanel-controls">
-                                                                <label class="control-label">Error Code:</label>
-                                                                <span>@err["errorCode"]</span>
-                                                                <label class="control-label">Internal:</label>
-                                                                <span>@err["errorInternal"]</span>
-                                                                <label class="control-label">Message:</label>
-                                                                <span>@err["errorMessage"]</span>
-                                                                <label class="control-label">Time:</label>
-                                                                <span>@err["time"]</span>
-                                                            </div>
-                                                        </div>
-
-                                                    </div>
-                                                </div>
-                                            </div>*@
+                                           
                                         </td>
 
                                         <td></td>
@@ -239,24 +206,24 @@
                         }
                         else
                         {
-                            <tr>
-
-                                <td></td>
-                                <td>@d.startTime</td>
-                                <td>@d.endTime</td>
-                                <td>@d.outcome</td>
-                                <td></td>
-                                <td></td>
-                                <td>
-                                    <a asp-controller="DiagnoseIssues"
-                                       asp-action="ActivityHostDetails"
-                                       asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
-                                </td>
-                                <td>@d.ClientOS</td>
-                                <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
-                                <td>@d.SessionHostPoolName</td>
-                                <td>@d.Tenants</td>
-                            </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td>@d.startTime</td>
+                                        <td>@d.endTime</td>
+                                        <td>@d.outcome</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td>
+                                            <a asp-controller="DiagnoseIssues"
+                                               asp-action="ActivityHostDetails"
+                                               asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
+                                        </td>
+                                        <td>@d.ClientOS</td>
+                                        <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
+                                        <td>@d.SessionHostPoolName</td>
+                                        <td>@d.Tenants</td>
+                                    </tr>
                         }
 
 
@@ -388,7 +355,9 @@
         new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
     }
 
-
+    function icontoggle(x) {
+        x.classList.toggle("ms-Icon--ChevronUp");
+    }
   
     function rowClick(index) {
         console.log(index);

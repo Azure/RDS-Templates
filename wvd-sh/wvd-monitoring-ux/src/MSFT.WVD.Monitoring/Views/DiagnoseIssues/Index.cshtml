@@ -18,7 +18,7 @@
                     </div>
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl3 ms-xl12 m-b-20">
-                    <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-xxxl2 ms-xxl2 ms-xl2"></label>
+                    <label asp-for="DiagonizeQuery.ActivityType" class="control-label ms-xxxl2 ms-xxl2 ms-xl2">Activity Type<span class="red">*</span></label>
                     <div class="input-wrap ms-xxxl10 ms-xxl12 ms-xl12">
                         <select size="1" asp-for="DiagonizeQuery.ActivityType" asp-items="Html.GetEnumSelectList<ActivityType>().Where(x=> x.Text != ActivityType.None.ToString() ).ToList()" class="form-control  width-100 " id="activityType"></select>
                     </div>
