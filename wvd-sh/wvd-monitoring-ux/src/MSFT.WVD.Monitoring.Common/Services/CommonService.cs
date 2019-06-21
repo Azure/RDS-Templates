@@ -50,6 +50,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
             requestdata.Add("auth_url", _config["configurations:AAD_AUTH_URL"]);
             requestdata.Add("resource", _config["configurations:RESOURCE_URL"]);
             requestdata.Add("client_id", _config["AzureAd:ClientId"]);
+            requestdata.Add("client_secret", _config["AzureAd:ClientSecret"]);
             requestdata.Add("refresh_token", refreshToken);
             using (HttpClient client = new HttpClient())
             {

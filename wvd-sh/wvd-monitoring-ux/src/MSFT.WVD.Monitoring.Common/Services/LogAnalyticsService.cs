@@ -30,7 +30,7 @@ namespace MSFT.WVD.Monitoring.Common.Services
         public JArray PrepareBatchQueryRequest(string hostName, out List<Counter> counters, XmlDocument xDoc)
         {
             counters = new List<Counter>();
-            string WorkspaceID = Configuration.GetSection("AzureAd").GetSection("WorkspaceID").Value;
+            string WorkspaceID = Configuration.GetSection("AzureAd").GetSection("LogAnalyticsWorkspaceId").Value;
             JArray jArrayQry = new JArray();
             foreach (XmlNode node in xDoc.DocumentElement.ChildNodes)
             {

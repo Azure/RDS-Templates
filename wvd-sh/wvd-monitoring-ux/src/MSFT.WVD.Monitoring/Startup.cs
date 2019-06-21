@@ -38,6 +38,7 @@ namespace MSFT.WVD.Monitoring
             {
                 options.Authority = $"{Configuration.GetSection("AzureAd").GetSection("Instance").Value}{Configuration.GetSection("AzureAd").GetSection("TenantId").Value}"; //+ this.TenantName; //358d0f13-4eda-45ea-886e-a6dcc6a70ae2
                 options.ClientId = Configuration.GetSection("AzureAd").GetSection("ClientId").Value;
+               options.ClientSecret = Configuration.GetSection("AzureAd").GetSection("ClientSecret").Value;
                 options.ResponseType = OpenIdConnectResponseType.Code;
                 options.ResponseMode = OpenIdConnectResponseMode.FormPost;
                 options.CallbackPath = "/security/signin-callback";
