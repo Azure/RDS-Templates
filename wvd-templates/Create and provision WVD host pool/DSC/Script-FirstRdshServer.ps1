@@ -81,16 +81,16 @@ else
 {
     Write-Log -Message "VM not registered with RDInfraAgent, script execution will continue"
 
-    # Importing WVD PowerShell module
+    # Importing Windows Virtual Desktop PowerShell module
     Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
 
-    Write-Log -Message "Imported RDMI PowerShell modules successfully"
+    Write-Log -Message "Imported Windows Virtual Desktop PowerShell modules successfully"
 
     # Getting fqdn of rdsh vm
     $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
     Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
-    # Authenticating to WVD
+    # Authenticating to Windows Virtual Desktop
     if ($isServicePrincipal -eq "True")
     {
         Write-Log  -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
@@ -107,17 +107,19 @@ else
 
     if ($authentication)
     {
-        Write-Log -Message "RDMI Authentication successfully Done. Result:`n$obj"  
+        Write-Log -Message "Windows Virtual Desktop Authentication successfully Done. Result:`n$obj"  
     }
     else
     {
-        Write-Log -Error "RDMI Authentication Failed, Error:`n$obj"
-        throw "RDMI Authentication Failed, Error:`n$obj"
+        Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
+        throw "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
     }
 
     # Set context to the appropriate tenant group
     Write-Log "Running switching to the $definedTenantGroupName context"
-    Set-RdsContext -TenantGroupName $definedTenantGroupName
+    if ($definedTenantGroupName -ne "Default Tenant Group") {
+        Set-RdsContext -TenantGroupName $definedTenantGroupName
+    }
     try
     {
         $tenants = Get-RdsTenant -Name "$TenantName"
@@ -134,7 +136,7 @@ else
 
     # Checking if host pool exists. If not, create a new one with the given HostPoolName
     Write-Log -Message "Checking Hostpool exists inside the Tenant"
-    $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
+    $HostPool = Get-RdsHostPool -TenantName "$TenantName" | Where-Object { $_.HostPoolName -eq "$HostPoolName"}
     $ApplicationGroupName = "Desktop Application Group"
     if ($HostPool)
     {

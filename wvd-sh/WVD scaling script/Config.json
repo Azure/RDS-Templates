@@ -1,126 +1,118 @@
 {
-	"RDMIScale": {
+	"WVDScale": {
 		"Azure": {
 			"Variable": [
 				{
-					"_Comments":"Tenant ID of Azure Active Directory",
+					"_Comments": "Tenant ID of Azure Active Directory",
 					"Name": "AADTenantId",
 					"Value": "00000000-0000-0000-0000-000000000000"
 				},
-				{	"_Comments":"Stored Credentials of Azure Service Principal GUID",
-					"Name": "AADApplicationId",
-					"Value": "00000000-0000-0000-0000-000000000000"
-				},
 				{
-					"_Comments":"use AADServicePrincipalSecret filed for testing only, set via New-StoredCredential",
-					"Name": "AADServicePrincipalSecret",
+					"_Comments": "Stored Credentials of Azure Service Principal GUID or Username",
+					"Name": "AADApplicationId",
 					"Value": ""
 				},
 				{
-					"_Comments":"Subscription Id of the Azure",
-					"Name": "currentAzureSubscriptionId",
-					"Value": "00000000-0000-0000-0000-000000000000"
+					"_Comments": "use AADServicePrincipalSecret filed for testing only, set via New-StoredCredential",
+					"Name": "AADServicePrincipalSecret",
+					"Value": ""
+
 				},
 				{
-					"_Comments":"WVD tenant Group name",
+					"_Comments": "Subscription Id of the Azure",
+					"Name": "currentAzureSubscriptionId",
+					"Value": ""
+				},
+				{
+					"_Comments": "The name of the tenant group in the Windows Virtual Desktop deployment",
 					"Name": "tenantGroupName",
 					"Value": "Default Tenant Group"
 				},
 				{
-					"_Comments":"WVD tenant name",
+					"_Comments": "The name of the tenant in the Windows Virtual Desktop deployment.",
 					"Name": "tenantName",
 					"Value": ""
 				},
 				{
-					"_Comments":"WVD host pool name",
+					"_Comments": "The name of the WVD Host Pool",
 					"Name": "hostPoolName",
 					"Value": ""
 				},
 				{
-					"_Comments":"Hostpool session Load Balancing Type in Peak Hours",
+					"_Comments": "Hostpool session Load Balancing Type in Peak Hours",
 					"Name": "PeakLoadBalancingType",
-					"Value": "BreadthFirst"
-				},
-				{
-					"_Comments":"Hostpool session Load Balancing Type in OffPeak Hours",
-					"Name": "OffPeakLoadBalancingType",
 					"Value": "DepthFirst"
 				},
 				{
-					"_Comments":"Session Load Balancing Peak Hours",
+					"_Comments": "Session Load Balancing Peak Hours",
 					"Name": "sessionLoadBalancingPeakHours",
 					"Value": "9:00-18:00"
-				},
-				{
-					"_Comments":"Session Load Balancing off Peak Hours",
-					"Name": "sessionLoadBalancingOffPeakHours",
-					"Value": "18:00-22:00"
 				}
 			]
 		},
 		"Deployment": {
 			"Variable": [
 				{
-					"_Comments":"RDbroker URL",
+					"_Comments": "RDbroker URL",
 					"Name": "Rdbroker",
 					"Value": "https://rdbroker.wvd.microsoft.com"
 				},
 				{
-					"_Comments":"Stored Credentials of Username or WVD service Principal GUID",
+					"_Comments": "Stored Credentials of Username or WVD service Principal GUID",
 					"Name": "Username",
 					"Value": ""
 				},
 				{
-					"_Comments":"use Password filed for testing only, set via New-StoredCredential",
+					"_Comments": "use Password filed for testing only, set via New-StoredCredential",
 					"Name": "Password",
 					"Value": ""
 				},
 				{
-					"_Comments":"accepted values True/False, True indicate service principal is being used to authenticate to WVD",
+					"_Comments": "Accepted values True/False, True indicate service principal is being used to authenticate to WVD",
 					"Name": "isServicePrincipal",
 					"Value": "False"
 				}
 			]
 		},
-		"RdmiScaleSettings": {
+		"WVDScaleSettings": {
 			"Variable": [
 				{
-					"_Comments":"Begin of the peak usage time",
+					"_Comments": "Begin of the peak usage time",
 					"Name": "BeginPeakTime",
 					"Value": "09:00:00"
 				},
 				{
-					"_Comments":"End of the peak usage time",
+					"_Comments": "End of the peak usage time",
 					"Name": "EndPeakTime",
 					"Value": "18:00:00"
 				},
 				{
-					"_Comments":"Time difference between local time and UTC, in hours",
+					"_Comments": "Time difference between local time and UTC, in hours(Example: India Standard Time is +5:30)",
 					"Name": "TimeDifferenceInHours",
-					"Value": "0"
+					"Value": "+5:30"
 				},
 				{
-					"_Comments":"Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started ",
+					"_Comments": "Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started ",
 					"Name": "SessionThresholdPerCPU",
 					"Value": "1"
 				},
 				{
-					"_Comments":"Minimum number of host pool VMs to keep running during off-peak usage time",
+					"_Comments": "Minimum number of host pool VMs to keep running during off-peak usage time",
 					"Name": "MinimumNumberOfRDSH",
 					"Value": "1"
 				},
 				{
-					"_Comments":"Number of seconds to wait before forcing users to logoff. If 0, don't force users to logoff",
+					"_Comments": "Number of seconds to wait before forcing users to logoff. If 0, don't force users to logoff",
 					"Name": "LimitSecondsToForceLogOffUser",
 					"Value": "5"
 				},
 				{
-					"_Comments":"Message title sent to a user before forcing logoff",
+					"_Comments": "Message title sent to a user before forcing logoff",
 					"Name": "LogOffMessageTitle",
 					"Value": "System Under Maintenance"
 				},
 				{
-					"_Comments":"Message body to send to a user before forcing logoff",
+					"_Comments": "Message body to send to a user before forcing logoff",
 					"Name": "LogOffMessageBody",
 					"Value": "Please save your work and logoff!"
 				}

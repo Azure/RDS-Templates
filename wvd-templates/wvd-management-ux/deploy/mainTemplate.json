@@ -6,26 +6,26 @@
             "defaultValue": "https://rdbroker.wvd.microsoft.com",
             "type": "string",
             "metadata": {
-                "description": "RDBroker URL of the infrastructure.   Ex: https://rdbroker.wvd.microsoft.com"
+                "description": "RDBroker URL of the infrastructure. Ex: https://rdbroker.wvd.microsoft.com"
             }
         },
         "ResourceURL": {
             "defaultValue": "https://mrs-prod.ame.gbl/mrs-RDInfra-prod",
             "type": "string",
             "metadata": {
-                "description": "Enterprise application location…"
+                "description": "The resourceURL defining the Windows Virtual Desktop enterprise appplication."
             }
         },
         "AzureADUserPrincipalName": {
             "type": "string",
             "metadata": {
-                "description": "User must have RDS Owner on the WVD tenant and must have Contributor on the Azure subscription"
+                "description": "An Azure AD user who has permissions to create resources (and a resource group, if chosen) in the Azure subscription. This can be accomplished by providing a user with a Contributor role in the Azure subscription"
             }
         },
         "AzureLoginPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "The password that corresponds to the AzureAD UserPrincipalName."
+                "description": "The password that corresponds to the AzureADUserPrincipalName."
             }
         },
         "ApplicationName": {
