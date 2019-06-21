@@ -46,6 +46,7 @@ $CheckRG = Get-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location
 if (!$CheckRG) {
     Write-Output "The specified resourcegroup does not exist, creating the resourcegroup $ResourceGroupName..."
     New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
+    Write-Output "ResourceGroup $ResourceGroupName created suceessfully"
 }
 
 # Create new Log Analytics Workspace
