@@ -72,7 +72,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                     string startDate, endDate = "";
                     if (data.DiagonizeQuery.StartDate == null)
                     {
-                         startDate = $"{DateTime.Now.ToUniversalTime().AddMinutes(-60).ToString("yyyy-MM-dd")}T00:00:00Z";
+                         startDate = $"{DateTime.Now.ToUniversalTime().AddDays(-7).ToString("yyyy-MM-dd")}T00:00:00Z";
                          endDate = $"{DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd")}T00:00:00Z";
                     }
                     else
@@ -430,81 +430,92 @@ namespace MSFT.WVD.Monitoring.Controllers
         {
             return View();
         }
-     
-        public async Task<IActionResult> IssuesInterval(DiagonizePageViewModel diagonizePageViewModel,  string interval=null,string outcome=null, string upn=null  )
+
+        public async Task<IActionResult> IssuesInterval(DiagonizePageViewModel diagonizePageViewModel, string interval = null, string outcome = null, string upn = null)
         {
+
+
             //DiagonizePageViewModel diagonizePageViewModel = new DiagonizePageViewModel();
-           // diagonizePageViewModel.DiagonizeQuery = new DiagonizeQuery();
-           if(diagonizePageViewModel.DiagonizeQuery==null)
+            // diagonizePageViewModel.DiagonizeQuery = new DiagonizeQuery();
+            if (diagonizePageViewModel.DiagonizeQuery == null)
             {
                 diagonizePageViewModel.DiagonizeQuery = new DiagonizeQuery();
                 diagonizePageViewModel.DiagonizeQuery.UPN = upn;
-               
+
             }
-          
+
+
             try
             {
-                if (!string.IsNullOrEmpty(interval))
+                if (diagonizePageViewModel.DiagonizeQuery.UPN != null)
                 {
-                    HttpContext.Session.Set<string>("SelectedInterval", interval);
+                    if (!string.IsNullOrEmpty(interval))
+                    {
+                        HttpContext.Session.Set<string>("SelectedInterval", interval);
+
+                    }
+                    else
+                    {
+                        diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddDays(-7);
+                        diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
+                        interval = HttpContext.Session.Get<string>("SelectedInterval");
+                    }
+
+                    if (!string.IsNullOrEmpty(outcome))
+                    {
+                        HttpContext.Session.Set<string>("SelectedOutcome", outcome);
+                    }
+                    else
+                    {
+                        outcome = HttpContext.Session.Get<string>("SelectedOutcome");
+                    }
+
+
+
+                    diagonizePageViewModel.DiagonizeQuery.ActivityOutcome = outcome != null ? (ActivityOutcome)Enum.Parse(typeof(ActivityOutcome), outcome) : ActivityOutcome.All;
+                    if (interval == startDateEnum.Lastonehour.ToString())
+                    {
+                        diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddMinutes(-60);
+                        diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
+                    }
+                    else if (interval == startDateEnum.sixhoursago.ToString())
+                    {
+
+                        diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddHours(-6);
+                        diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
+
+                    }
+                    else if (interval == startDateEnum.onedayago.ToString())
+                    {
+
+                        diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddDays(-1);
+                        diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
+
+                    }
+                    else if (interval == startDateEnum.onweekago.ToString())
+                    {
+
+                        diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddDays(-7);
+                        diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
+
+                    }
+                    return await Index(diagonizePageViewModel);
 
                 }
                 else
                 {
-                    diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddMinutes(-60);
-                    diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
-                    interval = HttpContext.Session.Get<string>("SelectedInterval");
-                }
-
-                if (!string.IsNullOrEmpty(outcome))
-                {
-                    HttpContext.Session.Set<string>("SelectedOutcome", outcome);
-                }
-                else
-                {
-                    outcome = HttpContext.Session.Get<string>("SelectedOutcome");
+                    return View("Index", diagonizePageViewModel);
                 }
 
 
-              
-               diagonizePageViewModel.DiagonizeQuery.ActivityOutcome = outcome!=null? (ActivityOutcome)Enum.Parse(typeof(ActivityOutcome), outcome) : ActivityOutcome.All;
-                if (interval == startDateEnum.Lastonehour.ToString())
-                {
-                    diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddMinutes(-60);
-                    diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
-                }
-                else if (interval == startDateEnum.sixhoursago.ToString())
-                {
-
-                    diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddHours(-6);
-                    diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
-                   
-                }
-                else if (interval == startDateEnum.onedayago.ToString())
-                {
-
-                    diagonizePageViewModel.DiagonizeQuery.StartDate =  DateTime.Now.AddDays(-1);
-                    diagonizePageViewModel.DiagonizeQuery.EndDate = DateTime.Now;
-                  
-                }
-                else if (interval == startDateEnum.onweekago.ToString())
-                {
-
-                    diagonizePageViewModel.DiagonizeQuery.StartDate = DateTime.Now.AddDays(-7);
-                    diagonizePageViewModel.DiagonizeQuery.EndDate   = DateTime.Now;
-                  
-                }
-                return await Index(diagonizePageViewModel);
             }
-            catch (Exception ex )
+            catch (Exception ex)
             {
 
                 return null;
             }
-
-          
-
-         
         }
+
+
     }
-}
+    }
