@@ -416,15 +416,14 @@
             openDialog(dialog);
         };
         function actionHandler(event) {
-            var labelText = "";
+          
             var counter = 0;
             for (var i = 0; i < checkBoxComponents.length; i++) {
                 if (checkBoxComponents[i].getValue()) {
                     counter++;
                 }
             }
-            labelText += counter + " option(s) selected. " + this.innerText.trim() + " clicked";
-            label.innerText = labelText;
+            
         }
         function openDialog(dialog) {
             // Open the dialog

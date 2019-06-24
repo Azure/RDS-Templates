@@ -126,12 +126,12 @@
 <script>
     (function () {
         document.getElementById("Diagnosebreadcrumb").style.display = "block";
-        var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
-        for (var i = 0; i < ContextualMenuElements.length; i++) {
-            var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
-            var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
-            new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
-        }
+        //var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+        //for (var i = 0; i < ContextualMenuElements.length; i++) {
+        //    var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+        //    var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+        //    new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+        //}
         var TableElements = document.querySelectorAll(".ms-Table");
         for (var i = 0; i < TableElements.length; i++) {
             new fabric['Table'](TableElements[i]);
@@ -150,4 +150,11 @@
         }, false);
     })();
 </script>
-
+<script type="text/javascript">
+    var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+    for (var i = 0; i < ContextualMenuElements.length; i++) {
+        var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+        var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+        new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+    }
+</script>
