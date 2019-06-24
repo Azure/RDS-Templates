@@ -64,6 +64,11 @@ $DisplayName=$AADAppDisplayName+"-"+($date)
 
 # Create a new AD Application
 $azureAdApplication=New-AzureADApplication -DisplayName $DisplayName -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
+
+# Create an app creadential to the Application
+$SecureClientSecret=ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
+New-AzureRmADAppCredential -ObjectId $azureAdApplication.ObjectId -Password $SecureClientSecret
+
 $ClientId = $azureAdApplication.AppId
 Write-Output "Azure AAD Application creation completed successfully (Application Id: $ClientId)" -Verbose
 
@@ -95,7 +100,16 @@ foreach($permission in $AzureLogAnalyticsApiPrincipal.Oauth2Permissions){
     $AzureLogAnalyticsApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
 }
 
-Set-AzureADApplication -ObjectId $azureAdApplication.ObjectId -RequiredResourceAccess $AzureLogAnalyticsApiAccess,$AzureWVDApiAccess -ErrorAction Stop
+# Set windows Microsoft Graph API permission to Client App Registration
+$AzureGraphApiPrincipal = Get-AzureADServicePrincipal -SearchString "Microsoft Graph"
+$AzureGraphApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
+$AzureGraphApiAccess.ResourceAppId = $AzureGraphApiPrincipal.AppId
+foreach($permission in $AzureGraphApiPrincipal.Oauth2Permissions | Where-Object {$_.Value -eq "User.Read"}){
+    $AzureGraphApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
+}
+
+# Add the Log Analytics API, WVD API and Microsoft Graph API permissions to the ADApplication
+Set-AzureADApplication -ObjectId $azureAdApplication.ObjectId -RequiredResourceAccess $AzureLogAnalyticsApiAccess,$AzureWVDApiAccess,$AzureGraphApiAccess -ErrorAction Stop
 
 #Get the Client Id and Client Secret
 Write-Output "Client Id : $ClientId"
