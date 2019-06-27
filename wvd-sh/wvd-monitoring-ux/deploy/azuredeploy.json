@@ -3,7 +3,8 @@
   "contentVersion": "1.0.0.0",
       "parameters": {
 
-      "WebAppName": {
+      "WebAppName": 
+      {
           "type": "string",
           "metadata": {
               "description": "Name of the webapp you wish to create, provide an unique name"
@@ -35,7 +36,7 @@
       "AppServicePlanName":"[concat(parameters('WebAppName'),'-Splan')]",
       "workerSize": "0",
       "serviceplansku": "S1",
-      "packageURL":"https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/scripts/wvd-monitoring-ux.zip"
+      "packageURL":"https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-sh/wvd-monitoring-ux/deploy/wvd-monitoring-ux.zip"
   },
   "resources": [
       {

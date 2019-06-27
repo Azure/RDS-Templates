@@ -7,9 +7,10 @@ Create an Azure AD App Registration
 This script is used to create an Azure AD App Registration
 
 .ROLE
-Users
+Administrator
 
 #>
+
 Param(
 
     [Parameter(Mandatory = $true)]
@@ -24,10 +25,6 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Co
 # Importing the modules
 Import-Module Azure
 Import-Module AzureAD
-
-# Initialize
-$ErrorActionPreference = "Stop"
-$spnRole = "contributor"
 
 # Provide the credentials to authenticate to Azure/AzureAD
 $Credentials=Get-Credential
@@ -72,18 +69,18 @@ New-AzureRmADAppCredential -ObjectId $azureAdApplication.ObjectId -Password $Sec
 $ClientId = $azureAdApplication.AppId
 Write-Output "Azure AAD Application creation completed successfully (Application Id: $ClientId)" -Verbose
 
-# Create new SPN
-Write-Output "Creating a new SPN" -Verbose
-$spn = New-AzureRmADServicePrincipal -ApplicationId $ClientId
-$spnName = $spn.ServicePrincipalNames
-Write-Output "SPN creation completed successfully (SPN Name: $spnName)" -Verbose
+# Create new Service Principal
+Write-Output "Creating a new Service Principal" -Verbose
+$ServicePrincipal = New-AzureRmADServicePrincipal -ApplicationId $ClientId
+$ServicePrincipalName = $ServicePrincipal.ServicePrincipalNames
+Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose
 
-# Assign role to SPN
+# Assign role to Service Principal
 Write-Output "Waiting for SPN creation to reflect in Directory before Role assignment"
-Start-Sleep 20
-Write-Output "Assigning role ($spnRole) to SPN App ($ClientId)" -Verbose
-New-AzureRmRoleAssignment -RoleDefinitionName $spnRole -ServicePrincipalName $ClientId
-Write-Output "SPN role assignment completed successfully" -Verbose
+Start-Sleep 25
+Write-Output "Assigning contributor role to Service Principal App ($ClientId)" -Verbose
+New-AzureRmRoleAssignment -RoleDefinitionName "contributor" -ServicePrincipalName $ClientId
+Write-Output "Service Principal role assignment completed successfully" -Verbose 
 
 # Set windows virtual desktop permission to Client App Registration
 $WVDApiPrincipal = Get-AzureADServicePrincipal -SearchString "Windows Virtual Desktop" | Where-Object {$_.DisplayName -eq "Windows Virtual Desktop"}
@@ -100,17 +97,17 @@ foreach($permission in $AzureLogAnalyticsApiPrincipal.Oauth2Permissions){
     $AzureLogAnalyticsApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
 }
 
-# Set windows Microsoft Graph API permission to Client App Registration
+# Set Microsoft Graph API permission to Client App Registration
 $AzureGraphApiPrincipal = Get-AzureADServicePrincipal -SearchString "Microsoft Graph"
 $AzureGraphApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
 $AzureGraphApiAccess.ResourceAppId = $AzureGraphApiPrincipal.AppId
-foreach($permission in $AzureGraphApiPrincipal.Oauth2Permissions | Where-Object {$_.Value -eq "User.Read"}){
-    $AzureGraphApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
-}
+$permission=$AzureGraphApiPrincipal.Oauth2Permissions | Where-Object {$_.Value -eq "User.Read"}
+$AzureGraphApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
 
-# Add the Log Analytics API, WVD API and Microsoft Graph API permissions to the ADApplication
+
+# Add the WVD API,Log Analytics API and Microsoft Graph API permissions to the ADApplication
 Set-AzureADApplication -ObjectId $azureAdApplication.ObjectId -RequiredResourceAccess $AzureLogAnalyticsApiAccess,$AzureWVDApiAccess,$AzureGraphApiAccess -ErrorAction Stop
 
-#Get the Client Id and Client Secret
+#Get the Client Id/Application Id and Client Secret
 Write-Output "Client Id : $ClientId"
 Write-Output "Client Secret Key: $ClientSecret"

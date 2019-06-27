@@ -7,7 +7,19 @@ Create Log Analytics Workspace
 This script is used to create Log Analytics Workspace
 
 .ROLE
-Users
+Administrator
+
+#>
+<#
+
+.SYNOPSIS
+Create Log Analytics Workspace
+
+.DESCRIPTION
+This script is used to create Log Analytics Workspace
+
+.ROLE
+Administrator
 
 #>
 Param(
@@ -44,19 +56,32 @@ Select-AzureRmSubscription -SubscriptionId $SubscriptionId
 # Check the specified resourcegroup exist/not if not will create new resource group
 $CheckRG = Get-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -ErrorAction SilentlyContinue
 if (!$CheckRG) {
-    Write-Output "The specified resourcegroup does not exist, creating the resourcegroup $ResourceGroupName..."
+    Write-Output "The specified resourcegroup does not exist, creating the resourcegroup $ResourceGroupName"
     New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
     Write-Output "ResourceGroup $ResourceGroupName created suceessfully"
 }
 
 # Create new Log Analytics Workspace
+$result=$null
+
 $CheckLAW = Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsWorkspaceName -ErrorAction SilentlyContinue
 if (!$CheckLAW) {
-    Write-Output "The workspace $LogAnalyticsWorkspaceName does not exist, Creating..."
-    New-AzureRmOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsWorkspaceName -Location $Location -Sku free 
+   Write-Output "The workspace $LogAnalyticsWorkspaceName does not exist, Creating..."
+   $result = New-AzureRmOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsWorkspaceName -Location $Location -Sku free -ErrorAction Ignore
+   if($result)
+   {
     Write-Output "Log Analytics Workspace created suceessfully"
+   }
+   else
+   {
+   Write-Host "The given LogAnalyticsWorkspace name is not unique"
+   $LogAnalyticsWorkspaceName = Read-Host -Prompt "Provide unique Log Analytics Workspace Name"
+   $result = New-AzureRmOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsWorkspaceName -Location $Location -Sku free -ErrorAction Ignore
+   Write-Output "Log Analytics Workspace created suceessfully"
+   }
 }
-
+if($result)
+{
 Write-Output "Adding the Performance Counters to the Log Analytics Workspace"
 
 # Adding the Logical Disk(% Free Space) Performance counter
@@ -118,3 +143,10 @@ $Workspace=Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $ResourceG
 $WorkspaceId=$workspace.CustomerId
 
 Write-Output "The Log Analytics Workspace Id: $WorkspaceId"
+}
+else
+{
+Write-Host "Please provide the unique names for LogAnalyticsWorkspace"
+}
+
+
