@@ -39,19 +39,18 @@ Login-AzureRmAccount -Credential $Credentials
 # Authentcating to AzureAD
 Connect-AzureAD -Credential $Credentials
 
-$ReplyURL = "$RedirectURI/security/signin-callback"
+$ReplyUrl = "$RedirectURI/security/signin-callback"
+# Get Azure AD App
+$AADApp = Get-AzureADApplication -Filter "AppId eq '$($AADApplicationId)'"
 
-# Get Azure AD Application
-$AADApplication = Get-AzureADApplication -Filter "AppId eq '$($AADApplicationId)'"
-
-$ReplyURLs = $AADApplication.ReplyUrls
+$ReplyUrls = $AADApp.ReplyUrls
 
 
 # Add Reply URL if not already in the list 
 
-if ($ReplyURLs -NotContains $ReplyURL) {
-    $ReplyURLs.Add($ReplyURL)
-    Set-AzureADApplication -ObjectId $AADApplication.ObjectId -ReplyUrls $ReplyURLs -PublicCliet $true -Verbose -ErrorAction Stop -
+if ($ReplyUrls -NotContains $ReplyUrl) {
+    $ReplyUrls.Add($ReplyUrl)
+    Set-AzureADApplication -ObjectId $AADApp.ObjectId -ReplyUrls $ReplyUrls -Verbose -ErrorAction Stop
 }
 
 Write-Host "Redirect URI is successfully added to AAD Application Authentication"
