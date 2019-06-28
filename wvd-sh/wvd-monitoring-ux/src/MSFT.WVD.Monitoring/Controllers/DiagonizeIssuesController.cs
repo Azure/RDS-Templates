@@ -77,8 +77,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                     }
                     else
                     {
-                        startDate = data.DiagonizeQuery.StartDate.ToString("yyyy-MM-dd")+"T00:00:00Z";
-                        endDate = data.DiagonizeQuery.EndDate.ToString("yyyy-MM-dd")+"T00: 00:00Z";
+                        startDate = data.DiagonizeQuery.StartDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ");//+"T00:00:00Z";
+                        endDate = data.DiagonizeQuery.EndDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ");//+"T00: 00:00Z";
                     }
 
                     

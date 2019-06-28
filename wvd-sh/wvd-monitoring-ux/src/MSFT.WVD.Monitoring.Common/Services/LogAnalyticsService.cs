@@ -104,22 +104,34 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     var content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
                     request.Content = content;
                     HttpResponseMessage response = await client.SendAsync(request);
-                    var data = response.Content.ReadAsStringAsync().Result;
-                    foreach (var item in JObject.Parse(data)["responses"])
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
                     {
-                        if (item["status"].ToString() == "200")
+                        var data = response.Content.ReadAsStringAsync().Result;
+                        foreach (var item in JObject.Parse(data)["responses"])
                         {
-                            if (item["body"]["tables"] != null && item["body"]["tables"][0]["rows"] != null && item["body"]["tables"][0]["rows"].ToString() != "[]" && item["body"]["tables"][0]["rows"].Count() > 0)
+                            if (item["status"].ToString() == "200")
                             {
-                                decimal avg = item["body"]["tables"][0]["rows"][0][0] != null ? (decimal)item["body"]["tables"][0]["rows"][0][0] : 0;
-                                decimal value = item["body"]["tables"][0]["rows"][0][1] != null ? (decimal)item["body"]["tables"][0]["rows"][0][1] : 0;
-                                var status = item["body"]["tables"][0]["rows"][0][3].ToString();
-                                counters.Where(x => x.id == (int)item["id"])
-                                .Select(x => { x.avg = avg; x.Value = value; x.Status = status; return x; })
-                                .ToList();
+                                if (item["body"]["tables"] != null && item["body"]["tables"][0]["rows"] != null && item["body"]["tables"][0]["rows"].ToString() != "[]" && item["body"]["tables"][0]["rows"].Count() > 0)
+                                {
+                                    decimal avg = item["body"]["tables"][0]["rows"][0][0] != null ? (decimal)item["body"]["tables"][0]["rows"][0][0] : 0;
+                                    decimal value = item["body"]["tables"][0]["rows"][0][1] != null ? (decimal)item["body"]["tables"][0]["rows"][0][1] : 0;
+                                    var status = item["body"]["tables"][0]["rows"][0][3].ToString();
+                                    counters.Where(x => x.id == (int)item["id"])
+                                    .Select(x => { x.avg = avg; x.Value = value; x.Status = status; return x; })
+                                    .ToList();
+                                }
                             }
                         }
                     }
+                    else
+                    {
+                        return new VMPerformance()
+                        {
+                            Message = response.StatusCode+" : "+ response.Content.ReadAsStringAsync().Result
+                    };
+                    }
+                    
+                   
                 }
                 return new VMPerformance()
                 {
