@@ -137,7 +137,7 @@ namespace MSFT.WVD.Monitoring.Controllers
         }
 
 
-        [HttpPost]
+        //[HttpPost]
         public async Task Logout()
         {
             _logger.LogInformation("Clear sessions and Logout from application");

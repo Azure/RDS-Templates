@@ -30,6 +30,7 @@
     </environment>
 </head>
 <body>
+
     <nav class="nav-bar">
         <div class="nav-bar-left">
             <div class="ms-logo">
@@ -39,22 +40,17 @@
             <div class="app-title">
                 <span>Windows Virtual Desktop</span>
             </div>
-            &nbsp;
-            &nbsp;
-            &nbsp;
+           
             <div class="app-title" id="Homebreadcrumb">
                 <a class="app-title" asp-area="" asp-controller="Home" asp-action="Index" style="color: whitesmoke;
     text-decoration: none;">
-                    > Home
+                    >Home
                 </a>
             </div>
-            &nbsp;
-            &nbsp;
-            &nbsp;
             <div class="app-title" id="Diagnosebreadcrumb">
                 <a class="app-title" asp-area="" asp-controller="DiagnoseIssues" asp-action="Index" style="color: whitesmoke;
     text-decoration: none;">
-                  >  Diagnose Issues
+                  >Diagnose Issues
                 </a>
             </div>
         </div>
@@ -88,12 +84,12 @@
                         </div>
                     </li>
                     <li class="ms-ContextualMenu-item">
-                        @using (Html.BeginForm("Logout", "Home", FormMethod.Post))
-                        {
-                            <button type="submit" class="ms-Button">
+                        @*@using (Html.BeginForm("Logout", "Home", FormMethod.Post))
+                        {*@
+                            <a  class="ms-Button" asp-action="Logout" asp-controller="Home">
                                 <span class="ms-Button-label">Sign out</span>
-                            </button>
-                        }
+                            </a>
+                        @*}*@
                         
                     </li>
 

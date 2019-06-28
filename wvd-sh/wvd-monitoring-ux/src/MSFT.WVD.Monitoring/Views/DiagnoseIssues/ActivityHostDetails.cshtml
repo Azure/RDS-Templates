@@ -16,6 +16,13 @@
             <div class="ms-Grid m-b-25 ms-Grid-col ms-xxxl4 ms-xxl6 ms-xl12 border-right" dir="ltr">
                 <div class="ms-Grid-row">
                     <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl0 ms-xl12 m-b-25">
+                        <label asp-for="ConnectionActivity.activityId" class="control-label">Activity Id:</label>
+                        <div class="input-wrap spanlabel">
+                            <span>@Model.ConnectionActivity.activityId</span>
+                            <input asp-for="@Model.ConnectionActivity.activityId" type="hidden">
+                        </div>
+                    </div>
+                    <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl0 ms-xl12 m-b-25">
                         <label asp-for="ConnectionActivity.userName" class="control-label">Current User UPN:</label>
                         <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.userName</span>
@@ -97,22 +104,22 @@
                                 <h4> VM Health State -  @*<i class="fa fa-check" style="color: #107c10;"></i>*@ <i class="ms-Icon ms-Icon--CheckMark green-circled-check" aria-hidden="true"></i> </h4>
                             }
                             <h4> VM Performance Current state </h4>
-                            <table class="ms-Table activity-details-table">
+                            <table class="ms-Table activity-details-table" style="width:100%;">
                                 @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
                                 {
-                                    <tr><td>Active sessions:</td><td colspan="2">@Model.UserSessions.Count</td></tr>
+                                    <tr><td>Active sessions:</td><td colspan="4">@Model.UserSessions.Count</td></tr>
 
                                 }
                                 else
                                 {
-                                    <tr><td>Active sessions:</td><td colspan="2">0</td></tr>
+                                    <tr><td>Active sessions:</td><td colspan="4">0</td></tr>
                                 }
                                 @foreach (var item in Model.VMPerformance.CurrentStateCounters)
                                 {
-                                   
+                                    var value =  item.Value != 0 ? item.Value.ToString() : "N/A";
                                     <tr>
                                         <td>@item.ObjectName</td>
-                                        <td>@item.Value</td>
+                                        <td> @value</td>
                                     </tr>
                                 }
                             </table>

@@ -117,6 +117,7 @@
                 <tr>
                     <th></th>
                     <th></th>
+                    <th asp-for="Activity Id">Activity Id</th>
                     <th asp-for="Start Time">Start Time</th>
                     <th asp-for="End Time">End Time</th>
                     <th asp-for="Outcome">Outcome</th>
@@ -128,8 +129,8 @@
                     <th asp-for="Error" style="display: none;"></th>
                     <th asp-for="Session Host">Session Host</th>
                     <th asp-for="Client">Client</th>
-                    <th asp-for="Client Ip">Client Ip</th>
-                    <th asp-for="HostPoolname">HostPoolname</th>
+                    <th asp-for="Client Ip">Client IP</th>
+                    <th asp-for="HostPoolname">HostPool</th>
                     <th asp-for="Tenant">Tenant</th>
                 </tr>
             </thead>
@@ -145,53 +146,51 @@
 
                         if (d.errors != null && d.errors.Count > 0)
                         {
+                            var customstyle = d.errors.Count > 1 ? "display:block" : "display:none";
                             var count = 0;
                             @foreach (var err in d.errors)
                             {
                                 count = count + 1;
                                 if (count == 1)
                                 {
-                <tr title="copy to clipboard">
-                    <td>
-                            
-                    </td>
-                   
+                                    
+                                    <tr>
+                                        <td></td>
 
-                    <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span><i onclick="icontoggle(this)" class="ms-Icon ms-Icon--ChevronDown" aria-hidden="true"></i></span></button></td>
 
-                    <td>@d.startTime</td>
-                    <td>@d.endTime</td>
-                    <td>@d.outcome</td>
-                    <td>@err["errorInternal"]</td>
-                    <td>@err["errorCodeSymbolic"]</td>
-                    <td style="display: none;">@err["errorCode"]</td>
-                    <td style="display: none;">@err["errorMessage"]</td>
-                    <td style="display: none;">@err["time"]</td>
-                    <td >
-                        <a asp-controller="DiagnoseIssues"
-                           asp-action="ActivityHostDetails"
-                           asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
-                    </td>
-                    <td>@d.ClientOS</td>
-                    <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
-                    <td>@d.SessionHostPoolName</td>
-                    <td>@d.Tenants</td>
+                                        <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span style="@customstyle" ><i id="icon-@index" onclick="icontoggle(this)" class="ms-Icon ms-Icon--ChevronUp" aria-hidden="true"></i></span></button></td>
+                                        <td>@d.activityId<span class="hover-copy"><i class="ms-Icon ms-Icon--Copy" title="copy to clipboard" aria-hidden="true"></i></span></td>
+                                        <td>@d.startTime</td>
+                                        <td>@d.endTime</td>
+                                        <td>@d.outcome</td>
+                                        <td>@err["errorInternal"]</td>
+                                        <td onclick="showErrorDetailsPanel(@err)">@err["errorCodeSymbolic"]</td>
+                                        <td style="display: none;">@err["errorCode"]</td>
+                                        <td style="display: none;">@err["errorMessage"]</td>
+                                        <td style="display: none;">@err["time"]</td>
+                                        <td>
+                                            <a asp-controller="DiagnoseIssues"
+                                               asp-action="ActivityHostDetails"
+                                               asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
+                                        </td>
+                                        <td>@d.ClientOS</td>
+                                        <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
+                                        <td>@d.SessionHostPoolName</td>
+                                        <td>@d.Tenants</td>
 
-                </tr>
+                                    </tr>
                                 }
                                 else
                                 {
-                                    <tr class="trData-@index" style="visibility:visible;" title="copy to clipboard">
-                                        <td>
-                                           
-                                        </td>
-
+                                    <tr class="trData-@index" style="visibility:hidden;display:none;">
+                                        <td></td>
+                                        <td></td>
                                         <td></td>
                                         <td></td>
                                         <td></td>
                                         <td></td>
                                         <td>@err["errorInternal"]</td>
-                                        <td>@err["errorCodeSymbolic"]</td>
+                                        <td onclick="showErrorDetailsPanel(@err)">@err["errorCodeSymbolic"]</td>
                                         <td></td>
                                         <td></td>
                                         <td></td>
@@ -206,24 +205,25 @@
                         }
                         else
                         {
-                                    <tr title="copy to clipboard">
-                                        <td></td>
-                                        <td></td>
-                                        <td>@d.startTime</td>
-                                        <td>@d.endTime</td>
-                                        <td>@d.outcome</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td>
-                                            <a asp-controller="DiagnoseIssues"
-                                               asp-action="ActivityHostDetails"
-                                               asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
-                                        </td>
-                                        <td>@d.ClientOS</td>
-                                        <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
-                                        <td>@d.SessionHostPoolName</td>
-                                        <td>@d.Tenants</td>
-                                    </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td>@d.activityId</td>
+                                <td>@d.startTime</td>
+                                <td>@d.endTime</td>
+                                <td>@d.outcome</td>
+                                <td></td>
+                                <td></td>
+                                <td>
+                                    <a asp-controller="DiagnoseIssues"
+                                       asp-action="ActivityHostDetails"
+                                       asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
+                                </td>
+                                <td>@d.ClientOS</td>
+                                <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
+                                <td>@d.SessionHostPoolName</td>
+                                <td>@d.Tenants</td>
+                            </tr>
                         }
 
 
@@ -301,7 +301,6 @@
                     <div class="header-btns">
                         <form>
                             <button type="submit"><span><i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i></span></button>
-                            @*<button type="button" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>*@
                         </form>
 
                     </div>
@@ -356,9 +355,10 @@
     }
 
     function icontoggle(x) {
-        x.classList.toggle("ms-Icon--ChevronUp");
+        var style = x.className == "ms-Icon ms-Icon--ChevronDown" ? "ms-Icon ms-Icon--ChevronUp" : "ms-Icon ms-Icon--ChevronDown";
+        x.className=   x.className.replace(x.className, style);
     }
-  
+
     function rowClick(index) {
         console.log(index);
         var lst = document.getElementsByClassName("trData-" + index);
@@ -410,13 +410,10 @@
         hiddenElement.download = 'people.csv';
         hiddenElement.click();
     }
-    var btnSlideClose = document.getElementsByClassName("close");
-    btnSlideClose.addEventListener("click", function () {
-        document.getElementById("errordetailspanel").style.visibility = "hidden";
-    });
+ 
 </script>
 <script>
-    const copytoclipboard = document.querySelectorAll('table tr');
+    const copytoclipboard = document.querySelectorAll('table td');
     copytoclipboard.forEach(color => {
         color.addEventListener('click', () => {
             const selection = window.getSelection();
@@ -445,20 +442,15 @@
     });
 </script>
 <script>
-    var table = document.getElementById('activityTabledata');
-    console.log(document.getElementById('activityTabledata'), "table")
+    function showErrorDetailsPanel(data) {
 
-    for ( var i = 0; i < activityTabledata.rows.length; i++)
-    {
-        console.log(activityTabledata.rows.length, "table22")
-        activityTabledata.rows[i].onclick = function () {
-        var value = document.getElementById("errordetailspanel").style.display;
         document.getElementById("errordetailspanel").style.display = "block";
         document.getElementById("errordetailspanel").style.visibility = "visible";
-            document.getElementById('errorcode').value = this.cells[6].innerText;
-            document.getElementById('Internal').value = this.cells[5].innerText;
-            document.getElementById('Message').value = this.cells[8].innerText;
-            document.getElementById('Time').value = this.cells[9].innerText;
-        }
+        document.getElementById('errorcode').value = data.errorCode;
+
+        document.getElementById('Internal').value = data.errorInternal;
+        document.getElementById('Message').value = data.errorMessage;
+        document.getElementById('Time').value = data.time;
+
     }
 </script>

@@ -729,7 +729,17 @@ html, body {
     max-width: 500px;
     position: fixed;
 }
-.error-msg {
+
+    #sendmessagediv .flyoutpanel .flyoutpanel-content {
+        flex: inherit;
+    }
+    #sendmessagediv .flyoutpanel .flyoutpanel-footer {
+        text-align: left;
+    }
+        #sendmessagediv .flyoutpanel .flyoutpanel-footer .primary-btn {
+            margin-left: 0;
+        }
+    .error-msg {
     color: red;
     margin-bottom: 2px;
     display: block;
@@ -1236,11 +1246,11 @@ html, body {
     content: "*";
     color: red;
 }
-.sendmessage {
+/*.sendmessage {
     position: absolute;
     top: 35%;
     left: -8px;
-}
+}*/
 .countitems {
     float: right;
     position: relative;
@@ -1731,3 +1741,14 @@ section {
         color: #333;
         font-weight: 500;
     }
+
+#activityTabledata tbody tr td span.hover-copy {
+    color: #fff;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+    #activityTabledata tbody tr td span.hover-copy:hover {
+        color: #333;
+    }
+

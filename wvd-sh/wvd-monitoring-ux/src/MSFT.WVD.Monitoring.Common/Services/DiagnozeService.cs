@@ -54,12 +54,12 @@ namespace MSFT.WVD.Monitoring.Common.Services
                 var url = "";
                 if (outcome == null)
                 {
-                    url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true";
+                    url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Detailed=true";//&PageSize=1000&SortField=StartTime&IsDescending=True";
                 }
                 else
                 {
                     int outcomeVal = (int)Enum.Parse(typeof(ActivityOutcome), outcome);
-                    url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true";
+                    url = $"{_brokerUrl}RdsManagement/V1/DiagnosticActivities/TenantGroups/{tenantGroupName}/Tenants/{tenant}?UserName={upn}&StartTime={startDatetime}&EndTime={endDatetime}&ActivityType={activityType}&Outcome={outcomeVal}&Detailed=true";// &PageSize=1000&SortField=StartTime&IsDescending=True";
                 }
 
                 var reply = await SendRequest(url, accessToken).ConfigureAwait(false);
@@ -83,17 +83,19 @@ namespace MSFT.WVD.Monitoring.Common.Services
                     endTime = (string)item["endTime"] == null || (string)item["endTime"] == "" ? (DateTime?)null : Convert.ToDateTime(item["endTime"]),
                     userName = item["userName"].ToString(),
                     outcome = (string)item["outcome"] == null || (string)item["outcome"] == "" ? "" : Enum.GetName(typeof(ActivityOutcome), (int)item["outcome"]),
-                  //  isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
-                  //  errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
+                    //  isInternalError = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorInternal"] : null,
+                    //  errorMessage = item["errors"].ToArray().Count() > 0 ? (string)item["errors"][0]["errorMessage"] : null,
                     //errors= errors.OfType<JObject>().ToList(),
-                    errors= item["errors"].OfType<JObject>().ToList(),
-                ClientOS = (string)item["details"]["ClientOS"],
+                    errors = item["errors"].OfType<JObject>().ToList(),
+                    ClientOS = (string)item["details"]["ClientOS"],
                     ClientIPAddress = item["details"]["ClientIPAddress"].ToString(),
                     Tenants = (string)item["details"]["Tenants"],
                     SessionHostName = (string)item["details"]["SessionHostName"],
                     SessionHostPoolName = (string)item["details"]["SessionHostPoolName"]
-                }).ToList();
-
+                }).ToList().OrderByDescending(x=> x.startTime).ToList();
+                
+             
+               
             }
             else
             {
