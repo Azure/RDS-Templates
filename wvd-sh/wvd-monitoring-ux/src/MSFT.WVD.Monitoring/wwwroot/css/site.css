@@ -1743,7 +1743,7 @@ section {
     }
 
 #activityTabledata tbody tr td span.hover-copy {
-    color: #fff;
+    /*color: #fff;*/
     cursor: pointer;
     margin-left: 5px;
 }
