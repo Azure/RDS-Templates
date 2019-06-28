@@ -183,7 +183,7 @@
                                                     <button class="ms-Button message-user ms-Dialog-action ms-Button--primary" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
                                                         <span class="ms-Button-label">Continue</span>
                                                     </button>
-                                                    <button class="ms-Button ms-Dialog-action">
+                                                    <button type="button"  class="ms-Button ms-Dialog-action">
                                                         <span class="ms-Button-label">Cancel</span>
                                                     </button>
                                                 </div>
@@ -250,18 +250,22 @@
                                             <button type="button" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
                                         </div>
                                         <div class="flyoutpanel-content">
+                                            <label class="control-label">User UPN<i class="red">*</i></label>
                                             <div class="flyoutpanel-controls">
-                                                <label class="control-label">User UPN<i class="red">*</i></label>
-                                                @if (Model.selectedUsername != null && Model.selectedUsername.Count>0)
-                                                {
-                                                    @foreach (var item in Model.selectedUsername)
+                                                <div style="height:20%; overflow-y:scroll; overflow-x:hidden;">
+                                                    @if (Model.selectedUsername != null && Model.selectedUsername.Count > 0)
                                                     {
-                                                <label class="control-label" asp-for="@item.adUserName" disabled>@item.adUserName</label>   
+                                                        @foreach (var item in Model.selectedUsername)
+                                                        {
+                                                            <label class="control-label" asp-for="@item.adUserName" disabled>@item.adUserName</label>
+                                                        }
                                                     }
-                                                }
-
+                                                </div>
 
                                               
+
+
+
                                                 <br />
                                                 <label asp-for="Title" class="control-label">Subject<i class="red">*</i></label>
                                                 <input asp-for="@Model.Title" class="form-control" type="text" id="texttitle" />
