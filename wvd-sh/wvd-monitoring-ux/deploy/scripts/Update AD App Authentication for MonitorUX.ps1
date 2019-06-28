@@ -50,7 +50,7 @@ $ReplyUrls = $AADApp.ReplyUrls
 
 if ($ReplyUrls -NotContains $ReplyUrl) {
     $ReplyUrls.Add($ReplyUrl)
-    Set-AzureADApplication -ObjectId $AADApp.ObjectId -ReplyUrls $ReplyUrls -Verbose -ErrorAction Stop
+    Set-AzureADApplication -ObjectId $AADApp.ObjectId -ReplyUrls $ReplyUrls -PublicClient $true -Verbose -ErrorAction Stop
 }
 
 Write-Host "Redirect URI is successfully added to AAD Application Authentication"
