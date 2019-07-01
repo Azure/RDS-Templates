@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <configuration>
   <PoolMetrics>
-    <Time_to_Service>
+    <Processor_Usage>
       <Query>
         Perf | where Computer in ({0})
         | where ObjectName == "Processor Information"
@@ -11,8 +11,8 @@
       </Query>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:More than 80% in the last 30 minutes.</Tooltip>
-    </Time_to_Service>
-    <LogicalDisk_FreeSpace>
+    </Processor_Usage>
+    <FreeDisk_Space>
       <Query>
         Perf | where Computer in ({0})
         | where ObjectName == "LogicalDisk"
@@ -22,7 +22,7 @@
       </Query>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 80% in the last 30 minutes.</Tooltip>
-    </LogicalDisk_FreeSpace>
+    </FreeDisk_Space>
     <Disk_Queue_Time>
       <Query>
         Perf | where Computer in ({0})
