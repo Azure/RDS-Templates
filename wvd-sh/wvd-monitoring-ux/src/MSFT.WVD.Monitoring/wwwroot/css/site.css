@@ -1742,13 +1742,45 @@ section {
         font-weight: 500;
     }
 
-#activityTabledata tbody tr td span.hover-copy {
-    /*color: #fff;*/
-    cursor: pointer;
-    margin-left: 5px;
-}
-
-    #activityTabledata tbody tr td span.hover-copy:hover {
-        color: #333;
+    #activityTabledata tbody tr td a.hover-copy {
+        display: inline-block;
     }
+
+    #activityTabledata tbody tr td a.hover-copy:hover {
+        text-decoration: underline;
+        display: inline-block;
+    }
+
+    #activityTabledata tbody tr td a.hover-copy i {
+        color: #fff;
+        cursor: pointer;
+        margin-left: 5px;
+        position: relative;
+    }
+
+        #activityTabledata tbody tr td a.hover-copy i:after {
+            content: attr(data-popuptext);
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 3px;
+            opacity: 0;
+            top: 0;
+            left: 0;
+            position: absolute;
+            transition: 500ms ease;
+            white-space: nowrap;
+            max-height: 0;
+            color: #fff;
+            font-family: 'Segoe UI';
+        }
+
+        #activityTabledata tbody tr td a.hover-copy i:hover:after {
+            opacity: 1;
+            top: -2.5em;
+            max-height: 200px;
+            padding: .4em;
+        }
+
+        #activityTabledata tbody tr td a.hover-copy, #activityTabledata tbody tr td a.hover-copy:hover i {
+            color: #333;
+        }
 

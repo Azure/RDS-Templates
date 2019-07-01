@@ -36,7 +36,7 @@
 
     <hr />
     <div class="export-btn">
-        <button class="ms-Button ms-Button--default float-left" onclick="download_csv()">
+        <button class="ms-Button ms-Button--default float-left" onclick="download_csv()" id="export">
             <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
         </button>
     </div>
@@ -49,7 +49,7 @@
             <ul class="ms-ContextualMenu is-hidden ms-ContextualMenu--multiselect">
                 <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">clear all filters</li>
                 <li class="ms-ContextualMenu-item ms-ContextualMenu-item--divider"></li>
-                <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Issues from</li>
+                <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Issues from</li>s
                 <li class="ms-ContextualMenu-item">
                     @{
                         IDictionary<string, string> routeData = new Dictionary<string, string>();
@@ -154,31 +154,31 @@
                                 if (count == 1)
                                 {
                                     
-                                    <tr>
-                                        <td></td>
+                <tr>
+                    <td></td>
 
 
-                                        <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span style="@customstyle" ><i id="icon-@index" onclick="icontoggle(this)" class="ms-Icon ms-Icon--ChevronUp" aria-hidden="true"></i></span></button></td>
-                                        <td><span>@d.activityId</span><span class="hover-copy"><i  class="ms-Icon ms-Icon--Copy" title="copy to clipboard" aria-hidden="true"></i></span></td>
-                                        <td>@d.startTime</td>
-                                        <td>@d.endTime</td>
-                                        <td>@d.outcome</td>
-                                        <td>@err["errorInternal"]</td>
-                                        <td onclick="showErrorDetailsPanel(@err)">@err["errorCodeSymbolic"]</td>
-                                        <td style="display: none;">@err["errorCode"]</td>
-                                        <td style="display: none;">@err["errorMessage"]</td>
-                                        <td style="display: none;">@err["time"]</td>
-                                        <td>
-                                            <a asp-controller="DiagnoseIssues"
-                                               asp-action="ActivityHostDetails"
-                                               asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
-                                        </td>
-                                        <td>@d.ClientOS</td>
-                                        <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
-                                        <td>@d.SessionHostPoolName</td>
-                                        <td>@d.Tenants</td>
+                    <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span style="@customstyle"><i id="icon-@index" onclick="icontoggle(this)" class="ms-Icon ms-Icon--ChevronUp" aria-hidden="true"></i></span></button></td>
+                    <td><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy"  aria-hidden="true"></i></a></td>
+                    <td>@d.startTime</td>
+                    <td>@d.endTime</td>
+                    <td>@d.outcome</td>
+                    <td>@err["errorInternal"]</td>
+                    <td onclick="showErrorDetailsPanel(@err)">@err["errorCodeSymbolic"]</td>
+                    <td style="display: none;">@err["errorCode"]</td>
+                    <td style="display: none;">@err["errorMessage"]</td>
+                    <td style="display: none;">@err["time"]</td>
+                    <td>
+                        <a asp-controller="DiagnoseIssues"
+                           asp-action="ActivityHostDetails"
+                           asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
+                    </td>
+                    <td>@d.ClientOS</td>
+                    <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
+                    <td>@d.SessionHostPoolName</td>
+                    <td>@d.Tenants</td>
 
-                                    </tr>
+                </tr>
                                 }
                                 else
                                 {
@@ -208,7 +208,8 @@
                                     <tr>
                                         <td></td>
                                         <td></td>
-                                        <td><span>@d.activityId</span><span class="hover-copy"><i class="ms-Icon ms-Icon--Copy" title="copy to clipboard" aria-hidden="true"></i></span></td>
+                                        @*<td><a href="javascript:void(0);">@d.activityId</a><span class="hover-copy"><i class="ms-Icon ms-Icon--Copy" title="copy to clipboard" aria-hidden="true"></i></span></td>*@
+                                        <td><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy"  aria-hidden="true"></i></a></td>
                                         <td>@d.startTime</td>
                                         <td>@d.endTime</td>
                                         <td>@d.outcome</td>
@@ -404,11 +405,16 @@
             csv += "\n";
         });
         console.log(csv);
-        var hiddenElement = document.createElement('a');
-        hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-        hiddenElement.target = '_blank';
-        hiddenElement.download = 'DiagnosticActivities.csv';
-        hiddenElement.click();
+        var fileName = "DiagnosticActivities";
+        var uri = 'data:application/csv;charset=utf-8,' + escape(csv);
+        var link = document.createElement("a");
+        link.href = uri;
+        link.style = "visibility:hidden";
+        link.download = fileName + ".csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+       
     }
  
 </script>
