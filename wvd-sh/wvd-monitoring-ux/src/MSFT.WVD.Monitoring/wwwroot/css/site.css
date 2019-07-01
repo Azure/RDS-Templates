@@ -1781,6 +1781,6 @@ section {
         }
 
         #activityTabledata tbody tr td a.hover-copy, #activityTabledata tbody tr td a.hover-copy:hover i {
-            color: #333;
+            color: #333333b3 !important;
         }
 
