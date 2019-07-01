@@ -1744,6 +1744,7 @@ section {
 
     #activityTabledata tbody tr td a.hover-copy {
         display: inline-block;
+        font-weight: 500;
     }
 
     #activityTabledata tbody tr td a.hover-copy:hover {
@@ -1781,6 +1782,6 @@ section {
         }
 
         #activityTabledata tbody tr td a.hover-copy, #activityTabledata tbody tr td a.hover-copy:hover i {
-            color: #333333b3 !important;
+            color: #333 !important;
         }
 
