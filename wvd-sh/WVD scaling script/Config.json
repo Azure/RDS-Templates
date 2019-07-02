@@ -16,7 +16,6 @@
 					"_Comments": "use AADServicePrincipalSecret filed for testing only, set via New-StoredCredential",
 					"Name": "AADServicePrincipalSecret",
 					"Value": ""
-
 				},
 				{
 					"_Comments": "Subscription Id of the Azure",
@@ -47,6 +46,11 @@
 					"_Comments": "Session Load Balancing Peak Hours",
 					"Name": "sessionLoadBalancingPeakHours",
 					"Value": "9:00-18:00"
+				},
+				{
+					"_Comments": "Name of the Maintainance Tag",
+					"Name": "maintainanceTagName",
+					"Value": "maintainance"
 				}
 			]
 		},

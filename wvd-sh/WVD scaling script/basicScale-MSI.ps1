@@ -296,16 +296,24 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                         #Check the session host status and session host is healthy or not before starting the host
                         if ($sessionhost.Status -eq "NoHeartbeat" -and $sessionhost.UpdateState -eq "Succeeded") {
                             $sessionhostname = $sessionhost.sessionhostname | out-string
+                                $VMName = $sessionhostname.Split(".")[0]
+                                $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
+                                #Check the Session host is in Maintainance
+                                if($VmInfo.Tags.Keys -contains  $maintainanceTagName){
+                                Write-Log 1 "Session Host is in Maintainace: $sessionhostname"
+                                Continue
+                                }
+
                             #Check session host is in AllownewConnections Mode
-                            $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
+                            $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhost.sessionhostname
                             if (!($checkAllowNewSession.AllowNewSession)) {
-                                Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname -AllowNewSession $true
+                                Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhost.sessionhostname -AllowNewSession $true
                             }
-                            $VMName = $sessionhostname.Split(".")[0]
+                            
                             #start the azureRM VM
                             try {
-                                Get-AzureRmVM | Where-Object { $_.Name -eq $VMName } | Start-AzureRmVM
-
+                                Write-Log 1 "Starting Azure VM: $VMName and waiting for it to complete ..." "Info"
+                                Start-AzureRmVM -Name $VMName -ResourceGroupName $VmInfo.ResourceGroupName
                             }
                             catch {
                                 Write-Log 1 "Failed to start Azure VM: $($VMName) with error: $($_.exception.message)" "Info"
@@ -315,7 +323,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                             $IsHostAvailable = $false
                             while (!$IsHostAvailable) {
 
-                                $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
+                                $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhost.sessionhostname
 
                                 if ($hoststatus.Status -eq "Available") {
                                     $IsHostAvailable = $true
@@ -341,16 +349,24 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                             if ($sHost.Status -eq "NoHeartbeat" -and $sHost.UpdateState -eq "Succeeded") {
                                 Write-Log 1 "Existing Sessionhost Sessions value reached near by hostpool maximumsession limit need to start the session host" "Info"
                                 $sessionhostname = $sHost.sessionhostname | out-string
-                                #Check session host is in allow new connection mode
-                                $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
-                                if (!($checkAllowNewSession.AllowNewSession)) {
-                                    Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname -AllowNewSession $true
-                                }
                                 $VMName = $sessionHostname.Split(".")[0]
-
+                                #Check the Session host is in maintainance
+                                $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
+                                if($VmInfo.Tags.Keys -contains $maintainanceTagName){
+                                Write-Log 1 "Session Host is in Maintainace: $sessionhostname"
+                                Continue
+                                }
+                                
+                                #Check session host is in allow new connection mode
+                                $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sHost.sessionhostname
+                                if (!($checkAllowNewSession.AllowNewSession)) {
+                                    Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sHost.sessionhostname -AllowNewSession $true
+                                }
+                                
                                 #start the azureRM VM
                                 try {
-                                    Get-AzureRmVM | Where-Object { $_.Name -eq $VMName } | Start-AzureRmVM
+                                    Write-Log 1 "Starting Azure VM: $VMName and waiting for it to complete ..." "Info"
+                                    Start-AzureRmVM -Name $VMName -ResourceGroupName $VMInfo.ResourceGroupName
                                 }
                                 catch {
                                     Write-Log 1 "Failed to start Azure VM: $($VMName) with error: $($_.exception.message)" "Info"
@@ -360,7 +376,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                                 $IsHostAvailable = $false
                                 while (!$IsHostAvailable) {
 
-                                    $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
+                                    $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sHost.sessionhostname
 
                                     if ($hoststatus.Status -eq "Available") {
                                         $IsHostAvailable = $true
@@ -368,9 +384,11 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                                 }
                                 $numberOfRunningHost = $numberOfRunningHost + 1
                                 break
-                            }
+                            
                         }
                     }
+                
+                }
                 }
             }
         }
@@ -480,13 +498,23 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                                 }
                             }
                         }
+
+
                         $VMName = $sessionHost.Split(".")[0]
+                          #Check the Session host is in maintainance
+                                $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
+                                if($VmInfo.Tags.Keys -contains $maintainanceTagName){
+                                Write-Log 1 "Session Host is in Maintainace: $($sessionHost | out-string)"
+                                $numberOfRunningHost = $numberOfRunningHost - 1
+                                Continue
+                                }
+
                         #check the session count before shutting down the VM
                         if ($existingSession -eq 0) {
                             #shutdown the Azure VM
                             try {
                                 Write-Log 1 "Stopping Azure VM: $VMName and waiting for it to complete ..." "Info"
-                                Get-AzureRmVM | Where-Object { $_.Name -eq $VMName } | Stop-AzureRmVM -Force
+                                Stop-AzureRmVM -Name $VMName -ResourceGroupName $VmInfo.ResourceGroupName -Force
                             }
                             catch {
                                 Write-Log 1 "Failed to stop Azure VM: $VMName with error: $_.exception.message" "Info"
@@ -563,16 +591,26 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                             if ($sessionHost.Status -eq "NoHeartbeat" -and $sessionhost.UpdateState -eq "Succeeded") {
                                 Write-Log 1 "Existing Sessionhost Sessions value reached near by hostpool maximumsession limit need to start the session host" "Info"
                                 $sessionhostname = $sessionHost.sessionhostname | Out-String
-                                #Check session host is in allow new connection mode
-                                $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
-                                if (!($checkAllowNewSession.AllowNewSession)) {
-                                    Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname -AllowNewSession $true
-                                }
+                                
                                 $VMName = $sessionHostname.Split(".")[0]
+                                $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
+                                #Check the Session host is in Maintainance
+                                if($VmInfo.Tags.Keys -eq $maintainanceTagName){
+                                Write-Log 1 "Session Host is in Maintainace: $sessionhostname"
+                                Continue
+                                }
+                                
+                                #Check session host is in allow new connection mode
+                                $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost.sessionhostname
+                                if (!($checkAllowNewSession.AllowNewSession)) {
+                                    Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost.sessionhostname -AllowNewSession $true
+                                }
+                               
 
                                 #start the azureRM VM
                                 try {
-                                    Get-AzureRmVM | Where-Object { $_.Name -eq $VMName } | Start-AzureRmVM
+									Write-Log 1 "Starting Azure VM: $VMName and waiting for it to complete ..." "Info"
+                                    Start-AzureRmVM -Name $VMName -ResourceGroupName $VmInfo.ResourceGroupName
                                 }
                                 catch {
                                     Write-Log 1 "Failed to start Azure VM: $($VMName) with error: $($_.exception.message)" "Info"
@@ -582,7 +620,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                                 $IsHostAvailable = $false
                                 while (!$IsHostAvailable) {
 
-                                    $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhostname
+                                    $hoststatus = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost.sessionhostname
 
                                     if ($hoststatus.Status -eq "Available") {
                                         $IsHostAvailable = $true
@@ -601,7 +639,6 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                                 break
                             }
                         }
-                        #}
                     }
                 }
             }
@@ -656,6 +693,12 @@ else {
             Write-Log 1 "Checking session host:$($sessionHost.SessionHostName | Out-String)  of sessions:$($sessionHost.Sessions) and status:$($sessionHost.Status)" "Info"
             $hostName = $sessionHost.SessionHostName | Out-String
             $VMName = $hostName.Split(".")[0]
+            $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
+             #Check the Session host is in Maintainance
+             if($VmInfo.Tags.Keys -contains $maintainanceTagName){
+             Write-Log 1 "Session Host is in Maintainace: $hostName"
+             Continue
+             }
             $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
             if ($hostName.ToLower().Contains($roleInstance.Name.ToLower())) {
                 #check the azure vm is running or not      
@@ -676,6 +719,13 @@ else {
                 #check whether the number of running VMs meets the minimum or not
                 if ($numberOfRunningHost -lt $MinimumNumberOfRDSH) {
                     $VMName = $sessionHost.Split(".")[0]
+                     $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
+                    #Check the Session host is in Maintainance
+                    if($VmInfo.Tags.Keys -contains $maintainanceTagName){
+                        Write-Log 1 "Session Host is in Maintainace: $($sessionhost | out-string )"
+                        Continue
+                        }
+                    
                     $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
                     if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
                         
@@ -688,6 +738,7 @@ else {
                             }
                             #start the azure VM
                             try {
+								Write-Log 1 "Starting Azure VM: $($roleInstance.Name) and waiting for it to complete ..." "Info"
                                 Start-AzureRmVM -Name $roleInstance.Name -Id $roleInstance.Id -ErrorAction SilentlyContinue
                             }
                             catch {
@@ -729,6 +780,13 @@ else {
                 foreach ($sessionHost in $RDSessionHost.sessionhostname) {
                     if ($hostPoolUserSessions.Count -ge $AvailableSessionCapacity) {
                         $VMName = $sessionHost.Split(".")[0]
+                          $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
+                            #Check the Session host is in Maintainance
+                            if($VmInfo.Tags.Keys -contains $maintainanceTagName){
+                                 Write-Log 1 "Session Host is in Maintainace: $($sessionhost | out-string)"
+                                 Continue
+                                }
+
                         $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
 
                         if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
@@ -741,6 +799,7 @@ else {
                                 }
                                 #start the Azure VM
                                 try {
+									Write-Log 1 "Starting Azure VM: $($roleInstance.Name) and waiting for it to complete ..." "Info"
                                     Start-AzureRmVM -Name $roleInstance.Name -Id $roleInstance.Id -ErrorAction SilentlyContinue
 
                                 }
@@ -929,9 +988,20 @@ else {
                                         }
                                     }
                                 }
+                                
+                              
                                 #check the session count before shutting down the VM
                                 if ($existingSession -eq 0) {
 
+                                    #Check the Session host is in maintainance
+                                    $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
+                                    if($VmInfo.Tags.Keys -contains $maintainanceTagName){
+                                    Write-Log 1 "Session Host is in Maintainace: $($sessionHost | out-string)"
+                                    $numberOfRunningHost = $numberOfRunningHost - 1
+                                    Continue
+                                    }
+
+                                
                                     #shutdown the Azure VM
                                     try {
                                         Write-Log 1 "Stopping Azure VM: $($roleInstance.Name) and waiting for it to complete ..." "Info"
@@ -963,7 +1033,7 @@ else {
                                             Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true -ErrorAction SilentlyContinue
                                         }
                                         catch {
-                                            Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost.SessionHost) with error: $($_.exception.message)" "Error"
+                                            Write-Log 1 "Unable to set it to allow connections on session host: $($sessionHost | Out-String) with error: $($_.exception.message)" "Error"
                                             exit 1
                                         }
                                     }
@@ -1027,19 +1097,27 @@ else {
                 foreach ($sessionHost in $RDSessionHost) {
                     $hostname = $sessionHost.SessionHostname | out-string
                     $VMName = $hostname.Split(".")[0]
+                    
+                    $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
+                    #Check the Session host is in Maintainance
+                    if($VmInfo.Tags.Keys -contains $maintainanceTagName){
+                        Write-Log 1 "Session Host is in Maintainace: $hostname"
+                        Continue
+                        }
                     $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
 
                     if ($sessionHost.Status -eq "Available" -and $sessionHost.Sessions -eq 0) 
                     { break }
                     if ($hostname.ToLower().Contains($roleInstance.Name.ToLower())) {
                         #check if the Azure VM is running or not and session host is healthy or not
-                        $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $hostname
+                        $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost.SessionHostname
                         if ($roleInstance.PowerState -ne "VM running" -and $getShsinfo.UpdateState -eq "Succeeded") {
                             if ($getShsinfo.AllowNewSession -eq $false) {
-                                Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $hostname -AllowNewSession $true
+                                Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost.SessionHostname -AllowNewSession $true
                             }
                             #start the Azure VM
                             try {
+								Write-Log 1 "Starting Azure VM: $($roleInstance.Name) and waiting for it to complete ..." "Info"
                                 Start-AzureRmVM -Name $roleInstance.Name -Id $roleInstance.Id -ErrorAction SilentlyContinue
                             }
                             catch {
