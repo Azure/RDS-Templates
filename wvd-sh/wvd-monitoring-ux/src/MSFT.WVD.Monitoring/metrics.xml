@@ -14,55 +14,57 @@
     </Processor_Usage>
     <FreeDisk_Space>
       <Query>
-        Perf | where Computer in ({0})
-        | where ObjectName == "LogicalDisk"
-        | where CounterName == "% Free Space"
-        | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer
-        | project avg = 0, Value , Computer, Status = iff(Value &lt; 20, 0, 2)
+        <![CDATA[
+       Perf | where Computer in ({0})
+       | where ObjectName == "LogicalDisk"
+       | where CounterName == "% Free Space"
+       | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer
+       | project avg = 0, Value , Computer, Status = iff(Value < 20, 0, 2)]]>
       </Query>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 80% in the last 30 minutes.</Tooltip>
     </FreeDisk_Space>
-    <Disk_Queue_Time>
+    <Disk_Queue_Length>
       <Query>
         Perf | where Computer in ({0})
         | where ObjectName == "LogicalDisk"
         | where CounterName == "Avg. Disk Queue Length"
         | where InstanceName == "C:"
         | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer
-        | project avg = 0, Value, Computer, Status = iff(Value &gt; 5, 0, 2)
+        | project avg = 0, Value, Computer, Status = iff(Value > 5, 0, 2)
       </Query>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 80% in the last 30 minutes.</Tooltip>
-    </Disk_Queue_Time>
+    </Disk_Queue_Length>
     <Memory_Page_Faults>
       <Query>
-        Perf | where Computer in ({0})
-        | where ObjectName == "Memory"
-        | where CounterName == "Available MBytes"
-        | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer
-        | project avg = 0, Value, Computer, Status = iff(Value &lt; 500, 0, 2)
+        <![CDATA[
+       Perf | where Computer in ({0})
+       | where ObjectName == "Memory"
+       | where CounterName == "Available MBytes"
+       | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer
+       | project avg = 0, Value, Computer, Status = iff(Value < 500, 0, 2)]]>
       </Query>
       <Drilldown>
-      Perf
-      | where Computer == {0}
-      | where ObjectName == "Memory"
-      | where CounterName == "Available MBytes"
+        Perf
+        | where Computer == {0}
+        | where ObjectName == "Memory"
+        | where CounterName == "Available MBytes"
       </Drilldown>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 1GB in the last 30 minutes.</Tooltip>
     </Memory_Page_Faults>
-	<Response_time_for_machine>
-	<Query>
-    Perf | where Computer in ({0})
-    | where ObjectName == 'User Input Delay per Session'
-    | where CounterName == 'Max Input Delay'
-    | where CounterValue != 0
-    | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer
-    | project   avg = 0, Value, Computer, Status = iff(Value > 2000 , 0, 2)
-  </Query>
-	 <timespan>PT30M</timespan>
-	</Response_time_for_machine>
-	
+    <Response_time_for_machine>
+      <Query>
+        Perf | where Computer in ({0})
+        | where ObjectName == 'User Input Delay per Session'
+        | where CounterName == 'Max Input Delay'
+        | where CounterValue != 0
+        | summarize  (TimeGenerated, Value)=arg_min(TimeGenerated,CounterValue) by Computer
+        | project   avg = 0, Value, Computer, Status = iff(Value > 2000 , 0, 2)
+      </Query>
+      <timespan>PT30M</timespan>
+    </Response_time_for_machine>
+
   </PoolMetrics>
 </configuration>

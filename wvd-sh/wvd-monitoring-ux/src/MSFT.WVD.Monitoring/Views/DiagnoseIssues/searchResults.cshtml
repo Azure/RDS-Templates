@@ -61,7 +61,7 @@
                 <li class="ms-ContextualMenu-item">
                     @{
                         IDictionary<string, string> routeData1 = new Dictionary<string, string>();
-                        routeData1.Add("interval", "Lastonehour");
+                        routeData1.Add("interval", "sixhoursago");
                         routeData1.Add("upn", Model.DiagonizeQuery.UPN);
                     }
                     <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData1">6 hours ago</a>
@@ -117,7 +117,7 @@
                 <tr>
                     <th></th>
                     <th></th>
-                    <th asp-for="Activity Id">Activity Id</th>
+
                     <th asp-for="Start Time">Start Time</th>
                     <th asp-for="End Time">End Time</th>
                     <th asp-for="Outcome">Outcome</th>
@@ -132,6 +132,7 @@
                     <th asp-for="Client Ip">Client IP</th>
                     <th asp-for="HostPoolname">HostPool</th>
                     <th asp-for="Tenant">Tenant</th>
+                    <th asp-for="Activity Id">Activity Id</th>
                 </tr>
             </thead>
 
@@ -159,7 +160,7 @@
 
 
                     <td><button class="chevron-btn" id="btnRowHide-@index" type="button" onclick="{rowClick(@index)}"><span style="@customstyle"><i id="icon-@index" onclick="icontoggle(this)" class="ms-Icon ms-Icon--ChevronUp" aria-hidden="true"></i></span></button></td>
-                    <td><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy"  aria-hidden="true"></i></a></td>
+
                     <td>@d.startTime</td>
                     <td>@d.endTime</td>
                     <td>@d.outcome</td>
@@ -177,26 +178,28 @@
                     <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
                     <td>@d.SessionHostPoolName</td>
                     <td>@d.Tenants</td>
+                    <td><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy" aria-hidden="true"></i></a></td>
 
                 </tr>
                                 }
                                 else
                                 {
-                                    <tr class="trData-@index" style="visibility:hidden;display:none;">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td>@err["errorInternal"]</td>
-                                        <td onclick="showErrorDetailsPanel(@err)">@err["errorCodeSymbolic"]</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
+                <tr class="trData-@index" style="visibility:hidden;display:none;">
+                    <td></td>
+                    <td></td>
+
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>@err["errorInternal"]</td>
+                    <td onclick="showErrorDetailsPanel(@err)">@err["errorCodeSymbolic"]</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
 
                                 }
 
@@ -205,26 +208,26 @@
                         }
                         else
                         {
-                                    <tr>
-                                        <td></td>
-                                        <td></td>
-                                        @*<td><a href="javascript:void(0);">@d.activityId</a><span class="hover-copy"><i class="ms-Icon ms-Icon--Copy" title="copy to clipboard" aria-hidden="true"></i></span></td>*@
-                                        <td><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy"  aria-hidden="true"></i></a></td>
-                                        <td>@d.startTime</td>
-                                        <td>@d.endTime</td>
-                                        <td>@d.outcome</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td>
-                                            <a asp-controller="DiagnoseIssues"
-                                               asp-action="ActivityHostDetails"
-                                               asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
-                                        </td>
-                                        <td>@d.ClientOS</td>
-                                        <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
-                                        <td>@d.SessionHostPoolName</td>
-                                        <td>@d.Tenants</td>
-                                    </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    @*<td><a href="javascript:void(0);">@d.activityId</a><span class="hover-copy"><i class="ms-Icon ms-Icon--Copy" title="copy to clipboard" aria-hidden="true"></i></span></td>*@
+                    <td>@d.startTime</td>
+                    <td>@d.endTime</td>
+                    <td>@d.outcome</td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <a asp-controller="DiagnoseIssues"
+                           asp-action="ActivityHostDetails"
+                           asp-route-id="@d.activityId" class="ms-ContextualMenu-item">@d.SessionHostName</a>
+                    </td>
+                    <td>@d.ClientOS</td>
+                    <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
+                    <td>@d.SessionHostPoolName</td>
+                    <td>@d.Tenants</td>
+                    <td><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy" aria-hidden="true"></i></a></td>
+                </tr>
                         }
 
 
@@ -235,42 +238,44 @@
                 {
                     @foreach (var d in Model.ManagementActivity)
                     {
-                        <tr>
-                            <td>@d.activityId</td>
-                            <td>@d.activityType</td>
-                            <td>@d.outcome</td>
-                            <td>
-                                @(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")
-                            </td>
-                            <td>@d.errorMessage</td>
-                            <td>@d.Tenants</td>
-                            <td>@d.userName</td>
-                            <td>@d.startTime</td>
-                            <td>@d.endTime</td>
-                            <td>@d.ObjectsCreated</td>
-                            <td>@d.ObjectsDeleted</td>
-                            <td>@d.ObjectsFetched</td>
+                <tr>
 
-                            <td>@d.ObjectsUpdated</td>
-                        </tr>
+                    <td>@d.activityType</td>
+                    <td>@d.outcome</td>
+                    <td>
+                        @(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")
+                    </td>
+                    <td>@d.errorMessage</td>
+                    <td>@d.Tenants</td>
+                    <td>@d.userName</td>
+                    <td>@d.startTime</td>
+                    <td>@d.endTime</td>
+                    <td>@d.ObjectsCreated</td>
+                    <td>@d.ObjectsDeleted</td>
+                    <td>@d.ObjectsFetched</td>
+
+                    <td>@d.ObjectsUpdated</td>
+                    <td>@d.activityId</td>
+                </tr>
                     }
                 }
                 else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.Feed)
                 {
                     @foreach (var d in Model.FeedActivity)
                     {
-                        <tr>
-                            <td>@d.activityId </td>
-                            <td>@d.activityType </td>
-                            <td>@d.startTime </td>
-                            <td>@d.endTime </td>
-                            <td>@d.userName</td>
-                            <td>@d.outcome </td>
-                            <td> @(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")</td>
-                            <td>@d.errorMessage </td>
-                            <td><a href="" class="not-active">@d.ClientIPAddress </a></td>
-                            <td>@d.ClientOS </td>
-                        </tr>
+                <tr>
+
+                    <td>@d.activityType </td>
+                    <td>@d.startTime </td>
+                    <td>@d.endTime </td>
+                    <td>@d.userName</td>
+                    <td>@d.outcome </td>
+                    <td> @(d.isInternalError != null && d.isInternalError.ToString() == "true" ? "Yes" : "No")</td>
+                    <td>@d.errorMessage </td>
+                    <td><a href="" class="not-active">@d.ClientIPAddress </a></td>
+                    <td>@d.ClientOS </td>
+                    <td>@d.activityId </td>
+                </tr>
                     }
                 }
                 else if (Model.ActivityType == MSFT.WVD.Monitoring.Common.Models.ActivityType.None)

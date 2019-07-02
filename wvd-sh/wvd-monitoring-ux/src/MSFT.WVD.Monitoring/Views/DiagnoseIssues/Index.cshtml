@@ -56,7 +56,7 @@
                 <li class="ms-ContextualMenu-item">
                     @{
                         IDictionary<string, string> routeData1 = new Dictionary<string, string>();
-                        routeData1.Add("interval", "Lastonehour");
+                        routeData1.Add("interval", "sixhoursago");
                         routeData1.Add("upn", Model.DiagonizeQuery.UPN);
                     }
                     <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData1">6 hours ago</a>
@@ -102,7 +102,7 @@
     <table class="ms-Table">
         <thead>
             <tr>
-                <th asp-for="Activity Id">Activity Id</th>
+
                 <th asp-for="Start Time">Start Time</th>
                 <th asp-for="End Time">End Time</th>
                 <th asp-for="Outcome">Outcome</th>
@@ -113,6 +113,7 @@
                 <th asp-for="Client Ip">Client Ip</th>
                 <th asp-for="HostPoolname">HostPoolname</th>
                 <th asp-for="Tenant">Tenant</th>
+                <th asp-for="Activity Id">Activity Id</th>
             </tr>
         </thead>
     </table>

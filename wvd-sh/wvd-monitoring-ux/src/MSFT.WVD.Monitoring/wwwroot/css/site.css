@@ -353,7 +353,7 @@ html, body {
 .activitytable {
     padding-right: 12px;
     padding-top: 50px; 
-    overflow-x:auto
+    /*overflow-x:auto*/
 }
 .norecordstable {
     padding-top: 10%;
@@ -1235,7 +1235,7 @@ html, body {
 .activitytable {
     padding-right: 12px;
     padding-top: 50px; 
-    overflow-x:auto
+    /*overflow-x:auto*/
 }
 .norecordstable {
     padding-top: 10%;
@@ -1765,7 +1765,7 @@ section {
             border-radius: 3px;
             opacity: 0;
             top: 0;
-            left: 0;
+            left: -100%;
             position: absolute;
             transition: 500ms ease;
             white-space: nowrap;

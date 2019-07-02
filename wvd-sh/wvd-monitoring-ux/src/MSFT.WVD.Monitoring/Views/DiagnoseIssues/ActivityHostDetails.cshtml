@@ -8,7 +8,7 @@
         <h2>
             <a asp-controller="DiagnoseIssues"
                asp-action="SearchResults"><i class="fa fa-chevron-left" aria-hidden="false"></i></a>
-           Activity feed <i class="fa fa-chevron-right" aria-hidden="false"></i> @Model.ConnectionActivity.SessionHostName Status
+            Activity feed <i class="fa fa-chevron-right" aria-hidden="false"></i> @Model.ConnectionActivity.SessionHostName Status
         </h2>
     </div>
     <div lass="width-100 content-section users-session">
@@ -53,7 +53,7 @@
                 </div>
             </div>
 
-           
+
             <section class="ms-Grid-col ms-xxxl4 ms-xxl6 ms-xl12">
                 @{
                     var tab1Style = Model.ShowConnectedUser ? "" : "active";
@@ -71,7 +71,7 @@
                         <a href="#tab2">User Connected</a>
                     </li>
                 </ul>
-              
+
                 <!-- Tab panes -->
                 <div class="tab-content">
                     <div class="@tabPan1Style" id="tab1">
@@ -116,10 +116,16 @@
                                 }
                                 @foreach (var item in Model.VMPerformance.CurrentStateCounters)
                                 {
-                                    var value =  item.Value != 0 ? item.Value.ToString() : "N/A";
+
+                                    var resultVal = item.Value == 0 ? "NA" :
+                                    (item.ObjectName == "Processor Usage" || item.ObjectName == "FreeDisk Space" ? string.Concat(item.Value.ToString(), " %") : (
+                                        item.ObjectName == "Disk Queue Time" ? item.Value.ToString() : (item.ObjectName == "Memory Page Faults" ? string.Concat(item.Value.ToString(), " MB") :
+                                        item.ObjectName == "Response time for machine" ? string.Concat(item.Value.ToString(), " ms") : null)));
+
                                     <tr>
-                                        <td>@item.ObjectName</td>
-                                        <td> @value</td>
+                                        <td>@item.ObjectName </td>
+                                        @*<td>@value  </td>*@
+                                        <td>@resultVal</td>
                                     </tr>
                                 }
                             </table>
@@ -168,33 +174,33 @@
 
                             }
                         }
-                       
+
                         @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
                         {
 
-                                    <div class="anchorlinksdiv m-b-25" id="anchorlinksdiv">
-                                        <div class="docs-DialogExample-default">
-                                            <div class="ms-Dialog">
-                                                <div class="ms-Dialog-title">Log Off Users</div>
-                                                <div class="ms-Dialog-content">
-                                                    <p class="ms-Dialog-subText">You are about to logoff  user(s).Are you sure you want to continue?</p>
-                                                </div>
-                                                <div class="ms-Dialog-actions">
-                                                    <button class="ms-Button message-user ms-Dialog-action ms-Button--primary" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
-                                                        <span class="ms-Button-label">Continue</span>
-                                                    </button>
-                                                    <button type="button"  class="ms-Button ms-Dialog-action">
-                                                        <span class="ms-Button-label">Cancel</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <button class="ms-Button docs-DialogExample-button" type="button"><span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--SignOut"></i>Logoff</span></button>
-                                            <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
-                                                <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Mail"></i>Message</span>
+                            <div class="anchorlinksdiv m-b-25" id="anchorlinksdiv">
+                                <div class="docs-DialogExample-default">
+                                    <div class="ms-Dialog">
+                                        <div class="ms-Dialog-title">Log Off Users</div>
+                                        <div class="ms-Dialog-content">
+                                            <p class="ms-Dialog-subText">You are about to logoff  user(s).Are you sure you want to continue?</p>
+                                        </div>
+                                        <div class="ms-Dialog-actions">
+                                            <button class="ms-Button message-user ms-Dialog-action ms-Button--primary" asp-action="LogOffUserSession" type="submit" id="btnlogOff">
+                                                <span class="ms-Button-label">Continue</span>
                                             </button>
-                                            <label class="docs-DialogExample-label"></label>
+                                            <button type="button" class="ms-Button ms-Dialog-action">
+                                                <span class="ms-Button-label">Cancel</span>
+                                            </button>
                                         </div>
                                     </div>
+                                    <button class="ms-Button docs-DialogExample-button" type="button"><span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--SignOut"></i>Logoff</span></button>
+                                    <button class="ms-Button message-user" asp-action="InitiateSendMessage" type="submit" id="msguserbtn">
+                                        <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Mail"></i>Message</span>
+                                    </button>
+                                    <label class="docs-DialogExample-label"></label>
+                                </div>
+                            </div>
                             <div class="tab-table">
                                 <table class="ms-Table">
                                     <thead>
@@ -211,8 +217,8 @@
                                             <tbody>
                                                 <tr>
                                                     <td>
-                                                     @{ var UserName = @Model.UserSessions[i].adUserName; }
-                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox" onchange="oncheckboxchecked(event,this)" > <!---->
+                                                        @{ var UserName = @Model.UserSessions[i].adUserName; }
+                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox" onchange="oncheckboxchecked(event,this)"> <!---->
                                                         <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
@@ -240,7 +246,7 @@
                                 <h4>There is no active user sessions.</h4>
                             </div>
                         }
-                        @if (Model.ShowMessageForm ==true)
+                        @if (Model.ShowMessageForm == true)
                         {
                             <div class="ms-PanelExample" id="sendmessagediv">
                                 <div class="flyoutpanel ms-Panel is-open">
@@ -262,7 +268,7 @@
                                                     }
                                                 </div>
 
-                                              
+
 
 
 
@@ -277,7 +283,7 @@
                                             </div>
                                         </div>
                                         <div class="flyoutpanel-footer sendmessage">
-                                           
+
                                             <button asp-action="SendMessage" type="submit" class="ms-Button primary-btn" id="sendmsg">
                                                 <span class="ms-Button-label">Send Message</span>
                                             </button>
@@ -427,43 +433,43 @@
             openDialog(dialog);
         };
         function actionHandler(event) {
-          
+
             var counter = 0;
             for (var i = 0; i < checkBoxComponents.length; i++) {
                 if (checkBoxComponents[i].getValue()) {
                     counter++;
                 }
             }
-            
+
         }
         function openDialog(dialog) {
             // Open the dialog
             dialogComponent.open();
         }
-      
-           
-       
+
+
+
     }());
 </script>
 <script>
- 
+
     function oncheckboxchecked(event) {
         var data = document.getElementsByClassName("chkbox");
         var tableData = document.getElementsByClassName("ms-Table");
         var checkData = [];
         for (var i = 0; i < data.length; i++) {
             if (data[i].checked == true) {
-               var username=tableData[1].rows[i + 1].cells[1].innerText;
+                var username = tableData[1].rows[i + 1].cells[1].innerText;
                 // checkData.push(username);
                 document.getElementById("textusername").value = username;
-                console.log(document.getElementById("textusername").value, "value")   
+                console.log(document.getElementById("textusername").value, "value")
             }
         }
         console.log(username, "username")
-       
-      
-       
-       
+
+
+
+
     }
 
 </script>
