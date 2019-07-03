@@ -118,9 +118,9 @@
                                 {
 
                                     var resultVal = item.Value == 0 ? "NA" :
-                                    (item.ObjectName == "Processor Usage" || item.ObjectName == "FreeDisk Space" ? string.Concat(item.Value.ToString(), " %") : (
-                                        item.ObjectName == "Disk Queue Time" ? item.Value.ToString() : (item.ObjectName == "Memory Page Faults" ? string.Concat(item.Value.ToString(), " MB") :
-                                        item.ObjectName == "Response time for machine" ? string.Concat(item.Value.ToString(), " ms") : null)));
+                                    (item.ObjectName == "Processor Usage" ? string.Concat(Math.Round(item.Value, 2).ToString(), " %") : item.ObjectName == "Free Disk Space" ? string.Concat(Math.Round(item.Value, 2).ToString(), " %") : (
+                                        item.ObjectName == "Avg. Disk Queue Length" ? item.Value.ToString() : (item.ObjectName == "Memory Usage" ? string.Concat(item.Value.ToString(), " MB") :
+                                        item.ObjectName == "Input Delay" ? string.Concat(item.Value.ToString(), " ms") : null)));
 
                                     <tr>
                                         <td>@item.ObjectName </td>

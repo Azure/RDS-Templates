@@ -96,6 +96,14 @@
                     }
                     <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData5">Success</a>
                 </li>
+                <li class="ms-ContextualMenu-item">
+                    @{
+                        IDictionary<string, string> routeData6 = new Dictionary<string, string>();
+                        routeData6.Add("outcome", "All");
+                        routeData6.Add("upn", Model.DiagonizeQuery.UPN);
+                    }
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData6">All</a>
+                </li>
             </ul>
         </div>
         <div class="clear"></div>
