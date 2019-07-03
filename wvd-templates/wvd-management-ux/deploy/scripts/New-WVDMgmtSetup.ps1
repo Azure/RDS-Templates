@@ -95,26 +95,37 @@ try
                 }
                 }
                 	
-                $wvdInfraWebAppName = $serviceIdinfo.DisplayName
+                $wvdInfraWebAppObjId = $serviceIdinfo.Id.Guid
                 #generate unique ID based on subscription ID
                 $unique_subscription_id = ($subscriptionid).Replace('-', '').substring(0, 19)
                 
 
                 #generate the display name for native app in AAD
                 $wvdSaaS_clientapp_display_name = "wvdSaaS" + $ResourceGroupName.ToLowerInvariant() + $unique_subscription_id.ToLowerInvariant()
-                #Creating Client application in azure ad
+                #Creating ClientApp Ad application in azure Active Directory
                 Connect-AzureAD -Credential $Cred
                 $clientAdApp = New-AzureADApplication -DisplayName $wvdSaaS_clientapp_display_name -ReplyUrls $redirectURL -PublicClient $true -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
-                $resourceAppId = Get-AzureADServicePrincipal -SearchString $wvdInfraWebAppName | Where-Object {$_.DisplayName -eq $wvdInfraWebAppName}
-                $clientappreq = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
-                $clientappreq.ResourceAppId = $resourceAppId.AppId
-                foreach($permission in $resourceAppId.Oauth2Permissions){
-                    $clientappreq.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
+                
+                #Collecting WVD Serviceprincipal Api Permission
+                $WVDServicePrincipal = Get-AzureADServicePrincipal -ObjectId $wvdInfraWebAppObjId #-SearchString $wvdInfraWebAppName | Where-Object {$_.DisplayName -eq $wvdInfraWebAppName}
+                $AzureAdResouceAcessObject = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
+                $AzureAdResouceAcessObject.ResourceAppId = $WVDServicePrincipal.AppId
+                foreach($permission in $WVDServicePrincipal.Oauth2Permissions){
+                $AzureAdResouceAcessObject.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
                 }
-                #Setting up the WVD Required Access to Client Application
-				 Set-AzureADApplication -ObjectId $clientAdApp.ObjectId -RequiredResourceAccess $clientappreq -ErrorAction Stop
 
-				}
+                #Collecting AzureService Management Api permission
+                $AzureServMgmtApi = Get-AzureRmADServicePrincipal -ApplicationId "797f4846-ba00-4fd7-ba43-dac1f8f63013"
+                $AzureAdServMgmtApi = Get-AzureADServicePrincipal -ObjectId $AzureServMgmtApi.Id.Guid
+                $AzureServMgmtApiResouceAcessObject = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
+                $AzureServMgmtApiResouceAcessObject.ResourceAppId = $AzureAdServMgmtApi.AppId
+                foreach($SerVMgmtAPipermission in $AzureAdServMgmtApi.Oauth2Permissions){
+                $AzureServMgmtApiResouceAcessObject.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $SerVMgmtAPipermission.Id,"Scope"
+                }
+
+                #Adding WVD Api Required Access and Azure Service Management Api required access Permissions to ClientAPP AD Application.
+				Set-AzureADApplication -ObjectId $clientAdApp.ObjectId -RequiredResourceAccess $AzureAdResouceAcessObject,$AzureServMgmtApiResouceAcessObject -ErrorAction Stop
+                }
                 
         catch
         {
