@@ -25,7 +25,7 @@
                     </div>
                 </div>
                 <div class="form-wrap ms-Grid-col ms-xxxl3 ms-xxl4 ms-xl12 p-l-r-15 m-b-20">
-                    <button type="submit" class="ms-Button primary-btn" id="process" asp-action="returnToIndex">
+                    <button type="submit" class="ms-Button primary-btn" asp-action="returnToIndex">
                         <span class="ms-Button-label">New Search</span>
                     </button>
                 </div>
@@ -56,7 +56,7 @@
                         routeData.Add("interval", "Lastonehour");
                         routeData.Add("upn", Model.DiagonizeQuery.UPN);
                     }
-                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData">Last hour</a>
+                    <a class="ms-ContextualMenu-link" id="process" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData">Last hour</a>
                 </li>
                 <li class="ms-ContextualMenu-item">
                     @{
@@ -100,6 +100,14 @@
                     }
                     <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData5">Success</a>
                 </li>
+                <li class="ms-ContextualMenu-item">
+                    @{
+                        IDictionary<string, string> routeData6 = new Dictionary<string, string>();
+                        routeData6.Add("outcome", "All");
+                        routeData6.Add("upn", Model.DiagonizeQuery.UPN);
+                    }
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData6">All</a>
+                </li>
             </ul>
         </div>
         <div class="clear"></div>
@@ -122,7 +130,7 @@
                     <th asp-for="End Time">End Time</th>
                     <th asp-for="Outcome">Outcome</th>
 
-                    <th asp-for="ErrorType">Error Type</th>
+                    <th asp-for="ErrorType">Service Error</th>
                     <th asp-for="Error">Error Code</th>
                     <th asp-for="Error" style="display: none;"></th>
                     <th asp-for="Error" style="display: none;"></th>
@@ -226,7 +234,7 @@
                     <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
                     <td>@d.SessionHostPoolName</td>
                     <td>@d.Tenants</td>
-                    <td><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy" aria-hidden="true"></i></a></td>
+                    <td id="copy"><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy" aria-hidden="true"></i></a></td>
                 </tr>
                         }
 
@@ -346,14 +354,13 @@
                 document.getElementById("validateUpn").style.display = "none";
             }, false);
         document.getElementById("loader1").hidden = true;
-        document.getElementById("process").addEventListener("click", function () {
-            document.getElementById("loader1").hidden = true;
+        document.getElementsByClassName("ms-ContextualMenu-link").addEventListener("click", function () {
+            document.getElementById("loader1").hidden = false;
         }, false);
     })();
 </script>
 <script type="text/javascript">
     var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
-    console.log(ContextualMenuElements);
     for (var i = 0; i < ContextualMenuElements.length; i++) {
         var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
         var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
@@ -424,7 +431,7 @@
  
 </script>
 <script>
-    const copytoclipboard = document.querySelectorAll('table td');
+    const copytoclipboard = document.querySelectorAll('table td a i');
     copytoclipboard.forEach(color => {
         color.addEventListener('click', () => {
             const selection = window.getSelection();

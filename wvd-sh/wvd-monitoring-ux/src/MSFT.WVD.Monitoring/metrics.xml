@@ -12,7 +12,7 @@
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:More than 80% in the last 30 minutes.</Tooltip>
     </Processor_Usage>
-    <FreeDisk_Space>
+    <Free_Disk_Space>
       <Query>
         <![CDATA[
        Perf | where Computer in ({0})
@@ -23,8 +23,8 @@
       </Query>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 80% in the last 30 minutes.</Tooltip>
-    </FreeDisk_Space>
-    <Disk_Queue_Length>
+    </Free_Disk_Space>
+    <Avg._Disk_Queue_Length>
       <Query>
         Perf | where Computer in ({0})
         | where ObjectName == "LogicalDisk"
@@ -35,8 +35,8 @@
       </Query>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 80% in the last 30 minutes.</Tooltip>
-    </Disk_Queue_Length>
-    <Memory_Page_Faults>
+    </Avg._Disk_Queue_Length>
+    <Memory_Usage>
       <Query>
         <![CDATA[
        Perf | where Computer in ({0})
@@ -53,8 +53,8 @@
       </Drilldown>
       <timespan>PT30M</timespan>
       <Tooltip>Unhealthy:Less than 1GB in the last 30 minutes.</Tooltip>
-    </Memory_Page_Faults>
-    <Response_time_for_machine>
+    </Memory_Usage>
+    <Input_Delay>
       <Query>
         Perf | where Computer in ({0})
         | where ObjectName == 'User Input Delay per Session'
@@ -64,7 +64,6 @@
         | project   avg = 0, Value, Computer, Status = iff(Value > 2000 , 0, 2)
       </Query>
       <timespan>PT30M</timespan>
-    </Response_time_for_machine>
-
+    </Input_Delay>
   </PoolMetrics>
 </configuration>

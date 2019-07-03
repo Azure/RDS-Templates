@@ -179,7 +179,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 } };
                 HttpContext.Session.Set("WVDRoles", roles);
                 HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleAssignment);
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "DiagnoseIssues");
             }
             else
             {

@@ -95,6 +95,14 @@
                     }
                     <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData5">Success</a>
                 </li>
+                <li class="ms-ContextualMenu-item">
+                    @{
+                        IDictionary<string, string> routeData6 = new Dictionary<string, string>();
+                        routeData6.Add("outcome", "All");
+                        routeData6.Add("upn", Model.DiagonizeQuery.UPN);
+                    }
+                    <a class="ms-ContextualMenu-link" tabindex="1" asp-controller="DiagnoseIssues" asp-action="IssuesInterval" asp-all-route-data="routeData6">All</a>
+                </li>
             </ul>
         </div>
         <div class="clear"></div>
@@ -106,7 +114,7 @@
                 <th asp-for="Start Time">Start Time</th>
                 <th asp-for="End Time">End Time</th>
                 <th asp-for="Outcome">Outcome</th>
-                <th asp-for="Type">Error Type</th>
+                <th asp-for="Type">Service Error</th>
                 <th asp-for="Error">Error Code</th>
                 <th asp-for="Session Host">Session Host</th>
                 <th asp-for="Client">Client</th>
@@ -128,12 +136,6 @@
 <script>
     (function () {
         document.getElementById("Diagnosebreadcrumb").style.display = "block";
-        //var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
-        //for (var i = 0; i < ContextualMenuElements.length; i++) {
-        //    var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
-        //    var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
-        //    new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
-        //}
         var TableElements = document.querySelectorAll(".ms-Table");
         for (var i = 0; i < TableElements.length; i++) {
             new fabric['Table'](TableElements[i]);
