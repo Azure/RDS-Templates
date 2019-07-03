@@ -186,7 +186,7 @@
                     <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
                     <td>@d.SessionHostPoolName</td>
                     <td>@d.Tenants</td>
-                    <td><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy" aria-hidden="true"></i></a></td>
+                    <td><a href="javascript:void(0);" class="hover-copy"><span>@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy" aria-hidden="true"></i></span></a></td>
 
                 </tr>
                                 }
@@ -234,7 +234,7 @@
                     <td><a href="" class="not-active">@d.ClientIPAddress</a></td>
                     <td>@d.SessionHostPoolName</td>
                     <td>@d.Tenants</td>
-                    <td id="copy"><a href="javascript:void(0);" class="hover-copy">@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy" aria-hidden="true"></i></a></td>
+                    <td id="copy"><a href="javascript:void(0);" class="hover-copy"><span>@d.activityId<i data-popuptext="Copy to clipboard" class="ms-Icon ms-Icon--Copy" aria-hidden="true"></i></span></a></td>
                 </tr>
                         }
 
@@ -431,7 +431,7 @@
  
 </script>
 <script>
-    const copytoclipboard = document.querySelectorAll('table td a i');
+    const copytoclipboard = document.querySelectorAll('table td a span');
     copytoclipboard.forEach(color => {
         color.addEventListener('click', () => {
             const selection = window.getSelection();
