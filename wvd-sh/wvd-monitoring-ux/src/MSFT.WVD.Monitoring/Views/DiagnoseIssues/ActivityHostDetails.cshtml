@@ -13,7 +13,7 @@
     </div>
     <div lass="width-100 content-section users-session">
         <form asp-controller="DiagnoseIssues" method="post" id="msgForm" class="ms-Grid-row">
-            <div class="ms-Grid m-b-25 ms-Grid-col ms-xxxl4 ms-xxl6 ms-xl12 border-right" dir="ltr">
+            <div class="ms-Grid m-b-25 ms-Grid-col ms-xxxl4 ms-xxl6 ms-xl6 border-right" dir="ltr">
                 <div class="ms-Grid-row">
                     <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl0 ms-xl12 m-b-25">
                         <label asp-for="ConnectionActivity.activityId" class="control-label">Activity Id:</label>
@@ -54,7 +54,7 @@
             </div>
 
 
-            <section class="ms-Grid-col ms-xxxl4 ms-xxl6 ms-xl12">
+            <section class="ms-Grid-col ms-xxxl4 ms-xxl6 ms-xl6">
                 @{
                     var tab1Style = Model.ShowConnectedUser ? "" : "active";
                     var tabPan1Style = Model.ShowConnectedUser ? "tab-pane" : "tab-pane active";
@@ -216,6 +216,7 @@
                                             bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
                                             <tbody>
                                                 <tr>
+
                                                     <td>
                                                         @{ var UserName = @Model.UserSessions[i].adUserName; }
                                                         <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox" onchange="oncheckboxchecked(event,this)"> <!---->

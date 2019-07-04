@@ -118,7 +118,7 @@
         <div id="loader1" class="loader"></div>
     }
     <span class="countitems">@Model.ConnectionActivity.Count items</span>
-    <div class="activitytable" id="table">
+    <div class="activitytable table-responsive" id="table">
 
         <table class="ms-Table" id="activityTabledata">
             <thead>
@@ -331,6 +331,7 @@
                         <label class="control-label">Time:</label>
                         <input type="text" class="form-control" id="Time" style="border: none;box-shadow: none;" />
                     </div>
+                    <p><a href="https://go.microsoft.com/fwlink/?linkid=2098183" target="_blank" class="detailslink">Learn more about this error</a></p>
                 </div>
 
             </div>
@@ -462,11 +463,10 @@
 </script>
 <script>
     function showErrorDetailsPanel(data) {
-
+        console.log(data,"data")
         document.getElementById("errordetailspanel").style.display = "block";
         document.getElementById("errordetailspanel").style.visibility = "visible";
-        document.getElementById('errorcode').value = data.errorCode;
-
+        document.getElementById('errorcode').value = data.errorCode + '('+ data.errorCodeSymbolic +')';
         document.getElementById('Internal').value = data.errorInternal;
         document.getElementById('Message').value = data.errorMessage;
         document.getElementById('Time').value = data.time;

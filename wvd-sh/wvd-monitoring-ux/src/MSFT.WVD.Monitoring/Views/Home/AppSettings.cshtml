@@ -5,11 +5,12 @@
     var tenant = Context.Session.Get<string>("SelectedTenantName");
 }
 <div class="ms-PanelExample">
-    <div class="flyoutpanel ms-Panel is-open">
+    <div class="flyoutpanel ms-Panel is-open" id="flyoutpanel">
         <form asp-controller="Home" asp-action="Save" method="post">
             <div class="flyoutpanel-content-wrap">
                 <div class="flyoutpanel-header">
                     <h4>Please choose Tenant Group &amp; Tenant</h4>
+                    <button type="button"  style="margin-top:11px;" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
                 </div>
                 <div class="flyoutpanel-content">
                     <div class="flyoutpanel-controls">
@@ -79,5 +80,10 @@
                 });
             }());
         }
+        document.getElementById("btnSlideClose").addEventListener("click", function () {
+            document.getElementById("flyoutpanel").style.display = "none";
+            document.getElementById("texttitle").value = "";
+            document.getElementById("texterror").value = "";
+        });
     })();
 </script>
