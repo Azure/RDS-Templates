@@ -189,6 +189,14 @@ namespace MSFT.WVD.Monitoring.Controllers
                             Status = "Success"
                         });
                     }
+                    else if (response == HttpStatusCode.Forbidden.ToString() || response == HttpStatusCode.Unauthorized.ToString())
+                    {
+                        messageStatus.Add(new MessageStatus()
+                        {
+                            Message = $"Failed to log off  {item.adUserName} . You don't have permissions to log off user.",
+                            Status = "Error"
+                        });
+                    }
                     else
                     {
                         messageStatus.Add(new MessageStatus()
@@ -316,6 +324,14 @@ namespace MSFT.WVD.Monitoring.Controllers
                                     Status = "Success"
                                 });
                                
+                            }
+                            else if(response== HttpStatusCode.Forbidden.ToString() || response == HttpStatusCode.Unauthorized.ToString())
+                            {
+                                messageStatus.Add(new MessageStatus()
+                                {
+                                    Message = $"Failed to send message to {item.adUserName} . You don't have permissions to send message.",
+                                    Status = "Error"
+                                });
                             }
                             else
                             {
