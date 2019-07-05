@@ -62,7 +62,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                 tenant = HttpContext.Session.Get<string>("SelectedTenantName");
                 if(string.IsNullOrEmpty(tenantGroupName) || string.IsNullOrEmpty(tenant))
                 {
-                    return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)HttpStatusCode.Forbidden, Message = "Invalid tennat group name or tenant name." });
+                    return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)HttpStatusCode.Forbidden, Message = "Invalid tenant group name or tenant name." });
                 }
                 else
                 {
@@ -92,8 +92,8 @@ namespace MSFT.WVD.Monitoring.Controllers
                         if (viewData.ManagementActivity?.Count > 0 && viewData.ManagementActivity[0].ErrorDetails != null)
                         {
                             _logger.LogError($"Error Occured : {viewData.ManagementActivity[0].ErrorDetails.Message}");
-                            return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ManagementActivity[0].ErrorDetails.StatusCode, Message = viewData.ManagementActivity[0].ErrorDetails.Message });
-                        }
+                            return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ManagementActivity[0].ErrorDetails.StatusCode, Message = "Access Denied!You are not authorized.Please contact system administrator"  });
+                            }
                         viewData.ActivityType = viewData.ManagementActivity?.Count() > 0 ? ActivityType.Management : ActivityType.None;
                     }
                     else if (data.DiagonizeQuery.ActivityType == ActivityType.Connection)
@@ -105,7 +105,7 @@ namespace MSFT.WVD.Monitoring.Controllers
                         if (viewData.ConnectionActivity?.Count > 0 && viewData.ConnectionActivity[0].ErrorDetails != null)
                         {
                             _logger.LogError($"Error Occured : {viewData.ConnectionActivity[0].ErrorDetails.Message}");
-                            return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ConnectionActivity[0].ErrorDetails.StatusCode, Message = viewData.ConnectionActivity[0].ErrorDetails.Message });
+                            return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)viewData.ConnectionActivity[0].ErrorDetails.StatusCode, Message = "Access Denied!You are not authorized.Please contact system administrator" });
                         }
 
                         viewData.ActivityType = viewData.ConnectionActivity?.Count() > 0 ? ActivityType.Connection : ActivityType.None;
@@ -187,6 +187,14 @@ namespace MSFT.WVD.Monitoring.Controllers
                         {
                             Message = $"Log off successfully for {item.adUserName} user session.",
                             Status = "Success"
+                        });
+                    }
+                    else if (response == HttpStatusCode.Forbidden.ToString() || response == HttpStatusCode.Unauthorized.ToString())
+                    {
+                        messageStatus.Add(new MessageStatus()
+                        {
+                            Message = $"Failed to log off  {item.adUserName} . You don't have permissions to log off user.",
+                            Status = "Error"
                         });
                     }
                     else
@@ -316,6 +324,14 @@ namespace MSFT.WVD.Monitoring.Controllers
                                     Status = "Success"
                                 });
                                
+                            }
+                            else if(response== HttpStatusCode.Forbidden.ToString() || response == HttpStatusCode.Unauthorized.ToString())
+                            {
+                                messageStatus.Add(new MessageStatus()
+                                {
+                                    Message = $"Failed to send message to {item.adUserName} . You don't have permissions to send message.",
+                                    Status = "Error"
+                                });
                             }
                             else
                             {
