@@ -56,25 +56,22 @@ $ClientSecret=$PasswordCredential.Value
 
 Write-Output "Creating a new Application in AAD" -Verbose
 
-# Prepare an Identifier URI
-$IdentifierUri = "https://" + $AppName +"."+ "azurewebsites.net"
-
 # Create a new AD Application
-$azAdApplication=New-AzADApplication -DisplayName $AppName -IdentifierUris $IdentifierUri -AvailableToOtherTenants $false -ErrorAction Stop 
+$azAdApplication=New-AzureADApplication -DisplayName $AppName -PublicClient $true 
 
 # Create an app credential to the Application
 $SecureClientSecret=ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
-
 New-AzADAppCredential -ObjectId $azAdApplication.ObjectId -Password $SecureClientSecret -StartDate $startDate -EndDate $startDate.AddYears(1)
-$AppId = $azAdApplication.ApplicationId
 
-# Get the ClientID
-$ClientId=$AppId.Guid
+# Get ClientId
+$ClientId = $azAdApplication.AppId
+
 Write-Output "Azure AAD Application creation completed successfully (Application Id: $ClientId)" -Verbose
 
 # Create new Service Principal
 Write-Output "Creating a new Service Principal" -Verbose
-$ServicePrincipal = New-AzADServicePrincipal -ApplicationId $ClientId
+$ServicePrincipal = New-AzADServicePrincipal -ApplicationId $ClientId 
+Get-AzADServicePrincipal -ApplicationId $ClientId
 $ServicePrincipalName = $ServicePrincipal.ServicePrincipalNames
 Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose
 

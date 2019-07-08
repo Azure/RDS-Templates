@@ -46,12 +46,12 @@ $AADApp = Get-AzADApplication -ApplicationId $AADApplicationId
 
 $ReplyUrls = $AADApp.ReplyUrls
 
-
 # Add Reply URL if not already in the list 
 
 if ($ReplyUrls -NotContains $ReplyUrl) {
     $ReplyUrls.Add($ReplyUrl)
-    Set-AzADApplication -ObjectId $AADApp.ObjectId -ReplyUrls $ReplyUrls -ErrorAction Stop
+
+    Set-AzADApplication -ObjectId $AADApp.ObjectId -ReplyUrl $ReplyUrls -AvailableToOtherTenants $true
 }
 
 Write-Host "Redirect URI is successfully added to AAD Application Authentication"
