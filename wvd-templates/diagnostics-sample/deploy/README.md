@@ -1,4 +1,4 @@
-# Create WVD-MONITORING-UX Environment
+# Create WVD-Diagnostics-UX Environment
 
 Deploy the web app to your azure environment.
 
