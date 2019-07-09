@@ -484,7 +484,7 @@
 						"name": "domainToJoin",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Domain to join",
-						"toolTip": "FQDN of the AD Domain to which sesion host VMs are going to be joined. For example, 'contoso.com' or 'site1.contoso.com'.",
+						"toolTip": "FQDN of the AD Domain to which session host VMs are going to be joined. For example, 'contoso.com' or 'site1.contoso.com'.",
 						"defaultValue": "",
 						"constraints": {
 							"required": false,
