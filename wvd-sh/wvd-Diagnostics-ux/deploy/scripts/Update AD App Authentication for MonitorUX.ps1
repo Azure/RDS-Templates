@@ -27,30 +27,31 @@ Param(
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 
 # Importing the modules
-Import-Module Azure
+Import-Module Az
 Import-Module AzureAD
 
 # Provide the credentials to authenticate to Azure/AzureAD
 $Credentials=Get-Credential
 
 #Authenticating to Azure
-Login-AzureRmAccount -Credential $Credentials
+Login-AzAccount -Credential $Credentials
 
 # Authentcating to AzureAD
 Connect-AzureAD -Credential $Credentials
 
 $ReplyUrl = "$RedirectURI/security/signin-callback"
+
 # Get Azure AD App
-$AADApp = Get-AzureADApplication -Filter "AppId eq '$($AADApplicationId)'"
+$AADApp = Get-AzADApplication -ApplicationId $AADApplicationId
 
 $ReplyUrls = $AADApp.ReplyUrls
-
 
 # Add Reply URL if not already in the list 
 
 if ($ReplyUrls -NotContains $ReplyUrl) {
     $ReplyUrls.Add($ReplyUrl)
-    Set-AzureADApplication -ObjectId $AADApp.ObjectId -ReplyUrls $ReplyUrls -PublicClient $true -Verbose -ErrorAction Stop
+
+    Set-AzADApplication -ObjectId $AADApp.ObjectId -ReplyUrl $ReplyUrls -AvailableToOtherTenants $true
 }
 
 Write-Host "Redirect URI is successfully added to AAD Application Authentication"

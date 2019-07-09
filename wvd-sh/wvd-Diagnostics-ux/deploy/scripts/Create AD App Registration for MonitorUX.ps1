@@ -15,7 +15,7 @@ Param(
 
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string] $AADAppDisplayName
+    [string] $AppName
 
 )
 
@@ -23,28 +23,29 @@ Param(
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 
 # Importing the modules
-Import-Module Azure
+Import-Module Az
 Import-Module AzureAD
 
 # Provide the credentials to authenticate to Azure/AzureAD
 $Credentials=Get-Credential
 
-#Authenticating to Azure
-Login-AzureRmAccount -Credential $Credentials
+# Authenticating to Azure
+Login-AzAccount -Credential $Credentials
 
-# Authentcating to AzureAD
+# Authenticating to AzureAD
 Connect-AzureAD -Credential $Credentials
 
 # Check if AD Application exist
-$existingApplication = Get-AzureRmADApplication -DisplayName $AADAppDisplayName -ErrorAction SilentlyContinue
+$existingApplication = Get-AzADApplication -DisplayName $AppName -ErrorAction SilentlyContinue
 if ($existingApplication -ne $null) {
     $appId = $existingApplication.ApplicationId
     Write-Output "An AAD Application already exists with (Application Id: $appId). Choose a different app display name"  -Verbose
     return
 }
+
 # Create an application secret
 $startDate = Get-Date
-$endDate = $startDate.AddYears($script:yearsOfExpiration)
+$endDate = $startDate.AddYears(1)
 $Guid = New-Guid
 $PasswordCredential = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordCredential
 $PasswordCredential.StartDate = $startDate
@@ -55,23 +56,22 @@ $ClientSecret=$PasswordCredential.Value
 
 Write-Output "Creating a new Application in AAD" -Verbose
 
-# Create an unique App Registration Name
-$date=Get-Date -UFormat %d%m%y
-$DisplayName=$AADAppDisplayName+"-"+($date)
-
 # Create a new AD Application
-$azureAdApplication=New-AzureADApplication -DisplayName $DisplayName -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
+$azAdApplication=New-AzureADApplication -DisplayName $AppName -PublicClient $true 
 
-# Create an app creadential to the Application
+# Create an app credential to the Application
 $SecureClientSecret=ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
-New-AzureRmADAppCredential -ObjectId $azureAdApplication.ObjectId -Password $SecureClientSecret
+New-AzADAppCredential -ObjectId $azAdApplication.ObjectId -Password $SecureClientSecret -StartDate $startDate -EndDate $startDate.AddYears(1)
 
-$ClientId = $azureAdApplication.AppId
+# Get ClientId
+$ClientId = $azAdApplication.AppId
+
 Write-Output "Azure AAD Application creation completed successfully (Application Id: $ClientId)" -Verbose
 
 # Create new Service Principal
 Write-Output "Creating a new Service Principal" -Verbose
-$ServicePrincipal = New-AzureRmADServicePrincipal -ApplicationId $ClientId
+$ServicePrincipal = New-AzADServicePrincipal -ApplicationId $ClientId 
+Get-AzADServicePrincipal -ApplicationId $ClientId
 $ServicePrincipalName = $ServicePrincipal.ServicePrincipalNames
 Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose
 
@@ -79,7 +79,7 @@ Write-Output "Service Principal creation completed successfully with $ServicePri
 Write-Output "Waiting for SPN creation to reflect in Directory before Role assignment"
 Start-Sleep 25
 Write-Output "Assigning contributor role to Service Principal App ($ClientId)" -Verbose
-New-AzureRmRoleAssignment -RoleDefinitionName "contributor" -ServicePrincipalName $ClientId
+New-AzRoleAssignment -ApplicationId $ClientId -RoleDefinitionName "contributor"
 Write-Output "Service Principal role assignment completed successfully" -Verbose 
 
 # Set windows virtual desktop permission to Client App Registration
@@ -106,7 +106,7 @@ $AzureGraphApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.Azur
 
 
 # Add the WVD API,Log Analytics API and Microsoft Graph API permissions to the ADApplication
-Set-AzureADApplication -ObjectId $azureAdApplication.ObjectId -RequiredResourceAccess $AzureLogAnalyticsApiAccess,$AzureWVDApiAccess,$AzureGraphApiAccess -ErrorAction Stop
+Set-AzureADApplication -ObjectId $azAdApplication.ObjectId -RequiredResourceAccess $AzureLogAnalyticsApiAccess,$AzureWVDApiAccess,$AzureGraphApiAccess -ErrorAction Stop
 
 #Get the Client Id/Application Id and Client Secret
 Write-Output "Client Id : $ClientId"
