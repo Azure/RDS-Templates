@@ -48,9 +48,9 @@
 					"Value": "9:00-18:00"
 				},
 				{
-					"_Comments": "Name of the Maintainance Tag",
-					"Name": "maintainanceTagName",
-					"Value": "maintainance"
+					"_Comments": "Name of the maintenance Tag",
+					"Name": "maintenanceTagName",
+					"Value": ""
 				}
 			]
 		},

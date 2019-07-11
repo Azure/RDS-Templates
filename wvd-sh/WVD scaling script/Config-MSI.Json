@@ -38,9 +38,9 @@
 					"Value": "9:00-3:00"
 				},
 				{
-					"_Comments": "Name of the Maintainance Tag",
-					"Name": "maintainanceTagName",
-					"Value": "maintainance"
+					"_Comments": "Name of the maintenance Tag",
+					"Name": "maintenanceTagName",
+					"Value": ""
 				},
 				{
 					"_Comments": "Keyvault name where the WVD Tenant Admin Account or Service Principal GUID have stored secret",

@@ -151,7 +151,7 @@ $Variable.WVDScale.Deployment | ForEach-Object { $_.Variable } | Where-Object { 
 $TimeDifference = [string]$TimeDifferenceInHours
 $CurrentDateTime = ConvertUTCtoLocal -timeDifferenceInHours $TimeDifference
 
-# Checking WVD Modules are existed or not
+# Checking if the WVD Modules are existed
 $WVDModules = Get-InstalledModule -Name "Microsoft.RDInfra.RDPowershell" -ErrorAction SilentlyContinue
 if (!$WVDModules) {
     Write-Log 1 "WVD Modules doesn't exist. Ensure WVD Modules are installed if not execute this command 'Install-Module Microsoft.RDInfra.RDPowershell  -AllowClobber' "
@@ -293,18 +293,18 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                 if ($numberOfRunningHost -lt $MinimumNumberOfRDSH) {
                     $hostofsessions = $sessionHost.Sessions
                     if ($hostpoolMaxSessionLimit -ne $hostofsessions) {
-                        #Check the session host status and session host is healthy or not before starting the host
+                        #Check the session host status and if the session host is healthy before starting the host
                         if ($sessionhost.Status -eq "NoHeartbeat" -and $sessionhost.UpdateState -eq "Succeeded") {
                             $sessionhostname = $sessionhost.sessionhostname | out-string
                                 $VMName = $sessionhostname.Split(".")[0]
                                 $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
-                                #Check the Session host is in Maintainance
-                                if($VmInfo.Tags.Keys -contains  $maintainanceTagName){
-                                Write-Log 1 "Session Host is in Maintainace: $sessionhostname"
+                                #Check the Session host is in maintenance
+                                if($VmInfo.Tags.Keys -contains  $maintenanceTagName){
+                                Write-Log 1 "Session Host is in Maintenance: $sessionhostname"
                                 Continue
                                 }
 
-                            #Check session host is in AllownewConnections Mode
+                            #check if the session host is allowing new connections
                             $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhost.sessionhostname
                             if (!($checkAllowNewSession.AllowNewSession)) {
                                 Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionhost.sessionhostname -AllowNewSession $true
@@ -345,19 +345,19 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                     if ($sessionHost.Sessions -ge $SessionhostLimit) {
                         foreach ($sHost in $getHosts) {
                             if ($sHost.Status -eq "Available" -and $sHost.Sessions -eq 0) { break }
-                            #Check the session host status and session host is healthy or not before starting the host
+                            #Check the session host status and if the session host is healthy before starting the host
                             if ($sHost.Status -eq "NoHeartbeat" -and $sHost.UpdateState -eq "Succeeded") {
                                 Write-Log 1 "Existing Sessionhost Sessions value reached near by hostpool maximumsession limit need to start the session host" "Info"
                                 $sessionhostname = $sHost.sessionhostname | out-string
                                 $VMName = $sessionHostname.Split(".")[0]
-                                #Check the Session host is in maintainance
+                                #Check the Session host is in maintenance
                                 $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
-                                if($VmInfo.Tags.Keys -contains $maintainanceTagName){
-                                Write-Log 1 "Session Host is in Maintainace: $sessionhostname"
+                                if($VmInfo.Tags.Keys -contains $maintenanceTagName){
+                                Write-Log 1 "Session Host is in Maintenance: $sessionhostname"
                                 Continue
                                 }
                                 
-                                #Check session host is in allow new connection mode
+                                #Check if the session host is allowing new connections
                                 $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sHost.sessionhostname
                                 if (!($checkAllowNewSession.AllowNewSession)) {
                                     Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sHost.sessionhostname -AllowNewSession $true
@@ -501,10 +501,10 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
 
 
                         $VMName = $sessionHost.Split(".")[0]
-                          #Check the Session host is in maintainance
+                          #Check the Session host is in maintenance
                                 $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
-                                if($VmInfo.Tags.Keys -contains $maintainanceTagName){
-                                Write-Log 1 "Session Host is in Maintainace: $($sessionHost | out-string)"
+                                if($VmInfo.Tags.Keys -contains $maintenanceTagName){
+                                Write-Log 1 "Session Host is in Maintenance: $($sessionHost | out-string)"
                                 $numberOfRunningHost = $numberOfRunningHost - 1
                                 Continue
                                 }
@@ -522,7 +522,7 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                             }
                         }
 
-                        #Check the session host server is healthy or not before enabling allow new session property true
+                        #Check if the session host server is healthy before enable allowing new connections
                         if ($sessionHostinfo.UpdateState -eq "Succeeded") {
                             #Ensure the Azure VMs that are off have the AllowNewSession mode set to True
                             try {
@@ -587,20 +587,20 @@ if ($hostpoolInfo.LoadBalancerType -eq "DepthFirst") {
                         foreach ($sessionhost in $getHosts) {
                             if ($sessionHost.Status -eq "Available" -and $sessionHost.Sessions -eq 0) 
                             { break }
-                            #Check the session host status and session host is healthy or not before starting the host
+                            #Check the session host status and if the session host is healthy before starting the host
                             if ($sessionHost.Status -eq "NoHeartbeat" -and $sessionhost.UpdateState -eq "Succeeded") {
                                 Write-Log 1 "Existing Sessionhost Sessions value reached near by hostpool maximumsession limit need to start the session host" "Info"
                                 $sessionhostname = $sessionHost.sessionhostname | Out-String
                                 
                                 $VMName = $sessionHostname.Split(".")[0]
                                 $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
-                                #Check the Session host is in Maintainance
-                                if($VmInfo.Tags.Keys -eq $maintainanceTagName){
-                                Write-Log 1 "Session Host is in Maintainace: $sessionhostname"
+                                #Check the Session host is in maintenance
+                                if($VmInfo.Tags.Keys -eq $maintenanceTagName){
+                                Write-Log 1 "Session Host is in Maintenance: $sessionhostname"
                                 Continue
                                 }
                                 
-                                #Check session host is in allow new connection mode
+                                #check if the session host is allowing new connections
                                 $checkAllowNewSession = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost.sessionhostname
                                 if (!($checkAllowNewSession.AllowNewSession)) {
                                     Set-RdsSessionHost -TenantName $tenantname -HostPoolName $hostpoolname -Name $sessionHost.sessionhostname -AllowNewSession $true
@@ -694,14 +694,14 @@ else {
             $hostName = $sessionHost.SessionHostName | Out-String
             $VMName = $hostName.Split(".")[0]
             $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
-             #Check the Session host is in Maintainance
-             if($VmInfo.Tags.Keys -contains $maintainanceTagName){
-             Write-Log 1 "Session Host is in Maintainace: $hostName"
+             #Check the Session host is in maintenance
+             if($VmInfo.Tags.Keys -contains $maintenanceTagName){
+             Write-Log 1 "Session Host is in Maintenance: $hostName"
              Continue
              }
             $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
             if ($hostName.ToLower().Contains($roleInstance.Name.ToLower())) {
-                #check the azure vm is running or not      
+                #check if the azure vm is running       
                 if ($roleInstance.PowerState -eq "VM running") {
                     $numberOfRunningHost = $numberOfRunningHost + 1
                     #Calculate available capacity of sessions						
@@ -720,19 +720,19 @@ else {
                 if ($numberOfRunningHost -lt $MinimumNumberOfRDSH) {
                     $VMName = $sessionHost.Split(".")[0]
                      $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
-                    #Check the Session host is in Maintainance
-                    if($VmInfo.Tags.Keys -contains $maintainanceTagName){
-                        Write-Log 1 "Session Host is in Maintainace: $($sessionhost | out-string )"
+                    #Check the Session host is in maintenance
+                    if($VmInfo.Tags.Keys -contains $maintenanceTagName){
+                        Write-Log 1 "Session Host is in Maintenance: $($sessionhost | out-string )"
                         Continue
                         }
                     
                     $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
                     if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
                         
-                        #Check if the Azure VM is running or not and session host is healthy or not
+                        #Check if the Azure VM is running and if the session host is healthy
                         $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost
                         if ($roleInstance.PowerState -ne "VM running" -and $getShsinfo.UpdateState -eq "Succeeded") {
-                            #Check the session host is allowing new sessions or not
+                            #check if the session host is allowing new connections
                             if ($getShsinfo.AllowNewSession -eq $false) {
                                 Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true
                             }
@@ -781,19 +781,19 @@ else {
                     if ($hostPoolUserSessions.Count -ge $AvailableSessionCapacity) {
                         $VMName = $sessionHost.Split(".")[0]
                           $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
-                            #Check the Session host is in Maintainance
-                            if($VmInfo.Tags.Keys -contains $maintainanceTagName){
-                                 Write-Log 1 "Session Host is in Maintainace: $($sessionhost | out-string)"
+                            #Check the Session host is in maintenance
+                            if($VmInfo.Tags.Keys -contains $maintenanceTagName){
+                                 Write-Log 1 "Session Host is in Maintenance: $($sessionhost | out-string)"
                                  Continue
                                 }
 
                         $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
 
                         if ($sessionHost.ToLower().Contains($roleInstance.Name.ToLower())) {
-                            #check if the Azure VM is running or not and session host is healthy or not
+                            #Check if the Azure VM is running and if the session host is healthy
                             $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost
                             if ($roleInstance.PowerState -ne "VM running" -and $getShsinfo.UpdateState -eq "Succeeded") {
-                                #Check the session host is allowing new sessions or not
+                                #check if the session host is allowing new connections
                                 if ($getShsinfo.AllowNewSession -eq $false) {
                                     Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true
                                 }
@@ -842,7 +842,7 @@ else {
         $depthBool = $false
         Write-UsageLog $hostPoolName $totalRunningCores $numberOfRunningHost $depthBool
     }
-    #} #Peak or not peak hour
+    #} 
     else {
         Write-Log 1 "It is Off-peak hours" "Info"
         Write-Output "It is Off-peak hours"
@@ -993,14 +993,13 @@ else {
                                 #check the session count before shutting down the VM
                                 if ($existingSession -eq 0) {
 
-                                    #Check the Session host is in maintainance
+                                    #Check the Session host is in maintenance
                                     $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
-                                    if($VmInfo.Tags.Keys -contains $maintainanceTagName){
-                                    Write-Log 1 "Session Host is in Maintainace: $($sessionHost | out-string)"
+                                    if($VmInfo.Tags.Keys -contains $maintenanceTagName){
+                                    Write-Log 1 "Session Host is in Maintenance: $($sessionHost | out-string)"
                                     $numberOfRunningHost = $numberOfRunningHost - 1
                                     Continue
                                     }
-
                                 
                                     #shutdown the Azure VM
                                     try {
@@ -1028,7 +1027,7 @@ else {
                                     }
                                     $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost
                                     if ($getShsinfo.UpdateState -eq "Succeeded") {
-                                        # Ensure the Azure VMs that are off have AllowNewSession mode set to True
+                                        # Ensure the Azure VMs that are off have Allow new connections mode set to True
                                         try {
                                             Set-RdsSessionHost -TenantName $tenantName -HostPoolName $hostPoolName -Name $sessionHost -AllowNewSession $true -ErrorAction SilentlyContinue
                                         }
@@ -1099,9 +1098,9 @@ else {
                     $VMName = $hostname.Split(".")[0]
                     
                     $VmInfo = Get-AzureRmVM | Where-Object { $_.Name -eq $VMName }
-                    #Check the Session host is in Maintainance
-                    if($VmInfo.Tags.Keys -contains $maintainanceTagName){
-                        Write-Log 1 "Session Host is in Maintainace: $hostname"
+                    #Check the Session host is in maintenance
+                    if($VmInfo.Tags.Keys -contains $maintenanceTagName){
+                        Write-Log 1 "Session Host is in Maintenance: $hostname"
                         Continue
                         }
                     $roleInstance = Get-AzureRmVM -Status | Where-Object { $_.Name.Contains($VMName) }
@@ -1109,7 +1108,7 @@ else {
                     if ($sessionHost.Status -eq "Available" -and $sessionHost.Sessions -eq 0) 
                     { break }
                     if ($hostname.ToLower().Contains($roleInstance.Name.ToLower())) {
-                        #check if the Azure VM is running or not and session host is healthy or not
+                        #Check if the Azure VM is running and if the session host is healthy
                         $getShsinfo = Get-RdsSessionHost -TenantName $tenantname -HostPoolName $hostPoolName -Name $sessionHost.SessionHostname
                         if ($roleInstance.PowerState -ne "VM running" -and $getShsinfo.UpdateState -eq "Succeeded") {
                             if ($getShsinfo.AllowNewSession -eq $false) {
