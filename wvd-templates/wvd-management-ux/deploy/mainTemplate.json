@@ -50,7 +50,7 @@
         }
     },
     "variables": {
-		"uniquestr": "[uniqueString(resourceGroup().id, deployment().name)]",
+        "uniquestr": "[uniqueString(resourceGroup().id, deployment().name)]",
         "accountName": "[concat('wvdsaas-autoAccount','-',variables('uniquestr'))]",
         "credentialName": "DefaultAzureCredential",
         "runbookName": "[concat('msftsaasbook','-',variables('uniquestr'))]",
@@ -175,7 +175,7 @@
             "apiVersion": "2015-01-01-preview",
             "location": "[resourceGroup().location]",
             "tags": {},
-			"dependsOn": [
+            "dependsOn": [
                 "[resourceId('Microsoft.Web/Sites', parameters('ApplicationName'))]",
                 "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                 "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
