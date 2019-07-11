@@ -35,7 +35,7 @@
       "AppServicePlanName":"[concat(parameters('AppName'),'-Splan')]",
       "workerSize": "0",
       "serviceplansku": "S1",
-      "packageURL":"https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/diagnostics-sample/deploy/wvd-diagnostics-ux.zip"
+      "packageURL":"https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-templates/diagnostics-sample/deploy/wvd-diagnostics-ux.zip"
   },
   "resources": [
       {
