@@ -15,11 +15,11 @@ Param(
 
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string] $ResourceGroupName,
+    [string] $ResourcegroupName,
 
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string] $LogAnalyticsWorkspaceName,
+    [string] $LogAnalyticsworkspaceName,
 
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
@@ -43,20 +43,20 @@ Login-AzAccount -Credential $Credential
 Select-AzSubscription -SubscriptionId $SubscriptionId
 
 # Check the specified resourcegroup exist/not if not will create new resource group
-$CheckRG = Get-AzResourceGroup -Name $ResourceGroupName -Location $Location -ErrorAction SilentlyContinue
+$CheckRG = Get-AzResourceGroup -Name $ResourcegroupName -Location $Location -ErrorAction SilentlyContinue
 if (!$CheckRG) {
-    Write-Output "The specified resourcegroup does not exist, creating the resourcegroup $ResourceGroupName"
-    New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Force
-    Write-Output "ResourceGroup $ResourceGroupName created suceessfully"
+    Write-Output "The specified resourcegroup does not exist, creating the resourcegroup $ResourcegroupName"
+    New-AzResourceGroup -Name $ResourcegroupName -Location $Location -Force
+    Write-Output "ResourceGroup $ResourcegroupName created suceessfully"
 }
 
-# Create new Log Analytics Workspace
+# Create new Log Analytics workspace
 $result=$null
 
-$CheckLAW = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsWorkspaceName -ErrorAction SilentlyContinue
+$CheckLAW = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourcegroupName -Name $LogAnalyticsworkspaceName -ErrorAction SilentlyContinue
 if (!$CheckLAW) {
-   Write-Output "The workspace $LogAnalyticsWorkspaceName does not exist, Creating..."
-   $result = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsWorkspaceName -Location $Location -Sku free -ErrorAction Ignore
+   Write-Output "The workspace $LogAnalyticsworkspaceName does not exist, Creating..."
+   $result = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsworkspaceName -Location $Location -Sku free -ErrorAction Ignore
    if($result)
    {
     Write-Output "Log Analytics Workspace created suceessfully"
@@ -64,8 +64,8 @@ if (!$CheckLAW) {
    else
    {
    Write-Host "The given LogAnalyticsWorkspace name is not unique"
-   $LogAnalyticsWorkspaceName = Read-Host -Prompt "Provide unique Log Analytics Workspace Name"
-   $result = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsWorkspaceName -Location $Location -Sku free -ErrorAction Ignore
+   $LogAnalyticsworkspaceName = Read-Host -Prompt "Provide unique Log Analytics Workspace Name"
+   $result = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourcegroupName -Name $LogAnalyticsworkspaceName -Location $Location -Sku free -ErrorAction Ignore
    Write-Output "Log Analytics Workspace created suceessfully"
    }
 }
@@ -75,8 +75,8 @@ Write-Output "Adding the Performance Counters to the Log Analytics Workspace"
 
 # Adding the Logical Disk(% Free Space) Performance counter
 New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
-                         -ResourceGroupName $ResourceGroupName `
-                         -WorkspaceName $LogAnalyticsWorkspaceName `
+                         -ResourceGroupName $ResourcegroupName `
+                         -WorkspaceName $LogAnalyticsworkspaceName `
                          -ObjectName "LogicalDisk" `
                          -InstanceName "*" `
                          -CounterName "% Free Space" `
@@ -85,8 +85,8 @@ New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
 
 # Adding the Logical Disk(Avg. Disk Queue Length)Performance counter
 New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
-                         -ResourceGroupName $ResourceGroupName `
-                         -WorkspaceName $LogAnalyticsWorkspaceName `
+                         -ResourceGroupName $ResourcegroupName `
+                         -WorkspaceName $LogAnalyticsworkspaceName `
                          -ObjectName "LogicalDisk" `
                          -InstanceName "C:" `
                          -CounterName "Avg. Disk Queue Length" `
@@ -95,8 +95,8 @@ New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
 
 # Adding the Memory(Available MBytes)Performance counter
 New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
-                         -ResourceGroupName $ResourceGroupName `
-                         -WorkspaceName $LogAnalyticsWorkspaceName `
+                         -ResourceGroupName $ResourcegroupName `
+                         -WorkspaceName $LogAnalyticsworkspaceName `
                          -ObjectName "Memory" `
                          -InstanceName "*" `
                          -CounterName "Available MBytes" `
@@ -105,8 +105,8 @@ New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
 
 # Adding the Processor Information(% Processor Time)Performance counter
 New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
-                         -ResourceGroupName $ResourceGroupName `
-                         -WorkspaceName $LogAnalyticsWorkspaceName `
+                         -ResourceGroupName $ResourcegroupName `
+                         -WorkspaceName $LogAnalyticsworkspaceName `
                          -ObjectName "Processor Information" `
                          -InstanceName "*" `
                          -CounterName "% Processor Time" `
@@ -116,26 +116,26 @@ New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
 # Adding the User Input Delay per Session(Max Input Delay)Performance counter
 New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
                          -ResourceGroupName $ResourceGroupName `
-                         -WorkspaceName $LogAnalyticsWorkspaceName `
+                         -WorkspaceName $LogAnalyticsworkspaceName `
                          -ObjectName "User Input Delay per Session" `
                          -InstanceName "*" `
                          -CounterName "Max Input Delay" `
                          -IntervalSeconds 60 `
                          -Name "Windows Performance Counter4"
 
-Write-Output "Performance Counters are successfully added to the workspace"
+Write-Output "Performance Counters are successfully added to the Log Analytics workspace"
 
-# Get the Log Analytics Workspace
-$Workspace=Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsWorkspaceName
+# Get the Log Analytics workspace
+$Workspace=Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourcegroupName -Name $LogAnalyticsworkspaceName
 
-# Get the log analytics workspace id
+# Get the Log Analytics workspace id
 $WorkspaceId=$workspace.CustomerId
 
 Write-Output "The Log Analytics Workspace Id: $WorkspaceId"
 }
 else
 {
-Write-Host "Please provide the unique names for LogAnalyticsWorkspace"
+Write-Host "Please provide the unique names for Log Analytics workspace"
 }
 
 

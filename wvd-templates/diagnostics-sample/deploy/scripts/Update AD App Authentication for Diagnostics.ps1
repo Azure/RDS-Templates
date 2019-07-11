@@ -15,11 +15,15 @@ Param(
 
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string] $AADApplicationId,
+    [string] $ClientId,
 
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string] $RedirectURI
+    [string] $RedirectURI,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string] $SubscriptionId
 
 )
 
@@ -39,10 +43,20 @@ Login-AzAccount -Credential $Credentials
 # Authentcating to AzureAD
 Connect-AzureAD -Credential $Credentials
 
+# Select the specified subscription
+Select-AzSubscription -SubscriptionId $SubscriptionId
+
+# Get the web app URLs list
+$Hostnames=(Get-AzWebApp).DefaultHostName
+$URL=$RedirectURI.Trim("https://")
+
+# check the RedirectURI exist in the web app URLs list
+if($Hostnames -match $URL)
+{
 $ReplyUrl = "$RedirectURI/security/signin-callback"
 
 # Get Azure AD App
-$AADApp = Get-AzADApplication -ApplicationId $AADApplicationId
+$AADApp = Get-AzADApplication -ApplicationId $ClientId
 
 $ReplyUrls = $AADApp.ReplyUrls
 
@@ -54,4 +68,9 @@ if ($ReplyUrls -NotContains $ReplyUrl) {
     Set-AzADApplication -ObjectId $AADApp.ObjectId -ReplyUrl $ReplyUrls -AvailableToOtherTenants $true
 }
 
-Write-Host "Redirect URI is successfully added to AAD Application Authentication"
+Write-Output "Redirect URI is successfully added to AAD Application Authentication"
+}
+else
+{
+Write-Output "Please provide the valid RedirectURI"
+}

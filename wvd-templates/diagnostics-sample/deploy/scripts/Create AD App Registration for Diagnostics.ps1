@@ -43,7 +43,7 @@ if ($existingApplication -ne $null) {
     return
 }
 
-# Create an application secret
+# Create a Client Secret
 $startDate = Get-Date
 $endDate = $startDate.AddYears(1)
 $Guid = New-Guid
@@ -56,7 +56,7 @@ $ClientSecret=$PasswordCredential.Value
 
 Write-Output "Creating a new Application in AAD" -Verbose
 
-# Create a new AD Application
+# Create a new AD Application with provided AppName
 $azAdApplication=New-AzureADApplication -DisplayName $AppName -PublicClient $true 
 
 # Create an app credential to the Application
@@ -108,6 +108,6 @@ $AzureGraphApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.Azur
 # Add the WVD API,Log Analytics API and Microsoft Graph API permissions to the ADApplication
 Set-AzureADApplication -ObjectId $azAdApplication.ObjectId -RequiredResourceAccess $AzureLogAnalyticsApiAccess,$AzureWVDApiAccess,$AzureGraphApiAccess -ErrorAction Stop
 
-#Get the Client Id/Application Id and Client Secret
+# Get the Client Id/Application Id and Client Secret
 Write-Output "Client Id : $ClientId"
 Write-Output "Client Secret Key: $ClientSecret"
