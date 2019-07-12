@@ -173,7 +173,7 @@
             "defaultValue": "contoso.com",
             "type": "string",
             "metadata": {
-                "description": "FQDN of the AD Domain to which sesion host VMs are going to be joined. For example, “contoso.com”."
+                "description": "FQDN of the AD Domain to which session host VMs are going to be joined. For example, “contoso.com”."
             }
         },
         "existingDomainUPN": {
