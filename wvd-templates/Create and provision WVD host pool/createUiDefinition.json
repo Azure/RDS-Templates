@@ -737,7 +737,7 @@
 			"newOrExistingVnet": "[steps('virtualMachineSettings').hostpoolVnet.newOrExisting]",
 			"existingSubnetName": "[steps('virtualMachineSettings').hostpoolVnet.subnets.subnet1.name]",
 			"virtualNetworkResourceGroupName": "[steps('virtualMachineSettings').hostpoolVnet.resourceGroup]",
-			"rdBrokerURL": "[basics('wvdRegion')]",
+			"rdBrokerURL": "https://rdbroker.wvd.microsoft.com",
 			"existingTenantGroupName": "[steps('wvdTenantInfo').tenantGroupName]",
 			"existingTenantName": "[steps('wvdTenantInfo').tenantName]",
 			"hostPoolName": "[basics('hostpoolName')]",
