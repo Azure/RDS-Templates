@@ -1,0 +1,49 @@
+{
+        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+                "registrationToken": {
+                        "type": "string",
+                        "metadata": {
+                                "description": "RDAgent registration token."
+                        },
+                        "defaultValue":""
+                },
+                "vmName": {
+                        "type": "string",
+                        "metadata": {
+                                "description": "VM name to install the RDAgent on."
+                        },
+                        "defaultValue":""
+                },
+        },
+        "variables": {
+                        "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool",
+                        "fileName": "[concat('Microsoft.RDInfra.RDAgent.Installer-x64-',parameters('msiVersion'),'.msi')]"
+        },
+
+        "resources":[
+        {
+                "apiVersion": "2018-10-01",
+                "type": "Microsoft.Compute/virtualMachines/extensions",
+                "name": "[concat(parameters('vmName'),'/','customscript')]",
+                "location": "[resourceGroup().location]",
+                "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion": "1.9",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                                "fileUris": [
+                                        "[concat(variables('baseUri'),'Agents.zip')]",
+                                        "[concat(variables('baseUri'),'RdagentInstall.ps1')]"
+                                        ],
+                                "timestamp":"[utcNow()]"
+                        },
+                        "protectedSettings": {
+                                "commandToExecute":"[concat('powershell -ExecutionPolicy Unrestricted -File RdagentInstall.ps1 -registrationToken ', parameters('registrationToken'))]"
+                        }
+                }
+        }
+        ]
+}
