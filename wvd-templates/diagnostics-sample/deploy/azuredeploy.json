@@ -2,40 +2,54 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
       "parameters": {
-      "AppName": 
+      "appName": 
       {
           "type": "string",
           "metadata": {
               "description": "Name of the webapp you wish to create, provide an unique name"
           }
       },
-      "Client-Id":
+      "clientId":
       {
           "type": "string",
           "metadata": {
-              "description": "AzureAD Client Id"
+              "description": "AzureAD client Id"
           }
       },
-      "Client-Secret":
+      "clientSecret":
       {
           "type": "securestring",
           "metadata": {
-              "description": "AzureAD Client Secret Key"
+              "description": "The secret that corresponds to the client Id"
           }
       },
-      "LogAnalyticsworkspaceId":
+      "logAnalyticsWorkspaceId":
       {
           "type": "string",
           "metadata": {
               "description": "Log Analytics workspace Id"
           }
-      }
+      },
+	  "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located."
+            },
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-templates/diagnostics-sample/deploy/"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
+            },
+            "defaultValue": ""
+        }
       },
   "variables": {
-      "AppServicePlanName":"[concat(parameters('AppName'),'-Splan')]",
+      "appServicePlanName":"[concat(parameters('AppName'),'-Splan')]",
       "workerSize": "0",
-      "serviceplansku": "S1",
-      "packageURL":"https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-templates/diagnostics-sample/deploy/wvd-diagnostics-ux.zip"
+      "servicePlanSKU": "S1",
+      "packageURL":"[concat(parameters('_artifactsLocation'),'wvd-diagnostics-ux.zip')]"
   },
   "resources": [
       {
@@ -47,11 +61,11 @@
           "displayName": "AppServicePlan"
         },
         "sku": {
-          "name": "[variables('serviceplansku')]",
+          "name": "[variables('servicePlanSKU')]",
           "capacity": "[variables('workerSize')]"
         },
         "properties": {
-          "name": "[variables('AppServicePlanName')]"
+          "name": "[variables('appServicePlanName')]"
         }
       },
     {
@@ -60,23 +74,23 @@
       "type": "Microsoft.Web/sites",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('AppServicePlanName'))]"
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
       ],
       "properties": {
-        "serverFarmId": "[variables('AppServicePlanName')]",
+        "serverFarmId": "[variables('appServicePlanName')]",
         "siteConfig": {
           "appSettings": [
               {
                   "name": "AzureAd:ClientId",
-                  "value": "[parameters('Client-Id')]"
+                  "value": "[parameters('client-Id')]"
               },
               {
                   "name": "AzureAd:ClientSecret",
-                  "value": "[parameters('Client-Secret')]"
+                  "value": "[parameters('client-Secret')]"
               },
               {
                   "name": "AzureAd:LogAnalyticsWorkspaceId",
-                  "value": "[parameters('LogAnalyticsworkspaceId')]"
+                  "value": "[parameters('logAnalyticsWorkspaceId')]"
               }
           ]
       }

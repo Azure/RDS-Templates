@@ -22,12 +22,12 @@ Param(
 # Set the ExecutionPolicy
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 
-# Importing the modules
+# Import Az and AzureAD modules
 Import-Module Az
 Import-Module AzureAD
 
 # Provide the credentials to authenticate to Azure/AzureAD
-$Credentials=Get-Credential
+$Credentials = Get-Credential
 
 # Authenticating to Azure
 Login-AzAccount -Credential $Credentials
@@ -35,11 +35,11 @@ Login-AzAccount -Credential $Credentials
 # Authenticating to AzureAD
 Connect-AzureAD -Credential $Credentials
 
-# Check if AD Application exist
+# Check AD Application exist/ not
 $existingApplication = Get-AzADApplication -DisplayName $AppName -ErrorAction SilentlyContinue
 if ($existingApplication -ne $null) {
     $appId = $existingApplication.ApplicationId
-    Write-Output "An AAD Application already exists with (Application Id: $appId). Choose a different app display name"  -Verbose
+    Write-Output "An AAD Application already exists with AppName $AppName(Application Id: $appId). Choose a different AppName"  -Verbose
     return
 }
 
@@ -66,7 +66,7 @@ New-AzADAppCredential -ObjectId $azAdApplication.ObjectId -Password $SecureClien
 # Get ClientId
 $ClientId = $azAdApplication.AppId
 
-Write-Output "Azure AAD Application creation completed successfully (Application Id: $ClientId)" -Verbose
+Write-Output "Azure AAD Application creation completed successfully with AppName $AppName (Application Id is: $ClientId)" -Verbose
 
 # Create new Service Principal
 Write-Output "Creating a new Service Principal" -Verbose
@@ -101,7 +101,7 @@ foreach($permission in $AzureLogAnalyticsApiPrincipal.Oauth2Permissions){
 $AzureGraphApiPrincipal = Get-AzureADServicePrincipal -SearchString "Microsoft Graph"
 $AzureGraphApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
 $AzureGraphApiAccess.ResourceAppId = $AzureGraphApiPrincipal.AppId
-$permission=$AzureGraphApiPrincipal.Oauth2Permissions | Where-Object {$_.Value -eq "User.Read"}
+$permission = $AzureGraphApiPrincipal.Oauth2Permissions | Where-Object {$_.Value -eq "User.Read"}
 $AzureGraphApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
 
 

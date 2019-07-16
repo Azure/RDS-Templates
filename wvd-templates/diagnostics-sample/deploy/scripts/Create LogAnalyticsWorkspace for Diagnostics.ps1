@@ -1,10 +1,10 @@
 ﻿<#
 
 .SYNOPSIS
-Create Log Analytics Workspace
+Create Log Analytics workspace
 
 .DESCRIPTION
-This script is used to create Log Analytics Workspace
+This script is used to create Log Analytics workspace
 
 .ROLE
 Administrator
@@ -30,10 +30,10 @@ Param(
     [string] $SubscriptionId
 
 )
-# Import the AzureRm module
+# Import the Az module
 Import-Module Az
 
-# Provide the credentias to authenticate to Azure
+# Provide the Azure credentials
 $Credential=Get-Credential
 
 # Authenticate to Azure
@@ -42,7 +42,7 @@ Login-AzAccount -Credential $Credential
 # Select the specified subscription
 Select-AzSubscription -SubscriptionId $SubscriptionId
 
-# Check the specified resourcegroup exist/not if not will create new resource group
+# Check the specified resourcegroup exist/not if not will create new resource group in your Azure subscription
 $CheckRG = Get-AzResourceGroup -Name $ResourcegroupName -Location $Location -ErrorAction SilentlyContinue
 if (!$CheckRG) {
     Write-Output "The specified resourcegroup does not exist, creating the resourcegroup $ResourcegroupName"
@@ -55,23 +55,23 @@ $result=$null
 
 $CheckLAW = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourcegroupName -Name $LogAnalyticsworkspaceName -ErrorAction SilentlyContinue
 if (!$CheckLAW) {
-   Write-Output "The workspace $LogAnalyticsworkspaceName does not exist, Creating..."
+   Write-Output "The Log Analytics workspace with the name $LogAnalyticsworkspaceName does not exist, creating..."
    $result = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $LogAnalyticsworkspaceName -Location $Location -Sku free -ErrorAction Ignore
    if($result)
    {
-    Write-Output "Log Analytics Workspace created suceessfully"
+    Write-Output "Log Analytics workspace created suceessfully"
    }
    else
    {
-   Write-Host "The given LogAnalyticsWorkspace name is not unique"
-   $LogAnalyticsworkspaceName = Read-Host -Prompt "Provide unique Log Analytics Workspace Name"
+   Write-Host "The given Log Analytics workspace name is not unique"
+   $LogAnalyticsworkspaceName = Read-Host -Prompt "Provide an unique Log Analytics workspace Name"
    $result = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourcegroupName -Name $LogAnalyticsworkspaceName -Location $Location -Sku free -ErrorAction Ignore
-   Write-Output "Log Analytics Workspace created suceessfully"
+   Write-Output "Log Analytics workspace created suceessfully"
    }
 }
 if($result)
 {
-Write-Output "Adding the Performance Counters to the Log Analytics Workspace"
+Write-Output "Adding the Performance Counters to the Log Analytics workspace"
 
 # Adding the Logical Disk(% Free Space) Performance counter
 New-AzOperationalInsightsWindowsPerformanceCounterDataSource `
@@ -131,7 +131,7 @@ $Workspace=Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourcegroupN
 # Get the Log Analytics workspace id
 $WorkspaceId=$workspace.CustomerId
 
-Write-Output "The Log Analytics Workspace Id: $WorkspaceId"
+Write-Output "The Log Analytics workspace Id: $WorkspaceId"
 }
 else
 {

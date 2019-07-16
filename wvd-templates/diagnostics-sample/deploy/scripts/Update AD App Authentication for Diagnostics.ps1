@@ -30,11 +30,11 @@ Param(
 # Set the ExecutionPolicy
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 
-# Importing the modules
+# Import Az an AzureAD modules
 Import-Module Az
 Import-Module AzureAD
 
-# Provide the credentials to authenticate to Azure/AzureAD
+# Provide the Azure credentials to authenticate to Azure and AzureAD
 $Credentials=Get-Credential
 
 #Authenticating to Azure
@@ -48,7 +48,7 @@ Select-AzSubscription -SubscriptionId $SubscriptionId
 
 # Get the web app URLs list
 $Hostnames=(Get-AzWebApp).DefaultHostName
-$URL=$RedirectURI.Trim("https://")
+$URL = $RedirectURI.Trim("https://")
 
 # check the RedirectURI exist in the web app URLs list
 if($Hostnames -match $URL)
