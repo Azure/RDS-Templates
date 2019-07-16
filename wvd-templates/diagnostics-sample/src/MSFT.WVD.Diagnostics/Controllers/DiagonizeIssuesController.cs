@@ -388,6 +388,7 @@ namespace MSFT.WVD.Diagnostics.Controllers
 
         public async Task<IActionResult> ActivityHostDetails(string id)
         {
+            string upn = HttpContext.Session.Get<string>("SelectedUpn");
             tenantGroupName = HttpContext.Session.Get<string>("SelectedTenantGroupName");
             tenant = HttpContext.Session.Get<string>("SelectedTenantName");
             var refreshtoken = await HttpContext.GetTokenAsync("refresh_token").ConfigureAwait(false);
@@ -401,6 +402,13 @@ namespace MSFT.WVD.Diagnostics.Controllers
             else
             {
                 var userSessions = await GetUserSessions(accessToken, tenantGroupName, tenant, ConnectionActivity[0].SessionHostPoolName, ConnectionActivity[0].SessionHostName).ConfigureAwait(false);
+                userSessions.ForEach(x => x.IsSelected = x.adUserName.ToString().Split(@"\")[1]== upn.Split('@')[0]);
+                // var userupn = @Model.ConnectionActivity.userName.Split('@')[0];
+                //var sessionuserupn = @Model.UserSessions[i].adUserName.Split(@"\")[1];
+                //if (userupn == sessionuserupn)
+                //{
+                //    isChecked = true;
+                //}
                 return View(new DiagnoseDetailPageViewModel()
                 {
                     ConnectionActivity = new ConnectionActivity
@@ -457,9 +465,9 @@ namespace MSFT.WVD.Diagnostics.Controllers
             {
                 diagonizePageViewModel.DiagonizeQuery = new DiagonizeQuery();
                 diagonizePageViewModel.DiagonizeQuery.UPN = upn;
-
+               
             }
-
+            HttpContext.Session.Set<string>("SelectedUpn", diagonizePageViewModel.DiagonizeQuery.UPN);
 
             try
             {
@@ -532,6 +540,20 @@ namespace MSFT.WVD.Diagnostics.Controllers
             }
         }
 
+        public async Task<IActionResult> ClearFilter(DiagonizePageViewModel diagonizePageViewModel, string upn = null)
+        {
+            // diagonizePageViewModel.DiagonizeQuery.UPN = upn;
+            // diagonizePageViewModel.DiagonizeQuery.ActivityOutcome= Convert.ToString(outcome);
+            //HttpContext.Session.Remove("interval");
+            //HttpContext. Session.Remove("outcome");
+            if (diagonizePageViewModel.DiagonizeQuery == null)
+            {
+                diagonizePageViewModel.DiagonizeQuery = new DiagonizeQuery();
+                diagonizePageViewModel.DiagonizeQuery.UPN = upn;
 
+            }
+            return await IssuesInterval(diagonizePageViewModel,null,null,upn);
+
+        }
     }
     }

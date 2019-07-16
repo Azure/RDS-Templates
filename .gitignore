@@ -712,3 +712,5 @@ $RECYCLE.BIN/
 
 # End of https://www.gitignore.io/api/macos,csharp,windows,angular,aspnetcore,visualstudio
 /wvd-sh/wvd-monitoring-ux/src/MSFT.WVD.Monitoring/Logs
+/wvd-templates/diagnostics-sample/src/MSFT.WVD.Diagnostics/Logs
+/wvd-sh/wvd-Diagnostics-ux
