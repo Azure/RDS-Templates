@@ -325,7 +325,7 @@
 						"toolTip": "Enter the URL for the generalized .vhd file from your storage account, such as https://mystorageaccount.blob.core.windows.net/vhds/mycustomimage.vhd",
 						"constraints": {
 							"required": true,
-							"regex": "^(http(s)?:\/\/)[a-z0-9]{3,24}(\\.blob\\.core\\.windows\\.net\/)([a-z0-9-]{3,63}\/)*([^.]+\\.vhd)$",
+							"regex": "^(http(s)?:\/\/)[a-z0-9]{3,24}(\\.blob\\.core\\.windows\\.net\/.+)(\\.vhd)$",
 							"validationMessage": "Please enter a valid URL for .vhd file from your storage account. It should be in the format of 'https://[storageaccountname].blob.core.windows.net/[container]/[imagename].vhd'"
 						},
 						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomVHD')]"
@@ -484,7 +484,7 @@
 						"name": "domainToJoin",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Domain to join",
-						"toolTip": "FQDN of the AD Domain to which sesion host VMs are going to be joined. For example, 'contoso.com' or 'site1.contoso.com'.",
+						"toolTip": "FQDN of the AD Domain to which session host VMs are going to be joined. For example, 'contoso.com' or 'site1.contoso.com'.",
 						"defaultValue": "",
 						"constraints": {
 							"required": false,
@@ -737,7 +737,7 @@
 			"newOrExistingVnet": "[steps('virtualMachineSettings').hostpoolVnet.newOrExisting]",
 			"existingSubnetName": "[steps('virtualMachineSettings').hostpoolVnet.subnets.subnet1.name]",
 			"virtualNetworkResourceGroupName": "[steps('virtualMachineSettings').hostpoolVnet.resourceGroup]",
-			"rdBrokerURL": "[basics('wvdRegion')]",
+			"rdBrokerURL": "https://rdbroker.wvd.microsoft.com",
 			"existingTenantGroupName": "[steps('wvdTenantInfo').tenantGroupName]",
 			"existingTenantName": "[steps('wvdTenantInfo').tenantName]",
 			"hostPoolName": "[basics('hostpoolName')]",
