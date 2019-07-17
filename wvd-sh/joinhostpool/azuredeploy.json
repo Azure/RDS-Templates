@@ -16,12 +16,6 @@
                                 },
                                 "defaultValue":""
                         },
-                        "timestamp": {
-                                "type": "string",
-                                "metadata": {
-                                        "description": "Timestamp of the custom script."
-                                }
-                        },
                         "WebAppName": 
                         {
                                 "type": "string",
@@ -35,7 +29,8 @@
                                 "metadata": {
                                         "description": "AzureAD Application Id"
                                 }
-                        }                },
+                        }
+                },
                 "variables": {
                         "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/",
                 },
