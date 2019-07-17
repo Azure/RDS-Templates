@@ -57,7 +57,7 @@ $ClientSecret=$PasswordCredential.Value
 Write-Output "Creating a new Application in AAD" -Verbose
 
 # Create a new AD Application with provided AppName
-$azAdApplication=New-AzureADApplication -DisplayName $AppName -PublicClient $true 
+$azAdApplication=New-AzureADApplication -DisplayName $AppName -PublicClient $false
 
 # Create an app credential to the Application
 $SecureClientSecret=ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
