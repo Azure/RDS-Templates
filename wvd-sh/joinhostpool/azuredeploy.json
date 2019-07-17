@@ -34,8 +34,8 @@
                 "name": "[concat(parameters('vmName'),'/','customscript')]",
                 "location": "[resourceGroup().location]",
                 "properties": {
-                        "publisher": "Microsoft.Compute",
-                        "type": "CustomScriptExtension",
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
                         "typeHandlerVersion": "1.9",
                         "autoUpgradeMinorVersion": true,
                         "settings": {
