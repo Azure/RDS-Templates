@@ -6,15 +6,13 @@
                                 "type": "string",
                                 "metadata": {
                                         "description": "RDAgent registration token."
-                                },
-                                "defaultValue":""
+                                }
                         },
                         "vmName": {
                                 "type": "string",
                                 "metadata": {
                                         "description": "VM name to install the RDAgent on."
-                                },
-                                "defaultValue":""
+                                }
                         },
                         "WebAppName": 
                         {
