@@ -31,9 +31,6 @@
                                 }
                         }
                 },
-                "variables": {
-                        "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/",
-                },
                 "resources":[
                         ]
 }
