@@ -54,7 +54,7 @@
   "resources": [
       {
         "apiVersion": "2015-08-01",
-        "name": "[variables('AppServicePlanName')]",
+        "name": "[variables('appServicePlanName')]",
         "type": "Microsoft.Web/serverfarms",
         "location": "[resourceGroup().location]",
         "tags": {
@@ -82,11 +82,11 @@
           "appSettings": [
               {
                   "name": "AzureAd:ClientId",
-                  "value": "[parameters('client-Id')]"
+                  "value": "[parameters('clientId')]"
               },
               {
                   "name": "AzureAd:ClientSecret",
-                  "value": "[parameters('client-Secret')]"
+                  "value": "[parameters('clientSecret')]"
               },
               {
                   "name": "AzureAd:LogAnalyticsWorkspaceId",
