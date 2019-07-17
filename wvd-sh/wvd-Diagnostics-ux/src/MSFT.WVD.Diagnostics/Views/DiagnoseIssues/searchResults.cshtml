@@ -47,15 +47,7 @@
                 <span class="ms-Button-label"><i class="ms-Icon ms-Icon--Filter" aria-hidden="true"></i>Filter</span>
             </button>
             <ul class="ms-ContextualMenu is-hidden ms-ContextualMenu--multiselect">
-                <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">
-                    <i class="ms-Icon ms-Icon--Filter" aria-hidden="true"></i>
-                    @{
-                        IDictionary<string, string> routeData7 = new Dictionary<string, string>();
-                      
-                        routeData7.Add("upn", Model.DiagonizeQuery.UPN);
-                    }
-                    <a style="text-decoration:none; color:#0078d7; padding-left:8px;" asp-controller="DiagnoseIssues" asp-action="ClearFilter" asp-all-route-data="routeData7">Clear all Filters</a>
-                </li>
+                <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">clear all filters</li>
                 <li class="ms-ContextualMenu-item ms-ContextualMenu-item--divider"></li>
                 <li class="ms-ContextualMenu-item ms-ContextualMenu-item--header">Issues from</li>
                 <li class="ms-ContextualMenu-item">
@@ -331,13 +323,13 @@
                 <div class="flyoutpanel-content">
                     <div class="flyoutpanel-controls">
                         <label class="control-label">Error Code:</label>
-                        <input type="text" class="form-control" id="errorcode" style="border: none;box-shadow: none;" readonly />
+                        <input type="text" class="form-control" id="errorcode" style="border: none;box-shadow: none;" />
                         <label class="control-label">Internal:</label>
-                        <input type="text" class="form-control" id="Internal" style="border: none;box-shadow: none;" readonly/>
+                        <input type="text" class="form-control" id="Internal" style="border: none;box-shadow: none;" />
                         <label class="control-label">Message:</label>
-                        <textarea rows="14" cols="10" wrap="soft" class="form-control" id="Message" style="border: none;box-shadow: none;resize:none;height: 100px;" readonly></textarea>
+                        <textarea rows="14" cols="10" wrap="soft" class="form-control" id="Message" style="border: none;box-shadow: none;resize:none;height: 100px;"></textarea>
                         <label class="control-label">Time:</label>
-                        <input type="text" class="form-control" id="Time" style="border: none;box-shadow: none;" readonly />
+                        <input type="text" class="form-control" id="Time" style="border: none;box-shadow: none;" />
                     </div>
                     <p><a href="https://go.microsoft.com/fwlink/?linkid=2098183" target="_blank" class="detailslink">Learn more about this error</a></p>
                 </div>

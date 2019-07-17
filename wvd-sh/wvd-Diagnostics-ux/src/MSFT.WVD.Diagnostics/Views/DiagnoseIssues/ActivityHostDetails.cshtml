@@ -86,11 +86,7 @@
                         else
                         {
                             var status = "";
-                            @if (Model.VMPerformance != null && Model.VMPerformance.CurrentStateCounters.Where(x => x.Value != 0).ToList().Count == 0)
-                            {
-                                status = "-";
-                            }
-                            else if (Model.VMPerformance != null && Model.VMPerformance.isHealthy)
+                            @if (Model.VMPerformance != null && Model.VMPerformance.isHealthy)
                             {
                                 status = "Healthy";
                             }
@@ -102,10 +98,6 @@
                             @if (@status == "Healthy")
                             {
                                 <h4> VM Health State -  @*<i class="fa fa-check" style="color: #107c10;"></i>*@ <i class="ms-Icon ms-Icon--CheckMark green-circled-check" aria-hidden="true"></i> </h4>
-                            }
-                            else if (@status == "-")
-                            {
-                                <h4> VM Health State :N/A</h4>
                             }
                             else
                             {
@@ -120,12 +112,12 @@
                                 }
                                 else
                                 {
-                                    <tr><td>Active sessions:</td><td colspan="4">-</td></tr>
+                                    <tr><td>Active sessions:</td><td colspan="4">0</td></tr>
                                 }
                                 @foreach (var item in Model.VMPerformance.CurrentStateCounters)
                                 {
 
-                                    var resultVal = item.Value == 0 ? "-" :
+                                    var resultVal = item.Value == 0 ? "NA" :
                                     (item.ObjectName == "Processor Usage" ? string.Concat(Math.Round(item.Value, 2).ToString(), " %") : item.ObjectName == "Free Disk Space" ? string.Concat(Math.Round(item.Value, 2).ToString(), " %") : (
                                         item.ObjectName == "Avg. Disk Queue Length" ? item.Value.ToString() : (item.ObjectName == "Memory Usage" ? string.Concat(item.Value.ToString(), " MB") :
                                         item.ObjectName == "Input Delay" ? string.Concat(item.Value.ToString(), " ms") : null)));
@@ -221,19 +213,19 @@
                                     @{
                                         for (int i = 0; i < Model.UserSessions.Count; i++)
                                         {
-                                           // bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
-                                            //var userupn = @Model.ConnectionActivity.userName.Split('@')[0];
-                                            //var sessionuserupn = @Model.UserSessions[i].adUserName.Split(@"\")[1];
-                                            //if(userupn == sessionuserupn)
-                                            //{
-                                            //    isChecked = true;
-                                            //}
+                                            bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
+                                            var userupn = @Model.ConnectionActivity.userName.Split('@')[0];
+                                            var sessionuserupn = @Model.UserSessions[i].adUserName.Split(@"\")[1];
+                                            if(userupn == sessionuserupn)
+                                            {
+                                                isChecked = true;
+                                            }
 
                                             <tbody>
                                                 <tr>
                                                     <td>
                                                         @{ var UserName = @Model.UserSessions[i].adUserName; }
-                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"  onchange="oncheckboxchecked(event,this)"> 
+                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"  onchange="oncheckboxchecked(event,this)"> <!---->
                                                         <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
