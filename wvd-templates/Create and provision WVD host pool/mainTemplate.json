@@ -41,10 +41,11 @@
                 "description": "(Required when rdshImageSource = Gallery) Gallery image SKU."
             },
             "allowedValues": [
+                "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
                 "Windows-10-Enterprise-multi-session",
                 "2016-Datacenter"
             ],
-            "defaultValue": "Windows-10-Enterprise-multi-session"
+            "defaultValue": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus"
         },
         "rdshCustomImageSourceName": {
             "type": "string",
@@ -76,13 +77,14 @@
         "rdshVMDiskType": {
             "type": "string",
             "allowedValues": [
-                "SSD",
-                "HDD"
+                "Premium_LRS",
+                "StandardSSD_LRS",
+                "Standard_LRS"
             ],
             "metadata": {
-                "description": "The VM disk type for the VM: HDD or SSD."
+                "description": "The VM disk type for the VM: Premium_LRS (Default), Standard_LRS or StandardSSD_LRS."
             },
-            "defaultValue": "SSD"
+            "defaultValue": "Premium_LRS"
         },
         "rdshVmSize": {
             "type": "string",
@@ -115,7 +117,7 @@
         "domainToJoin": {
             "type": "string",
             "metadata": {
-                "description": "FQDN of the AD Domain to which sesion host VMs are going to be joined. For example, 'contoso.com'."
+                "description": "FQDN of the AD Domain to which session host VMs are going to be joined. For example, 'contoso.com'."
             }
         },
         "existingDomainUPN": {
@@ -141,6 +143,16 @@
             "type": "string",
             "metadata": {
                 "description": "The name of the virtual network the VMs will be connected to."
+            }
+        },
+        "newOrExistingVnet": {
+            "type": "string",
+            "defaultValue": "existing",
+            "allowedValues": [
+                "existing"
+            ],
+            "metadata": {
+                "description": "Only existing vnets are allowed. This parameter ensures validation for Azure Marketplace offering."
             }
         },
         "existingSubnetName": {
@@ -198,7 +210,7 @@
         "tenantAdminUpnOrApplicationId": {
             "type": "string",
             "metadata": {
-                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the WVD Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
+                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the Windows Virtual Desktop Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
             }
         },
         "tenantAdminPassword": {
@@ -235,19 +247,21 @@
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
-        "subnet-id": "[concat(resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks',parameters('existingVnetName')),'/subnets/',parameters('existingSubnetName'))]",
-        "hostPoolFriendlyName": "[parameters('hostPoolName')]",
+        "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
+        "existingTenantName": "[replace(parameters('existingTenantName'),'\"','')]",
+        "hostPoolName": "[replace(parameters('hostPoolName'),'\"','')]",
+        "hostPoolFriendlyName": "[variables('hostPoolName')]",
         "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
         "rdshVmNamesOutput": {
-            "copy":[
+            "copy": [
                 {
-                    "name":"rdshVmNamesCopy",
-                    "count":"[parameters('rdshNumberOfInstances')]",
+                    "name": "rdshVmNamesCopy",
+                    "count": "[parameters('rdshNumberOfInstances')]",
                     "input": {
-                        "name":"[concat(variables('rdshPrefix'),copyIndex('rdshVmNamesCopy'))]"
+                        "name": "[concat(variables('rdshPrefix'),copyIndex('rdshVmNamesCopy'))]"
                     }
                 }
             ]
@@ -256,6 +270,7 @@
     "resources": [
         {
             "apiVersion": "2018-10-01",
+            "condition": "[equals(parameters('enablePersistentDesktop'),bool('False'))]",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
             "location": "[parameters('location')]",
@@ -271,6 +286,9 @@
             "apiVersion": "2018-05-01",
             "name": "vmCreation-linkedTemplate",
             "type": "Microsoft.Resources/deployments",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -322,12 +340,12 @@
                     },
                     "location": {
                         "value": "[parameters('location')]"
+                    },
+                    "enablePersistentDesktop": {
+                        "value": "[parameters('enablePersistentDesktop')]"
                     }
                 }
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
-            ]
+            }
         },
         {
             "apiVersion": "2018-10-01",
@@ -379,14 +397,10 @@
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
                             "password": "PrivateSettingsRef:tenantAdminPassword"
                         },
-                        "ADAdminCredentials": {
-                            "userName": "[parameters('existingDomainUPN')]",
-                            "password": "PrivateSettingsRef:adAdminPassword"
-                        },
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
-                        "TenantName": "[parameters('existingTenantName')]",
-                        "HostPoolName": "[parameters('hostPoolName')]",
+                        "TenantName": "[variables('existingTenantName')]",
+                        "HostPoolName": "[variables('hostPoolName')]",
                         "Description": "[variables('hostPoolDescription')]",
                         "FriendlyName": "[variables('hostPoolFriendlyName')]",
                         "Hours": "[variables('registrationExpirationHours')]",
@@ -398,14 +412,13 @@
                 },
                 "ProtectedSettings": {
                     "items": {
-                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]",
-                        "adAdminPassword": "[parameters('existingDomainPassword')]"
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
                     }
                 }
             }
         },
         {
-            "condition":"[greater(parameters('rdshNumberOfInstances'),1)]",
+            "condition": "[greater(parameters('rdshNumberOfInstances'),1)]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
@@ -430,30 +443,26 @@
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
                             "password": "PrivateSettingsRef:tenantAdminPassword"
                         },
-                        "ADAdminCredentials": {
-                            "userName": "[parameters('existingDomainUPN')]",
-                            "password": "PrivateSettingsRef:adAdminPassword"
-                        },
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
-                        "TenantName": "[parameters('existingTenantName')]",
-                        "HostPoolName": "[parameters('hostPoolName')]",
+                        "TenantName": "[variables('existingTenantName')]",
+                        "HostPoolName": "[variables('hostPoolName')]",
+                        "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]"
                     }
                 },
                 "ProtectedSettings": {
                     "items": {
-                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]",
-                        "adAdminPassword": "[parameters('existingDomainPassword')]"
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
                     }
                 }
             }
         }
     ],
     "outputs": {
-        "rdshVmNamesObject":{
-            "value":"[variables('rdshVmNamesOutput')]",
+        "rdshVmNamesObject": {
+            "value": "[variables('rdshVmNamesOutput')]",
             "type": "object"
         }
     }

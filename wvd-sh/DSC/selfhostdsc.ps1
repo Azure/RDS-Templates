@@ -8,7 +8,7 @@ Configuration SelfhostConfig {
 
 	Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 
-	$defaultProf = @(@{path="HKLM:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="1"},
+	$defaultProf = @(@{path="HKLM:\TempDefault\Software\Policies\Microsoft\Office\16.0\common"; name="InsiderSlabBehavior"; value ="2"},
 			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="enable"; value = 1},
 			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSetting"; value = 1},
 			@{path="HKLM:\TempDefault\software\policies\microsoft\office\16.0\outlook\cached mode"; name="CalendarSyncWindowSettingMonths"; value = 1},
@@ -73,6 +73,14 @@ Configuration SelfhostConfig {
                         ValueData   = 0
                         ValueType   = "DWORD"
 		}
+		Registry DeleteLocalProfileWhenVHDShouldApply
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\FSLogix\Profiles"
+                        ValueName   = "DeleteLocalProfileWhenVHDShouldApply"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
 
 # Diasble MMA to change watson settings
 
@@ -130,6 +138,25 @@ Configuration SelfhostConfig {
 			Ensure      = "Present"
                         Key         = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
                         ValueName   = "fEnableTimeZoneRedirection"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+
+# Multimedia Redirection
+
+		Registry AllowRdpMultimediaRedirection 
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server"
+                        ValueName   = "AllowRdpMultimediaRedirection"
+                        ValueData   = 1
+                        ValueType   = "DWORD"
+		}
+		Registry TSMMRemotingAllowedApps_wmp
+		{
+			Ensure      = "Present"
+                        Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp\TSMMRemotingAllowedApps"
+                        ValueName   = "wmplayer.exe"
                         ValueData   = 1
                         ValueType   = "DWORD"
 		}
@@ -246,10 +273,13 @@ Configuration SelfhostConfig {
                         ValueType   = "DWORD"
 		}
 
-		Script OutlookCacheMode {
+				Script OutlookCacheMode {
 
 			SetScript = {
-				reg load HKLM\TempDefault C:\Users\Default\NTUSER.DAT
+
+                                        reg load HKLM\TempDefault C:\Users\Default\NTUSER.DAT
+
+                                        Start-Sleep -Seconds  1
 
 					foreach ($a in $defaultProf)
 					{
@@ -260,26 +290,29 @@ Configuration SelfhostConfig {
 						else
 						{
 							New-Item -Path $a.path -Force
-								New-ItemProperty -Path $a.path -Name $a.name -Value $a.value    
+							New-ItemProperty -Path $a.path -Name $a.name -Value $a.value    
 						}
 					}
 
 					Start-Sleep -Seconds 5
 
-					reg unload HKLM\TempDefault
+                                        reg unload HKLM\TempDefault
 			}
 
 			TestScript = {
-				reg load HKLM\TempDefault C:\Users\Default\NTUSER.DAT
+                                        reg load HKLM\TempDefault C:\Users\Default\NTUSER.DAT
 
-					$result = $true
+                                        Start-Sleep -Seconds  1
+
+
+				$result = $true
 
 					foreach ($a in $defaultProf)
 					{
 						if(!(Test-Path $a.path))
 						{
 							Write-Information -message '$($s.path) not found'
-								$result = $false
+							$result = $false
 						}
 						else
 						{
@@ -287,7 +320,7 @@ Configuration SelfhostConfig {
 								if($value -ne $a.value)
 								{ 
 									Write-Information -message '$($s.path) has no compliant value $($a.name):$value'
-																											  $result = $false
+									$result = $false
 								}
 								else
 								{
@@ -298,6 +331,7 @@ Configuration SelfhostConfig {
 					}
 					Start-Sleep -Seconds 5
 
+
 					reg unload HKLM\TempDefault
 
 					$result
@@ -305,18 +339,18 @@ Configuration SelfhostConfig {
 			GetScript = {@{Result="Ok"}}
 		}
 
-                Script RestartFSLogix {
-                    SetScript = {
-                        Restart-Service -Name frxsvc
-                    }
+        Script RestartFSLogix {
+            SetScript = {
+                Restart-Service -Name frxsvc
+            }
 
-                    TestScript = {
-                        $result = $false
-                        Get-Service -Name frxsvc
-                        $result
-                    }
-                    GetScript = {@{Result="Ok"}}
-                    DependsOn = "[Registry]LogLocation"
-                } 
+            TestScript = {
+                $result = $false
+                Get-Service -Name frxsvc
+                $result
+            }
+            GetScript = {@{Result="Ok"}}
+            DependsOn = "[Registry]LogLocation"
+        } 
 	}
 }

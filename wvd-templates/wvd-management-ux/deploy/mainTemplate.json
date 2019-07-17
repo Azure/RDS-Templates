@@ -6,47 +6,47 @@
             "defaultValue": "https://rdbroker.wvd.microsoft.com",
             "type": "string",
             "metadata": {
-                "description": "RDBroker URL of the infrastructure.   Ex: https://rdbroker.wvd.microsoft.com"
+                "description": "RDBroker URL of the infrastructure. Ex: https://rdbroker.wvd.microsoft.com"
             }
         },
         "ResourceURL": {
             "defaultValue": "https://mrs-prod.ame.gbl/mrs-RDInfra-prod",
             "type": "string",
             "metadata": {
-                "description": "Enterprise application location…"
+                "description": "The resourceURL defining the Windows Virtual Desktop enterprise appplication."
             }
         },
         "AzureADUserPrincipalName": {
             "type": "string",
             "metadata": {
-                "description": "User must have RDS Owner on the WVD tenant and must have Contributor on the Azure subscription"
+                "description": "An Azure AD user who has permissions to create resources (and a resource group, if chosen) in the Azure subscription. This can be accomplished by providing a user with a Contributor role in the Azure subscription"
             }
         },
         "AzureLoginPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "The password that corresponds to the AzureAD UserPrincipalName."
+                "description": "The password that corresponds to the AzureADUserPrincipalName."
             }
         },
         "ApplicationName": {
             "type": "string",
             "metadata": {
-                "description": "The name of the web app that you wish to create. Provide unique name"
-            },
-            "defaultValue": "WVDManagementUXWeb"
+                "description": "Provide a unique name of the web app that you wish to create"
+            }
         }
     },
     "variables": {
-        "accountName": "wvdsaas-autoAccount",
+		"uniquestr": "[uniqueString(resourceGroup().id, deployment().name)]",
+        "accountName": "[concat('wvdsaas-autoAccount','-',variables('uniquestr'))]",
         "credentialName": "DefaultAzureCredential",
-        "runbookName": "msftsaasbook",
-        "webAPIAppName":"[concat(parameters('ApplicationName'),'-API')]",
+        "runbookName": "[concat('msftsaasbook','-',variables('uniquestr'))]",
+        "webAPIAppName": "[concat(parameters('ApplicationName'),'-API')]",
         "hostingPlanName": "[concat(parameters('ApplicationName'),'-SPlan')]",
-        "serviceplansku":"S1",
+        "serviceplansku": "S1",
         "workerSize": "0",
         "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/scripts/",
-        "scriptUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/scripts/New-WVDMgmtSetup.ps1",
-        "fileURI": "[concat(variables('baseURL'),'/msft-rdmi-saas-offering.zip')]",
+        "scriptUri": "[concat(variables('baseURL'),'New-WVDMgmtSetup.ps1')]",
+        "fileURI": "[concat(variables('baseURL'),'/msft-wvd-saas-offering.zip')]",
         "sku": "Free",
         "automationVariables": [
             {
@@ -58,7 +58,7 @@
                 "value": "[concat('\"',parameters('AzureLoginPassword'),'\"')]"
             },
             {
-                "name": "subsriptionid",
+                "name": "subscriptionid",
                 "value": "[concat('\"',subscription().subscriptionId,'\"')]"
             },
             {
@@ -94,7 +94,7 @@
                 "value": "[concat('\"',variables('fileURI'),'\"')]"
             }
         ],
-        "uniqueBase": "[toLower(uniquestring(parameters('ApplicationName'), resourceGroup().id, deployment().name))]",
+        "uniqueBase": "[toLower(uniquestring(parameters('ApplicationName'), resourceGroup().id, deployment().name,variables('accountName')))]",
         "newGuid": "[guid(variables('uniqueBase'))]"
     },
     "resources": [
@@ -105,7 +105,7 @@
                 "capacity": "[variables('workerSize')]"
             },
             "name": "[variables('hostingPlanName')]",
-            "apiVersion": "2015-08-01",
+            "apiVersion": "2016-03-01",
             "location": "[resourceGroup().location]",
             "properties": {
                 "name": "[variables('hostingPlanName')]"
@@ -115,7 +115,7 @@
             "type": "Microsoft.Web/sites",
             "name": "[parameters('ApplicationName')]",
             "kind": "app",
-            "apiVersion": "2015-08-01",
+            "apiVersion": "2016-03-01",
             "location": "[resourceGroup().location]",
             "properties": {
                 "serverFarmId": "[variables('hostingPlanName')]"
@@ -128,7 +128,7 @@
             "type": "Microsoft.Web/sites",
             "name": "[variables('webAPIAppName')]",
             "kind": "api",
-            "apiVersion": "2015-08-01",
+            "apiVersion": "2016-03-01",
             "location": "[resourceGroup().location]",
             "properties": {
                 "serverFarmId": "[variables('hostingPlanName')]"
@@ -162,6 +162,11 @@
             "apiVersion": "2015-01-01-preview",
             "location": "[resourceGroup().location]",
             "tags": {},
+			"dependsOn": [
+                "[resourceId('Microsoft.Web/Sites', parameters('ApplicationName'))]",
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+                "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
+            ],
             "properties": {
                 "sku": {
                     "name": "[variables('sku')]"
@@ -228,8 +233,7 @@
                         "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"
                     ]
                 }
-            ],
-            "dependsOn": []
+            ]
         }
     ],
     "outputs": {}
