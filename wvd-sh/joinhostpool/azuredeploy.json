@@ -30,7 +30,7 @@
               "description": "Log Analytics Workspace Id"
           }
       }
-        },
+      },
         "variables": {
                         "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/",
         },
