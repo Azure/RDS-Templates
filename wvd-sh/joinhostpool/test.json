@@ -2,35 +2,6 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
       "parameters": {
-
-      "WebAppName": 
-      {
-          "type": "string",
-          "metadata": {
-              "description": "Name of the webapp you wish to create, provide an unique name"
-          }
-      },
-      "Client-Id":
-      {
-          "type": "string",
-          "metadata": {
-              "description": "AzureAD Application Id"
-          }
-      },
-      "Client-Secret":
-      {
-          "type": "securestring",
-          "metadata": {
-              "description": "AzureAD Application Secret Key"
-          }
-      },
-      "LogAnalyticsWorkspaceId":
-      {
-          "type": "string",
-          "metadata": {
-              "description": "Log Analytics Workspace Id"
-          }
-      }
       },
   "variables": {
       "AppServicePlanName":"[concat(parameters('WebAppName'),'-Splan')]",
