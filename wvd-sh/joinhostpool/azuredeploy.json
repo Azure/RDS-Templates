@@ -2,6 +2,26 @@
         "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
                 "contentVersion": "1.0.0.0",
                 "parameters": {
+                        "registrationToken": {
+                                "type": "string",
+                                "metadata": {
+                                        "description": "RDAgent registration token."
+                                },
+                                "defaultValue":""
+                        },
+                        "vmName": {
+                                "type": "string",
+                                "metadata": {
+                                        "description": "VM name to install the RDAgent on."
+                                },
+                                "defaultValue":""
+                        },
+                        "timestamp": {
+                                "type": "string",
+                                "metadata": {
+                                        "description": "Timestamp of the custom script."
+                                }
+                        },
                         "WebAppName": 
                         {
                                 "type": "string",
@@ -30,6 +50,9 @@
                                         "description": "Log Analytics Workspace Id"
                                 }
                         }
+                },
+                "variables": {
+                        "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/",
                 },
                 "resources": [
                         ]
