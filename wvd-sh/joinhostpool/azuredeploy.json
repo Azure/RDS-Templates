@@ -9,6 +9,27 @@
               "description": "Name of the webapp you wish to create, provide an unique name"
           }
       },
+      "Client-Id":
+      {
+          "type": "string",
+          "metadata": {
+              "description": "AzureAD Application Id"
+          }
+      },
+      "Client-Secret":
+      {
+          "type": "securestring",
+          "metadata": {
+              "description": "AzureAD Application Secret Key"
+          }
+      },
+      "LogAnalyticsWorkspaceId":
+      {
+          "type": "string",
+          "metadata": {
+              "description": "Log Analytics Workspace Id"
+          }
+      }
         },
         "variables": {
                         "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/",
