@@ -8,12 +8,6 @@
                                         "description": "RDAgent registration token."
                                 }
                         },
-                        "vmName": {
-                                "type": "string",
-                                "metadata": {
-                                        "description": "VM name to install the RDAgent on."
-                                }
-                        },
                         "WebAppName": 
                         {
                                 "type": "string",
