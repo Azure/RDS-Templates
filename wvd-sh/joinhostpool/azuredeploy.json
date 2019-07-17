@@ -20,8 +20,7 @@
                         "type": "string",
                         "metadata": {
                                 "description": "Timestamp of the custom script."
-                        },
-                        "defaultValue":"[utcNow()]"
+                        }
                 }
         },
         "variables": {
