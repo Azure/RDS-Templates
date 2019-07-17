@@ -16,10 +16,16 @@
                         },
                         "defaultValue":""
                 },
+                "timestamp": {
+                        "type": "string",
+                        "metadata": {
+                                "description": "Timestamp of the custom script."
+                        },
+                        "defaultValue":"[utcNow()]"
+                }
         },
         "variables": {
-                        "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool",
-                        "fileName": "[concat('Microsoft.RDInfra.RDAgent.Installer-x64-',parameters('msiVersion'),'.msi')]"
+                        "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/",
         },
 
         "resources":[
@@ -38,7 +44,7 @@
                                         "[concat(variables('baseUri'),'Agents.zip')]",
                                         "[concat(variables('baseUri'),'RdagentInstall.ps1')]"
                                         ],
-                                "timestamp":"[utcNow()]"
+                                "timestamp":"[parameters('timestamp')]"
                         },
                         "protectedSettings": {
                                 "commandToExecute":"[concat('powershell -ExecutionPolicy Unrestricted -File RdagentInstall.ps1 -registrationToken ', parameters('registrationToken'))]"
