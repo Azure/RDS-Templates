@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool/"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -254,7 +254,7 @@
         "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
-        "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
+        "vmTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/', variables('vmTemplateName'), '.json', parameters('_artifactsLocationSasToken')))]",
         "rdshVmNamesOutput": {
             "copy": [
                 {
@@ -390,7 +390,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
                     "configurationFunction": "Configuration.ps1\\FirstSessionHost",
                     "properties": {
                         "TenantAdminCredentials": {
@@ -436,7 +436,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
                     "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
                     "properties": {
                         "TenantAdminCredentials": {
