@@ -4,7 +4,7 @@ param(
 
 #Extract MSIs
 Expand-Archive -path .\Agents.zip 
-$msiFile =  Get-ChildItem .\Agents -name 'Microsoft.RDInfra.RDAgent*'
+$msiFile =  Get-ChildItem .\Agents -name 'Microsoft.RDInfra.RDAgent.Installer*'
 
 write-host $msiFile
 
