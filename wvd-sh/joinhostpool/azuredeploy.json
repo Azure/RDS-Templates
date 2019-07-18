@@ -23,13 +23,14 @@
                         }
                 },
                 "variables": {
-                        "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/"
+                        "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/",
+                        "cseName": "[concat(parameters('vmName'),'/','customscript')]"
                 },
                 "resources": [
                 {
                         "apiVersion": "2018-10-01",
                         "type": "Microsoft.Compute/virtualMachines/extensions",
-                        "name": "[concat(parameters('vmName'),'/','customscript')]",
+                        "name": "[variables('cseName')]",
                         "location": "[resourceGroup().location]",
                         "properties": {
                                 "publisher": "Microsoft.Compute",
@@ -51,7 +52,7 @@
         ],
                 "outputs": {
                         "instanceView": {
-                                "value": "[reference( resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'))).instanceView]",
+                                "value": "[reference( resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'),'customscript')).instanceView]",
                                 "type": "object"
                         }
                 }

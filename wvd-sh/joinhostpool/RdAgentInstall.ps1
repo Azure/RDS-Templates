@@ -1,5 +1,5 @@
 param(
-      [string]$registrationToken,
+      [string]$registrationToken
 )
 
 #Extract MSIs
