@@ -39,7 +39,7 @@
                                 "settings": {
                                         "fileUris": [
                                                 "[concat(variables('baseUri'),'Agents.zip')]",
-                                        "[concat(variables('baseUri'),'RdagentInstall.ps1')]"
+                                        "[concat(variables('baseUri'),'RdAgentInstall.ps1')]"
                                                 ],
                                         "timestamp":"[parameters('timestamp')]"
                                 },
@@ -48,5 +48,10 @@
                                 }
                         }
                 }
-        ]
-}
+        ],
+                "outputs": {
+                        "instanceView": {
+                                "value": "[reference( resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'))).instanceView]",
+                                "type": "object"
+                        }
+                }
