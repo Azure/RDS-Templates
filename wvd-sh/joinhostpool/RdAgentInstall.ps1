@@ -8,12 +8,13 @@ $msiFile =  Get-ChildItem .\Agents -name 'Microsoft.RDInfra.RDAgent.Installer*'
 
 write-host $msiFile
 
+cd .\Agents
 
 $execarg = @(
     "/i"
-    ".\Agents\$msiFile"
+    "$msiFile"
     "/passive"
-    " REGISTRATIONTOKEN=$registrationToken"
+    "REGISTRATIONTOKEN=$registrationToken"
 )
 
 write-host "Installing RDAgent..."
@@ -27,9 +28,8 @@ Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\RDInfraAgent"
 write-host "Installing BootLoader..."
 $execarg = @(
     "/i"
-    ".\Agents\Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" 
+    "Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi" 
     "/passive"
-    " REGISTRATIONTOKEN=$registrationToken"
 )
 Start-Process msiexec.exe -Wait -ArgumentList $execarg
 
