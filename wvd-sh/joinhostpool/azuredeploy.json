@@ -20,20 +20,6 @@
                                         "description": "Timestamp of the custom script."
                                 }
                         }
-                        "WebAppName": 
-                        {
-                                "type": "string",
-                                "metadata": {
-                                        "description": "Name of the webapp you wish to create, provide an unique name"
-                                }
-                        },
-                                "Client-Id":
-                                {
-                                        "type": "string",
-                                        "metadata": {
-                                                "description": "AzureAD Application Id"
-                                        }
-                                }
                 },
                 "variables": {
                         "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/"
