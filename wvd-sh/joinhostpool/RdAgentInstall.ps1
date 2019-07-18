@@ -16,7 +16,7 @@ $execarg = @(
 )
 
 write-host "Installing RDAgent..."
-Start-Process msiexec.exe -Wait -ArgumentList $exearg
+Start-Process msiexec.exe -Wait -ArgumentList $execarg
 
 write-host "Verifiying RDAgent registry keys"
 
@@ -30,7 +30,7 @@ $execarg = @(
     "/passive"
     " REGISTRATIONTOKEN=$registrationToken"
 )
-Start-Process msiexec.exe -Wait -ArgumentList $exearg
+Start-Process msiexec.exe -Wait -ArgumentList $execarg
 
 if ((Test-Path -Path "HKLM:\SOFTWARE\Microsoft\RDAgentBootLoader") -eq $false) {(Start-Sleep -s 60)} ELSE {write-host "RDAgentBootLoader Registry entry found"}
 Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\RDAgentBootLoader"
