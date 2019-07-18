@@ -4,7 +4,7 @@ Deploy the web app to your azure environment.
 
 Click the button below to deploy:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmbastos%2Fjoinhostpool%2Fwvd-sh%2Fjoinhostpool%2Frdagentarm.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https:%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmbastos%2Fjoinhostpool%2Fwvd-sh%2Fjoinhostpool%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
