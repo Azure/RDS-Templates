@@ -25,5 +25,27 @@
                         "baseUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/mbastos/joinhostpool/wvd-sh/joinhostpool/"
                 },
                 "resources": [
-                        ]
+                {
+                        "apiVersion": "2018-10-01",
+                        "type": "Microsoft.Compute/virtualMachines/extensions",
+                        "name": "[concat(parameters('vmName'),'/','customscript')]",
+                        "location": "[resourceGroup().location]",
+                        "properties": {
+                                "publisher": "Microsoft.Compute",
+                                "type": "CustomScriptExtension",
+                                "typeHandlerVersion": "1.9",
+                                "autoUpgradeMinorVersion": true,
+                                "settings": {
+                                        "fileUris": [
+                                                "[concat(variables('baseUri'),'Agents.zip')]",
+                                        "[concat(variables('baseUri'),'RdagentInstall.ps1')]"
+                                                ],
+                                        "timestamp":"[parameters('timestamp')]"
+                                },
+                                "protectedSettings": {
+                                        "commandToExecute":"[concat('powershell -ExecutionPolicy Unrestricted -File RdagentInstall.ps1 -registrationToken ', parameters('registrationToken'))]"
+                                }
+                        }
+                }
+        ]
 }
