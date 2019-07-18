@@ -31,7 +31,7 @@
         "ApplicationName": {
             "type": "string",
             "metadata": {
-                "description": "Provide a unique name of the web app that you wish to create"
+                "description": "Enter a unique name--without spaces--for your management UX app. This will be used to generate a unique DNS name for the public IP address of the web app and will be used for the app registration in Azure AD."
             }
         },
         "_artifactsLocation": {
