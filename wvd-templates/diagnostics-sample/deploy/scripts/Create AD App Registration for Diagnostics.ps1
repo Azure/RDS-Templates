@@ -26,7 +26,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Co
 Import-Module Az
 Import-Module AzureAD
 
-# Provide the credentials to authenticate to Azure/AzureAD
+# Provide the credentials to authenticate to Azure and AzureAD
 $Credentials = Get-Credential
 
 # Authenticating to Azure
@@ -35,7 +35,7 @@ Login-AzAccount -Credential $Credentials
 # Authenticating to AzureAD
 Connect-AzureAD -Credential $Credentials
 
-# Check AD Application exist/ not
+# Check whether the AD Application exist/ not
 $existingApplication = Get-AzADApplication -DisplayName $AppName -ErrorAction SilentlyContinue
 if ($existingApplication -ne $null) {
     $appId = $existingApplication.ApplicationId
@@ -57,13 +57,13 @@ $ClientSecret=$PasswordCredential.Value
 Write-Output "Creating a new Application in AAD" -Verbose
 
 # Create a new AD Application with provided AppName
-$azAdApplication=New-AzureADApplication -DisplayName $AppName -PublicClient $false
+$azAdApplication=New-AzureADApplication -DisplayName $AppName -PublicClient $false -AvailableToOtherTenants $false
 
 # Create an app credential to the Application
 $SecureClientSecret=ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
 New-AzADAppCredential -ObjectId $azAdApplication.ObjectId -Password $SecureClientSecret -StartDate $startDate -EndDate $startDate.AddYears(1)
 
-# Get ClientId
+# Get the ClientId
 $ClientId = $azAdApplication.AppId
 
 Write-Output "Azure AAD Application creation completed successfully with AppName $AppName (Application Id is: $ClientId)" -Verbose
@@ -71,6 +71,8 @@ Write-Output "Azure AAD Application creation completed successfully with AppName
 # Create new Service Principal
 Write-Output "Creating a new Service Principal" -Verbose
 $ServicePrincipal = New-AzADServicePrincipal -ApplicationId $ClientId 
+
+# Get the Service Principal
 Get-AzADServicePrincipal -ApplicationId $ClientId
 $ServicePrincipalName = $ServicePrincipal.ServicePrincipalNames
 Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose

@@ -6,7 +6,7 @@
       {
           "type": "string",
           "metadata": {
-              "description": "Name of the webapp you wish to create, provide an unique name"
+              "description": "Name of the webapp you wish to create, Provide an unique name"
           }
       },
       "clientId":
