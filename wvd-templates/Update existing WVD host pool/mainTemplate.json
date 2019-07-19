@@ -2,80 +2,18 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "rdBrokerURL": {
-            "defaultValue": "https://rdbroker.wvd.microsoft.com",
+        "_artifactsLocation": {
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Update%20existing%20WVD%20host%20pool",
             "type": "string",
             "metadata": {
-                "description": "The Broker URL of the Windows Virtual Desktop deployment the session hosts will be connected to."
+                "description": "The base URI where artifacts required by this template are located."
             }
         },
-        "existingTenantGroupName": {
-            "defaultValue": "Default Tenant Group",
-            "type": "string",
-            "metadata": {
-                "description": "The name of the tenant group in the Windows Virtual Desktop deployment"
-            }
-        },
-        "existingTenantName": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the tenant in the Windows Virtual Desktop deployment."
-            }
-        },
-        "existingHostpoolName": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the hostpool to be in the RDS Tenant."
-            }
-        },
-        "actionOnPreviousVirtualMachines": {
-            "defaultValue": "Delete",
-            "allowedValues": [
-                "Deallocate",
-                "Delete"
-            ],
-            "type": "string",
-            "metadata": {
-                "description": "Action to be taken on the old Azure VM resources. If delete is selected, the associated network interfaces and vhd files in Azure blob storage will also be deleted."
-            }
-        },
-        "userLogoffDelayInMinutes": {
-            "type": "int",
-            "metadata": {
-                "description": "Delay before users are automatically logged off from the current VMs in the hostpool."
-            }
-        },
-        "userNotificationMessege": {
-            "defaultValue": "Scheduled maintenance, please save your work and logoff as soon as possible",
-            "type": "string",
-            "metadata": {
-                "description": "Message that will be displayed to the user notifying them of the automatic logoff."
-            }
-        },
-        "tenantAdminUpnOrApplicationId": {
-            "type": "string",
-            "metadata": {
-                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the Windows Virtual Desktop Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
-            }
-        },
-        "tenantAdminPassword": {
+        "_artifactsLocationSasToken": {
+            "defaultValue": "",
             "type": "securestring",
             "metadata": {
-                "description": "The password that corresponds to the tenant admin UPN."
-            }
-        },
-        "isServicePrincipal": {
-            "defaultValue": false,
-            "type": "bool",
-            "metadata": {
-                "description": "The boolean value indicating if the credentials are for a service principal."
-            }
-        },
-        "aadTenantId": {
-            "defaultValue": "",
-            "type": "string",
-            "metadata": {
-                "description": "(Required when isServicePrincipal = True) This value identifies the Azure AD tenant of the service principal."
+                "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
             }
         },
         "rdshImageSource": {
@@ -188,6 +126,13 @@
                 "description": "The password that corresponds to the existing domain username."
             }
         },
+        "ouPath": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Specifies an organizational unit (OU) for the domain account. Example: OU=testOU;DC=domain;DC=Domain;DC=com"
+            }
+        },
         "existingVnetName": {
             "type": "string",
             "metadata": {
@@ -216,25 +161,80 @@
                 "description": "The resource group containing the existing virtual network."
             }
         },
-        "ouPath": {
-            "defaultValue": "",
+        "rdBrokerURL": {
+            "defaultValue": "https://rdbroker.wvd.microsoft.com",
             "type": "string",
             "metadata": {
-                "description": "Specifies an organizational unit (OU) for the domain account. Example: OU=testOU;DC=domain;DC=Domain;DC=com"
+                "description": "The Broker URL of the Windows Virtual Desktop deployment the session hosts will be connected to."
             }
         },
-        "_artifactsLocation": {
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Update%20existing%20WVD%20host%20pool",
+        "existingTenantGroupName": {
+            "defaultValue": "Default Tenant Group",
             "type": "string",
             "metadata": {
-                "description": "The base URI where artifacts required by this template are located."
+                "description": "The name of the tenant group in the Windows Virtual Desktop deployment"
             }
         },
-        "_artifactsLocationSasToken": {
-            "defaultValue": "",
+        "existingTenantName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the tenant in the Windows Virtual Desktop deployment."
+            }
+        },
+        "existingHostpoolName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the hostpool to be in the RDS Tenant."
+            }
+        },
+        "tenantAdminUpnOrApplicationId": {
+            "type": "string",
+            "metadata": {
+                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the Windows Virtual Desktop Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
+            }
+        },
+        "tenantAdminPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
+                "description": "The password that corresponds to the tenant admin UPN."
+            }
+        },
+        "isServicePrincipal": {
+            "defaultValue": false,
+            "type": "bool",
+            "metadata": {
+                "description": "The boolean value indicating if the credentials are for a service principal."
+            }
+        },
+        "aadTenantId": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "(Required when isServicePrincipal = True) This value identifies the Azure AD tenant of the service principal."
+            }
+        },
+        "actionOnPreviousVirtualMachines": {
+            "defaultValue": "Delete",
+            "allowedValues": [
+                "Deallocate",
+                "Delete"
+            ],
+            "type": "string",
+            "metadata": {
+                "description": "Action to be taken on the old Azure VM resources. If delete is selected, the associated network interfaces and vhd files in Azure blob storage will also be deleted."
+            }
+        },
+        "userLogoffDelayInMinutes": {
+            "type": "int",
+            "metadata": {
+                "description": "Delay before users are automatically logged off from the current VMs in the hostpool."
+            }
+        },
+        "userNotificationMessege": {
+            "defaultValue": "Scheduled maintenance, please save your work and logoff as soon as possible",
+            "type": "string",
+            "metadata": {
+                "description": "Message that will be displayed to the user notifying them of the automatic logoff."
             }
         },
         "location": {
