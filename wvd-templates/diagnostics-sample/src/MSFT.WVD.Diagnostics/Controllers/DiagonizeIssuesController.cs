@@ -127,6 +127,7 @@ namespace MSFT.WVD.Diagnostics.Controllers
               
             }
             HttpContext.Session.Set<DiagonizeQuery>("SearchQuery", data.DiagonizeQuery);
+            HttpContext.Session.Set<List<ConnectionActivity>>("ConnectionActivity", viewData.ConnectionActivity);
             viewData.DiagonizeQuery = data.DiagonizeQuery;
             return View("SearchResults", viewData);
         }
@@ -555,5 +556,29 @@ namespace MSFT.WVD.Diagnostics.Controllers
             return await IssuesInterval(diagonizePageViewModel,null,null,upn);
 
         }
-    }
+        private string ListToCSV<ConnectionActivity>(List<ConnectionActivity> list)
+        {
+            StringBuilder sList = new StringBuilder();
+
+            Type type = typeof(ConnectionActivity);
+            var props = type.GetProperties();
+            sList.Append(string.Join(",", props.Select(p => p.Name)));
+            sList.Append(Environment.NewLine);
+
+            foreach (var element in list)
+            {
+                sList.Append(string.Join(",", props.Select(p => p.GetValue(element, null))));
+                sList.Append(Environment.NewLine);
+            }
+
+            return sList.ToString();
+        }
+        [HttpPost]
+        public FileContentResult ExtractToCSV()
+        {
+            List<ConnectionActivity> data = HttpContext.Session.Get<List<ConnectionActivity>>("ConnectionActivity");
+           string csv = ListToCSV(data);
+           return File(new System.Text.UTF8Encoding().GetBytes(csv), "text/csv", "DiagnosticActivities.csv");
+       }
+}
     }

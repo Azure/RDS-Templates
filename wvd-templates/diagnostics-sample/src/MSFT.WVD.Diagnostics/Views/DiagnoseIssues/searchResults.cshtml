@@ -31,15 +31,15 @@
                 </div>
             </div>
         </div>
-
+        <hr />
+        <div class="export-btn">
+            <button type="submit" class="ms-Button ms-Button--default float-left" asp-action="ExtractToCSV" id="export">
+                <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
+            </button>
+        </div>
     </form>
 
-    <hr />
-    <div class="export-btn">
-        <button class="ms-Button ms-Button--default float-left" onclick="download_csv()" id="export">
-            <span class="ms-Button-label flex-row-center"><i class="ms-Icon ms-Icon--Export" aria-hidden="true"></i>Export</span>
-        </button>
-    </div>
+   
 
     <div class="ContextualMenuWrap">
         <div class="ms-ContextualMenuExample filter-btn float-right">
@@ -398,45 +398,7 @@
             }
         }
     }
-    function download_csv() {
-        var jsonData = [];
-        var jsonHeaderData = '';
-        var myTab = document.getElementById('activityTabledata');
-        for (var j = 1; j < myTab.rows[0].cells.length; j++) {
-            var objheaers = myTab.rows[0].cells[j].innerText;
-            if (j == 1) {
-                jsonHeaderData = objheaers;
-            }
-            else {
-                jsonHeaderData = jsonHeaderData + "," + objheaers;
-            }
-        }
-        for (i = 1; i < myTab.rows.length; i++) {
-            var jsonRowData = [];
-            for (var j = 1; j < myTab.rows[i].cells.length; j++) {
-                var objCells = myTab.rows[i].cells[j].innerText;
-
-                jsonRowData.push(objCells);
-            }
-            jsonData.push(jsonRowData);
-        }
-        var csv = jsonHeaderData + '\n';
-        jsonData.forEach(function (row) {
-            csv += row.join(',');
-            csv += "\n";
-        });
-        console.log(csv);
-        var fileName = "DiagnosticActivities";
-        var uri = 'data:application/csv;charset=utf-8,' + escape(csv);
-        var link = document.createElement("a");
-        link.href = uri;
-        link.style = "visibility:hidden";
-        link.download = fileName + ".csv";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-       
-    }
+  
  
 </script>
 <script>
