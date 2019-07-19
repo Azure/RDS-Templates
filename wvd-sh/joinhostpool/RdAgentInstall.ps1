@@ -20,7 +20,6 @@ $execarg = @(
 write-host "Installing RDAgent..."
 Start-Process msiexec.exe -Wait -ArgumentList $execarg
 
-write-host "Verifiying RDAgent registry keys"
 
 write-host "Installing BootLoader..."
 $execarg = @(
@@ -32,7 +31,7 @@ Start-Process msiexec.exe -Wait -ArgumentList $execarg
 
 write-host "Agent Status:$((Get-Service rdagentbootloader).Status)"
 
-write-host "Verify reg keys
+write-host "Verifiying RDAgent registry keys"
 if ((Test-Path -Path "HKLM:\SOFTWARE\Microsoft\RDInfraAgent") -eq $false) {(Start-Sleep -s 60)} ELSE {write-host "RDinfraAgent Registry entry found"}
 Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\RDInfraAgent"
 
