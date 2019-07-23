@@ -29,6 +29,8 @@ namespace MSFT.WVD.Diagnostics.Common.Services
             requestdata.Add("grant_type", "refresh_token");
             requestdata.Add("resource", _config["configurations:LogAnalytic_URL"]);
             requestdata.Add("refresh_token", refreshToken);
+            requestdata.Add("client_id", _config["AzureAd:ClientId"]);
+            requestdata.Add("client_secret", _config["AzureAd:ClientSecret"]);
             using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
