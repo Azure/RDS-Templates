@@ -135,7 +135,7 @@
             "Windows-10-Enterprise-1903": {
                 "galleryPublisher": "MicrosoftWindowsDesktop",
                 "galleryOffer": "Windows-10",
-                "gallerySku": "19h1-ent"
+                "gallerySku": "19h1-entn"
             },
             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1809": {
                 "galleryPublisher": "MicrosoftWindowsDesktop",
