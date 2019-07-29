@@ -46,6 +46,7 @@
                 "Windows-10-Enterprise-1903",
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1809",
                 "Windows-10-Enterprise-multi-session-1809",
+                "Windows-10-Enterprise-1809",
                 "2016-Datacenter"
             ],
             "defaultValue": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus"
