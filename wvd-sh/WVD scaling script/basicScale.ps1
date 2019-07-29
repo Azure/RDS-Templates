@@ -217,7 +217,7 @@ Select-AzureRmSubscription -SubscriptionId $CurrentAzureSubscriptionId
 $BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 $EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
 
-#Checking givne host pool name exists in Tenant
+#Checking given host pool name exists in Tenant
 $HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
 if ($HostpoolInfo -eq $null) {
     Write-Log 1 "Hostpoolname '$HostpoolName' does not exist in the tenant of '$TenantName'. Ensure that you have entered the correct values." "Info"
