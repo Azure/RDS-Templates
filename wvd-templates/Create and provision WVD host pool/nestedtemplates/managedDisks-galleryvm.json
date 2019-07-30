@@ -23,7 +23,8 @@
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1809",
                 "Windows-10-Enterprise-multi-session-1809",
                 "Windows-10-Enterprise-1809",
-                "2016-Datacenter"
+                "Windows-Server-2016-Datacenter",
+                "Windows-Server-2012-R2-Datacenter"
             ],
             "metadata": {
                 "description": "Gallery image SKU."
@@ -153,10 +154,15 @@
                 "galleryOffer": "Windows-10",
                 "gallerySku": "rs5-enterprise"
             },
-            "2016-Datacenter": {
+            "Windows-Server-2016-Datacenter": {
                 "galleryPublisher": "MicrosoftwindowsServer",
                 "galleryOffer": "WindowsServer",
                 "gallerySku": "2016-Datacenter"
+            },
+            "Windows-Server-2012-R2-Datacenter": {
+                "galleryPublisher": "MicrosoftwindowsServer",
+                "galleryOffer": "WindowsServer",
+                "gallerySku": "2012-R2-Datacenter"
             }
         },
         "storageAccountType": "[parameters('rdshVMDiskType')]",
