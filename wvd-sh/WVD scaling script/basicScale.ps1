@@ -224,7 +224,7 @@ if ($HostpoolInfo -eq $null) {
     exit
 }	
         
-#Compare session loadbalancing peak hours and setting up appropriate load balacing type based on PeakLoadBalancingType
+#Compare beginpeaktime and endpeaktime hours and setting up appropriate load balacing type based on PeakLoadBalancingType
 if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 
     if ($HostpoolInfo.LoadBalancerType -ne $PeakLoadBalancingType) {
@@ -241,7 +241,7 @@ if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDa
 }
 else{
     if ($HostpoolInfo.LoadBalancerType -eq $PeakLoadBalancingType) {
-        Write-Log 3 "Changing Hostpool Load Balance Type:$PeakLoadBalancingType Current Date Time is: $CurrentDateTime" "Info"
+        Write-Log 3 "Changing Hostpool Load Balance Type in off peak hours. Current Date Time is: $CurrentDateTime" "Info"
         
         if ($hostpoolinfo.LoadBalancerType -ne "DepthFirst") {                
             $LoadBalanceType = Set-RdsHostPool -TenantName $TenantName -Name $HostpoolName -DepthFirstLoadBalancer -MaxSessionLimit $HostpoolInfo.MaxSessionLimit
