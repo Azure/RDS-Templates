@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Xml;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -308,8 +309,8 @@ namespace MSFT.WVD.Diagnostics.Controllers
                                 hostPoolName = item.hostPoolName,
                                 sessionHostName = item.sessionHostName,
                                 sessionId = item.sessionId,
-                                messageTitle = data.Title,
-                                messageBody = data.Message,
+                                messageTitle = HttpUtility.UrlEncode(data.Title),
+                                messageBody = HttpUtility.UrlEncode(data.Message),
                                 userPrincipalName = item.userPrincipalName,
                                 adUserName = item.adUserName
 

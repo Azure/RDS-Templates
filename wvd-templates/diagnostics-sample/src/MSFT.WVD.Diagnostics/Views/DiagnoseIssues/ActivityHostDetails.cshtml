@@ -16,28 +16,28 @@
             <div class="ms-Grid m-b-25 ms-Grid-col ms-xxxl4 ms-xxl6 ms-xl6 border-right" dir="ltr">
                 <div class="ms-Grid-row">
                     <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl0 ms-xl12 m-b-25">
-                        <label asp-for="ConnectionActivity.activityId" class="control-label">Activity Id:</label>
+                        <label asp-for="ConnectionActivity.activityId" class="control-label">Activity ID:</label>
                         <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.activityId</span>
-                            <input asp-for="@Model.ConnectionActivity.activityId"  type="hidden">
+                            <input asp-for="@Model.ConnectionActivity.activityId" type="hidden">
                         </div>
                     </div>
                     <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl0 ms-xl12 m-b-25">
-                        <label asp-for="ConnectionActivity.userName" class="control-label">Current User UPN:</label>
+                        <label asp-for="ConnectionActivity.userName" class="control-label">Current user UPN:</label>
                         <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.userName</span>
                             <input asp-for="@Model.ConnectionActivity.userName" id="userName" type="hidden">
                         </div>
                     </div>
                     <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl10 ms-xl12 m-b-25">
-                        <label asp-for="ConnectionActivity.SessionHostName" class="control-label">Session Host Name:</label>
+                        <label asp-for="ConnectionActivity.SessionHostName" class="control-label">Session host name:</label>
                         <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.SessionHostName</span>
                             <input asp-for="@Model.ConnectionActivity.SessionHostName" type="hidden">
                         </div>
                     </div>
                     <div class="form-wrap ms-Grid-col ms-xxxl10 ms-xxl10 ms-xl12 m-b-25">
-                        <label asp-for="ConnectionActivity.SessionHostPoolName" class="control-label">SessionHostPoolName:</label>
+                        <label asp-for="ConnectionActivity.SessionHostPoolName" class="control-label">Session host pool name:</label>
                         <div class="input-wrap spanlabel">
                             <span>@Model.ConnectionActivity.SessionHostPoolName</span>
                             <input asp-for="@Model.ConnectionActivity.SessionHostPoolName" type="hidden">
@@ -65,10 +65,10 @@
                 }
                 <ul id="nav-tab" class="nav tab-links">
                     <li class="@tab1Style">
-                        <a href="#tab1">VM Performance</a>
+                        <a href="#tab1">VM performance</a>
                     </li>
                     <li class="@tab2Style">
-                        <a href="#tab2">User Connected</a>
+                        <a href="#tab2">User connected</a>
                     </li>
                 </ul>
 
@@ -97,21 +97,24 @@
                             else
                             {
                                 status = "Unhealthy";
-
                             }
                             @if (@status == "Healthy")
                             {
-                                <h4> VM Health State -  @*<i class="fa fa-check" style="color: #107c10;"></i>*@ <i class="ms-Icon ms-Icon--CheckMark green-circled-check" aria-hidden="true"></i> </h4>
+                                <div class="vm-status"><b> VM health state: &nbsp;&nbsp;&nbsp; </b>  <i class="ms-Icon ms-Icon--CheckMark green-circled-check" aria-hidden="true"></i></div>
                             }
                             else if (@status == "-")
                             {
-                                <h4> VM Health State :N/A</h4>
+                                <div class="vm-status">
+                                    <b> VM health state: &nbsp;&nbsp;&nbsp;</b><span>N/A</span>
+                                </div>
                             }
                             else
                             {
-                                <h4> VM Health State -  @*<i class="fa fa-check" style="color: #107c10;"></i>*@ <i class="ms-Icon ms-Icon--CheckMark green-circled-check" aria-hidden="true"></i> </h4>
+                                <div class="vm-status">
+                                    <b> VM health state: &nbsp;&nbsp;&nbsp; </b><i class="ms-Icon ms-Icon--ErrorBadge red-circled-check" aria-hidden="true"></i>
+                                </div>
                             }
-                            <h4> VM Performance Current state </h4>
+                            <h4> VM performance current state </h4>
                             <table class="ms-Table activity-details-table" style="width:100%;">
                                 @if (Model.UserSessions != null && Model.UserSessions.Count > 0)
                                 {
@@ -131,7 +134,7 @@
                                         item.ObjectName == "Input Delay" ? string.Concat(item.Value.ToString(), " ms") : null)));
 
                                     <tr>
-                                        <td>@item.ObjectName </td>
+                                        <td>@item.ObjectName: </td>
                                         @*<td>@value  </td>*@
                                         <td>@resultVal</td>
                                     </tr>
@@ -221,7 +224,7 @@
                                     @{
                                         for (int i = 0; i < Model.UserSessions.Count; i++)
                                         {
-                                           // bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
+                                            // bool isChecked = Convert.ToBoolean(@Model.UserSessions[i].IsSelected);
                                             //var userupn = @Model.ConnectionActivity.userName.Split('@')[0];
                                             //var sessionuserupn = @Model.UserSessions[i].adUserName.Split(@"\")[1];
                                             //if(userupn == sessionuserupn)
@@ -233,7 +236,7 @@
                                                 <tr>
                                                     <td>
                                                         @{ var UserName = @Model.UserSessions[i].adUserName; }
-                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox"  onchange="oncheckboxchecked(event,this)"> 
+                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox" onchange="oncheckboxchecked(event,this)">
                                                         <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
@@ -247,7 +250,7 @@
                                                 </tr>
                                             </tbody>
                                         }
-                                       
+
                                     }
                                 </table>
                             </div>
@@ -463,13 +466,13 @@
             dialogComponent.open();
         }
 
- 
+
         var username = document.getElementById('userName').value;
-        console.log(username,"res");
+        console.log(username, "res");
         var sessionusername = document.getElementById('adUserName').value;
-     //   var modelsessionusername = sessionusername.split('\')[0]
+        //   var modelsessionusername = sessionusername.split('\')[0]
         if (username = sessionusername) {
-            document.getElementsByClassName("chkbox").checked=true;
+            document.getElementsByClassName("chkbox").checked = true;
         }
 
     }());
