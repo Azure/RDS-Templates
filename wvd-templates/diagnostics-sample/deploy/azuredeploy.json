@@ -35,14 +35,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/wvd-monitoring/wvd-templates/diagnostics-sample/deploy/"
-        },
-        "_artifactsLocationSasToken": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
-            },
-            "defaultValue": ""
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/diagnostics-sample/deploy/azuredeploy.json/"
         }
       },
   "variables": {
