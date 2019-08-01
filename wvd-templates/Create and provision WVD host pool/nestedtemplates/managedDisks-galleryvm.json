@@ -19,7 +19,12 @@
             "allowedValues": [
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
                 "Windows-10-Enterprise-multi-session",
-                "2016-Datacenter"
+                "Windows-10-Enterprise-1903",
+                "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1809",
+                "Windows-10-Enterprise-multi-session-1809",
+                "Windows-10-Enterprise-1809",
+                "2016-Datacenter",
+                "2012-R2-Datacenter"
             ],
             "metadata": {
                 "description": "Gallery image SKU."
@@ -118,9 +123,48 @@
         }
     },
     "variables": {
-        "galleryPublisher": "[if( contains(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'MicrosoftWindowsDesktop', 'MicrosoftwindowsServer')]",
-        "galleryOffer": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), 'Windows-10',  if(equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session-with-Office-365-ProPlus'), 'office-365', 'WindowsServer'))]",
-        "gallerySku": "[if( equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session'), '19h1-evd',   if(equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session-with-Office-365-ProPlus'), 'rs5-evd-o365pp', parameters('rdshGalleryImageSKU')))]",
+        "galleryImage": {
+            "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "office-365",
+                "gallerySku": "1903-evd-o365pp"
+            },
+            "Windows-10-Enterprise-multi-session": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "Windows-10",
+                "gallerySku": "19h1-evd"
+            },
+            "Windows-10-Enterprise-1903": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "Windows-10",
+                "gallerySku": "19h1-entn"
+            },
+            "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1809": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "office-365",
+                "gallerySku": "rs5-evd-o365pp"
+            },
+            "Windows-10-Enterprise-multi-session-1809": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "Windows-10",
+                "gallerySku": "rs5-evd"
+            },
+            "Windows-10-Enterprise-1809": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "Windows-10",
+                "gallerySku": "rs5-enterprise"
+            },
+            "2016-Datacenter": {
+                "galleryPublisher": "MicrosoftwindowsServer",
+                "galleryOffer": "WindowsServer",
+                "gallerySku": "2016-Datacenter"
+            },
+            "2012-R2-Datacenter": {
+                "galleryPublisher": "MicrosoftwindowsServer",
+                "galleryOffer": "WindowsServer",
+                "gallerySku": "2012-R2-Datacenter"
+            }
+        },
         "storageAccountType": "[parameters('rdshVMDiskType')]",
         "availabilitySetId": {
             "id": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')),json('null'))]"
@@ -175,9 +219,9 @@
                 },
                 "storageProfile": {
                     "imageReference": {
-                        "publisher": "[variables('galleryPublisher')]",
-                        "offer": "[variables('galleryOffer')]",
-                        "sku": "[variables('gallerySku')]",
+                        "publisher": "[variables('galleryimage')[parameters('rdshGalleryImageSKU')].galleryPublisher]",
+                        "offer": "[variables('galleryImage')[parameters('rdshGalleryImageSKU')].galleryOffer]",
+                        "sku": "[variables('galleryImage')[parameters('rdshGalleryImageSKU')].gallerySku]",
                         "version": "latest"
                     },
                     "osDisk": {
