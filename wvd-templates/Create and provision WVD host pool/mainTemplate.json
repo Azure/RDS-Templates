@@ -47,8 +47,8 @@
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1809",
                 "Windows-10-Enterprise-multi-session-1809",
                 "Windows-10-Enterprise-1809",
-                "Windows-Server-2016-Datacenter",
-                "Windows-Server-2012-R2-Datacenter"
+                "2016-Datacenter",
+                "2012-R2-Datacenter"
             ],
             "defaultValue": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus"
         },
