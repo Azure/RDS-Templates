@@ -1752,6 +1752,14 @@ for details on configuring this project to bundle and minify static web assets. 
         font-size: 11px;
     }
 
+.red-circled-check {
+    background: #d23232;
+    color: #fff;
+    padding: 3px;
+    border-radius: 50%;
+    font-size: 11px;
+}
+
     .ms-Icon--Export::before {
         content: '\EDE1';
     }
@@ -1774,6 +1782,9 @@ for details on configuring this project to bundle and minify static web assets. 
 
 .activityTabledata tbody tr td {
     word-break: break-word;
+}
+.vm-status{
+    margin:20px 0px;
 }
 
 @media screen and (max-width: 1166px) {

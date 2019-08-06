@@ -85,7 +85,6 @@ namespace MSFT.WVD.Diagnostics.Common.Services
             var result = await _cache.GetOrCreateAsync(key, async entry =>
             {
                 var url = "";
-                sendMessageQuery.messageBody = sendMessageQuery.messageBody.ToString().Contains("&") == true ? sendMessageQuery.messageBody.ToString().Replace("&", "and") : sendMessageQuery.messageBody;
                 var Content = new StringContent(JsonConvert.SerializeObject(sendMessageQuery), Encoding.UTF8, "application/json");
                 url = $"{_brokerUrl}RdsManagement/V1/TenantGroups/{sendMessageQuery.tenantGroupName}/Tenants/{sendMessageQuery.tenantName}/HostPools/{sendMessageQuery.hostPoolName}/SessionHosts/{sendMessageQuery.sessionHostName}/Sessions/{sendMessageQuery.sessionId}/actions/send-message-user?MessageTitle={sendMessageQuery.messageTitle.ToString()}&MessageBody={sendMessageQuery.messageBody.ToString()}";
                 var reply = await PostRequest(url, JsonConvert.SerializeObject(sendMessageQuery), accessToken).ConfigureAwait(false);
