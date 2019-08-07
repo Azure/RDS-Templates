@@ -382,7 +382,7 @@
                         <label class="control-label">Internal:</label>
                         <input type="text" class="form-control" id="Internal" style="border: none;box-shadow: none;" readonly />
                         <label class="control-label">Message:</label>
-                        <textarea rows="14" cols="10" wrap="soft" class="form-control" id="Message" style="border: none;box-shadow: none;resize:none;height: 100px;" readonly></textarea>
+                        <div  id="Message" style="border: none;box-shadow: none;height: auto; font-size:14px; font-weight:normal; color:#555555; padding:6px 12px; " ></div>
                         <label class="control-label">Time:</label>
                         <input type="text" class="form-control" id="Time" style="border: none;box-shadow: none;" readonly />
                     </div>
@@ -485,7 +485,7 @@
         document.getElementById("errordetailspanel").style.visibility = "visible";
         document.getElementById('errorcode').value = data.errorCode + '(' + data.errorCodeSymbolic + ')';
         document.getElementById('Internal').value = data.errorInternal;
-        document.getElementById('Message').value = data.errorMessage;
+        document.getElementById('Message').innerText = data.errorMessage;
         document.getElementById('Time').value = data.time;
 
     }
