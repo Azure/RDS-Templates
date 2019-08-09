@@ -20,8 +20,12 @@
                             <br />
 
                             <label asp-for="SubmitData.TenantName" class="control-label">Tenant Name<i class="red">*</i></label>
-                            <input asp-for="SubmitData.TenantName" class="form-control m-b-10" id="tenant" type="text"/>
+                            <input asp-for="SubmitData.TenantName" class="form-control m-b-10" id="tenant" type="text" />
                             <span asp-validation-for="SubmitData.TenantName" id="validatetenant" class="error-msg validatetenant"></span>
+                            <br />
+                            <span class="error-msg">
+                                @Model.Message
+                            </span>
                         </div>
                     </div>
                     <div class="flyoutpanel-footer">
