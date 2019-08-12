@@ -74,10 +74,14 @@ namespace MSFT.WVD.Diagnostics.Controllers
                 }
             }
             role = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles").FirstOrDefault();
+
+           
+
             return View(new HomePageViewModel()
             {
                 SelectedRole = role,
                 Message = messsage,
+                TenantGroups= GetTenantGroups(),
                 ShowDialog = HttpContext.Session.GetString("SelectedTenantGroupName") == null
             });
         }
@@ -170,8 +174,34 @@ namespace MSFT.WVD.Diagnostics.Controllers
         }
         public IActionResult AppSettings()
         {
+           
             _logger.LogInformation("Open panel to set tenant group name and tenant name.");
-            return View();
+            return View(new HomePageViewModel()
+            {
+                TenantGroups = GetTenantGroups(),
+            });
+        }
+
+        public List<string> GetTenantGroups()
+        {
+            var roles = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
+            var tenantGroups = new List<string>();
+            foreach (var item in roles)
+            {
+                if (item.scope.ToString().Split('/').Length > 1)
+                {
+                    tenantGroups.Add(item.scope.ToString().Split('/')[1].ToString());
+                }
+                else
+                {
+                    tenantGroups.Add(Constants.tenantGroupName);
+                }
+            }
+            if (tenantGroups == null || tenantGroups.Count == 0)
+            {
+                tenantGroups.Add(Constants.tenantGroupName);
+            }
+            return tenantGroups.Distinct().ToList();
         }
     }
 }

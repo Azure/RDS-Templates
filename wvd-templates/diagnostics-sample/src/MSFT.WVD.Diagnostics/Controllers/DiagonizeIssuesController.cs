@@ -172,7 +172,7 @@ namespace MSFT.WVD.Diagnostics.Controllers
                 {
                     var logOffUserQuery = new LogOffUserQuery()
                     {
-                        tenantGroupName = item.tenantGroupName,
+                        tenantGroupName = tenantGroupName,
                         tenantName = item.tenantName,
                         hostPoolName = item.hostPoolName,
                         sessionHostName = item.sessionHostName,
@@ -315,7 +315,7 @@ namespace MSFT.WVD.Diagnostics.Controllers
                             {
                                 var sendMessageQuery = new SendMessageQuery()
                                 {
-                                    tenantGroupName = item.tenantGroupName,
+                                    tenantGroupName = tenantGroupName,
                                     tenantName = item.tenantName,
                                     hostPoolName = item.hostPoolName,
                                     sessionHostName = item.sessionHostName,
@@ -427,15 +427,11 @@ namespace MSFT.WVD.Diagnostics.Controllers
                 {
                     userSessions.ForEach(x => x.IsSelected = x.adUserName.ToString().Split(@"\")[1] == ConnectionActivity[0].userName.Split('@')[0] ? true : false);
                 }
-                else if (userSessions[0].httpStatus == HttpStatusCode.Forbidden || userSessions[0].httpStatus == HttpStatusCode.Unauthorized)
+                else if (userSessions != null && userSessions.Count > 0 && (userSessions[0].httpStatus == HttpStatusCode.Forbidden || userSessions[0].httpStatus == HttpStatusCode.Unauthorized))
                 {
                     return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)userSessions[0].httpStatus, Message = "Access Denied! You are not authorized to view user sessions. Please contact system administrator." });
                 }
-                else
-                {
-                    return RedirectToAction("Error", "Home", new ErrorDetails() { StatusCode = (int)HttpStatusCode.InternalServerError, Message = "Eror occured to get user session list. Please contact system administrator." });
-
-                }
+                
 
                 return View(new DiagnoseDetailPageViewModel()
                 {
