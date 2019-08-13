@@ -63,13 +63,19 @@ namespace MSFT.WVD.Diagnostics.Common.Services
                     userPrincipalName = (string)item["userPrincipalName"],
                     sessionId = (int)item["sessionId"],
                     applicationType = (string)item["applicationType"],
-                    adUserName = (string)item["adUserName"]
+                    adUserName = (string)item["adUserName"],
+                    httpStatus=result.StatusCode
                 }).ToList().Where(x => x.sessionHostName.ToString() == hostName).ToList();
             }
             else
             {
                 _logger.LogError("No user sessions found.");
-                return null;
+                return new List<UserSession>() {
+                    new UserSession()
+                    {
+                        httpStatus=result.StatusCode
+                    }
+                };
             }
 
         }
@@ -126,6 +132,7 @@ namespace MSFT.WVD.Diagnostics.Common.Services
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 request.Content = content;
                 HttpResponseMessage response = await client.SendAsync(request);
+                _logger.LogInformation($"Received response from ActivityId:{activityId} Status:{response.StatusCode}");
                 return response.ReasonPhrase;
             }
         }

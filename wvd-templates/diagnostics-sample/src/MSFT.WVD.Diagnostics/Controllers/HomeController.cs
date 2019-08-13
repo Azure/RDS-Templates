@@ -10,7 +10,9 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using MSFT.WVD.Diagnostics.Common.Models;
+using MSFT.WVD.Diagnostics.Common.Services;
 using MSFT.WVD.Diagnostics.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,48 +28,30 @@ namespace MSFT.WVD.Diagnostics.Controllers
         private readonly IFileProvider _fileProvider;
         private readonly ILogger _logger;
         private readonly IHostingEnvironment _hostingEnvironment;
-        public HomeController(IMemoryCache cache , IFileProvider fileProvider, ILogger<DiagnoseIssuesController> logger, IHostingEnvironment hostingEnvironment)
+        private readonly RoleAssignmentService _roleAssignmentService;
+
+        public HomeController(IMemoryCache cache, IFileProvider fileProvider, ILogger<DiagnoseIssuesController> logger, IHostingEnvironment hostingEnvironment, RoleAssignmentService roleAssignmentService)
         {
-                _fileProvider = fileProvider;
-                _logger = logger;
-                _hostingEnvironment = hostingEnvironment;
+            _fileProvider = fileProvider;
+            _logger = logger;
+            _hostingEnvironment = hostingEnvironment;
+            _roleAssignmentService = roleAssignmentService;
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var role = new RoleAssignment();
             var messsage = "";
             if (HttpContext.Session.Get<RoleAssignment>("SelectedRole") == null)
             {
-                //var response = await InitialzeRoleInfomation();
-                //if (response.IsSuccessStatusCode)
-                //{
-                //    var strRoleAssignments = response.Content.ReadAsStringAsync().Result;
-                //    var roleAssignments = JsonConvert.DeserializeObject(strRoleAssignments);
-                //    HttpContext.Session.Set("WVDRoles", roleAssignments);
-                //    //HttpContext.Session.Set("tenantGroups", roleAssignments.Select(x => x.tenantGroupName));
-                //}
-
-                /****following code is for temporary for role assignment***/
-
-                var roleassignment = new RoleAssignment
-                {
-
-                    signInName = User.Claims.First(claim => claim.Type.Contains("upn")).Value,
-                    displayName = User.Claims.First(claim => claim.Type == "name").Value
-                };
-                var roles = new List<RoleAssignment>();
-                roles.Add(roleassignment);
-                _logger.LogInformation($"save selected role in session storage");
-
-                HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleassignment);
-                HttpContext.Session.Set("WVDRoles", roles);
-
+                var roleAssignments = await InitialzeRoleInfomation();
+                HttpContext.Session.Set("WVDRoles", roleAssignments);
+                HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleAssignments[0]);
                 //get queries from xml
                 _logger.LogInformation($"Get Log analytic queries from from xml file");
                 XmlDocument xDoc = new XmlDocument();
                 xDoc.PreserveWhitespace = false;
                 var path = _fileProvider.GetFileInfo("/metrics.xml");
-                if(path.Exists)
+                if (path.Exists)
                 {
                     try
                     {
@@ -80,7 +64,7 @@ namespace MSFT.WVD.Diagnostics.Controllers
                         _logger.LogError($"Failed to load 'metrics.xml' .{ex.Message}");
                         messsage = $"Failed to load 'metrics.xml' .{ex.Message}";
                     }
-                  
+
                 }
                 else
                 {
@@ -90,16 +74,19 @@ namespace MSFT.WVD.Diagnostics.Controllers
                 }
             }
             role = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles").FirstOrDefault();
-            //var tenantGroups = HttpContext.Session.Get<IEnumerable<string>>("tenantGroups")
+
+           
+
             return View(new HomePageViewModel()
             {
                 SelectedRole = role,
                 Message = messsage,
+                TenantGroups= GetTenantGroups(),
                 ShowDialog = HttpContext.Session.GetString("SelectedTenantGroupName") == null
             });
         }
 
-        private async Task<HttpResponseMessage> InitialzeRoleInfomation()
+        private async Task<List<RoleAssignment>> InitialzeRoleInfomation()
         {
             _logger.LogInformation("Call api to get role assignment details");
 
@@ -108,22 +95,8 @@ namespace MSFT.WVD.Diagnostics.Controllers
             string roleAssignments = string.Empty;
             HttpContext.Session.SetString("upn", upn);
             HttpContext.Session.SetString("accessToken", accessToken);
-
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/api/");
-                client.Timeout = TimeSpan.FromMinutes(30);
-                //HTTP GET
-                return await client.GetAsync("RoleAssignment/TenantGroups?accessToken=" + accessToken + "&upn=" + upn);
-                //if (response.IsSuccessStatusCode)
-                //{
-                //    roleAssignments = response.Content.ReadAsStringAsync().Result;
-                //    this.HttpContext.Session.Set("asd", roleAssignments);
-                //    //HttpContext.Session.Set("WVDRoles", roleAssignments);
-                //    //HttpContext.Session.Set("tenantGroups", roleAssignments.Select(x => x.tenantGroupName));
-                //}
-            }
-            //HttpContext.Session.Set<JArray>("WVDRoles", roleAssignments);
+            var roles = await _roleAssignmentService.GetRoleAssignments(accessToken, upn);
+            return roles;
         }
 
         public IActionResult Login()
@@ -141,7 +114,6 @@ namespace MSFT.WVD.Diagnostics.Controllers
         public async Task Logout()
         {
             _logger.LogInformation("Clear sessions and Logout from application");
-
             HttpContext.Session.Clear();
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
@@ -149,37 +121,27 @@ namespace MSFT.WVD.Diagnostics.Controllers
 
         [HttpPost]
         [Authorize]
-        public  IActionResult Save(HomePageViewModel data)
+        public IActionResult Save(HomePageViewModel data)
         {
             if (ModelState.IsValid)
             {
                 _logger.LogInformation("Save tenant group name and tenant name in session storage.");
-
                 var submittedData = data.SubmitData;
                 HttpContext.Session.Set<string>("SelectedTenantGroupName", submittedData.TenantGroupName);
                 HttpContext.Session.Set<string>("SelectedTenantName", submittedData.TenantName);
 
-               
-
-                /***following line will have to use ***/
-                //HttpContext.Session.Set<RoleAssignment>("selectedRole", roles?.SingleOrDefault(x => x.tenantGroupName == submittedData.TenantGroupName));
-                //var roles = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
-
-                //temporary code
-                var roleAssignment = new RoleAssignment
+                List<RoleAssignment> roles = HttpContext.Session.Get<List<RoleAssignment>>("WVDRoles");
+                var selectedRole = roles.ToList().Where(x => x.tenantGroupName == submittedData.TenantGroupName).FirstOrDefault();
+                if (selectedRole == null)
                 {
-                    tenantGroupName = submittedData.TenantGroupName,
-                    signInName = User.Claims.First(claim => claim.Type.Contains("upn")).Value,
-                    displayName = User.Claims.First(claim => claim.Type == "name").Value
-                };
-                var roles = new List<RoleAssignment> { new RoleAssignment {
-                tenantGroupName= submittedData.TenantGroupName,
-                signInName=User.Claims.First(claim => claim.Type.Contains("upn")).Value,
-                displayName=User.Claims.First(claim => claim.Type=="name").Value
-                } };
-                HttpContext.Session.Set("WVDRoles", roles);
-                HttpContext.Session.Set<RoleAssignment>("SelectedRole", roleAssignment);
-                return RedirectToAction("Index", "DiagnoseIssues");
+                    return View("Index", new HomePageViewModel() { ShowDialog = true, Message = "Invalid tenant group name." });
+
+                }
+                else
+                {
+                    HttpContext.Session.Set<RoleAssignment>("SelectedRole", selectedRole);
+                    return RedirectToAction("Index", "DiagnoseIssues");
+                }
             }
             else
             {
@@ -202,7 +164,6 @@ namespace MSFT.WVD.Diagnostics.Controllers
 
                 return View(new ErrorViewModel()
                 {
-
                     ErrorDetails = new ErrorDetails
                     {
                         Message = $"RouteOfException : { exceptionFeature.Path}. ErrorMessage : {exceptionFeature.Error.Message}"
@@ -213,8 +174,34 @@ namespace MSFT.WVD.Diagnostics.Controllers
         }
         public IActionResult AppSettings()
         {
+           
             _logger.LogInformation("Open panel to set tenant group name and tenant name.");
-            return View();
+            return View(new HomePageViewModel()
+            {
+                TenantGroups = GetTenantGroups(),
+            });
+        }
+
+        public List<string> GetTenantGroups()
+        {
+            var roles = HttpContext.Session.Get<IEnumerable<RoleAssignment>>("WVDRoles");
+            var tenantGroups = new List<string>();
+            foreach (var item in roles)
+            {
+                if (item.scope.ToString().Split('/').Length > 1)
+                {
+                    tenantGroups.Add(item.scope.ToString().Split('/')[1].ToString());
+                }
+                else
+                {
+                    tenantGroups.Add(Constants.tenantGroupName);
+                }
+            }
+            if (tenantGroups == null || tenantGroups.Count == 0)
+            {
+                tenantGroups.Add(Constants.tenantGroupName);
+            }
+            return tenantGroups.Distinct().ToList();
         }
     }
 }

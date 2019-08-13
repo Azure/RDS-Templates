@@ -236,7 +236,7 @@
                                                 <tr>
                                                     <td>
                                                         @{ var UserName = @Model.UserSessions[i].adUserName; }
-                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" class="chkbox" onchange="oncheckboxchecked(event,this)">
+                                                        <input asp-for="@Model.UserSessions[i].IsSelected" type="checkbox" id="@i-checkbox" checked="@Model.UserSessions[i].IsSelected" class="chkbox" onchange="oncheckboxchecked(event,this)">
                                                         <input asp-for="@Model.UserSessions[i].tenantGroupName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].tenantName" type="hidden">
                                                         <input asp-for="@Model.UserSessions[i].hostPoolName" type="hidden">
@@ -275,14 +275,14 @@
                                             <button type="button" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
                                         </div>
                                         <div class="flyoutpanel-content">
-                                            <label class="control-label">User UPN<i class="red">*</i></label>
+                                            <label class="control-label"><b>User UPN</b><i class="red">*</i></label>
                                             <div class="flyoutpanel-controls">
-                                                <div style="height:20%; overflow-y:scroll; overflow-x:hidden;">
+                                                <div style="height:50px; overflow-x:hidden;">
                                                     @if (Model.selectedUsername != null && Model.selectedUsername.Count > 0)
                                                     {
                                                         @foreach (var item in Model.selectedUsername)
                                                         {
-                                                            <label class="control-label" asp-for="@item.adUserName" disabled>@item.adUserName</label>
+                                                            <span class="control-label" asp-for="@item.adUserName"  disabled>@item.adUserName</span>
                                                         }
                                                     }
                                                 </div>
@@ -351,10 +351,10 @@
                 document.getElementById("texttitle").value = "";
                 document.getElementById("texterror").value = "";
                 document.getElementById("sendmessagediv").hidden = true;
-                var chk = document.getElementsByClassName("chkbox");
-                for (var i = 0; i < chk.length; i++) {
-                    document.getElementById(i + '-checkbox').checked = false;
-                }
+                //var chk = document.getElementsByClassName("chkbox");
+                //for (var i = 0; i < chk.length; i++) {
+                //    document.getElementById(i + '-checkbox').checked = false;
+                //}
             }
         }
 
@@ -468,9 +468,7 @@
 
 
         var username = document.getElementById('userName').value;
-        console.log(username, "res");
         var sessionusername = document.getElementById('adUserName').value;
-        //   var modelsessionusername = sessionusername.split('\')[0]
         if (username = sessionusername) {
             document.getElementsByClassName("chkbox").checked = true;
         }
@@ -488,14 +486,8 @@
                 var username = tableData[1].rows[i + 1].cells[1].innerText;
                 // checkData.push(username);
                 document.getElementById("textusername").value = username;
-                console.log(document.getElementById("textusername").value, "value")
             }
         }
-        console.log(username, "username")
-
-
-
-
     }
 
 </script>

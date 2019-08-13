@@ -25,7 +25,7 @@ namespace MSFT.WVD.Diagnostics.Common.Models
         Lastonehour=1,
         sixhoursago=6,
         onedayago=24,
-        onweekago=168,
+        oneweekago=168,
     }
     //public class Errors
     //{
