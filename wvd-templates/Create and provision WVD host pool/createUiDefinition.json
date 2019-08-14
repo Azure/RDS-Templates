@@ -54,15 +54,30 @@
 				"visible": true
 			},
 			{
-				"name": "regionInfo",
+				"name": "serviceMetadataLocationTextBlock",
 				"type": "Microsoft.Common.TextBlock",
 				"options": {
-					"text": "For the best user experience, consider creating your environment near an Azure region containing a Windows Virtual Desktop cluster.",
+					"text": "Windows Virtual Desktop stores information that is global in nature. Select the location you would like the service metadata to be stored.",
 					"link": {
 						"label": "Learn more",
-						"uri": "https://azure.microsoft.com/global-infrastructure/services/"
+						"uri": "https://aka.ms/wvdgeo"
 					}
 				}
+			},
+			{
+				"name": "serviceMetadataLocation",
+				"type": "Microsoft.Common.OptionsGroup",
+				"label": "Service metadata location",
+				"defaultValue": "Gallery",
+				"constraints": {
+					"allowedValues": [
+						{
+							"label": "United States",
+							"value": "UnitedStates"
+						}
+					]
+				},
+				"visible": true
 			}
 		],
 		"steps": [
