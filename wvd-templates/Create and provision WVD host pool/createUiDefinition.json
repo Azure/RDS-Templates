@@ -73,7 +73,7 @@
 					"allowedValues": [
 						{
 							"label": "United States",
-							"value": "UnitedStates"
+							"value": "United-States"
 						}
 					]
 				},
@@ -756,6 +756,7 @@
 			"existingTenantGroupName": "[steps('wvdTenantInfo').tenantGroupName]",
 			"existingTenantName": "[steps('wvdTenantInfo').tenantName]",
 			"hostPoolName": "[basics('hostpoolName')]",
+			"serviceMetadataLocation": "[basics('serviceMetadataLocation')]",
 			"enablePersistentDesktop": "[basics('isPersonalDesktop').value]",
 			"defaultDesktopUsers": "[basics('defaultDesktopUsers')]",
 			"tenantAdminUpnOrApplicationId": "[coalesce(steps('wvdTenantInfo').tenantAdminApplicationId, steps('wvdTenantInfo').tenantAdminUPN) ]",
