@@ -394,6 +394,10 @@
 									"value": "Windows-10-Enterprise-multi-session"
 								},
 								{
+									"label": "Windows 10 Enterprise, Version 1903",
+									"value": "Windows-10-Enterprise-1903"
+								},
+								{
 									"label": "Windows Server 2016 Datacenter",
 									"value": "2016-Datacenter"
 								}
