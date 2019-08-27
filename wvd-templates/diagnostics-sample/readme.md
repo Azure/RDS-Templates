@@ -19,7 +19,7 @@ Deploy this web app in your Azure subscription to search and view diagnostic act
 
 To get started, you’ll need to find your app’s configuration file. First, navigate to the Kudu portal: 
 
-- https://<yourappname> .scm.azurewebsites.net/DebugConsole 
+- https://&lt;yourappname&gt;.scm.azurewebsites.net/DebugConsole 
 
 Next, select the Site folder and navigate to wwwroot. 
 
