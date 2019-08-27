@@ -22,12 +22,12 @@ Param(
 # Set the ExecutionPolicy
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 
-# Importing the modules
+# Import Az and AzureAD modules
 Import-Module Az
 Import-Module AzureAD
 
-# Provide the credentials to authenticate to Azure/AzureAD
-$Credentials=Get-Credential
+# Provide the credentials to authenticate to Azure and AzureAD
+$Credentials = Get-Credential
 
 # Authenticating to Azure
 Login-AzAccount -Credential $Credentials
@@ -35,15 +35,15 @@ Login-AzAccount -Credential $Credentials
 # Authenticating to AzureAD
 Connect-AzureAD -Credential $Credentials
 
-# Check if AD Application exist
+# Check whether the AD Application exist/ not
 $existingApplication = Get-AzADApplication -DisplayName $AppName -ErrorAction SilentlyContinue
 if ($existingApplication -ne $null) {
     $appId = $existingApplication.ApplicationId
-    Write-Output "An AAD Application already exists with (Application Id: $appId). Choose a different app display name"  -Verbose
+    Write-Output "An AAD Application already exists with AppName $AppName(Application Id: $appId). Choose a different AppName"  -Verbose
     return
 }
 
-# Create an application secret
+# Create a Client Secret
 $startDate = Get-Date
 $endDate = $startDate.AddYears(1)
 $Guid = New-Guid
@@ -56,21 +56,23 @@ $ClientSecret=$PasswordCredential.Value
 
 Write-Output "Creating a new Application in AAD" -Verbose
 
-# Create a new AD Application
-$azAdApplication=New-AzureADApplication -DisplayName $AppName -PublicClient $true 
+# Create a new AD Application with provided AppName
+$azAdApplication=New-AzureADApplication -DisplayName $AppName -PublicClient $false -AvailableToOtherTenants $false
 
 # Create an app credential to the Application
 $SecureClientSecret=ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
 New-AzADAppCredential -ObjectId $azAdApplication.ObjectId -Password $SecureClientSecret -StartDate $startDate -EndDate $startDate.AddYears(1)
 
-# Get ClientId
+# Get the ClientId
 $ClientId = $azAdApplication.AppId
 
-Write-Output "Azure AAD Application creation completed successfully (Application Id: $ClientId)" -Verbose
+Write-Output "Azure AAD Application creation completed successfully with AppName $AppName (Application Id is: $ClientId)" -Verbose
 
 # Create new Service Principal
 Write-Output "Creating a new Service Principal" -Verbose
 $ServicePrincipal = New-AzADServicePrincipal -ApplicationId $ClientId 
+
+# Get the Service Principal
 Get-AzADServicePrincipal -ApplicationId $ClientId
 $ServicePrincipalName = $ServicePrincipal.ServicePrincipalNames
 Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose
@@ -101,13 +103,13 @@ foreach($permission in $AzureLogAnalyticsApiPrincipal.Oauth2Permissions){
 $AzureGraphApiPrincipal = Get-AzureADServicePrincipal -SearchString "Microsoft Graph"
 $AzureGraphApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
 $AzureGraphApiAccess.ResourceAppId = $AzureGraphApiPrincipal.AppId
-$permission=$AzureGraphApiPrincipal.Oauth2Permissions | Where-Object {$_.Value -eq "User.Read"}
+$permission = $AzureGraphApiPrincipal.Oauth2Permissions | Where-Object {$_.Value -eq "User.Read"}
 $AzureGraphApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
 
 
 # Add the WVD API,Log Analytics API and Microsoft Graph API permissions to the ADApplication
 Set-AzureADApplication -ObjectId $azAdApplication.ObjectId -RequiredResourceAccess $AzureLogAnalyticsApiAccess,$AzureWVDApiAccess,$AzureGraphApiAccess -ErrorAction Stop
 
-#Get the Client Id/Application Id and Client Secret
+# Get the Client Id/Application Id and Client Secret
 Write-Output "Client Id : $ClientId"
 Write-Output "Client Secret Key: $ClientSecret"

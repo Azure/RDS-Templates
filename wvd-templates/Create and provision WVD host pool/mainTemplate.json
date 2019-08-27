@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool/"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -43,6 +43,7 @@
             "allowedValues": [
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
                 "Windows-10-Enterprise-multi-session",
+                "Windows-10-Enterprise-1903",
                 "2016-Datacenter"
             ],
             "defaultValue": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus"
@@ -193,6 +194,16 @@
                 "description": "The name of the hostpool to be created in the RDS Tenant."
             }
         },
+        "serviceMetadataLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "Windows Virtual Desktop stores information that is global in nature. Select the location you would like the service metadata to be stored. See https://aka.ms/wvdgeo for more information."
+            },
+            "allowedValues": [
+                "United-States"
+            ],
+            "defaultValue": "United-States"
+        },
         "enablePersistentDesktop": {
             "type": "bool",
             "metadata": {
@@ -254,7 +265,7 @@
         "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
-        "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
+        "vmTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/', variables('vmTemplateName'), '.json', parameters('_artifactsLocationSasToken')))]",
         "rdshVmNamesOutput": {
             "copy": [
                 {
@@ -390,7 +401,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
                     "configurationFunction": "Configuration.ps1\\FirstSessionHost",
                     "properties": {
                         "TenantAdminCredentials": {
@@ -436,7 +447,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
                     "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
                     "properties": {
                         "TenantAdminCredentials": {
