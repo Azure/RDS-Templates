@@ -33,11 +33,13 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Co
 # Import the Az module
 Import-Module Az
 
-# Provide the Azure credentials
-$Credential=Get-Credential
-
-# Authenticate to Azure
-Login-AzAccount -Credential $Credential
+# Get the context
+$context= Get-AzContext
+if($context -eq $null)
+{
+  Write-Error "Please authenticate to Azure using Login-AzAccount cmdlet and then run this script"
+  exit
+}
 
 # Select the specified subscription
 Select-AzSubscription -SubscriptionId $SubscriptionId
