@@ -12,11 +12,11 @@ Click the button below to deploy:
 # Update Existing Windows Virtual Desktop Hostpool
 This template will remove or stop the old instance of Windows Virtual Desktop Hostpool session hosts and creates new virtual machines and registers them as session hosts to Windows Virtual Desktop host pool. There are different sets of parameters you must enter to successfully deploy the template:
 
-- ActionOnPreviousVirtualMachines
-- VM image Type
+- VM Image Type
 - RDSH VM Configuration in Azure
 - Domain and Network Properties
 - Authentication to Windows Virtual Desktop
+- Update action
 
 Follow the guidance below for entering the appropriate parameters for your scenario.
 
@@ -111,7 +111,7 @@ When updating a host pool, you can choose how to notify users who are currently 
 
 - **ActionOnPreviousVirtualMachines**. Select **Delete** or **Deallocate**. If **Delete** is selected, the previous session host VMs will be deleted, along with the associated network interfaces and OS disk. If **Deallocate** is selected, Azure VMs (hosts) will be removed from hostpool and simply de-allocated in Azure, allowing you to preserve or connect to them later.
 - **UserLogoffDelayInMinutes**. The delay before users are automatically logged off from existing sessions in the host pool.
-- **UserNotificationMessege**. The message that will be sent to users with existing sessions before the logoff delay counter starts ticking. You can use this message to notify users to save their work or logoff themselves, before they will be logged off automatically. 
+- **UserNotificationMessage**. The message that will be sent to users with existing sessions before the logoff delay counter starts ticking. You can use this message to notify users to save their work or logoff themselves, before they will be logged off automatically. 
 
 [![Deploy](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fstaging%2Fwvd-templates%2FUpdate%20existing%20WVD%20host%20pool%2FmainTemplate.json)
 
