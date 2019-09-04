@@ -100,18 +100,18 @@ Enter the following information to authenticate to Windows Virtual Desktop and r
 - **Existing Host Pool Name**
 - **Tenant Admin Upn or Application Id**. If you are creating a new host pool, this principal must be assigned either the *RDS Owner* or *RDS Contributor* role at the tenant scope (or higher). If you are registering these virtual machines to an existing host pool, this principal must be assigned either the *RDS Owner* or *RDS Contributor* role at the host pool scope (or higher).
 
+  > [!WARNING]
+  You cannot enter a UPN that requires MFA to successfully authenticate. If you do, this template will create the virtual machines but fail to register them to a host pool.
+
+- **Tenant Admin Password**
+- **Is Service Principal**. If you select **True** for **Is Service Principal**, enter your Azure AD tenant ID for the **Aad Tenant Id** parameter to properly identify the directory of your service principal and successfully authenticate to Windows Virtual Desktop. Otherwise, leave the **Aad Tenant Id** parameter empty.
+
 ## Update Actions
 When updating a host pool, you can choose how to notify users who are currently connected and how to handle the previous session host VMs.
 
 - **ActionOnPreviousVirtualMachines**. Select **Delete** or **Deallocate**. If **Delete** is selected, the previous session host VMs will be deleted, along with the associated network interfaces and OS disk. If **Deallocate** is selected, Azure VMs (hosts) will be removed from hostpool and simply de-allocated in Azure, allowing you to preserve or connect to them later.
 - **UserLogoffDelayInMinutes**. The delay before users are automatically logged off from existing sessions in the host pool.
 - **UserNotificationMessege**. The message that will be sent to users with existing sessions before the logoff delay counter starts ticking. You can use this message to notify users to save their work or logoff themselves, before they will be logged off automatically. 
-
-  > [!WARNING]
-  You cannot enter a UPN that requires MFA to successfully authenticate. If you do, this template will create the virtual machines but fail to register them to a host pool.
-
-- **Tenant Admin Password**
-- **Is Service Principal**. If you select **True** for **Is Service Principal**, enter your Azure AD tenant ID for the **Aad Tenant Id** parameter to properly identify the directory of your service principal and successfully authenticate to Windows Virtual Desktop. Otherwise, leave the **Aad Tenant Id** parameter empty.
 
 [![Deploy](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fstaging%2Fwvd-templates%2FUpdate%20existing%20WVD%20host%20pool%2FmainTemplate.json)
 
