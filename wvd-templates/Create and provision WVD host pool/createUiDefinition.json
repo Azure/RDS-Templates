@@ -127,6 +127,15 @@
 									}
 								},
 								{
+									"label": "Power",
+									"value": {
+										"boolean": true,
+										"value": 1,
+										"usageProfileMultiplier": 1,
+										"vmCountMultipler": 0
+									}
+								},
+								{
 									"label": "Custom",
 									"value": {
 										"boolean": false,
@@ -273,9 +282,9 @@
 							]
 						},
 						"recommendedSizes": [
-							"Standard_D8s_v3",
-							"Standard_D8_v3",
-							"Standard_B8ms"
+							"Standard_D4s_v3",
+							"Standard_D4_v3",
+							"Standard_B4ms"
 						],
 						"imageReference": {
 							"publisher": "MicrosoftWindowsDesktop",
