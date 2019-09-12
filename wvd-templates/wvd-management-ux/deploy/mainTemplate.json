@@ -63,14 +63,6 @@
         "sku": "Free",
         "automationVariables": [
             {
-                "name": "Username",
-                "value": "[concat('\"',parameters('AzureADUserPrincipalName'),'\"')]"
-            },
-            {
-                "name": "password",
-                "value": "[concat('\"',parameters('AzureLoginPassword'),'\"')]"
-            },
-            {
                 "name": "subscriptionid",
                 "value": "[concat('\"',subscription().subscriptionId,'\"')]"
             },
