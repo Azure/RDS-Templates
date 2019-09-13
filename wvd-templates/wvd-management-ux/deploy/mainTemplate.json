@@ -52,7 +52,7 @@
     "variables": {
         "uniquestr": "[uniqueString(resourceGroup().id, deployment().name)]",
         "accountName": "[concat('wvdsaas-autoAccount','-',variables('uniquestr'))]",
-        "credentialName": "DefaultAzureCredential",
+        "credentialName": "ManagementUXDeploy",
         "runbookName": "[concat('msftsaasbook','-',variables('uniquestr'))]",
         "webAPIAppName": "[concat(parameters('ApplicationName'),'-API')]",
         "hostingPlanName": "[concat(parameters('ApplicationName'),'-SPlan')]",
