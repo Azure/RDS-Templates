@@ -52,7 +52,7 @@
     "variables": {
         "uniquestr": "[uniqueString(resourceGroup().id, deployment().name)]",
         "accountName": "[concat('wvdsaas-autoAccount','-',variables('uniquestr'))]",
-        "credentialName": "DefaultAzureCredential",
+        "credentialName": "ManagementUXDeploy",
         "runbookName": "[concat('msftsaasbook','-',variables('uniquestr'))]",
         "webAPIAppName": "[concat(parameters('ApplicationName'),'-API')]",
         "hostingPlanName": "[concat(parameters('ApplicationName'),'-SPlan')]",
@@ -62,14 +62,6 @@
         "fileURI": "[concat(parameters('_artifactsLocation'),'scripts/msft-wvd-saas-offering.zip')]",
         "sku": "Free",
         "automationVariables": [
-            {
-                "name": "Username",
-                "value": "[concat('\"',parameters('AzureADUserPrincipalName'),'\"')]"
-            },
-            {
-                "name": "password",
-                "value": "[concat('\"',parameters('AzureLoginPassword'),'\"')]"
-            },
             {
                 "name": "subscriptionid",
                 "value": "[concat('\"',subscription().subscriptionId,'\"')]"
