@@ -33,11 +33,6 @@
 					"Value": "BreadthFirst"
 				},
 				{
-					"_Comments": "Session Load Balancing Peak Hours",
-					"Name": "sessionLoadBalancingPeakHours",
-					"Value": "9:00-3:00"
-				},
-				{
 					"_Comments": "Name of the maintenance Tag",
 					"Name": "maintenanceTagName",
 					"Value": ""

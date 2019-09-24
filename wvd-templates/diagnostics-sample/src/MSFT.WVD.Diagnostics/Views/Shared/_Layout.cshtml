@@ -41,12 +41,12 @@
                 <span>Windows Virtual Desktop</span>
             </div>
            
-            <div class="app-title" id="Homebreadcrumb">
+            @*<div class="app-title" id="Homebreadcrumb">
                 <a class="app-title" asp-area="" asp-controller="Home" asp-action="Index" style="color: whitesmoke;
     text-decoration: none;">
                     >Home
                 </a>
-            </div>
+            </div>*@
             <div class="app-title" id="Diagnosebreadcrumb">
                 <a class="app-title" asp-area="" asp-controller="DiagnoseIssues" asp-action="Index" style="color: whitesmoke;
     text-decoration: none;">
@@ -63,8 +63,8 @@
             <div class="ms-ContextualMenuExample">
                 <button class="ms-Button ms-Button--primary" style="height: 50px !important;padding: 4px 20px 1px !important;margin-right: -24px;">
                     <div class="user-details">
-                        <span style="padding-right: 5px;">@roleAssignment.displayName</span>
-                        <span>@roleAssignment.roleDefinitionName</span>
+                        <span style="padding-right: 5px;">@roleAssignment.displayName.ToString()</span><br />
+                        <span style="font-size:10px;">@roleAssignment.roleDefinitionName.ToString()</span>
                     </div>
                     <div class="user-initials">@initial</div>
                 </button>
@@ -75,12 +75,13 @@
                     <li class="ms-ContextualMenu-item">
                         <div class="app-info">
                             <p class="m-0">
-                                <strong>@roleAssignment.displayName</strong><span> @roleAssignment.roleDefinitionName </span>
+                                <strong>@roleAssignment.displayName.ToString()</strong><span> ( @roleAssignment.roleDefinitionName.ToString() )</span>
                             </p>
-                            <p><span> @roleAssignment.signInName</span></p>
+                            <span> @roleAssignment.signInName.ToString()</span>
                             <hr>
-                            <p><b>Infrastructure Permission</b> <br> <span> @roleAssignment.tenantGroupName</span></p>
+                            <p><b>Infrastructure Permission</b> <br> <span> @roleAssignment.scope.ToString()</span></p>
                             <hr>
+                            <p><b>App Version</b> <br> <span> 1.0.1</span></p>
                         </div>
                     </li>
                     <li class="ms-ContextualMenu-item">

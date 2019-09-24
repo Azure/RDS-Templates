@@ -88,6 +88,7 @@ namespace MSFT.WVD.Diagnostics
             services.AddSingleton<UserSessionService>();
             services.AddSingleton<LogAnalyticsService>();
             services.AddSingleton<CommonService>();
+            services.AddSingleton<RoleAssignmentService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

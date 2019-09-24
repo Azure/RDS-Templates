@@ -198,6 +198,16 @@
                 "description": "The name of the hostpool to be created in the RDS Tenant."
             }
         },
+        "serviceMetadataLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "Windows Virtual Desktop stores information that is global in nature. Select the location you would like the service metadata to be stored. See https://aka.ms/wvdgeo for more information."
+            },
+            "allowedValues": [
+                "United-States"
+            ],
+            "defaultValue": "United-States"
+        },
         "enablePersistentDesktop": {
             "type": "bool",
             "metadata": {

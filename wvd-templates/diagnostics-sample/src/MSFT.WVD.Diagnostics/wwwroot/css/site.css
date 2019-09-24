@@ -6,6 +6,7 @@ html, body {
     padding: 0;
     overflow: hidden;
     font-family: 'Segoe UI';
+    color: #333;
 }
 
 /* body {
@@ -567,6 +568,10 @@ html, body {
         min-width: auto;
     }
 
+.is-selected {
+    content: '\2713'
+}
+
     .float-left {
         float: left;
         background-color: white;
@@ -592,6 +597,7 @@ html, body {
 
         .ms-Table thead th {
             font-weight: 600;
+            color: #333 !important;
         }
 
         .ms-Table tbody tr td {
@@ -886,9 +892,11 @@ html, body {
         display: none;
     }
 
-        .tab-pane.active {
+        .tab-pane .active {
             display: block;
+            font-weight: bold;
         }
+      
 
         .tab-pane .tab-table .ms-Table thead th, .tab-pane .tab-table .ms-Table tbody td {
             border-bottom: none;
@@ -1461,6 +1469,7 @@ for details on configuring this project to bundle and minify static web assets. 
 
         .ms-Table thead th {
             font-weight: 600;
+            color: #333 !important;
         }
 
         .ms-Table tbody tr td {
@@ -1726,14 +1735,21 @@ for details on configuring this project to bundle and minify static web assets. 
 
         .tab-pane.active {
             display: block;
+           
         }
 
-    .not-active {
-        pointer-events: none;
-        cursor: default;
-        text-decoration: none;
-        color: black;
-    }
+.tab-links .active a {
+    font-weight: 600;
+}
+
+
+
+.not-active {
+    pointer-events: none;
+    cursor: default;
+    text-decoration: none;
+    color: black;
+}
 
     #Indexnodata {
         margin-top: 200px;
@@ -1751,6 +1767,14 @@ for details on configuring this project to bundle and minify static web assets. 
         border-radius: 50%;
         font-size: 11px;
     }
+
+.red-circled-check {
+    background: #d23232;
+    color: #fff;
+    padding: 3px;
+    border-radius: 50%;
+    font-size: 11px;
+}
 
     .ms-Icon--Export::before {
         content: '\EDE1';
@@ -1774,6 +1798,9 @@ for details on configuring this project to bundle and minify static web assets. 
 
 .activityTabledata tbody tr td {
     word-break: break-word;
+}
+.vm-status{
+    margin:20px 0px;
 }
 
 @media screen and (max-width: 1166px) {
@@ -1823,7 +1850,7 @@ for details on configuring this project to bundle and minify static web assets. 
                     border-radius: 3px;
                     opacity: 0;
                     top: 0;
-                    left: -100%;
+                    right: 50%;
                     position: absolute;
                     transition: 500ms ease;
                     white-space: nowrap;

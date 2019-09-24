@@ -40,6 +40,7 @@
             "allowedValues": [
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
                 "Windows-10-Enterprise-multi-session",
+                "Windows-10-Enterprise-1903",
                 "2016-Datacenter"
             ],
             "type": "string",
@@ -187,6 +188,16 @@
                 "description": "The name of the hostpool to be in the RDS Tenant."
             }
         },
+        "serviceMetadataLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "Windows Virtual Desktop stores information that is global in nature. Select the location you would like the service metadata to be stored. See https://aka.ms/wvdgeo for more information."
+            },
+            "allowedValues": [
+                "United-States"
+            ],
+            "defaultValue": "United-States"
+        },
         "tenantAdminUpnOrApplicationId": {
             "type": "string",
             "metadata": {
@@ -230,7 +241,7 @@
                 "description": "Delay before users are automatically logged off from the current VMs in the hostpool."
             }
         },
-        "userNotificationMessege": {
+        "userNotificationMessage": {
             "defaultValue": "Scheduled maintenance, please save your work and logoff as soon as possible",
             "type": "string",
             "metadata": {
@@ -408,7 +419,7 @@
                         "DomainName": "[parameters('domainToJoin')]",
                         "deleteordeallocateVMs": "[parameters('ActionOnPreviousVirtualMachines')]",
                         "messageTitle": "[variables('messageTitle')]",
-                        "userNotificationMessege": "[parameters('userNotificationMessege')]",
+                        "userNotificationMessege": "[parameters('userNotificationMessage')]",
                         "userLogoffDelayInMinutes": "[parameters('userLogoffDelayInMinutes')]"
                     }
                 },

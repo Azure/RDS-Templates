@@ -1,6 +1,6 @@
 {
 	"$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
-	"handler": "Microsoft.Compute.MultiVm",
+	"handler": "Microsoft.Azure.CreateUIDef",
 	"version": "0.1.2-preview",
 	"parameters": {
 		"basics": [
@@ -54,15 +54,30 @@
 				"visible": true
 			},
 			{
-				"name": "regionInfo",
+				"name": "serviceMetadataLocationTextBlock",
 				"type": "Microsoft.Common.TextBlock",
 				"options": {
-					"text": "For the best user experience, consider creating your environment near an Azure region containing a Windows Virtual Desktop cluster.",
+					"text": "Windows Virtual Desktop stores information that is global in nature. Select the location you would like the service metadata to be stored.",
 					"link": {
 						"label": "Learn more",
-						"uri": "https://azure.microsoft.com/global-infrastructure/services/"
+						"uri": "https://aka.ms/wvdgeo"
 					}
 				}
+			},
+			{
+				"name": "serviceMetadataLocation",
+				"type": "Microsoft.Common.DropDown",
+				"label": "Service metadata location",
+				"defaultValue": "United States",
+				"constraints": {
+					"allowedValues": [
+						{
+							"label": "United States",
+							"value": "United-States"
+						}
+					]
+				},
+				"visible": true
 			}
 		],
 		"steps": [
@@ -109,6 +124,15 @@
 										"value": 2,
 										"usageProfileMultiplier": 1,
 										"vmCountMultiplier": 0
+									}
+								},
+								{
+									"label": "Power",
+									"value": {
+										"boolean": true,
+										"value": 1,
+										"usageProfileMultiplier": 1,
+										"vmCountMultipler": 0
 									}
 								},
 								{
@@ -258,9 +282,9 @@
 							]
 						},
 						"recommendedSizes": [
-							"Standard_D8s_v3",
-							"Standard_D8_v3",
-							"Standard_B8ms"
+							"Standard_D4s_v3",
+							"Standard_D4_v3",
+							"Standard_B4ms"
 						],
 						"imageReference": {
 							"publisher": "MicrosoftWindowsDesktop",
@@ -377,6 +401,10 @@
 								{
 									"label": "Windows 10 Enterprise multi-session",
 									"value": "Windows-10-Enterprise-multi-session"
+								},
+								{
+									"label": "Windows 10 Enterprise, Version 1903",
+									"value": "Windows-10-Enterprise-1903"
 								},
 								{
 									"label": "Windows Server 2016 Datacenter",
@@ -505,51 +533,6 @@
 						},
 						"toolTip": "Enter the name of the organizational unit (OU) you would like the virtual machines to join. If you do not have a specific OU, leave this parameter empty. The OU should look like 'OU=unit1,DC=contoso,DC=com'",
 						"visible": "[steps('virtualMachineSettings').specifyDetailedDomainConfiguration]"
-					},
-					{
-						"name": "rdshUseManagedDisks",
-						"type": "Microsoft.Common.OptionsGroup",
-						"label": "Use managed disks",
-						"toolTip": "Enable this feature to have Azure automatically manage the availability of disks to provide data redundancy and fault domains, without creating and managing storage accounts on your own. Managed disks may not be available in all regions.",
-						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomVHD')]",
-						"defaultValue": "Yes",
-						"constraints": {
-							"allowedValues": [
-								{
-									"label": "No",
-									"value": false
-								},
-								{
-									"label": "Yes",
-									"value": true
-								}
-							],
-							"required": true
-						}
-					},
-					{
-						"name": "imageStorageAccount",
-						"type": "Microsoft.Storage.StorageAccountSelector",
-						"label": "Image storage account",
-						"toolTip": "Select the storage account containing the generalized .vhd file. The vhds for the newly created VMs will also be created in this storage account.",
-						"defaultValue": {
-							"name": "storageaccount01",
-							"type": "Standard_LRS"
-						},
-						"options": {
-							"hideExisting": false
-						},
-						"visible": "[and(equals(steps('virtualMachineSettings').vmImageType, 'CustomVHD'), not(coalesce(steps('virtualMachineSettings').rdshUseManagedDisks, bool('true'))))]"
-					},
-					{
-						
-						"name": "storageAccountError",
-						"type": "Microsoft.Common.InfoBox",
-						"visible": "[and(equals(steps('virtualMachineSettings').vmImageType, 'CustomVHD')   , and(not(coalesce(steps('virtualMachineSettings').rdshUseManagedDisks, bool('true')))  , not(contains(coalesce(steps('virtualMachineSettings').imageURI, ''),  coalesce(steps('virtualMachineSettings').imageStorageAccount.name, '') ))  ))]",
-						"options": {
-						  "icon": "Error",
-						  "text": "You must select the storage account that contains the vhd image. The storage account names comes right after \"https://\" in the vhd image URI. If you do not see it listed, you must re-start the deployment with the correct Azure location selected."
-						}
 					},
 					{
 						"name": "hostpoolVnet",
@@ -727,8 +710,8 @@
 			"rdshVMDiskType": "[coalesce(steps('virtualMachineSettings').rdshVMDiskTypeAll, steps('virtualMachineSettings').rdshVMDiskTypeStandard)]",
 			"rdshVmSize": "[steps('configureVirtualMachines').virtualMachineSize]",
 			"enableAcceleratedNetworking": false,
-			"rdshUseManagedDisks": "[coalesce(steps('virtualMachineSettings').rdshUseManagedDisks, not(equals(steps('virtualMachineSettings').vmImageType, 'CustomVHD')), bool(true))]",
-			"storageAccountResourceGroupName": "[coalesce(steps('virtualMachineSettings').imageStorageAccount.resourceGroup, '')]",
+			"rdshUseManagedDisks": "[bool(true)]",
+			"storageAccountResourceGroupName": "''",
 			"domainToJoin": "[coalesce(steps('virtualMachineSettings').domainToJoin , last(parse(concat('[\"', replace(steps('virtualMachineSettings').domainUser, '@', '\",\"' ) , '\"]'))))]",
 			"existingDomainUPN": "[steps('virtualMachineSettings').domainUser]",
 			"existingDomainPassword": "[steps('virtualMachineSettings').password.password]",
@@ -741,6 +724,7 @@
 			"existingTenantGroupName": "[steps('wvdTenantInfo').tenantGroupName]",
 			"existingTenantName": "[steps('wvdTenantInfo').tenantName]",
 			"hostPoolName": "[basics('hostpoolName')]",
+			"serviceMetadataLocation": "[basics('serviceMetadataLocation')]",
 			"enablePersistentDesktop": "[basics('isPersonalDesktop').value]",
 			"defaultDesktopUsers": "[basics('defaultDesktopUsers')]",
 			"tenantAdminUpnOrApplicationId": "[coalesce(steps('wvdTenantInfo').tenantAdminApplicationId, steps('wvdTenantInfo').tenantAdminUPN) ]",

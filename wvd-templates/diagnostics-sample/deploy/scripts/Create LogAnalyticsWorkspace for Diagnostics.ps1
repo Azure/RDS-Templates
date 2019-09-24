@@ -33,14 +33,19 @@ Param(
 # Import the Az module
 Import-Module Az
 
-# Provide the Azure credentials
-$Credential=Get-Credential
-
-# Authenticate to Azure
-Login-AzAccount -Credential $Credential
+# Get the context
+$context= Get-AzContext
+if($context -eq $null)
+{
+  Write-Error "Please authenticate to Azure using Login-AzAccount cmdlet and then run this script"
+  exit
+}
 
 # Select the specified subscription
 Select-AzSubscription -SubscriptionId $SubscriptionId
+
+if($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefinitionName -eq "Contributor")
+{
 
 # Check the specified resourcegroup exist/not if not will create new resource group in your Azure subscription
 $CheckRG = Get-AzResourceGroup -Name $ResourcegroupName -Location $Location -ErrorAction SilentlyContinue
@@ -136,6 +141,11 @@ Write-Output "The Log Analytics workspace Id: $WorkspaceId"
 else
 {
 Write-Host "Please provide the unique names for Log Analytics workspace"
+}
+}
+else
+{
+Write-Output "Authenticated user should have the Owner/Contributor permissions"
 }
 
 
