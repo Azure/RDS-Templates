@@ -97,13 +97,6 @@ if($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefini
     $ServicePrincipalName = $ServicePrincipal.ServicePrincipalNames
     Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose
 
-    # Assign role to Service Principal
-    Write-Output "Waiting for Service Principal creation to reflect in Directory before Role assignment"
-    Start-Sleep 25
-    Write-Output "Assigning contributor role to Service Principal App ($ClientId)" -Verbose
-    New-AzRoleAssignment -ApplicationId $ClientId -RoleDefinitionName "contributor"
-    Write-Output "Service Principal role assignment completed successfully" -Verbose 
-
     # Set windows virtual desktop permission to Client App Registration
     $WVDApiPrincipal = Get-AzureADServicePrincipal -SearchString "Windows Virtual Desktop" | Where-Object {$_.DisplayName -eq "Windows Virtual Desktop"}
     $AzureWVDApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
