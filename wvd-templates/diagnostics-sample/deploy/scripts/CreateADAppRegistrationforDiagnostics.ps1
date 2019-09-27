@@ -24,7 +24,7 @@ Param(
 )
 
 # Set the ExecutionPolicy
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
 
 # Import Az and AzureAD modules
 Import-Module Az
@@ -39,10 +39,11 @@ if($context -eq $null)
 }
 
 # Select the subscription
-Select-AzSubscription -SubscriptionId $SubscriptionId
+$Subscription = Select-AzSubscription -SubscriptionId $SubscriptionId
+Set-AzContext -SubscriptionObject $Subscription.ExtendedProperties
 
 # Get the Role Assignment of the authenticated user
-$RoleAssignment=Get-AzRoleAssignment -SignInName $context.Account
+$RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account
 
 # Validate whether the authenticated user having the Owner or Contributor role
 if($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefinitionName -eq "Contributor")
