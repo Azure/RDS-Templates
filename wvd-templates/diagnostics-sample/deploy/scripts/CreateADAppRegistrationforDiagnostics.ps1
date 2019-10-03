@@ -24,7 +24,7 @@ Param(
 )
 
 # Set the ExecutionPolicy
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
 
 # Import Az and AzureAD modules
 Import-Module Az
@@ -39,10 +39,11 @@ if($context -eq $null)
 }
 
 # Select the subscription
-Select-AzSubscription -SubscriptionId $SubscriptionId
+$Subscription = Select-AzSubscription -SubscriptionId $SubscriptionId
+Set-AzContext -SubscriptionObject $Subscription.ExtendedProperties
 
 # Get the Role Assignment of the authenticated user
-$RoleAssignment=Get-AzRoleAssignment -SignInName $context.Account
+$RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account
 
 # Validate whether the authenticated user having the Owner or Contributor role
 if($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefinitionName -eq "Contributor")
@@ -96,13 +97,6 @@ if($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefini
     Get-AzADServicePrincipal -ApplicationId $ClientId
     $ServicePrincipalName = $ServicePrincipal.ServicePrincipalNames
     Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose
-
-    # Assign role to Service Principal
-    Write-Output "Waiting for Service Principal creation to reflect in Directory before Role assignment"
-    Start-Sleep 25
-    Write-Output "Assigning contributor role to Service Principal App ($ClientId)" -Verbose
-    New-AzRoleAssignment -ApplicationId $ClientId -RoleDefinitionName "contributor"
-    Write-Output "Service Principal role assignment completed successfully" -Verbose 
 
     # Set windows virtual desktop permission to Client App Registration
     $WVDApiPrincipal = Get-AzureADServicePrincipal -SearchString "Windows Virtual Desktop" | Where-Object {$_.DisplayName -eq "Windows Virtual Desktop"}
