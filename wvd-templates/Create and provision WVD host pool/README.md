@@ -1,4 +1,13 @@
-# Create and provision new WVD hostpool
+Click the button below to deploy:
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2Fwvd-templates%2FCreate%20and%20provision%20WVD%20host%20pool%2FmainTemplate.json" target="_blank">
+    <img src="http://azuredeploy.net/deploybutton.png"/>
+</a>
+<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2Fwvd-templates%2FCreate%20and%20provision%20WVD%20host%20pool%2FmainTemplate.json" target="_blank">
+    <img src="http://armviz.io/visualizebutton.png"/>
+</a>
+
+# Create and provision new Windows Virtual Desktop hostpool
 
 This template creates virtual machines and registers them as session hosts to a new or existing Windows Virtual Desktop host pool. There are multiple sets of parameters you must enter to successfully deploy the template:
 - VM image
@@ -6,7 +15,8 @@ This template creates virtual machines and registers them as session hosts to a 
 - Domain and network properties
 - Authentication to Windows Virtual Desktop
 
-Follow the guidance below for entering the appropriate parameters for your scenario.
+> **Reporting issues:**
+> Microsoft Support is not handling issues for any published tools in this repository. These tools are published as is with no implied support. However, we would like to welcome you to open issues using GitHub issues to collaborate and improve these tools. You can open [an issue](https://github.com/Azure/rds-templates/issues) and add the label **1-Create-and-provision-host-pool** to associate it with this tool.
 
 ## VM image
 When creating the virtual machines, you have three options:
@@ -93,13 +103,3 @@ Enter the following information to authenticate to Windows Virtual Desktop and r
 ### Default Desktop users
 If you want to assign default users to the "Desktop Application Group", please use the following parameter and provide a comma separated list of users you would like to assign to access the desktop for this host pool. Example: user1@contoso.com,user2@contoso.com,user3@contoso.com.
 - **defaultDesktopUsers**. Make sure you don't use spaces between the commas so it will not interfere with any tool you may be using to deploy this template.
-
-Click the button below to deploy:
-
-
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2Fwvd-templates%2FCreate%20and%20provision%20WVD%20host%20pool%2FmainTemplate.json" target="_blank">
-    <img src="http://azuredeploy.net/deploybutton.png"/>
-</a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2Fwvd-templates%2FCreate%20and%20provision%20WVD%20host%20pool%2FmainTemplate.json" target="_blank">
-    <img src="http://armviz.io/visualizebutton.png"/>
-</a>

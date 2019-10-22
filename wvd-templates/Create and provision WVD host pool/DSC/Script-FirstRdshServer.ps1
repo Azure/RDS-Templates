@@ -61,9 +61,6 @@ $ErrorActionPreference = "Stop"
 # Testing if it is a ServicePrincipal and validade that AadTenant ID in this case is not null or empty
 ValidateServicePrincipal -IsServicePrincipal $isServicePrincipal -AadTenantId $AadTenantId
 
-Write-Log -Message "Identifying if this VM is Build >= 1809"
-$rdshIs1809OrLaterBool = Is1809OrLater
-
 Write-Log -Message "Creating a folder inside rdsh vm for extracting deployagent zip file"
 $DeployAgentLocation = "C:\DeployAgent"
 ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $DeployAgentLocation
@@ -84,16 +81,16 @@ else
 {
     Write-Log -Message "VM not registered with RDInfraAgent, script execution will continue"
 
-    # Importing WVD PowerShell module
+    # Importing Windows Virtual Desktop PowerShell module
     Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
 
-    Write-Log -Message "Imported RDMI PowerShell modules successfully"
+    Write-Log -Message "Imported Windows Virtual Desktop PowerShell modules successfully"
 
     # Getting fqdn of rdsh vm
     $SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
     Write-Log  -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
-    # Authenticating to WVD
+    # Authenticating to Windows Virtual Desktop
     if ($isServicePrincipal -eq "True")
     {
         Write-Log  -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
@@ -110,17 +107,19 @@ else
 
     if ($authentication)
     {
-        Write-Log -Message "RDMI Authentication successfully Done. Result:`n$obj"  
+        Write-Log -Message "Windows Virtual Desktop Authentication successfully Done. Result:`n$obj"  
     }
     else
     {
-        Write-Log -Error "RDMI Authentication Failed, Error:`n$obj"
-        throw "RDMI Authentication Failed, Error:`n$obj"
+        Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
+        throw "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
     }
 
     # Set context to the appropriate tenant group
     Write-Log "Running switching to the $definedTenantGroupName context"
-    Set-RdsContext -TenantGroupName $definedTenantGroupName
+    if ($definedTenantGroupName -ne "Default Tenant Group") {
+        Set-RdsContext -TenantGroupName $definedTenantGroupName
+    }
     try
     {
         $tenants = Get-RdsTenant -Name "$TenantName"
@@ -137,7 +136,8 @@ else
 
     # Checking if host pool exists. If not, create a new one with the given HostPoolName
     Write-Log -Message "Checking Hostpool exists inside the Tenant"
-    $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
+    $HostPool = Get-RdsHostPool -TenantName "$TenantName" | Where-Object { $_.HostPoolName -eq "$HostPoolName"}
+    $ApplicationGroupName = "Desktop Application Group"
     if ($HostPool)
     {
         Write-log -Message "Hostpool exists inside tenant: $TenantName"
@@ -148,6 +148,9 @@ else
         $HostPool = Invoke-Expression("New-RdsHostPool -TenantName `"`$TenantName`" -Name `"`$HostPoolName`" -Description `$Description -FriendlyName `$FriendlyName $EnablePersistentDesktopOption -ValidationEnv `$false")
         $HName = $HostPool.name | Out-String -Stream
         Write-Log -Message "Successfully created new Hostpool: $HName"
+        
+        Write-Log -Message "Changing Application Group: $ApplicationGroupName FriendlyName to: $HostPoolName"
+        Set-RdsRemoteDesktop -TenantName $TenantName -HostPoolName $HostPoolName -AppGroupName $ApplicationGroupName -FriendlyName $HostPoolName
     }
 
     # Setting UseReverseConnect property to true
@@ -179,18 +182,16 @@ else
     Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall, SxS is $DeployAgentLocation\RDInfraSxSStackInstall"
     $DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
                                        -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
-                                       -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" `
-                                       -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" `
                                        -RegistrationToken $Registered.Token `
-                                       -StartAgent $true `
-                                       -rdshIs1809OrLater $rdshIs1809OrLaterBool
+                                       -StartAgent $true
     
     Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName`n$DAgentInstall"
 
     # Get Session Host Info
     Write-Log -Message "Getting rdsh host $SessionHostName information"
 
-    [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = ([PsRdsSessionHost]::new("$TenantName","$HostPoolName",$SessionHostName)).GetSessionHost()
+    [PsRdsSessionHost]$pssh = [PsRdsSessionHost]::new("$TenantName","$HostPoolName",$SessionHostName)
+    [Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = $pssh.GetSessionHost()
     Write-Log -Message "RDSH object content: `n$($rdsh | Out-String)"
 
     $rdshName = $rdsh.SessionHostName | Out-String -Stream
@@ -202,8 +203,18 @@ else
     $DefaultDesktopUsers = $DefaultDesktopUsers.Replace("`"","").Replace("'","").Replace(" ","")
     if (-Not ([string]::IsNullOrEmpty($DefaultDesktopUsers)))
     {
-        $ApplicationGroupName = "Desktop Application Group"
         AddDefaultUsers -TenantName "$TenantName" -HostPoolName "$HostPoolName" -ApplicationGroupName $ApplicationGroupName -DefaultUsers $DefaultDesktopUsers
+    }
+
+    Write-Log -Message "Waiting for session host return when in available status"
+    $AvailableSh =  $pssh.GetSessionHostWhenAvailable()
+    if ($AvailableSh -ne $null)
+    {
+        Write-Log -Message "Session host $($rdsh.SessionHostName) is now in Available state"
+    }
+    else
+    {
+        Write-Log -Message "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
     }
    
     Write-Log -Message "Successfully added $rdshName VM to $poolName"

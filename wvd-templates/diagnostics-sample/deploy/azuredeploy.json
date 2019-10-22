@@ -1,0 +1,107 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+      "parameters": {
+      "appName": 
+      {
+          "type": "string",
+          "metadata": {
+              "description": "Name of the webapp you wish to create, Provide an unique name"
+          }
+      },
+      "clientId":
+      {
+          "type": "string",
+          "metadata": {
+              "description": "AzureAD client Id"
+          }
+      },
+      "clientSecret":
+      {
+          "type": "securestring",
+          "metadata": {
+              "description": "The secret that corresponds to the client Id"
+          }
+      },
+      "logAnalyticsWorkspaceId":
+      {
+          "type": "string",
+          "metadata": {
+              "description": "Log Analytics workspace Id"
+          }
+      },
+	  "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located."
+            },
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/diagnostics-sample/deploy/"
+        }
+      },
+  "variables": {
+      "appServicePlanName":"[concat(parameters('AppName'),'-Splan')]",
+      "workerSize": "0",
+      "servicePlanSKU": "S1",
+      "packageURL":"[concat(parameters('_artifactsLocation'),'wvd-diagnostics-ux.zip')]"
+  },
+  "resources": [
+      {
+        "apiVersion": "2015-08-01",
+        "name": "[variables('appServicePlanName')]",
+        "type": "Microsoft.Web/serverfarms",
+        "location": "[resourceGroup().location]",
+        "tags": {
+          "displayName": "AppServicePlan"
+        },
+        "sku": {
+          "name": "[variables('servicePlanSKU')]",
+          "capacity": "[variables('workerSize')]"
+        },
+        "properties": {
+          "name": "[variables('appServicePlanName')]"
+        }
+      },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[parameters('AppName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[variables('appServicePlanName')]",
+        "siteConfig": {
+          "appSettings": [
+              {
+                  "name": "AzureAd:ClientId",
+                  "value": "[parameters('clientId')]"
+              },
+              {
+                  "name": "AzureAd:ClientSecret",
+                  "value": "[parameters('clientSecret')]"
+              },
+              {
+                  "name": "AzureAd:LogAnalyticsWorkspaceId",
+                  "value": "[parameters('logAnalyticsWorkspaceId')]"
+              }
+          ]
+      }
+      },
+      "resources": [
+        {
+          "name": "MSDeploy",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', parameters('AppName'))]"
+          ],
+          "properties": {
+            "packageUri": "[variables('packageURL')]"
+          }
+        }
+      ]
+    }
+  ]
+}

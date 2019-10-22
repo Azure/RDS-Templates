@@ -15,6 +15,13 @@
     <Variable Name="tenantGroupName" Value="Default Tenant Group"/>
     <!-- WVD host pool name -->
     <Variable Name="hostPoolName" Value=""/>
+	<!-- Hostpool session Load Balancing Type -->
+    <Variable Name="PeakLoadBalancingType" Value="DepthFirst"/>
+    <Variable Name="OffPeakLoadBalancingType" Value="BreadthFirst"/>
+    <!-- session Load Balancing Peak Hours -->
+    <Variable Name="sessionLoadBalancingPeakHours" Value="9:00-18:00"/>
+    <!-- session Load Balancing off Peak Hours -->
+    <Variable Name="sessionLoadBalancingOffPeakHours" Value="18:00-22:00"/>
   </Azure>
   <Deployment>
     <Variable Name="Rdbroker" Value="https://rdbroker.wvd.microsoft.com"/>

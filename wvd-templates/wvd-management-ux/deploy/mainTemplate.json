@@ -6,59 +6,64 @@
             "defaultValue": "https://rdbroker.wvd.microsoft.com",
             "type": "string",
             "metadata": {
-                "description": "RDBroker URL of the infrastructure.   Ex: https://rdbroker.wvd.microsoft.com"
+                "description": "RDBroker URL of the infrastructure. Ex: https://rdbroker.wvd.microsoft.com"
             }
         },
         "ResourceURL": {
             "defaultValue": "https://mrs-prod.ame.gbl/mrs-RDInfra-prod",
             "type": "string",
             "metadata": {
-                "description": "Enterprise application location…"
+                "description": "The resourceURL defining the Windows Virtual Desktop enterprise appplication."
             }
         },
         "AzureADUserPrincipalName": {
             "type": "string",
             "metadata": {
-                "description": "User must have RDS Owner on the WVD tenant and must have Contributor on the Azure subscription"
+                "description": "An Azure AD user who has permissions to create resources (and a resource group, if chosen) in the Azure subscription. This can be accomplished by providing a user with a Contributor role in the Azure subscription"
             }
         },
         "AzureLoginPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "The password that corresponds to the AzureAD UserPrincipalName."
+                "description": "The password that corresponds to the AzureADUserPrincipalName."
             }
         },
         "ApplicationName": {
             "type": "string",
             "metadata": {
-                "description": "The name of the web app that you wish to create. Provide unique name"
+                "description": "Enter a unique name--without spaces--for your management UX app. This will be used to generate a unique DNS name for the public IP address of the web app and will be used for the app registration in Azure AD."
+            }
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "WVDManagementUXWeb"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
+            },
+            "defaultValue": ""
         }
     },
     "variables": {
-        "accountName": "wvdsaas-autoAccount",
-        "credentialName": "DefaultAzureCredential",
-        "runbookName": "msftsaasbook",
-        "webAPIAppName":"[concat(parameters('ApplicationName'),'-API')]",
+        "uniquestr": "[uniqueString(resourceGroup().id, deployment().name)]",
+        "accountName": "[concat('wvdsaas-autoAccount','-',variables('uniquestr'))]",
+        "credentialName": "ManagementUXDeploy",
+        "runbookName": "[concat('msftsaasbook','-',variables('uniquestr'))]",
+        "webAPIAppName": "[concat(parameters('ApplicationName'),'-API')]",
         "hostingPlanName": "[concat(parameters('ApplicationName'),'-SPlan')]",
-        "serviceplansku":"S1",
+        "serviceplansku": "S1",
         "workerSize": "0",
-        "baseURL": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/scripts/",
-        "scriptUri": "[concat(variables('baseURL'),'New-WVDMgmtSetup.ps1')]",
-        "fileURI": "[concat(variables('baseURL'),'/msft-wvd-saas-offering.zip')]",
+        "scriptUri": "[concat(parameters('_artifactsLocation'),'scripts/New-WVDMgmtSetup.ps1')]",
+        "fileURI": "[concat(parameters('_artifactsLocation'),'scripts/msft-wvd-saas-offering.zip')]",
         "sku": "Free",
         "automationVariables": [
             {
-                "name": "Username",
-                "value": "[concat('\"',parameters('AzureADUserPrincipalName'),'\"')]"
-            },
-            {
-                "name": "password",
-                "value": "[concat('\"',parameters('AzureLoginPassword'),'\"')]"
-            },
-            {
-                "name": "subsriptionid",
+                "name": "subscriptionid",
                 "value": "[concat('\"',subscription().subscriptionId,'\"')]"
             },
             {
@@ -94,7 +99,7 @@
                 "value": "[concat('\"',variables('fileURI'),'\"')]"
             }
         ],
-        "uniqueBase": "[toLower(uniquestring(parameters('ApplicationName'), resourceGroup().name, resourceGroup().id, deployment().name))]",
+        "uniqueBase": "[toLower(uniquestring(parameters('ApplicationName'), resourceGroup().id, deployment().name,variables('accountName')))]",
         "newGuid": "[guid(variables('uniqueBase'))]"
     },
     "resources": [
@@ -162,7 +167,7 @@
             "apiVersion": "2015-01-01-preview",
             "location": "[resourceGroup().location]",
             "tags": {},
-			"dependsOn": [
+            "dependsOn": [
                 "[resourceId('Microsoft.Web/Sites', parameters('ApplicationName'))]",
                 "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                 "[resourceId('Microsoft.Web/Sites', variables('webAPIAppName'))]"

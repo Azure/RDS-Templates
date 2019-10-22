@@ -1,0 +1,121 @@
+{
+	"WVDScale": {
+		"Azure": {
+			"Variable": [
+				{
+					"_Comments": "Tenant ID of the Azure Active Directory",
+					"Name": "AADTenantId",
+					"Value": ""
+				},
+				{
+					"_Comments": "Subscription ID of the Azure",
+					"Name": "currentAzureSubscriptionId",
+					"Value": ""
+				},
+				{
+					"_Comments": "The name of the tenant group in the Windows Virtual Desktop deployment",
+					"Name": "tenantGroupName",
+					"Value": "Default Tenant Group"
+				},
+				{
+					"_Comments": "The name of the tenant in the Windows Virtual Desktop deployment.",
+					"Name": "tenantName",
+					"Value": ""
+				},
+				{
+					"_Comments": "Name of the WVD Host Pool",
+					"Name": "hostPoolName",
+					"Value": ""
+				},
+				{
+					"_Comments": "Hostpool session Load Balancing Type",
+					"Name": "peakLoadBalancingType",
+					"Value": "BreadthFirst"
+				},
+				{
+					"_Comments": "Session Load Balancing Peak Hours",
+					"Name": "sessionLoadBalancingPeakHours",
+					"Value": "9:00-3:00"
+				},
+				{
+					"_Comments": "Name of the maintenance Tag",
+					"Name": "maintenanceTagName",
+					"Value": ""
+				},
+				{
+					"_Comments": "Keyvault name where the WVD Tenant Admin Account or Service Principal GUID have stored secret",
+					"Name": "keyVaultName",
+					"Value": ""
+				},
+				{
+					"_Comments": "Secret name to be retrieved",
+					"Name": "keyVaultSecretName",
+					"Value": ""
+				}
+			]
+		},
+		"Deployment": {
+			"Variable": [
+				{
+					"_Comments": "RDbroker URL",
+					"Name": "rdBroker",
+					"Value": "https://rdbroker.wvd.microsoft.com"
+				},
+				{
+					"_Comments": "Username of Windows Virtual Desktop Tenant Admin or Windows Virtual Desktop Service Principal GUID",
+					"Name": "userName",
+					"Value": ""
+				},
+				{
+					"_Comments": "Accepted values True/False, True indicate service principal is being used to authenticate to WVD",
+					"Name": "isServicePrincipal",
+					"Value": "False"
+				}
+			]
+		},
+		"WVDScaleSettings": {
+			"Variable": [
+				{
+					"_Comments": "Begin of the peak usage time",
+					"Name": "beginPeakTime",
+					"Value": "09:00:00"
+				},
+				{
+					"_Comments": "End of the peak usage time",
+					"Name": "endPeakTime",
+					"Value": "18:00:00"
+				},
+				{
+					"_Comments": "Time difference between local time and UTC, in hours(Example: India Standard Time is +5:30)",
+					"Name": "timeDifferenceInHours",
+					"Value": "+5:30"
+				},
+				{
+					"_Comments": "Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started ",
+					"Name": "sessionThresholdPerCPU",
+					"Value": "1"
+				},
+				{
+					"_Comments": "Minimum number of host pool VMs to keep running during off-peak usage time",
+					"Name": "minimumNumberOfRDSH",
+					"Value": "1"
+				},
+				{
+					"_Comments": "Number of seconds to wait before forcing users to logoff. If 0, don't force users to logoff",
+					"Name": "limitSecondsToForceLogOffUser",
+					"Value": "5"
+				},
+				{
+					"_Comments": "Message title sent to a user before forcing logoff",
+					"Name": "logOffMessageTitle",
+					"Value": "System Under Maintenance"
+				},
+				{
+					"_Comments": "Message body to send to a user before forcing logoff",
+					"Name": "logOffMessageBody",
+					"Value": "Please save your work and logoff!"
+				}
+			]
+		}
+	}
+}
