@@ -280,7 +280,8 @@
                     }
                 }
             ]
-        }
+        },
+        "vmCreation-linkedTemplate_name": "[concat(variables('rdshPrefix'), 'vmCreation-linkedTemplate')]"
     },
     "resources": [
         {
@@ -299,7 +300,7 @@
         },
         {
             "apiVersion": "2018-05-01",
-            "name": "vmCreation-linkedTemplate",
+            "name": "[variables('vmCreation-linkedTemplate_name')]",
             "type": "Microsoft.Resources/deployments",
             "dependsOn": [
                 "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
@@ -368,7 +369,7 @@
             "name": "[concat(variables('rdshPrefix'), copyindex(),'/', 'joindomain')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "vmCreation-linkedTemplate"
+                "[variables('vmCreation-linkedTemplate_name')]"
             ],
             "copy": {
                 "name": "rdsh-domain-join-loop",
