@@ -140,7 +140,7 @@
                 "galleryOffer": "WindowsServer",
                 "gallerySku": "2016-Datacenter"
             }
-        },        
+        },
         "storageAccountType": "[parameters('rdshVMDiskType')]",
         "availabilitySetId": {
             "id": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')),json('null'))]"
