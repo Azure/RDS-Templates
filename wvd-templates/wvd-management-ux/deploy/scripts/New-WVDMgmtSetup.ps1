@@ -8,11 +8,17 @@ $AutomationAccountName = Get-AutomationVariable -Name 'accountName'
 $WebApp = Get-AutomationVariable -Name 'webApp'
 $ApiApp = Get-AutomationVariable -Name 'apiApp'
 
-Invoke-WebRequest -Uri $fileURI -OutFile "C:\msft-wvd-saas-offering.zip"
-New-Item -Path "C:\msft-wvd-saas-offering" -ItemType directory -Force -ErrorAction SilentlyContinue
-Expand-Archive "C:\msft-wvd-saas-offering.zip" -DestinationPath "C:\msft-wvd-saas-offering" -ErrorAction SilentlyContinue
-$AzureModulesPath = Get-ChildItem -Path "C:\msft-wvd-saas-offering\msft-wvd-saas-offering" | Where-Object { $_.FullName -match 'AzureModules.zip' }
-Expand-Archive $AzureModulesPath.FullName -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
+$FileNames = "msft-wvd-saas-api.zip,msft-wvd-saas-web.zip,AzureModules.zip"
+$SplitFilenames = $FileNames.split(",")
+foreach($Filename in $SplitFilenames){
+if($Filename -eq "AzureModules.zip"){
+Invoke-WebRequest -Uri $fileURI/scripts/$Filename -OutFile "C:\$Filename"
+}else{
+Invoke-WebRequest -Uri $fileURI/$Filename -OutFile "C:\$Filename"
+}
+}
+#New-Item -Path "C:\msft-wvd-saas-offering" -ItemType directory -Force -ErrorAction SilentlyContinue
+Expand-Archive "C:\AzureModules.zip" -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
 
 Import-Module AzureRM.Resources
 Import-Module AzureRM.Profile
@@ -28,14 +34,13 @@ Get-ExecutionPolicy -List
 $CredentialAssetName = 'ManagementUXDeploy'
 
 #Get the credential with the above name from the Automation Asset store
-$Cred = Get-AutomationPSCredential -Name $CredentialAssetName
-Add-AzureRmAccount -Environment 'AzureCloud' -Credential $Cred
+$Credentials = Get-AutomationPSCredential -Name $CredentialAssetName
+#$Credentials = Get-Credential
+Add-AzureRmAccount -Environment 'AzureCloud' -Credential $Credentials
 Select-AzureRmSubscription -SubscriptionId $SubscriptionId
-$CodeBitPath = "C:\msft-wvd-saas-offering\msft-wvd-saas-offering"
-$WebAppDirectory = ".\msft-wvd-saas-web"
-$WebAppExtractionPath = ".\msft-wvd-saas-web\msft-wvd-saas-web.zip"
-$ApiAppDirectory = ".\msft-wvd-saas-api"
-$ApiAppExtractionPath = ".\msft-wvd-saas-api\msft-wvd-saas-api.zip"
+
+New-Item -Path "C:\msft-wvd-saas-web" -ItemType directory -Force -ErrorAction SilentlyContinue
+$WebAppDirectory = "C:\msft-wvd-saas-web"
 
 #Function to get PublishingProfileCredentials
 function Get-PublishingProfileCredentials ($resourceGroupName,$webAppName) {
@@ -83,17 +88,6 @@ try
 	$wvdinfraWebAppId = "5a0aa725-4958-4b0c-80a9-34562e23f3b7"
 	$serviceIdinfo = Get-AzureRmADServicePrincipal -ErrorAction SilentlyContinue | Where-Object { $_.ApplicationId -eq $wvdinfraWebAppId }
 
-	if (!$serviceIdinfo) {
-		$wvdinfraWebApp = "Windows Virtual Desktop"
-
-		$serviceIdinformation = Get-AzureRmADServicePrincipal -DisplayName $wvdinfraWebApp -ErrorAction SilentlyContinue
-		foreach ($servicePName in $serviceIdinformation) {
-			if ($servicePName.ApplicationId -eq $wvdinfraWebAppId) {
-				$serviceIdinfo = $servicePName
-			}
-		}
-	}
-
 	$wvdInfraWebAppObjId = $serviceIdinfo.Id.GUID
 	#generate unique ID based on subscription ID
 	$unique_subscription_id = ($SubscriptionId).Replace('-','').substring(0,19)
@@ -102,7 +96,7 @@ try
 	#generate the display name for native app in AAD
 	$wvdSaaS_clientapp_display_name = "wvdSaaS" + $ResourceGroupName.ToLowerInvariant() + $unique_subscription_id.ToLowerInvariant()
 	#Creating ClientApp Ad application in azure Active Directory
-	Connect-AzureAD -Credential $Cred
+	Connect-AzureAD -Credential $Credentials
 	$clientAdApp = New-AzureADApplication -DisplayName $wvdSaaS_clientapp_display_name -ReplyUrls $redirectURL -PublicClient $true -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
 
 	#Collecting WVD Serviceprincipal Api Permission
@@ -136,17 +130,7 @@ if ($ApiApp)
 {
 	try
 	{
-		## PUBLISHING API-APP PACKAGE ##
-
-		Set-Location $CodeBitPath
-
-		# Extract the Api-App ZIP file content.
-
-		Write-Output "Extracting the Api-App Zip File"
-		Expand-Archive -Path $ApiAppExtractionPath -DestinationPath $ApiAppDirectory -Force
-		$ApiAppExtractedPath = Get-ChildItem -Path $ApiAppDirectory | Where-Object { $_.FullName -notmatch '\\*.zip($|\\)' } | Resolve-Path -Verbose
-
-		# Get publishing profile from Api-App
+	    # Get publishing profile from Api-App
 
 		Write-Output "Getting the Publishing profile information from Api-App"
 		$ApiAppXML = (Get-AzureRmWebAppPublishingProfile -Name $ApiApp `
@@ -164,8 +148,8 @@ if ($ApiApp)
 		# Publish Api-App Package files recursively
 
 		Write-Output "Uploading the Extracted files to Api-App"
-		Get-ChildItem $ApiAppExtractedPath | Compress-Archive -update -DestinationPath 'c:\msft-wvd-saas-Api.zip' -Verbose
-		Test-Path -Path 'c:\msft-wvd-saas-Api.zip'
+		#Get-ChildItem $ApiAppExtractedPath | Compress-Archive -update -DestinationPath 'c:\msft-wvd-saas-Api.zip' -Verbose
+		Test-Path -Path 'C:\msft-wvd-saas-Api.zip'
 		$filePath = 'C:\msft-wvd-saas-Api.zip'
 		$apiUrl = "https://$ApiAppURL/api/zipdeploy"
 		$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $ApiAppUserName,$ApiAppPassword)))
@@ -204,34 +188,25 @@ if ($WebApp -and $ApiApp)
 	try
 	{
 		## PUBLISHING WEB-APP PACKAGE ##
-
-		Set-Location $CodeBitPath
-
 		Write-Output "Extracting the Web-App Zip File"
-
 		# Extract the Web-App ZIP file content.
-
-		Expand-Archive -Path $WebAppExtractionPath -DestinationPath $WebAppDirectory -Force
-		$WebAppExtractedPath = Get-ChildItem -Path $WebAppDirectory | Where-Object { $_.FullName -notmatch '\\*.zip($|\\)' } | Resolve-Path -Verbose
+		Expand-Archive -Path "C:\msft-wvd-saas-web.zip" -DestinationPath $WebAppDirectory -Force
+																																  
 
 		# Get the main.bundle.js file Path 
-
-		$MainbundlePath = Get-ChildItem $WebAppExtractedPath -Recurse | Where-Object { ($_.FullName -match "main\.(\w+).bundle.js$") } | ForEach-Object { $_.FullName }
+		$MainbundlePath = Get-ChildItem $WebAppDirectory -Recurse | Where-Object { ($_.FullName -match "main\.(\w+).bundle.js$") } | ForEach-Object { $_.FullName }
 
 
 		# Get Url of Api-App 
-
 		$GetUrl = Get-AzureRmResource -ResourceName $ApiApp -ResourceGroupName $ResourceGroupName -ExpandProperties
 		$GetApiUrl = $GetUrl.Properties | Select-Object defaultHostName
 		$ApiUrl = $GetApiUrl.DefaultHostName
 
 		# Change the Url in the main.bundle.js file with the ApiURL
-
 		Write-Output "Updating the Url in main.bundle.js file with Api-app Url"
 		(Get-Content $MainbundlePath).Replace("[api_url]","https://" + $ApiUrl) | Set-Content $MainbundlePath
 
 		# Get publishing profile from web app
-
 		Write-Output "Getting the Publishing profile information from Web-App"
 		$WebAppXML = (Get-AzureRmWebAppPublishingProfile -Name $WebApp `
  				-ResourceGroupName $ResourceGroupName `
@@ -245,11 +220,10 @@ if ($WebApp -and $ApiApp)
 		$WebAppUserName = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userName").value
 		$WebAppPassword = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userPWD").value
 		$WebAppURL = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@publishUrl").value
-
+        Remove-Item "C:\msft-wvd-saas-web.zip" -Force
 		# Publish Web-App Package files recursively
-
 		Write-Output "Uploading the Extracted files to Web-App"
-		Get-ChildItem $WebAppExtractedPath | Compress-Archive -update -DestinationPath 'c:\msft-wvd-saas-web.zip' -Verbose
+		Get-ChildItem $WebAppDirectory | Compress-Archive -update -DestinationPath 'c:\msft-wvd-saas-web.zip' -Verbose
 		Test-Path -Path 'c:\msft-wvd-saas-web.zip'
 		$filePath = 'C:\msft-wvd-saas-web.zip'
 		$apiUrl = "https://$WebAppUrl/api/zipdeploy"
@@ -295,11 +269,10 @@ Param(
  
 )
 
-Invoke-WebRequest -Uri `$fileURI -OutFile "C:\msft-wvd-saas-offering.zip"
-New-Item -Path "C:\msft-wvd-saas-offering" -ItemType directory -Force -ErrorAction SilentlyContinue
-Expand-Archive "C:\msft-wvd-saas-offering.zip" -DestinationPath "C:\msft-wvd-saas-offering" -ErrorAction SilentlyContinue
-`$AzureModulesPath = Get-ChildItem -Path "C:\msft-wvd-saas-offering\msft-wvd-saas-offering"| Where-Object {`$_.FullName -match 'AzureModules.zip'}
-Expand-Archive `$AzureModulesPath.fullname -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
+
+Invoke-WebRequest -Uri `$fileURI/scripts/AzureModules.zip -OutFile "C:\AzureModules.zip"
+
+Expand-Archive "C:\AzureModules.zip" -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
 
 Import-Module AzureRM.profile
 Import-Module AzureRM.Automation
