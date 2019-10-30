@@ -106,7 +106,7 @@ function Write-UsageLog {
 .SYNOPSIS
 Function for creating a variable from JSON
 #>
-function SetScriptVariable ($Name,$Value) {
+function Set-ScriptVariable ($Name,$Value) {
   Invoke-Expression ("`$Script:" + $Name + " = `"" + $Value + "`"")
 }
 
