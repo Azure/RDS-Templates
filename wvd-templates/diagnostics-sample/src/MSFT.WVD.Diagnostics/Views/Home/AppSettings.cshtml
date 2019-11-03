@@ -1,0 +1,90 @@
+﻿@model MSFT.WVD.Diagnostics.Models.HomePageViewModel
+@using Microsoft.AspNetCore.Http
+@{
+    var tenantGroup = Context.Session.Get<string>("SelectedTenantGroupName");
+    var tenant = Context.Session.Get<string>("SelectedTenantName");
+}
+<div class="ms-PanelExample">
+    <div class="flyoutpanel ms-Panel is-open" id="flyoutpanel">
+        <form asp-controller="Home" asp-action="Save" method="post">
+            <div class="flyoutpanel-content-wrap">
+                <div class="flyoutpanel-header">
+                    <h4>Please choose Tenant Group &amp; Tenant</h4>
+                    <button type="button"  style="margin-top:11px;" class="close" href="" id="btnSlideClose"><i class="fa fa-times"></i></button>
+                </div>
+                <div class="flyoutpanel-content">
+                    <div class="flyoutpanel-controls">
+                        <label asp-for="SubmitData.TenantGroupName" class="control-label">TenantGroupName<i class="red">*</i></label>
+                        @*<input asp-for="SubmitData.TenantGroupName" class="form-control m-b-10" id="tenantgrp" type="text" value="@tenantGroup" />*@
+                        <select size="1" asp-for="SubmitData.TenantGroupName" asp-items="@(new SelectList(Model.TenantGroups, tenantGroup))"  class="form-control  width-100 " id="tenantGroup"></select>
+
+                        @*<span asp-validation-for="SubmitData.TenantGroupName" id="errorTenantGrp" class="error-msg validate"></span>*@
+                        <label asp-for="SubmitData.TenantName" class="control-label">TenantName<i class="red">*</i></label>
+                        <input asp-for="SubmitData.TenantName" class="form-control m-b-10" id="tenant" type="text" value="@tenant" />
+                        <span asp-validation-for="SubmitData.TenantName" id="errorTenant" class="error-msg validatetenant"></span>
+                    </div>
+                </div>
+                <div class="flyoutpanel-footer">
+                   
+                    <button type="submit" class="ms-Button" id="save" disabled>
+                        <span class="ms-Button-label">Save</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    (function () {
+        if (document.getElementById("tenant").value.length > 0) {
+            document.getElementById("save").removeAttribute("disabled");
+            document.getElementById("save").className = "ms-Button primary-btn";
+        }
+        //document.getElementById("tenantgrp")
+        //    .addEventListener("change", TenantGroupChange, false);
+        //document.getElementById("tenantgrp")
+        //    .addEventListener("keyup", TenantGroupChange, false);
+        document.getElementById("tenant")
+            .addEventListener("change", TenantChange, false);
+        document.getElementById("tenant")
+            .addEventListener("keyup", TenantChange, false);
+
+        //function TenantGroupChange(event) {
+        //    if (document.getElementById("tenantgrp").value.length > 0 && document.getElementById("tenant").value.length > 0) {
+        //        document.getElementById("save").removeAttribute("disabled");
+        //        document.getElementById("save").className = "ms-Button primary-btn";
+        //    }
+        //    document.getElementById("errorTenantGrp").style.display = "none";
+        //};
+
+        function TenantChange(event) {
+            if ( document.getElementById("tenant").value.length > 0) {
+                document.getElementById("save").removeAttribute("disabled");
+                document.getElementById("save").className = "ms-Button primary-btn";
+            }
+            document.getElementById("errorTenant").style.display = "none";
+        };
+
+        var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+        for (var i = 0; i < ContextualMenuElements.length; i++) {
+            var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+            var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+            new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+        }
+        var PanelExamples = document.getElementsByClassName("ms-PanelExample");
+        for (var i = 0; i < PanelExamples.length; i++) {
+            (function () {
+                var PanelExampleButton = PanelExamples[i].querySelector(".ms-Button");
+                var PanelExamplePanel = PanelExamples[i].querySelector(".ms-Panel");
+                PanelExampleButton.addEventListener("click", function (i) {
+                    new fabric['Panel'](PanelExamplePanel);
+                });
+            }());
+        }
+        document.getElementById("btnSlideClose").addEventListener("click", function () {
+            document.getElementById("flyoutpanel").style.display = "none";
+            document.getElementById("texttitle").value = "";
+            document.getElementById("texterror").value = "";
+        });
+    })();
+</script>

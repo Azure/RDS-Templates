@@ -1,0 +1,198 @@
+﻿@using Microsoft.AspNetCore.Http
+@{ var roleAssignment = Context.Session.Get<MSFT.WVD.Diagnostics.Common.Models.RoleAssignment>("SelectedRole");
+    var initial = roleAssignment != null && roleAssignment.displayName != null && roleAssignment.displayName.Split(" ").Length > 1 ? roleAssignment.displayName.Split(" ")[0].Substring(0, 1) + roleAssignment.displayName.Split(" ")[1].Substring(0, 1) : roleAssignment.displayName.Split(" ")[0].Substring(0, 2).ToUpper();}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] WVD Monitoring</title>
+
+    <environment include="Development">
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css">
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.min.css" />
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
+        <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+        <link rel="stylesheet" href="~/css/site.css" />
+     
+    </environment>
+    <environment exclude="Development">
+
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css">
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.min.css" />
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css" />
+        <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+        <link rel="stylesheet" href="~/css/site.css" />
+  
+    </environment>
+</head>
+<body>
+
+    <nav class="nav-bar">
+        <div class="nav-bar-left">
+            <div class="ms-logo">
+                <img class="logo" src="~/images/Microsoft_logo.png" />
+                <span class="title">&nbsp;&nbsp;Microsoft</span>
+            </div>
+            <div class="app-title">
+                <span>Windows Virtual Desktop</span>
+            </div>
+           
+            @*<div class="app-title" id="Homebreadcrumb">
+                <a class="app-title" asp-area="" asp-controller="Home" asp-action="Index" style="color: whitesmoke;
+    text-decoration: none;">
+                    >Home
+                </a>
+            </div>*@
+            <div class="app-title" id="Diagnosebreadcrumb">
+                <a class="app-title" asp-area="" asp-controller="DiagnoseIssues" asp-action="Index" style="color: whitesmoke;
+    text-decoration: none;">
+                  >Diagnose Issues
+                </a>
+            </div>
+        </div>
+        <div class="nav-bar-right">
+            <div class="home-icon">
+                <a class="ms-Button" asp-area="" asp-controller="Home" asp-action="AppSettings">
+                    <i class="fa fa-cog"></i>
+                </a>
+            </div>
+            <div class="ms-ContextualMenuExample">
+                <button class="ms-Button ms-Button--primary" style="height: 50px !important;padding: 4px 20px 1px !important;margin-right: -24px;">
+                    <div class="user-details">
+                        <span style="padding-right: 5px;">@roleAssignment.displayName.ToString()</span><br />
+                        <span style="font-size:10px;">@roleAssignment.roleDefinitionName.ToString()</span>
+                    </div>
+                    <div class="user-initials">@initial</div>
+                </button>
+                <ul class="nav-bar-right-menu ms-ContextualMenu is-hidden">
+                    <li class="ms-ContextualMenu-item">
+                        <div class="user-initials">@initial</div>
+                    </li>
+                    <li class="ms-ContextualMenu-item">
+                        <div class="app-info">
+                            <p class="m-0">
+                                <strong>@roleAssignment.displayName.ToString()</strong><span> ( @roleAssignment.roleDefinitionName.ToString() )</span>
+                            </p>
+                            <span> @roleAssignment.signInName.ToString()</span>
+                            <hr>
+                            <p><b>Infrastructure Permission</b> <br> <span> @roleAssignment.scope.ToString()</span></p>
+                            <hr>
+                            <p><b>App Version</b> <br> <span> 1.0.1</span></p>
+                        </div>
+                    </li>
+                    <li class="ms-ContextualMenu-item">
+                        @*@using (Html.BeginForm("Logout", "Home", FormMethod.Post))
+                        {*@
+                            <a  class="ms-Button" asp-action="Logout" asp-controller="Home" style="text-decoration:none;">
+                                <span class="ms-Button-label">Sign Out</span>
+                            </a>
+                        @*}*@
+                        
+                    </li>
+
+                </ul>
+            </div>
+            
+        </div>
+
+    </nav>
+
+
+
+    <partial name="_CookieConsentPartial" />
+
+    <div class="body-content">
+        <div class="vertical-menu">
+            <ul>
+                @*<li>
+                    <a asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fa fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                </li>*@
+                <li>
+                    <a asp-area="" asp-controller="DiagnoseIssues" asp-action="Index" id="Diagnoseissuesnav">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <span>Diagnose Issues</span>
+                    </a>
+                </li>
+                @*<li>
+                    <a asp-area="" asp-controller="Home" asp-action="About">
+                        <i class="fa fa-laptop-medical"></i>
+                        <span>Deployment Health</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fa fa-home"></i>
+                        <span>Application View</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fa fa-calendar-check"></i>
+                        <span>User Report</span>
+                    </a>
+                </li>*@
+            </ul>
+        </div>
+       
+        @RenderBody()
+    </div>
+
+    <environment include="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/js/site.js"></script>
+        <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <script type="text/javascript">
+            var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+            for (var i = 0; i < ContextualMenuElements.length; i++) {
+                var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+                var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+                new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+            }
+        </script>
+        <script type="text/javascript">
+            var BreadcrumbHTML = document.querySelector('.ms-Breadcrumb');
+            var Breadcrumb = new fabric['Breadcrumb'](BreadcrumbHTML);
+        </script>
+        <script type="text/javascript">
+            document.getElementById("Diagnosebreadcrumb").hidden = true;
+            document.getElementById("Diagnoseissuesnav").addEventListener("click", function () {
+                document.getElementById("Diagnosebreadcrumb").hidden = false;
+            }, false);
+        </script>
+    </environment>
+
+    <environment exclude="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/js/site.js"></script>
+        <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+        <script type="text/javascript">
+            var ContextualMenuElements = document.querySelectorAll(".ms-ContextualMenuExample");
+            for (var i = 0; i < ContextualMenuElements.length; i++) {
+                var ButtonElement = ContextualMenuElements[i].querySelector(".ms-Button");
+                var ContextualMenuElement = ContextualMenuElements[i].querySelector(".ms-ContextualMenu");
+                new fabric['ContextualMenu'](ContextualMenuElement, ButtonElement);
+            }
+        </script>
+        <script type="text/javascript">
+            var BreadcrumbHTML = document.querySelector('.ms-Breadcrumb');
+            var Breadcrumb = new fabric['Breadcrumb'](BreadcrumbHTML);
+        </script>
+        <script type="text/javascript">
+            document.getElementById("Diagnosebreadcrumb").hidden = true;
+            document.getElementById("Diagnoseissuesnav").addEventListener("click", function () {
+                document.getElementById("Diagnosebreadcrumb").hidden = false;
+            }, false);
+        </script>
+    </environment>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

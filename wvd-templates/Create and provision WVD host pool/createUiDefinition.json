@@ -1,0 +1,737 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+	"handler": "Microsoft.Azure.CreateUIDef",
+	"version": "0.1.2-preview",
+	"parameters": {
+		"basics": [
+			{
+				"name": "hostpoolName",
+				"type": "Microsoft.Common.TextBox",
+				"label": "Hostpool name",
+				"constraints": {
+					"required": true,
+					"regex": "^[\\w-'][\\w-'\\s]*[\\w-']+$",
+					"validationMessage": "The name for the Windows Virtual Desktop host pool may contain only alphanumeric characters, spaces, underscore, apostrophe, or dash characters. Leading or trailing whitespace is not allowed."
+				},
+				"visible": true
+			},
+			{
+				"name": "isPersonalDesktop",
+				"type": "Microsoft.Common.OptionsGroup",
+				"label": "Desktop type",
+				"toolTip": "Select 'Pooled' if you would like users to be directed to the best available session host in the pool and to utilize multi-session virtual machines. Select 'Personal' if you would like each user to have their own virtual machine.",
+				"defaultValue": "Pooled",
+				"constraints": {
+					"allowedValues": [
+						{
+							"label": "Pooled",
+							"value": {
+								"value": false,
+								"personalMultiplier": 0
+							}
+						},
+						{
+							"label": "Personal",
+							"value": {
+								"value": true,
+								"personalMultiplier": 1
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "defaultDesktopUsers",
+				"type": "Microsoft.Common.TextBox",
+				"label": "Default desktop users",
+				"toolTip": "Enter a comma separated list of users to be automatically assigned to the desktop app group for the host pool. For example, 'user1@contoso.com,user2@contoso.com,etc.'.",
+				"defaultValue": "",
+				"constraints": {
+					"required": false,
+					"regex": "^([a-zA-Z0-9_.+-]+@([a-zA-Z0-9-]+(-[a-zA-Z0-9]+)*\\.)+[a-zA-Z]{2,})(,[a-zA-Z0-9_.+-]+@([a-zA-Z0-9-]+(-[a-zA-Z0-9]+)*\\.)+[a-zA-Z]{2,})*$",
+					"validationMessage": "The list may only contain UPNs (in the form of valid email addresses) separated by commas. Leading whitespace, trailing whitespace, or additional spaces before or after commas is not allowed."
+				},
+				"visible": true
+			},
+			{
+				"name": "serviceMetadataLocationTextBlock",
+				"type": "Microsoft.Common.TextBlock",
+				"options": {
+					"text": "Windows Virtual Desktop stores information that is global in nature. Select the location you would like the service metadata to be stored.",
+					"link": {
+						"label": "Learn more",
+						"uri": "https://aka.ms/wvdgeo"
+					}
+				}
+			},
+			{
+				"name": "serviceMetadataLocation",
+				"type": "Microsoft.Common.DropDown",
+				"label": "Service metadata location",
+				"defaultValue": "United States",
+				"constraints": {
+					"allowedValues": [
+						{
+							"label": "United States",
+							"value": "United-States"
+						}
+					]
+				},
+				"visible": true
+			}
+		],
+		"steps": [
+			{
+				"name": "configureVirtualMachines",
+				"label": "Configure virtual machines",
+				"subLabel": {
+					"preValidation": "Usage profile and VM count",
+					"postValidation": "Done"
+				},
+				"bladeTitle": "Configure number of VMs based on profile usage",
+				"bladeSubtitle": "Select a usage profile and number of users to determine the recommended number of VMs",
+				"elements": [
+					{
+						"name": "usageProfile",
+						"type": "Microsoft.Common.OptionsGroup",
+						"label": "Usage Profile",
+						"defaultValue": "Medium",
+						"toolTip": "Select a usage profile to determine the number of users per vCPU--Light (6), Medium (4), or Heavy (2)--to use to calculate the number of virtual machines to create based on the selected VM size. If you would like to create a specific number of VMs, select 'Custom'.",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Light",
+									"value": {
+										"boolean": true,
+										"value": 6,
+										"usageProfileMultiplier": 1,
+										"vmCountMultiplier": 0
+									}
+								},
+								{
+									"label": "Medium",
+									"value": {
+										"boolean": true,
+										"value": 4,
+										"usageProfileMultiplier": 1,
+										"vmCountMultiplier": 0
+									}
+								},
+								{
+									"label": "Heavy",
+									"value": {
+										"boolean": true,
+										"value": 2,
+										"usageProfileMultiplier": 1,
+										"vmCountMultiplier": 0
+									}
+								},
+								{
+									"label": "Power",
+									"value": {
+										"boolean": true,
+										"value": 1,
+										"usageProfileMultiplier": 1,
+										"vmCountMultipler": 0
+									}
+								},
+								{
+									"label": "Custom",
+									"value": {
+										"boolean": false,
+										"value": 1,
+										"usageProfileMultiplier": 0,
+										"vmCountMultiplier": 1
+									}
+								}
+							]
+						},
+						"visible": "[not(basics('isPersonalDesktop').value)]"
+					},
+					{
+						"name": "totalUsers",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Total users",
+						"defaultValue": "100",
+						"constraints": {
+							"required": true,
+							"regex": "^[1-9][0-9]*$",
+							"validationMessage": "Only positive values are allowed."
+						},
+						"visible": "[ or(basics('isPersonalDesktop').value, coalesce(steps('configureVirtualMachines').usageProfile.boolean, bool('true') )) ]"
+					},
+					{
+						"name": "virtualMachineCount",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Number of virtual machines",
+						"defaultValue": "100",
+						"constraints": {
+							"required": true,
+							"regex": "^[1-9][0-9]*$",
+							"validationMessage": "Only positive values are allowed."
+						},
+						"visible": "[and( not(basics('isPersonalDesktop').value) , not(coalesce(steps('configureVirtualMachines').usageProfile.boolean, bool('true'))) )]"
+					},
+					{
+						"name": "virtualMachineSize",
+						"type": "Microsoft.Compute.SizeSelector",
+						"label": "Virtual machine size",
+						"osPlatform": "Windows",
+						"constraints": {
+							"allowedSizes": [
+								"Standard_A1_v2",
+								"Standard_A2_v2",
+								"Standard_A2m_v2",
+								"Standard_A4_v2",
+								"Standard_A4m_v2",
+								"Standard_A8_v2",
+								"Standard_A8m_v2",
+								"Standard_B1ms",
+								"Standard_B1s",
+								"Standard_B2ms",
+								"Standard_B2s",
+								"Standard_B4ms",
+								"Standard_B8ms",
+								"Standard_D2_v3",
+								"Standard_D2s_v3",
+								"Standard_D4_v3",
+								"Standard_D4s_v3",
+								"Standard_D8_v3",
+								"Standard_D8s_v3",
+								"Standard_D16_v3",
+								"Standard_D16s_v3",
+								"Standard_D32_v3",
+								"Standard_D32s_v3",
+								"Standard_D64_v3",
+								"Standard_D64s_v3",
+								"Standard_E2_v3",
+								"Standard_E2s_v3",
+								"Standard_E4_v3",
+								"Standard_E4s_v3",
+								"Standard_E8_v3",
+								"Standard_E8s_v3",
+								"Standard_E16_v3",
+								"Standard_E16s_v3",
+								"Standard_E20_v3",
+								"Standard_E20s_v3",
+								"Standard_E32_v3",
+								"Standard_E32s_v3",
+								"Standard_E64_v3",
+								"Standard_E64s_v3",
+								"Standard_F1",
+								"Standard_F1s",
+								"Standard_F2",
+								"Standard_F2s",
+								"Standard_F2s_v2",
+								"Standard_F4",
+								"Standard_F4s",
+								"Standard_F4s_v2",
+								"Standard_F8",
+								"Standard_F8s",
+								"Standard_F8s_v2",
+								"Standard_F16",
+								"Standard_F16s",
+								"Standard_F16s_v2",
+								"Standard_F32s_v2",
+								"Standard_F64s_v2",
+								"Standard_F72s_v2",
+								"Standard_H8",
+								"Standard_H8m",
+								"Standard_H16",
+								"Standard_H16m",
+								"Standard_H16r",
+								"Standard_H16mr",
+								"Standard_L4s",
+								"Standard_L8s",
+								"Standard_L8s_v2",
+								"Standard_L16s",
+								"Standard_L16s_v2",
+								"Standard_L32s",
+								"Standard_L32s_v2",
+								"Standard_L64s_v2",
+								"Standard_L80s_v2",
+								"Standard_M8ms",
+								"Standard_M16ms",
+								"Standard_M32ms",
+								"Standard_M64",
+								"Standard_M64m",
+								"Standard_M64ms",
+								"Standard_M64s",
+								"Standard_NC6",
+								"Standard_NC6s_v2",
+								"Standard_NC6s_v3",
+								"Standard_NC12",
+								"Standard_NC12s_v2",
+								"Standard_NC12s_v3",
+								"Standard_NC24",
+								"Standard_NC24r",
+								"Standard_NC24rs_v2",
+								"Standard_NC24rs_v3",
+								"Standard_NC24s_v2",
+								"Standard_NC24s_v3",
+								"Standard_ND6s",
+								"Standard_ND12s",
+								"Standard_ND24rs",
+								"Standard_ND24s",
+								"Standard_NV6",
+								"Standard_NV6s_v2",
+								"Standard_NV12",
+								"Standard_NV12s_v2",
+								"Standard_NV24",
+								"Standard_NV24s_v2"
+							]
+						},
+						"recommendedSizes": [
+							"Standard_D4s_v3",
+							"Standard_D4_v3",
+							"Standard_B4ms"
+						],
+						"imageReference": {
+							"publisher": "MicrosoftWindowsDesktop",
+							"offer": "Windows-10",
+							"sku": "rs5-evd"
+						},
+						"visible": true,
+						"count": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]"
+					},
+					{
+						"name": "rdshNamePrefix",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Virtual machine name prefix",
+						"toolTip": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory and in Windows Virtual Desktop.",
+						"constraints": {
+							"required": true,
+							"regex": "^[a-zA-Z0-9][a-zA-Z0-9-]{0,11}$",
+							"validationMessage": "The prefix for virtual machines can only contain alphanumeric values and hypens, but may not start with a hyphen. The prefix may not be shorter than 2 characters or longer than 12 characters."
+						},
+						"visible": true
+					}
+				]
+			},
+			{
+				"name": "virtualMachineSettings",
+				"label": "Virtual machine settings",
+				"subLabel": {
+					"preValidation": "Select VM configuration settings",
+					"postValidation": "Done"
+				},
+				"bladeTitle": "Configure the VMs for Azure",
+				"bladeSubtitle": "VM configuration",
+				"elements": [
+					{
+						"name": "vmImageType",
+						"type": "Microsoft.Common.OptionsGroup",
+						"label": "Image source",
+						"defaultValue": "Gallery",
+						"toolTip": "Select Blob storage to provide a generalized .vhd image in blob storage, 'Managed image' to provide an existing manage image from an Azure resource group, or 'Gallery' to select an image from the Azure Gallery.",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Blob storage",
+									"value": "CustomVHD"
+								},
+								{
+									"label": "Managed image",
+									"value": "CustomImage"
+								},
+								{
+									"label": "Gallery",
+									"value": "Gallery"
+								}
+							]
+						},
+						"visible": true
+					},
+					{
+						"name": "imageURI",
+						"type": "Microsoft.Common.TextBox",
+						"label": "imageURI",
+						"toolTip": "Enter the URL for the generalized .vhd file from your storage account, such as https://mystorageaccount.blob.core.windows.net/vhds/mycustomimage.vhd",
+						"constraints": {
+							"required": true,
+							"regex": "^(http(s)?:\/\/)[a-z0-9]{3,24}(\\.blob\\.core\\.windows\\.net\/.+)(\\.vhd)$",
+							"validationMessage": "Please enter a valid URL for .vhd file from your storage account. It should be in the format of 'https://[storageaccountname].blob.core.windows.net/[container]/[imagename].vhd'"
+						},
+						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomVHD')]"
+					},
+					{
+						"name": "rdshCustomImageSourceName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Image name",
+						"toolTip": "Enter the name of the Azure managed image to be used as the source OS for the virtual machines.",
+						"constraints": {
+							"required": true,
+							"regex": "^[a-zA-Z0-9][a-zA-Z0-9_.-]*[a-zA-Z0-9_]*$",
+							"validationMessage": "The name for the managed image must begin with a letter or number, end with a letter, number or underscore, and may contain only letters, numbers, underscores, periods, or hyphens."
+						},
+						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomImage')]"
+					},
+					{
+						"name": "rdshCustomImageSourceResourceGroup",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Image resource group name",
+						"toolTip": "Enter the name of the existing resouce group that contains the Azure managed image.",
+						"constraints": {
+							"required": true,
+							"regex": "^[a-zA-Z0-9.()-]*[a-zA-Z0-9()-]+$",
+							"validationMessage": "The resource group name for the managed image may containl only alphanumeric characters, periods, underscores, hyphens and parenthesis and cannot end in a period."
+						},
+						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomImage')]"
+					},
+					{
+						"name": "rdshCustomImageWarning",
+						"type": "Microsoft.Common.InfoBox",
+						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomImage')]",
+						"options": {
+						  "icon": "Warning",
+						  "text": "Ensure that the managed image is both in the specified Azure subscription and in the Azure location you selected."
+						}
+					},
+					{
+						"name": "galleryImageSelection",
+						"type": "Microsoft.Common.DropDown",
+						"label": "Image OS version",
+						"defaultValue": "Windows 10 Enterprise multi-session with Office 365 ProPlus",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Windows 10 Enterprise multi-session with Office 365 ProPlus",
+									"value": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus"
+								},
+								{
+									"label": "Windows 10 Enterprise multi-session",
+									"value": "Windows-10-Enterprise-multi-session"
+								},
+								{
+									"label": "Windows 10 Enterprise, Version 1903",
+									"value": "Windows-10-Enterprise-1903"
+								},
+								{
+									"label": "Windows Server 2016 Datacenter",
+									"value": "2016-Datacenter"
+								}
+							]
+						},
+						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'Gallery')]"
+					},
+					{
+						"name": "rdshVMDiskTypeAll",
+						"type": "Microsoft.Common.DropDown",
+						"label": "Disk Type",
+						"defaultValue": "Premium SSD",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Premium SSD",
+									"value": "Premium_LRS"
+								},
+								{
+									"label": "Standard SSD",
+									"value": "StandardSSD_LRS"
+								},
+								{
+									"label": "Standard HDD",
+									"value": "Standard_LRS"
+								}
+							]
+						},
+						"visible": "[contains(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 's')]"
+					},
+					{
+						"name": "rdshVMDiskTypeStandard",
+						"type": "Microsoft.Common.DropDown",
+						"label": "Disk type",
+						"defaultValue": "Standard SSD",
+						"toolTip": "The disk types available with the selected VM SKU are 'Standard SSD' and Standard HDD'. If you would like to use premium storage, go back and change your VM SKU to one that contains an 's'.",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Standard SSD",
+									"value": "StandardSSD_LRS"
+								},
+								{
+									"label": "Standard HDD",
+									"value": "Standard_LRS"
+								}
+							]
+						},
+						"visible": "[not(contains(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 's'))]"
+					},
+					{
+						"name": "domainUser",
+						"type": "Microsoft.Common.TextBox",
+						"label": "AD domain join UPN",
+						"toolTip": "UPN of an Active Directory user that has permissions and will be used to join the virtual machines to your domain. For example, vmjoiner@contoso.com. A local user account with this name will be created on each virtual machine. You can delete the user or reset the password after initial VM provisioning.",
+						"visible": true,
+						"constraints": {
+							"required": true,
+							"regex": "^[a-zA-Z0-9_.+-`~!#$%^(){}]+@([a-zA-Z0-9-]+(-[a-zA-Z0-9]+)*\\.)+[a-zA-Z]{2,}$",
+							"validationMessage": "Please enter a valid UPN, like vmjoiner@contoso.com"
+						}
+					},
+					{
+						"name": "password",
+						"type": "Microsoft.Compute.CredentialsCombo",
+						"label": {
+							"password": "Admin Password",
+							"confirmPassword": "Confirm password"
+						},
+						"osPlatform": "Windows",
+						"toolTip": {
+							"password": "Password corresponding to the 'AD domain join UPN'. The local user account created on the virtual machines will also use this password. You can delete the user or reset the password after initial VM provisioning."
+						},
+						"constraints": {
+							"required": true
+						},
+						"options": {
+							"hideConfirmation": false
+						},
+						"visible": true
+					},
+					{
+						"name": "specifyDetailedDomainConfiguration",
+						"type": "Microsoft.Common.OptionsGroup",
+						"label": "Specify domain or OU",
+						"toolTip": "Select 'Yes' if you would like to join the virtual machines to a specific domain or organization unit (OU). Otherwise, by selecting 'False', the virtual machines will not be joined to an OU and the suffix of the 'AD domain join UPN' will be used as the domain name. For 'vmjoiner@contoso.com', the default domain name would be 'contoso.com'.",
+						"visible": true,
+						"defaultValue": "No",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "No",
+									"value": false
+								},
+								{
+									"label": "Yes",
+									"value": true
+								}
+							]
+						}
+					},
+					{
+						"name": "domainToJoin",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Domain to join",
+						"toolTip": "FQDN of the AD Domain to which session host VMs are going to be joined. For example, 'contoso.com' or 'site1.contoso.com'.",
+						"defaultValue": "",
+						"constraints": {
+							"required": false,
+							"regex": "^([a-zA-Z0-9-]+(-[a-zA-Z0-9]+)*\\.)+[a-zA-Z]{2,}$",
+							"validationMessage": "Please enter a domain name with alphanumeric characters, separated by period, like 'contoso.com' or 'site1.contoso.com'"
+						},
+						"visible": "[steps('virtualMachineSettings').specifyDetailedDomainConfiguration]"
+					},
+					{
+						"name": "ouPath",
+						"type": "Microsoft.Common.TextBox",
+						"label": "(Optional) OU path",
+						"defaultValue": "",
+						"constraints": {
+							"required": false,
+							"regex": "^(OU=[^,]+)(,OU=[^,]+)*(,DC=[^\\W-][a-zA-Z0-9-]*[^\\W-.]){2,}$",
+							"validationMessage": "The OU path should contain 1 or more OU values specifying the organizaion unit and 2 or more DC values specifying the domain, in a comma separated format like 'OU=unit1,DC=contoso,DC=com'. Leading and trailing whitespace is not allowed."
+						},
+						"toolTip": "Enter the name of the organizational unit (OU) you would like the virtual machines to join. If you do not have a specific OU, leave this parameter empty. The OU should look like 'OU=unit1,DC=contoso,DC=com'",
+						"visible": "[steps('virtualMachineSettings').specifyDetailedDomainConfiguration]"
+					},
+					{
+						"name": "hostpoolVnet",
+						"type": "Microsoft.Network.VirtualNetworkCombo",
+						"label": {
+							"virtualNetwork": "Virtual network",
+							"subnets": "Subnets"
+						},
+						"toolTip": {
+							"virtualNetwork": "Select the virtual network connected to the domain. If you do not, the virtual machines will be created but not joined to the domain and will not be able to receive connections.",
+							"subnets": "Select the subnet with available addresses to host the virtual machines."
+						},
+						"defaultValue": {
+							"name": "vnet-01",
+							"addressPrefixSize": "/24"
+						},
+						"constraints": {
+							"minAddressPrefixSize": "/30"
+						},
+						"options": {
+							"hideExisting": false
+						},
+						"subnets": {
+							"subnet1": {
+								"label": "vmSubnet",
+								"defaultValue": {
+									"name": "vmSubnet",
+									"addressPrefixSize": "/26"
+								},
+								"constraints": {
+									"minAddressPrefixSize": "/30",
+									"minAddressCount": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
+									"requireContiguousAddresses": false
+								}
+							}
+						},
+						"visible": true
+					},
+					{
+						"name": "virtualNetworkError",
+						"type": "Microsoft.Common.InfoBox",
+						"visible": "[equals('new', steps('virtualMachineSettings').hostpoolVnet.newOrExisting)]",
+						"options": {
+						  "icon": "Error",
+						  "text": "You must select an existing virtual network that has access to the Active Directory. If you do not see it listed, you must re-start the deployment with the correct Azure location selected."
+						}
+					}
+				]
+			},
+			{
+				"name": "wvdTenantInfo",
+				"label": "Windows Virtual Desktop information",
+				"subLabel": {
+					"preValidation": "Authenticate to Windows Virtual Desktop to register the VMs to the service after provisioning.",
+					"postValidation": "Done"
+				},
+				"bladeTitle": "Authenticate to Windows Virtual Desktop",
+				"bladeSubtitle": "",
+				"elements": [
+					{
+						"name": "tenantGroupName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Windows Virtual Desktop tenant group name",
+						"toolTip": "Enter the name of the tenant group name associated with your Windows Virtual Desktop tenant. If you were not given one, leave it as 'Default Tenant Group'.",
+						"defaultValue": "Default Tenant Group",
+						"constraints": {
+							"required": true,
+							"regex": "^[\\w-'][\\w-'\\s.]*[\\w-']+$",
+							"validationMessage": "The name for the Windows Virtual Desktop tenant group may contain only alphanumeric characters, spaces, underscore, apostrophe, or dash character. Leading or trailing whitespace is not allowed."
+						}
+					},
+					{
+						"name": "tenantName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Windows Virtual Desktop tenant name",
+						"toolTip": "Enter the name of your Windows Virtual Desktop tenant.",
+						"constraints": {
+							"required": true,
+							"regex": "^[\\w-'][\\w-'\\s.]*[\\w-']+$",
+							"validationMessage": "The name for the Windows Virtual Desktop tenant may contain only alphanumeric characters, spaces, underscore, apostrophe, or dash character. Leading or trailing whitespace is not allowed."
+						}
+					},
+					{
+						"name": "tenantAdminIsServicePrincipal",
+						"type": "Microsoft.Common.OptionsGroup",
+						"label": "Windows Virtual Desktop tenant RDS Owner",
+						"toolTip": "Select the type of account you would like to use to authenticate to Windows Virtual Desktop. This user must have 'RDS Owner' or 'RDS Contributor' permissions on the Windows Virtual Desktop tenant.",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "UPN",
+									"value": false
+								},
+								{
+									"label": "Service principal",
+									"value": true								
+								}
+							]
+						},
+						"defaultValue": "UPN"
+					},
+					{
+						"name": "tenantAdminUPN",
+						"type": "Microsoft.Common.TextBox",
+						"label": "UPN",
+						"toolTip": "Enter the UPN (wvdadmin@contoso.onmicrosoft.com) of an Azure AD user who has permissions to create a host pool. This Azure AD user must have either 'RDS Owner' or 'RDS Contributor' permissions on the Windows Virtual Desktop tenant.",
+						"constraints": {
+							"required": true,
+							"regex": "^[a-zA-Z0-9_.+-`~!#$%^(){}]+@([a-zA-Z0-9-]+(-[a-zA-Z0-9]+)*\\.)+[a-zA-Z]{2,}$",
+							"validationMessage": "Please enter a valid UPN, like wvdadmin@contoso.com or wvdadmin@contoso.onmicrosoft.com"
+						},
+						"visible": "[not(steps('wvdTenantInfo').tenantAdminIsServicePrincipal)]"
+					},
+					{
+						"name": "tenantAdminApplicationId",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Application ID",
+						"toolTip": "Enter the Application ID (GUID) of an Azure AD service principal who has permissions to create a host pool. This Azure AD service principal must have either 'RDS Owner' or 'RDS Contributor' permissions on the Windows Virtual Desktop tenant.",
+						"constraints": {
+							"required": true,
+							"regex": "^[0-9A-Fa-f]{8}[-][0-9A-Fa-f]{4}[-][0-9A-Fa-f]{4}[-][0-9A-Fa-f]{4}[-][0-9A-Fa-f]{12}$",
+							"validationMessage": "The application ID of the service principal must be a valid GUID."
+						},
+						"visible": "[steps('wvdTenantInfo').tenantAdminIsServicePrincipal]"
+					},
+					{
+						"name": "tenantAdminPassword",
+						"type": "Microsoft.Common.PasswordBox",
+						"label": {
+							"password": "Password",
+							"confirmPassword": "Confirm password"
+						},
+						"constraints": {
+							"required": true
+						},
+						"toolTip": "Password for the Azure AD user or service principal with RDS Owner privileges on the Windows Virtual Desktop tenant.",
+						"options": {
+							"hideConfirmation": false
+						},
+						"visible": true
+					},
+					{
+						"name": "tenantAdminServicePrincipalAadTenantId",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Azure AD tenant ID",
+						"toolTip": "Enter the Azure AD tenant ID associated with the Application ID",
+						"constraints": {
+							"required": true,
+							"regex": "^[0-9A-Fa-f]{8}[-][0-9A-Fa-f]{4}[-][0-9A-Fa-f]{4}[-][0-9A-Fa-f]{4}[-][0-9A-Fa-f]{12}$",
+							"validationMessage": "The Azure AD tenant ID must be a valid GUID."
+						},
+						"visible": "[steps('wvdTenantInfo').tenantAdminIsServicePrincipal]"
+					},
+					{
+						"name": "tenantAdminWarning",
+						"type": "Microsoft.Common.InfoBox",
+						"visible": "[not(steps('wvdTenantInfo').tenantAdminIsServicePrincipal)]",
+						"options": {
+						  "icon": "Warning",
+						  "text": "You cannot enter a user account that requires MFA. If you intend to use MFA, consider creating a service principal for this purpose.",
+						  "uri": "https://aka.ms/wvdsp"
+						}
+					}
+				]
+			}
+		],
+		"outputs": {
+			"rdshImageSource": "[steps('virtualMachineSettings').vmImageType]",
+			"vmImageVhdUri": "[coalesce(steps('virtualMachineSettings').imageURI, '')]",
+			"rdshGalleryImageSKU": "[steps('virtualMachineSettings').galleryImageSelection]",
+			"rdshCustomImageSourceName": "[coalesce(steps('virtualMachineSettings').rdshCustomImageSourceName, '')]",
+			"rdshCustomImageSourceResourceGroup": "[coalesce(steps('virtualMachineSettings').rdshCustomImageSourceResourceGroup, '')]",
+			"rdshNamePrefix": "[steps('configureVirtualMachines').rdshNamePrefix]",
+			"rdshNumberOfInstances": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
+			"rdshVMDiskType": "[coalesce(steps('virtualMachineSettings').rdshVMDiskTypeAll, steps('virtualMachineSettings').rdshVMDiskTypeStandard)]",
+			"rdshVmSize": "[steps('configureVirtualMachines').virtualMachineSize]",
+			"enableAcceleratedNetworking": false,
+			"rdshUseManagedDisks": "[bool(true)]",
+			"storageAccountResourceGroupName": "''",
+			"domainToJoin": "[coalesce(steps('virtualMachineSettings').domainToJoin , last(parse(concat('[\"', replace(steps('virtualMachineSettings').domainUser, '@', '\",\"' ) , '\"]'))))]",
+			"existingDomainUPN": "[steps('virtualMachineSettings').domainUser]",
+			"existingDomainPassword": "[steps('virtualMachineSettings').password.password]",
+			"ouPath": "[coalesce(steps('virtualMachineSettings').ouPath, '')]",
+			"existingVnetName": "[steps('virtualMachineSettings').hostpoolVnet.name]",
+			"newOrExistingVnet": "[steps('virtualMachineSettings').hostpoolVnet.newOrExisting]",
+			"existingSubnetName": "[steps('virtualMachineSettings').hostpoolVnet.subnets.subnet1.name]",
+			"virtualNetworkResourceGroupName": "[steps('virtualMachineSettings').hostpoolVnet.resourceGroup]",
+			"rdBrokerURL": "https://rdbroker.wvd.microsoft.com",
+			"existingTenantGroupName": "[steps('wvdTenantInfo').tenantGroupName]",
+			"existingTenantName": "[steps('wvdTenantInfo').tenantName]",
+			"hostPoolName": "[basics('hostpoolName')]",
+			"serviceMetadataLocation": "[basics('serviceMetadataLocation')]",
+			"enablePersistentDesktop": "[basics('isPersonalDesktop').value]",
+			"defaultDesktopUsers": "[basics('defaultDesktopUsers')]",
+			"tenantAdminUpnOrApplicationId": "[coalesce(steps('wvdTenantInfo').tenantAdminApplicationId, steps('wvdTenantInfo').tenantAdminUPN) ]",
+			"tenantAdminPassword": "[steps('wvdTenantInfo').tenantAdminPassword]",
+			"isServicePrincipal": "[steps('wvdTenantInfo').tenantAdminIsServicePrincipal]",
+			"aadTenantId": "[coalesce(steps('wvdTenantInfo').tenantAdminServicePrincipalAadTenantId, '')]",
+			"location": "[location()]"
+		}
+	}
+}

@@ -91,7 +91,7 @@
         }
     },
     "variables": {
-        "storageAccountType": "[if( equals(parameters('rdshVMDiskType'), 'HDD'), 'Standard_LRS', 'Premium_LRS')]",
+        "storageAccountType": "[parameters('rdshVMDiskType')]",
         "imageName": "[concat(parameters('rdshPrefix'), 'image')]"
     },
     "resources": [
