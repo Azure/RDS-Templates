@@ -1,0 +1,94 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"_artifactsLocation": {
+			"value": "https://raw.githubusercontent.com/Everink/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool/"
+		},
+		"rdshImageSource": {
+			"value": "SharedImageGallery"
+		},
+		"SharedImageGalleryResourceGroup": {
+			"value": "wvd-p-weu-sharedimagegallery-rg"
+		},
+		"SharedImageGalleryName": {
+			"value": "WVD_SharedImageGallery"
+		},
+		"SharedImageGalleryDefinitionName": {
+			"value": "WVD-HostPool1-GoldenImage"
+		},
+		"SharedImageGalleryVersionName": {
+			"value": "latest"
+		},
+		"hostPoolName": {
+			"value": "Hostpool1"
+		},
+		"rdshNamePrefix": {
+			"value": "demoVM"
+		},
+		"rdshNumberOfInstances": {
+			"value": 2
+		},
+		"rdshVmSize": {
+			"value": "Standard_D2s_v3"
+		},
+		"rdshVMDiskType": {
+			"value": "Premium_LRS"
+		},
+		"domainToJoin": {
+			"value": "roeleverink.nl"
+		},
+		"existingDomainUPN": {
+			"value": "sa-domainjoin@roeleverink.nl"
+		},
+		"existingDomainPassword": {
+			"reference": {
+				"keyVault": {
+					"id": "/subscriptions/f7e06285-03e5-4c9d-95cd-32d791b2563e/resourcegroups/wvd-p-weu-keyvault-rg/providers/Microsoft.KeyVault/vaults/wvd-p-weu-keyvault01"
+				},
+				"secretName": "sa-domainjoin"
+			}
+		},
+		"ouPath": {
+			"value": "OU=Windows Virtual Desktop,OU=Computers,OU=Demo,DC=roeleverink,DC=nl"
+		},
+		"existingVnetName": {
+			"value": "wvd-p-weu-vnet1"
+		},
+		"existingSubnetName": {
+			"value": "wvd-p-weu-vnet1_CLIENTS"
+		},
+		"virtualNetworkResourceGroupName": {
+			"value": "wvd-p-weu-network-rg"
+		},
+		"rdBrokerURL": {
+			"value": "https://rdbroker.wvd.microsoft.com"
+		},
+		"existingTenantGroupName": {
+			"value": "Default Tenant Group"
+		},
+		"existingTenantName": {
+			"value": "roeleverink.nl"
+		},		
+		"defaultDesktopUsers": {
+			"value": "r.everink@roeleverink.nl"
+		},
+		"tenantAdminUpnOrApplicationId": {
+			"value": "514e2dd6-ecd4-417b-ac07-de44565cb818"
+		},
+		"tenantAdminPassword": {
+			"reference": {
+				"keyVault": {
+					"id": "/subscriptions/f7e06285-03e5-4c9d-95cd-32d791b2563e/resourcegroups/wvd-p-weu-keyvault-rg/providers/Microsoft.KeyVault/vaults/wvd-p-weu-keyvault01"
+				},
+				"secretName": "WVD-SP"
+			}
+		},
+		"isServicePrincipal": {
+			"value": true
+		},
+		"aadTenantId": {
+			"value": "214da8f2-c2d8-4f61-8e13-8dba0a4edaa2"
+		}
+	}
+}
