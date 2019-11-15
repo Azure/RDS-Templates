@@ -225,10 +225,7 @@
                 },
                 "storageProfile": {
                     "imageReference": {
-                        "publisher": "[variables('galleryimage')[parameters('rdshGalleryImageSKU')].galleryPublisher]",
-                        "offer": "[variables('galleryImage')[parameters('rdshGalleryImageSKU')].galleryOffer]",
-                        "sku": "[variables('galleryImage')[parameters('rdshGalleryImageSKU')].gallerySku]",
-                        "version": "latest"
+                        "id": "[resourceId(parameters('SharedImageGalleryResourceGroup'),'Microsoft.Compute/galleries/images/versions',parameters('SharedImageGalleryName'), parameters('SharedImageGalleryDefinitionName'), parameters('SharedImageGalleryVersionName') )]"
                     },
                     "osDisk": {
                         "createOption": "FromImage",
