@@ -44,6 +44,9 @@ if($context -eq $null)
 # Select the specified subscription
 Select-AzSubscription -SubscriptionId $SubscriptionId
 
+# Get Role Assignments for the Context
+$RoleAssignment = (Get-AzRoleAssignment -SignInName $context.Account)
+
 if($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefinitionName -eq "Contributor")
 {
 

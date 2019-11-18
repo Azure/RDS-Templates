@@ -5,3 +5,11 @@ This repository contains samples to showcase APIs for implementing MSIX app atta
 Due to this being a preview Microsoft does not offer support for MSIX app attach. All support efforts are community driven. 
 
 Please reference Getting started with MSIX app attach in Windows Virtual Desktop (Preview) document for details on MSIX app attach.
+
+### Additional materials
+
+* [Windows Virtual Desktop on Azure | Released](https://www.youtube.com/watch?v=QLDu6QVohEI) (Microsoft Mechanics, Youtube.com)
+* [Windwos Virutal Desktop Tech Community](https://techcommunity.microsoft.com/t5/Windows-Virtual-Desktop/bd-p/WindowsVirtualDesktop) 
+* [MSIX app attach will fundamentally change working with application landscapes on Windows Virtual Desktop!](https://blogs.msdn.microsoft.com/rds/2015/07/13/azure-resource-manager-template-for-rds-deployment) (blog series) [Freek Berson] 
+* [Create an MSIX package from a desktop installer (MSI, EXE or App-V) on a VM](https://docs.microsoft.com/en-us/windows/msix/packaging-tool/create-app-package-msi-vm) (Docs.Microsoft.com)
+ 
