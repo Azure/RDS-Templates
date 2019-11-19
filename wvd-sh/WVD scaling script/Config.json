@@ -68,7 +68,7 @@
 				},
 				{
 					"_Comments": "Accepted values True/False, True indicate service principal is being used to authenticate to WVD",
-					"Name": "isServicePrincipal",
+					"Name": "isWVDServicePrincipal",
 					"Value": "False"
 				}
 			]
