@@ -461,7 +461,7 @@
 						"name": "domainUser",
 						"type": "Microsoft.Common.TextBox",
 						"label": "AD domain join UPN",
-						"toolTip": "UPN of an Active Directory user that has permissions and will be used to join the virtual machines to your domain. For example, vmjoiner@contoso.com. A local user account with this name will be created on each virtual machine. You can delete the user or reset the password after initial VM provisioning.",
+						"toolTip": "UPN of an Active Directory user that has permissions and will be used to join the virtual machines to your domain. For example, vmjoiner@contoso.com. A local user account with this name will be created on each virtual machine. See https://aka.ms/vmUsernameReq for invalid usernames.",
 						"visible": true,
 						"constraints": {
 							"required": true,
@@ -638,7 +638,7 @@
 						"name": "tenantAdminUPN",
 						"type": "Microsoft.Common.TextBox",
 						"label": "UPN",
-						"toolTip": "Enter the UPN (wvdadmin@contoso.onmicrosoft.com) of an Azure AD user who has permissions to create a host pool. This Azure AD user must have either 'RDS Owner' or 'RDS Contributor' permissions on the Windows Virtual Desktop tenant.",
+						"toolTip": "Enter the UPN (wvdadmin@contoso.onmicrosoft.com) of an Azure AD user who is either 'RDS Owner' or 'RDS Contributor' permissions on the Windows Virtual Desktop tenant to create a host pool. Do not enter a user who has MFA enabled.",
 						"constraints": {
 							"required": true,
 							"regex": "^[a-zA-Z0-9_.+-`~!#$%^(){}]+@([a-zA-Z0-9-]+(-[a-zA-Z0-9]+)*\\.)+[a-zA-Z]{2,}$",
