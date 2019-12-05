@@ -1,0 +1,5 @@
+﻿{
+  "ApiEndpoint": "http://rdmi-api.azurewebsites.net/api/rdmi",
+  "ClientId": "554b179c-9b8a-4ac1-acdf-9989596387fa",
+  "RedirectURL": "http://localhost:4200/Home_Page"
+}

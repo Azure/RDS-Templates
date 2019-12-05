@@ -1,0 +1,20 @@
+.dropDown{
+    position: absolute;
+    box-shadow: 0 0 5px lightgrey;
+}
+
+.dropDownList{
+    display: inline-grid;
+}
+
+.dropDownList > li{
+    min-width: 358px;
+    padding: 10px 5px;
+    margin-right: 0;
+    
+}
+.dropDownList > li:hover{
+    background-color: #5283B1;
+    color: white;
+    cursor: pointer;
+}

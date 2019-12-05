@@ -1,0 +1,381 @@
+<div>
+  <!-- A Ribbon Flag that displays when there no tenants to display -->
+  <div class="rdsNotification" *ngIf="showCreateTenant">
+    <div class="info">
+      <i class="icon icon-info" aria-hidden="true"></i>
+      <p>There is no tenant available. Please create a new tenant.</p>
+    </div>
+    <div [hidden]="true" class="createDeply"> <a id="linkRibbonCreateTenant" (click)="OpenCreateTenant($event)"><i
+          class="icon icon-plus" aria-hidden="true"></i> Create Tenant</a> </div>
+    <a class="close" (click)="CloseCreateTenant($event)"><i class="icon icon-close" aria-hidden="true"></i></a>
+  </div>
+  <!-- A Ribbon Flag that displays Error Message -->
+  <div class="rdsErrorNotification" *ngIf="error">
+    <div class="info">
+      <i class="icon icon-info" aria-hidden="true"></i>
+      <span>{{errorMessage}}</span>
+    </div>
+    <a class="close" (click)="error = false"><i class="icon icon-close" aria-hidden="true"></i></a>
+  </div>
+
+  <!-- Notification -->
+  <div class="create-notifications">
+    <simple-notifications [options]="options"></simple-notifications>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="refreshTenantLoading" class="ngLoader">
+    <div>
+      <img src="assets/Images/loading.gif" />
+    </div>
+  </div>
+
+  <div class="addDeploy">
+    <div class="tabbable-panel">
+      <div class="tabbable-line">
+        <ul class="nav nav-tabs">
+          <li class="active">
+            <a href="#tab_default_2" data-toggle="tab">
+              Tenants
+            </a>
+          </li>
+        </ul>
+        <!--Tenants Tab Content -->
+        <div class="tab-content">
+          <div class="tab-pane active" id="tab_default_2">
+            <div>
+              <div class="col-md-8">
+                <ul>
+                  <li [hidden]="true"><button type="button" id="linkCreateTenant" (click)="OpenCreateTenant($event)"><i
+                        class="icon icon-plus" aria-hidden="true"></i> Create Tenant</button></li>
+                  <li><button type="button" id="btnEditTenant" data-toggle="modal" data-target="#editModal"
+                      [disabled]="isEditDisabled"><i class="icon icon-edit" aria-hidden="true"></i> Edit</button></li>
+                  <li><button type="button" id="btnDeleteTenant" class="ManageLink" data-toggle="modal"
+                      data-target="#deleteModal" [disabled]="isDeleteDisabled"><i class="icon icon-delete"
+                        aria-hidden="true"></i> Delete</button></li>
+                  <li><button type="button" id="linkCreateTenant" (click)="OpenManageTenant()"><i
+                        class="icon icon-setting" aria-hidden="true"></i> Manage Tenant Groups</button></li>
+                  <li><button type="button" (click)="RefreshTenant()" class="ManageLink"><i class="icon icon-refresh"
+                        aria-hidden="true"></i> Refresh</button></li>
+                </ul>
+              </div>
+              <div class="col-md-3 pull-right">
+                <div class="search marginTop10">
+                  <!-- search bar -->
+                  <div class="input-group" id="searchFormTop">
+                    <input type="text" class="form-control" name="q" id="q" placeholder="Search"
+                      [(ngModel)]="searchByTenantName" (ngModelChange)="getSearchByTenantName(searchByTenantName)">
+                    <span class="input-group-btn">
+                      <button class="btn btn-default" type="button"><i class="icon icon-search"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xs-12">
+              <!-- table content -->
+              <table class="table tableSelection table-hover">
+                <thead>
+                  <tr>
+                    <th style="width: 4%;text-align: left">
+                      <div class="control-group">
+                        <label class="control control--checkbox">
+                          <input type="checkbox" class="solcheckbox" [checked]="checkedMain" (click)="CheckAll($event)">
+                          <span class="control__indicator"></span>
+                        </label>
+                      </div>
+                    </th>
+                    <th style="width:15%;text-align:left;">Tenant Name</th>
+                    <th style="width:15%;text-align:left;">Friendly Name</th>
+                    <th style="width:12%;text-align:center;">Description</th>
+                    <th style="width:12%;text-align:center;">Subscription ID</th>
+                    <!-- <th style="width:12%;text-align:center;">Assigned</th>
+                    <th style="width:12%;text-align:center;">Active</th> -->
+                  </tr>
+                </thead>
+                <tbody *ngIf="!editedBody">
+                  <tr
+                    *ngFor="let i of searchTenants | paginate: { itemsPerPage: listItems, currentPage: tenantsList, id:'tenants',totalItems: totalItems }; let ind=index"
+                    [ngClass]="{'rowSelect':checked[absoluteIndex(ind)]}" id="row-tenant-{{i.friendlyName}}"
+                    (click)="TenantRowClicked(i.aadTenantId, i.tenantName, absoluteIndex(ind))">
+                    <td style="width: 4%;text-align: left">
+                      <div class="control-group">
+                        <label class="control control--checkbox">
+                          <input type="checkbox" class="solcheckbox" (click)="IsChecked(absoluteIndex(ind))" [checked]="checked[absoluteIndex(ind)]">
+                          <span class="control__indicator"></span>
+                        </label>
+                      </div>
+                    </td>
+                    <td class="hoverUnderline" style="width: 15%;text-align:left;"
+                      (click)="SetSelectedTenant(absoluteIndex(ind), i.tenantName,i.azureSubscriptionId)">
+                      {{i.tenantName}}
+                    </td>
+                    <td style="width: 15%;text-align:left;"><span>{{i.friendlyName}}</span></td>
+                    <td style="width:12%;text-align:center;"><span>{{i.description}}</span></td>
+                    <td style="width:12%;text-align:center;"><span>{{i.azureSubscriptionId}}</span></td>
+                    <!-- <td style="width:12%;text-align:center;"><span>{{i.noOfUsers}}</span></td>
+                    <td style="width:12%;text-align:center;"><span>{{i.noOfActivehosts}}</span></td> -->
+                  </tr>
+                </tbody>
+              </table>
+              <!-- pagination code -->
+              <!-- <ul class="pagination  pull-right" *ngIf="!(editedBody || tenantlistErrorFound)">
+                <li [ngClass]="{disabled:currentPageNo === 1 ,  link:currentPageNo === 1}">
+                  <a (click)="previousPage()">Previous</a>
+                </li>
+                <li class="CurrentIndex" *ngFor="let item of counter(currentNoOfPagesCount);let i=index">
+                  <a [ngClass]="{'isActive': curentIndex === i }" (click)="CurrentPage(i)">{{i + 1 }}</a>
+                </li>
+                <li [ngClass]="{disabled:currentNoOfPagesCount === currentPageNo ,  link:currentNoOfPagesCount === currentPageNo}">
+                  <a (click)="NextPage()">Next</a>
+                </li>
+              </ul> -->
+              <!-- pagination code -->
+              <div class="row" style="margin: 0;" *ngIf="!(editedBody || tenantlistErrorFound)">
+                <pagination-controls (pageChange)="tenantsList = $event" class="pagination pull-right" id="tenants">
+                </pagination-controls>
+              </div>
+              <!-- displays "No tenants to display" message  when there are no tenants in the table -->
+              <div class="EmptyTableMsg" *ngIf="editedBody">
+                <div style="text-align:center">
+                  <br /><br />
+                  <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                    style="position: relative; width: 10%; left: 44%;" />
+                  <h5 style="color:#808080;font-weight:400;"> No Tenants to display</h5>
+                  <p style="color:#808080"> To create a Tenants, click Create a new tenant button and give tenantID with
+                    unique tenant name </p>
+                  <button class="btn btn-sm btn-primary" id="" (click)="OpenCreateTenant($event)">Create a new
+                    tenant</button>
+                </div>
+              </div>
+              <!-- displays  Error message  when it is problem related to server -->
+              <div class="EmptyTableMsg" *ngIf="tenantlistErrorFound">
+                <div style="text-align:center">
+                  <br /><br />
+                  <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                    style="position: relative; width: 10%; left: 44%;" />
+                  <h5 style="color:#808080;font-weight:400;"> Error</h5>
+                  <p style="color:#808080"> Problem with server, please try again </p>
+                  <button class="btn btn-sm btn-primary" id="" (click)="RefreshTenant()">Refresh</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Select Tenant Group Name Modal Dialog -->
+  <div class="overlay" *ngIf="showManageTenantDialog">
+    <div class="createTenent">
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <h4>Please select a Tenant Group</h4>
+          <div class="DeployUrl marginBottom30">
+            <label for="manageTenant" style="font-size:11px"><span class="colorRed">&nbsp;*</span><b>Tenant
+                Group</b></label>           
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Choose tenant group" [(ngModel)]="slectedtenantgroupname">
+                <div class="input-group-btn">
+                  <button class="btn btn-default" (click)="openDropDown()">
+                    <i class="caret"></i>
+                  </button>
+                </div>
+            </div>
+            <div class="dropDown" *ngIf="showDropDown">
+                <ul class="dropDownList">
+                  <li *ngFor="let list of TenantGroups" (click)="changeTenantgroup(list)">{{list}}</li>
+                </ul>
+            </div>
+            <div *ngIf="ShowTenantgroupError" class="colorRed">
+              Please select tenant group
+            </div>
+          </div>
+        </div>
+      </div>
+      <a href="" class="close" id="btnSlideClose" (click)="ManageTenantSlideClose($event)"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="btnCancel" (click)="CloseManageTenant($event)" />
+          </li>
+          <li>
+            <input type="button" value="Save" id="btnDone" [disabled]="tenantDoneButtonDisable" (click)="ManageTenant($event)" />
+            <!--(click)="ManageTenant(tenantForm.value)" [disabled]="tenantDoneButtonDisable"-->
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Create Tenant Modal Dialog -->
+  <div class="overlay" *ngIf="showTenantDialog">
+    <div class="createTenent">
+      <input type="hidden" id="hfisCreateTenantOpen" [(ngModel)]="isCreateTenantOpen" />
+      <form [formGroup]="tenantForm">
+        <div class="createTenantHead">
+          <div class="TenantStatus">
+            <div id="tab-1" class="tab-content current" *ngIf="!showTenantTab2">
+              <ul class="tabs" style="float:left;">
+                <li class="tab-link current" data-tab="tab-1">1</li>
+                <li class="tab-link disable" data-tab="tab-2">2</li>
+              </ul>
+              <div style="clear:both"></div>
+              <h4>Create Azure Active Directory Tenant</h4>
+              <p>
+                Before you create remote desktop tenant, you need to <a>Create AAD Tenant <i class="icon icon-help"
+                    aria-hidden="true"></i></a>
+                The Azure Active Directory tenant is associated with the customers.
+              </p>
+              <div class="DeployUrl">
+                <div class="form-group">
+                  <label>Azure AD Tenant ID <span class="important-Field">*</span></label>
+                  <input type="text" name="aadTenantId" placeholder="ex- 63a20bdc-47e2-4cad-b482-400169b6c670"
+                    (ngModelChange)="TenantChange($event)" formControlName="aadTenantId" />
+                  <div *ngIf="tenantForm.controls['aadTenantId'].hasError('pattern')" class="colorRed">
+                    Please enter Valid Azure AD Tenant ID
+                  </div>
+                  <div *ngIf="createTenantId" class="colorRed">
+                    Please enter Azure AD Tenant ID
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="tab-2" class="tab-content current" *ngIf="showTenantTab2">
+              <ul class="tabs" style="float:left;">
+                <li class="tab-link disable" data-tab="tab-1">1</li>
+                <li class="tab-link current" data-tab="tab-2">2</li>
+              </ul>
+              <div style="clear:both"></div>
+              <h4>Create WVD Tenant</h4>
+              <div class="DeployUrl marginBottom30">
+                <div class="form-group">
+                  <label>Tenant Unique Name <span class="important-Field">*</span></label>
+                  <input type="text" name="tenantName" placeholder="ex- Tenant One"
+                    (ngModelChange)="TenantNameChange($event)" formControlName="tenantName" />
+                  <div *ngIf="tenantForm.controls['tenantName'].hasError('pattern')" class="colorRed">
+                    Please enter Valid Tenant unique name
+                  </div>
+                  <div *ngIf="createTenantUniqueName" class="colorRed">
+                    Please enter Tenant unique name
+                  </div>
+                </div>
+              </div>
+              <div class="DeployUrl marginBottom30">
+                <div class="form-group">
+                  <label>Tenant Friendly Name – <span class="ashColor">optional</span></label>
+                  <input type="text" name="friendlyName" placeholder="ex- Honolulu Hospital"
+                    formControlName="friendlyName" />
+                  <div *ngIf="tenantForm.controls['friendlyName'].hasError('pattern')" class="colorRed">
+                    Please enter Valid Tenant friendly name
+                  </div>
+                </div>
+              </div>
+              <div class="DeployUrl">
+                <div class="form-group">
+                  <label>Description – <span class="ashColor">optional</span></label>
+                  <textarea rows="3" cols="47" name="description"
+                    placeholder="ex- Implementing on-prem Active Directory" formControlName="description"></textarea>
+                  <div *ngIf="tenantForm.controls['description'].hasError('pattern')" class="colorRed">
+                    Please enter Valid Description details
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="borderLine"> </div>
+          </div>
+        </div>
+        <a href="" class="close" id="btnSlideClose" (click)="CreateTenantSlideClose($event)"><i class="icon icon-close"
+            aria-hidden="true"></i></a>
+        <div class="botomBtn" *ngIf="!showTenantTab2">
+          <ul>
+            <li>
+              <input type=button value="Cancel" id="btnCancel" (click)="CloseCreateTenant($event)" />
+            </li>
+            <li>
+              <input type="button" value="Next" id="btnNext" (click)="ShowNextTab(tenantForm.value)"
+                [disabled]="tenantNextButtonDisable ||tenantForm.controls['aadTenantId'].hasError('pattern')" />
+            </li>
+          </ul>
+        </div>
+        <div class="botomBtn" *ngIf="showTenantTab2">
+          <ul>
+            <li>
+              <input type=button value="Previous" id="btnPrevious" (click)="ShowPreviousTab()" />
+            </li>
+            <li>
+              <input type="button" value="Done" id="btnDone" (click)="CreateTenant(tenantForm.value)"
+                [disabled]="tenantDoneButtonDisable" />
+            </li>
+          </ul>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!--Edit Tenant Modal Dialog-->
+  <div class="modal fade" id="editModal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content popup-main">
+        <div class="modal-header">
+          <i class="icon icon-close" aria-hidden="true" data-dismiss="modal"></i>
+          <h4 class="modal-title">Edit Tenant</h4>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="tenantFormEdit">
+            <div class="row">
+
+              <div class="col-sm-12 form-group">
+                <label>Tenant Unique Name <span class="important-Field">*</span></label>
+                <input type="text" [readonly]="true" (keydown)="$event.preventDefault();" name="tenantName" formControlName="tenantName" />
+              </div>
+
+              <div class="col-sm-12 form-group">
+                <label>Tenant Friendly Name – <span class="ashColor">optional</span></label>
+                <input type="text"  name="friendlyName" formControlName="friendlyName" />
+                <div *ngIf="tenantFormEdit.controls['friendlyName'].hasError('pattern')" class="colorRed">
+                  Please enter Valid Tenant friendly name
+                </div>
+              </div>
+              <div class="col-sm-12 form-group">
+                <label>Description – <span class="ashColor">optional</span></label>
+                <textarea rows="3" cols="47" name="description" formControlName="description"></textarea>
+                <div *ngIf="tenantFormEdit.controls['description'].hasError('pattern')" class="colorRed">
+                  Please enter Valid Description details
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" (click)="UpdateTenant(tenantFormEdit.value)">Update</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal" id="Cancelupdatedeployment"
+            #editclose>Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Tenant Modal Dialog-->
+  <div class="modal fade" id="deleteModal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content popup-main">
+        <div class="modal-header">
+          <i class="icon icon-close" aria-hidden="true" (click)="GetTenants()" data-dismiss="modal"></i>
+          <h4 class="modal-title">Delete Tenant Confirmation</h4>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete '<span style="font-weight:bold;">{{deleteCount}}</span>' tenant(s) ?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" (click)="DeleteTenant()" data-dismiss="modal">Yes</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

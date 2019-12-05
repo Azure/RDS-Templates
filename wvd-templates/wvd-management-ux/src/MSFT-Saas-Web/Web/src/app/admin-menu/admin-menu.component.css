@@ -1,0 +1,52 @@
+.selected {
+  /*background: #8fa6bf;
+  text-decoration: none !important;
+  border-left: 10px solid #00A1EA !important;*/
+  background: #c2d6e9;
+  text-decoration: none !important;
+  border-left: 10px solid #8ca6be !important;
+  color: #4982af !important;
+}
+.selectedTenant {
+  background: #8fa6bf;
+  text-decoration: none !important;
+  border-left: 10px solid #4982af !important;
+  color: white !important
+}
+
+.selectedAll {
+  text-decoration: none !important;
+  color: white !important;
+  background: #5283b1;
+  border-left: 10px solid #3f6d90 !important;
+}
+
+.selectedparent {
+  /*background: #8fa6bf;
+  border-left: 10px solid transparent !important;*/
+  background: #89b7dc;
+  border-left: 10px solid transparent !important;
+}
+.selectedparentTenant {
+  background: #8fa6bf;
+  border-left: 10px solid transparent !important;
+}
+
+.selectedAllparent {
+  background: #5283b1;
+  /*background: #8fa6bf;*/
+  border-left: 10px solid transparent !important;
+}
+
+.deployment-accordion ul li label a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-left: none !important;
+}
+.selectedAll a, .selectedAllparent a, .selectedparent a, .selectedTenant a {
+  color: #ffffff !important;
+}
+.selected a {
+  color: #4982af !important;
+}
