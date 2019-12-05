@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>WVD - Management</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+  <link rel="icon" href="assets/Images/MSfevicon.png" type="image/png" sizes="16x16">
+  <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+  <link href="assets/css/icons.css" rel="stylesheet" />
+  <link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/bootstrap.min.js"></script>
+</head>
+<body>
+  <app-root>
+
+  </app-root>
+  <script>
+    /* This block of code is used for sidenav  to expand and close  */
+    var isOpen = 0;
+    function toggleNav() {
+      if (isOpen == 0) {
+        document.getElementById("mySidenav").style.width = "250px";
+        $('#main').addClass('expand');
+        $(".menu-opener span").removeClass('icon icon-chevron-right');
+        $(".menu-opener span").addClass('icon icon-chevron-left');
+        $("#mySidenav .menu-text").show(100);
+        isOpen = 1;
+      }
+      else {
+        document.getElementById("mySidenav").style.width = "50px";
+        $('#main').removeClass('expand');
+        $(".menu-opener span").removeClass('icon icon-chevron-left');
+        $(".menu-opener span").addClass('icon icon-chevron-right');
+        $("#mySidenav .menu-text").hide(100);
+        isOpen = 0;
+      }
+    }
+
+  </script>
+</body>
+</html>

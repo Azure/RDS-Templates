@@ -1,0 +1,2331 @@
+.NotificationHighlight{
+  background-color: #484848;
+}
+
+.link {
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+
+/* Main CSS Start */
+.colorRed {
+  color: red;
+}
+
+body {
+  margin: 0px;
+  padding: 0px;
+  overflow-x: hidden;
+  font-family: segoe ui;
+}
+
+.no-pad {
+  padding: 0px !important;
+}
+
+.no-marg {
+  margin: 0px !important;
+}
+
+.fontsizeSmaller {
+  font-size: x-small;
+  margin-top: 2px !important;
+}
+
+.height50 {
+  height: 50px !important;
+}
+
+.validationFailedBorder {
+  border-color: red !important;
+}
+
+.paddingLeft0 {
+  padding-left: 0;
+}
+
+.marginRight3 {
+  margin-right: 3px;
+}
+
+.marginLeft7 {
+  margin-left: 7px;
+}
+
+.fontSize12 {
+  font-size: 12px;
+}
+
+.padding20 {
+  padding: 20px;
+}
+
+.marginBottom15 {
+  margin-bottom: 15px;
+}
+
+.mar20 {
+  margin: 20px;
+}
+
+.marginLeft25 {
+  margin-left: 25px;
+}
+
+.marginTop20 {
+  margin-top: 20px;
+}
+
+.marginTop10 {
+  margin-top: 10px;
+}
+
+.mar20_left0 {
+  margin: 20px 20px 20px 0px;
+}
+
+.fontsizeSmaller {
+  font-size: x-small;
+  margin-top: 2px !important;
+}
+
+.height50 {
+  height: 50px !important;
+}
+
+.red {
+  color: red !important;
+}
+
+ul li {
+  list-style: none;
+}
+
+a:hover {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.marginBottom30 {
+  margin-bottom: 30px;
+}
+
+.marginBottom20 {
+  margin-bottom: 20px;
+}
+
+.marginTop10 {
+  margin-top: 10px;
+}
+
+.ashColor {
+  color: #8d8d8d;
+}
+
+.important-Field {
+  color: red;
+  font-size: 15px;
+  font-weight: 500;
+}
+/* Main CSS Start */
+
+/* Notification Feedback CSS Start */
+.loader .my-loader {
+  background-color: #D32F2F !important;
+  margin-top: 30%;
+}
+
+.simple-notification {
+  background: #fff !important;
+  color: #000 !important;
+  box-shadow: 4px 5px 10px #888888;
+  border: 1px solid #ccc;
+  padding: 5px 10px !important;
+}
+
+.glyphicon-ok-sign {
+  color: green !important;
+}
+
+.simple-notification-wrapper.top {
+  top: 60px !important;
+}
+
+.simple-notification-wrapper {
+  width: 320px !important;
+}
+
+i.angular-Notify {
+  background: forestgreen !important;
+  color: #fff !important;
+  font-weight: 800;
+  padding: 5px !important;
+  border-radius: 50%;
+  margin-top: 4px;
+  font-size: 8px;
+  width: initial !important;
+  height: initial !important;
+  position: relative !important;
+}
+
+i.angular-NotifyFail {
+  background: #e75c18 !important;
+  color: #fff !important;
+  font-weight: 800;
+  padding: 5px !important;
+  border-radius: 50%;
+  margin-top: 4px;
+  font-size: 8px;
+  width: initial !important;
+  height: initial !important;
+  position: relative !important;
+}
+
+i.angular-NotifyInfo {
+  background: #0078d7 !important;
+  color: #fff !important;
+  font-weight: 800;
+  padding: 5px !important;
+  border-radius: 50%;
+  margin-top: 4px;
+  font-size: 8px;
+  width: initial !important;
+  height: initial !important;
+  position: relative !important;
+}
+
+i.notify-close {
+  width: initial !important;
+  height: initial !important;
+  top: -20px !important;
+  padding: 0px !important;
+  font-size: 10px;
+  left: -2px !important;
+}
+
+.notify-label {
+  margin: 0px 0px 0px 5px !important;
+  font-size: 13px !important;
+  font-weight: 500;
+}
+
+.notify-text {
+  font-size: 12px !important;
+  margin: 10px 0px !important;
+}
+
+.notify-message i.icon-check {
+  font-size: 6px !important;
+  top: 1px;
+  left: 8px;
+}
+
+.notify-message i.icon-glyph-682 {
+  font-size: 7px !important;
+  top: 1px;
+  left: 8px;
+}
+
+.notify-message i.icon-fail {
+  font-size: 6px !important;
+  top: 1px;
+  left: 8px;
+}
+
+.notify-message .notification-text {
+  color: #000 !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+}
+
+.feedback-Dropdown {
+  min-width: 310px;
+  height: calc(100vh - 50px);
+  padding: 10px 20px 20px 20px;
+  right: 0px;
+  z-index: 9999;
+}
+
+.no-Notify {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.infoMain {
+  background: #d6d2d2;
+  display: flex;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
+  .infoMain i {
+    float: left;
+    display: flex;
+  }
+
+  .infoMain p {
+    float: right;
+    width: 79%;
+    display: flex;
+  }
+
+.smileIconAdj i {
+  font-size: 25px;
+  margin-right: 10px;
+}
+
+  .smileIconAdj i:hover {
+    color: #f9d35a;
+  }
+
+.notification-Dropdown {
+  min-width: 365px;
+  height: calc(100vh - 50px);
+  padding: 20px;
+  right: 0px;
+  z-index: 9999;
+  left: -182px !important;
+  overflow-y: auto;
+}
+
+  .notification-Dropdown a {
+    top: 15px;
+  }
+
+.signout-Dropdown {
+  height: calc(100vh - 50px);
+  right: 0px;
+  z-index: 9999;
+  left: -153px !important;
+  border-radius: 0px;
+}
+
+  .signout-Dropdown a {
+    top: 15px;
+  }
+
+.signout {
+  padding: 0px 30px;
+  font-size: 16px;
+  color: #000;
+}
+
+.notification-list, .feedback-list {
+  list-style: none;
+  padding: 0px;
+  margin: 0px 5px 0px 0px;
+}
+
+  .notification-list span, .feedback-list span {
+    font-size: 12px;
+  }
+
+  .notification-list li {
+    width: 100%;
+    display: block;
+    overflow: hidden;
+    border-bottom: 1px solid #eee;
+    padding: 5px 10px;
+    position: relative;
+  }
+
+  .feedback-list li {
+    width: 100%;
+    display: block;
+    overflow: hidden;
+    padding: 0px;
+    position: relative;
+  }
+
+  .feedback-list li {
+    width: 100%;
+    display: block;
+    overflow: hidden;
+    padding: 0px;
+    position: relative;
+  }
+
+  .notification-list li p {
+    font-size: 13px;
+    color: #bbbaba;
+    margin: 0px;
+  }
+
+  .feedback-list li p {
+    color: #000;
+  }
+
+.link-close {
+  top: 10px !important;
+  right: 15px !important;
+}
+
+.feedback-Dropdown .icnclose {
+  font-size: 12px !important;
+}
+
+.feedback-Dropdown i.icon-info {
+  font-size: 35px;
+  color: #0078d7;
+  background: #ddd;
+  border: none;
+  padding: 10px;
+}
+
+.feedbackMain {
+  position: relative;
+  height: calc(100vh - 115px);
+}
+
+.send-feedback {
+  background-color: #3052aa;
+  color: #fff;
+  border: none;
+  padding: 3px 15px;
+}
+
+.notification-list i.icon-check, .feedback-list i.icon-check {
+  color: forestgreen;
+  font-weight: bold;
+  border: 1px solid forestgreen;
+  padding: 2px;
+  border-radius: 50%;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.notification-list li .close, .feedback-list li .close {
+  display: none;
+  top: 5px;
+}
+
+.notification-list li:hover {
+  background: #eee;
+}
+
+  .notification-list li:hover .close {
+    display: block;
+  }
+
+    .notification-list li:hover .close i {
+      font-size: 12px;
+    }
+
+.notification-list li a, .feedback-list {
+  color: #0078d7;
+}
+
+.notification-list li p.notification-text {
+  color: #8d8d8d;
+  padding-left: 5px;
+  margin: 4px 0px 0px;
+  font-size: 14px;
+}
+
+.feedback-list li p.notification-text {
+  margin: 0px;
+  color: #000;
+  padding: 10px;
+  font-size: 13px;
+  background-color: #d6d2d2;
+}
+/* Notification Feedback CSS End */
+
+/* Search CSS Start */
+.search {
+  position: relative;
+}
+
+  .search .input-group {
+    z-index: 0 !important;
+    border: 1px solid #ddd;
+  }
+
+    .search .input-group .form-control {
+      border-radius: 0;
+      box-shadow: none;
+      border: 0;
+      height: 27px;
+      padding: 4px 12px;
+      z-index: 0 !important;
+    }
+
+  .search .input-group-btn .btn:hover {
+    background: #fff;
+  }
+
+  .search .input-group-btn .btn {
+    padding: 0px 12px;
+    border: 0;
+    z-index: 0;
+  }
+
+    .search .input-group-btn .btn i {
+      color: #8d8d8d;
+      line-height: 26px;
+    }
+
+.filter {
+  font-size: 13px;
+  padding: 20px;
+  display: block;
+}
+
+.searchInfo {
+  color: #0078d7;
+  position: relative;
+  top: 3px;
+}
+/* Search CSS End */
+
+/* Profile CSS Start */
+.profile {
+  position: relative;
+}
+
+.drop-profile {
+  width: 100%;
+  height: auto;
+  background-color: #fff;
+  position: absolute;
+  box-shadow: 4px 5px 10px #888888;
+  padding-left: 0px;
+  text-align: left;
+  z-index: 9999;
+  top: 100%;
+  margin: 0px;
+  padding: 0px;
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+.profile-area {
+  min-width: 150px;
+  text-align: right;
+}
+
+.navbar-nav > li:last-child > a {
+  padding: 11px 10px;
+  line-height: 25px;
+}
+
+.navbar-inverse .navbar-nav > .active > a,
+.navbar-inverse .navbar-nav > .active > a:focus,
+.navbar-inverse .navbar-nav > .active > a:hover {
+  /*background: #6ca2e0 !important;*/
+  background: #000;
+}
+
+.profile-area a .user i {
+  padding: 6px;
+  border-radius: 50%;
+  background: #0078d7;
+  color: #fff;
+}
+
+.show-on-hover:hover > ul.dropdown-menu {
+  display: block;
+}
+
+.drop-profile li {
+  padding: 10px;
+}
+
+  .drop-profile li a {
+    text-decoration: none;
+    color: #000;
+    font-size: 13px;
+  }
+
+  .drop-profile li:hover {
+    background-color: #E6E6E6;
+  }
+
+  .drop-profile li a:hover {
+    background: none;
+  }
+
+.profile > ul > li .notification {
+  background: #e75c18;
+  width: 20px;
+  height: 20px;
+  padding: 0px;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 70%;
+  text-align: center;
+  color: #ffffff;
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-size: 10px;
+  box-sizing: border-box;
+}
+
+
+.profile > ul > li:hover {
+  background: #080808;
+  cursor: pointer;
+}
+
+.profile > ul > li:active {
+  background: #080808;
+}
+/* Profile CSS End */
+
+/* Sidenav CSS Start */
+.sidenav {
+  height: calc(100vh - 52px);
+  position: fixed;
+  top: 52px;
+  background-color: #EBEBEB !important;
+  overflow-x: hidden;
+  transition: 0.5s;
+  width: 50px;
+  float: left;
+  z-index: 1;
+}
+
+  .sidenav a {
+    text-decoration: none;
+    color: #000;
+    display: block;
+    overflow: hidden;
+    transition: 0.3s;
+    line-height: 36px;
+    padding-left: 15px;
+    height: 50px;
+  }
+
+    .sidenav a span.icon {
+      color: #2F2F2F;
+      font-size: 20px;
+      float: left;
+      line-height: 50px;
+    }
+
+    .sidenav a .menu-text {
+      display: none;
+      font-size: 15px;
+      padding-left: 10px;
+      color: #2F2F2F;
+      line-height: 50px;
+    }
+
+    .sidenav a:hover,
+    .offcanvas a:focus,
+    .offcanvas a:active {
+      color: #f1f1f1;
+      background-color: #73a3da;
+    }
+
+  .sidenav .menu-opener {
+    font-size: 36px;
+  }
+/** Sidenav CSS End **/
+
+/** Categories CSS Start **/
+.categories {
+  width: 100%;
+  float: left;
+  background: #ececec;
+  padding: 20px 30px;
+  box-sizing: border-box;
+}
+
+  .categories h5 {
+    margin: 0px;
+    font-weight: normal;
+    color: #8d8d8d;
+    padding-bottom: 15px;
+  }
+
+  .categories ul {
+    margin: 0px;
+    padding: 0px;
+  }
+
+    .categories ul li {
+      list-style: none;
+      padding: 10px 0px;
+      clear: both;
+    }
+
+      .categories ul li p {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 2px solid #ddd;
+        text-align: center;
+        font-size: 13px;
+        padding: 3px;
+        line-height: 20px;
+        float: left;
+        clear: both;
+        margin: 0px;
+      }
+
+      .categories ul li a {
+        margin-left: 10px;
+        text-decoration: none;
+        font-size: 13px;
+        color: #000;
+        padding-top: 5px;
+        display: inline-block;
+        width: 85%;
+      }
+
+      .categories ul li.active a, .categories ul li:hover a {
+        color: #0078d7;
+      }
+
+      .categories ul li.active p, .categories ul li:hover p {
+        background: #0078d7;
+        color: #fff;
+        border: 1px solid #0078d7;
+      }
+/** Categories CSS End **/
+
+/** Caurosel CSS Start**/
+#fade-quote-carousel.carousel {
+  padding-bottom: 60px;
+}
+
+.multi_tenent #fade-quote-carousel.carousel .carousel-indicators {
+  width: 40px;
+  left: calc(50% - 20px);
+  margin-left: 0;
+}
+
+  .multi_tenent #fade-quote-carousel.carousel .carousel-indicators > li {
+    background: none;
+    border: 0 !important;
+    float: left;
+    margin: 0;
+    margin-right: 5px;
+  }
+
+    .multi_tenent #fade-quote-carousel.carousel .carousel-indicators > li .nav_radio {
+      width: 12px;
+      height: 12px;
+      border: 1px solid #0078d7;
+      display: inline-block;
+      border-radius: 50%;
+    }
+
+    .multi_tenent #fade-quote-carousel.carousel .carousel-indicators > li.active .nav_radio {
+      background: #0078d7;
+    }
+
+    .multi_tenent #fade-quote-carousel.carousel .carousel-indicators > li .nav_control {
+      display: block;
+      position: absolute;
+      left: 0;
+      color: #0078d7;
+    }
+
+    .multi_tenent #fade-quote-carousel.carousel .carousel-indicators > li.active .nav_control {
+      display: none;
+    }
+
+.multi_tenent .carousel-indicators .active {
+  width: auto;
+  height: auto;
+}
+
+.multi_tenent .carousel-indicators li {
+  text-indent: unset;
+}
+
+#fade-quote-carousel.carousel .carousel-inner .item {
+  opacity: 0;
+  -webkit-transition-property: opacity;
+  -ms-transition-property: opacity;
+  transition-property: opacity;
+}
+
+#fade-quote-carousel.carousel .carousel-inner .active {
+  opacity: 1;
+  -webkit-transition-property: opacity;
+  -ms-transition-property: opacity;
+  transition-property: opacity;
+}
+
+#fade-quote-carousel.carousel .carousel-indicators {
+  bottom: 10px;
+}
+
+  #fade-quote-carousel.carousel .carousel-indicators > li {
+    background-color: #fff;
+    border: 1px solid #0078d7 !important;
+    border: none;
+  }
+
+  #fade-quote-carousel.carousel .carousel-indicators .active {
+    background-color: #0078d7;
+  }
+/** Caurosel CSS End **/
+
+/** Rds CSS Start **/
+.rdsDeploymnt-leftcontent {
+  width: 280px;
+  float: left;
+  min-height: calc(100vh - 52px);
+  border-right: 1px solid #8d8d8d;
+}
+
+  .rdsDeploymnt-leftcontent h3 {
+    padding: 20px;
+    margin: 0px;
+  }
+
+.rdsDeploymnt-rightcontent {
+  min-width: 72%;
+  position: fixed;
+  /* width: 100%; */
+  margin-left: 273px;
+  float: left;
+  /* width: calc(100% - 281px); */
+  min-height: calc(100vh - 52px);
+}
+
+.rdsDeploymnt-rightcontent .rdsErrorNotification {
+  /*background: #dfeaf6;*/
+  background: #fbcbcb;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: block;
+  position: relative;
+  left:7px;
+}
+
+  .rdsDeploymnt-rightcontent .rdsNotification {
+    /*background: #dfeaf6;*/
+    background: #c4d6ea;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: block;
+    position: relative;
+  }
+
+    .rdsDeploymnt-rightcontent .rdsNotification .info i {
+      float: left;
+      font-size: 18px;
+      padding-top: 3px;
+    }
+
+    .rdsDeploymnt-rightcontent .rdsNotification .info p {
+      float: left;
+      margin: 0px 10px;
+      font-size: 13px;
+      padding-top: 2px;
+    }
+
+    .rdsDeploymnt-rightcontent .rdsNotification .host-width {
+      width: 90%;
+    }
+
+  .rdsDeploymnt-rightcontent table {
+    margin: 0px;
+  }
+
+    .rdsDeploymnt-rightcontent table tr td:first-child, .rdsDeploymnt-rightcontent table tr th:first-child {
+      padding-left: 15px;
+    }
+
+.tenant-tableAdj .tableSelection tbody {
+  /*height: calc(100vh - 360px);*/
+}
+
+.createDeply a {
+  color: #0078d7;
+  margin-left: 30px;
+  font-size: 15px;
+}
+
+.addDeploy {
+  padding: 20px 0px 0px;
+  box-sizing: border-box;
+}
+
+.allDeployment {
+  padding: 20px;
+}
+
+.addDeploy h3 {
+  margin: 0px;
+  padding: 0px 20px;
+}
+
+.allDeployment h3 {
+  margin: 0px;
+}
+
+.addDeploy ul, .allDeployment ul {
+  margin: 10px 10px 15px 0px;
+  padding: 0px;
+  display: block;
+  overflow: hidden;
+}
+
+  .addDeploy ul li, .allDeployment ul li {
+    padding: 5px 10px;
+    list-style: none;
+    float: left;
+    font-size: 14px;
+  }
+
+    .addDeploy ul li a, .addDeploy ul li button, .allDeployment ul li a, .allDeployment ul li button {
+      color: #0078d7;
+      background: transparent;
+      border: none;
+    }
+
+    .addDeploy ul li:first-child, .allDeployment ul li:first-child {
+      padding: 5px 5px 5px 0px;
+    }
+
+    .addDeploy ul li button:disabled, .addDeploy ul li button:disabled i, .allDeployment ul li button:disabled, .allDeployment ul li button:disabled i {
+      color: #74b9ef;
+      cursor: not-allowed;
+    }
+
+.AllDeployTable {
+  width: 100%;
+  margin: 20px 0px;
+  max-height: calc(100vh - 230px);
+  overflow: auto;
+}
+
+  .AllDeployTable table {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+    .AllDeployTable table tr th,
+    .AllDeployTable table tr td {
+      border-bottom: 1px solid #ddd;
+      padding: 5px;
+    }
+
+    .AllDeployTable table tr th,
+    .AllDeployTable table tr td {
+      font-weight: normal;
+      font-size: 12px;
+      text-align: left;
+    }
+
+  .AllDeployTable p {
+    font-size: 13px;
+    color: #8d8d8d;
+    margin: 20px 40px;
+  }
+
+.rdsDeploymnt-rightcontent tbody {
+  display: block;
+  height: calc(100vh - 335px);
+  overflow-y: auto;
+}
+
+.appGroup-Tableheight .AppGroup-apptable tbody {
+  display: block;
+  /*height: calc(100vh - 550px);*/
+  height: calc(100vh - 430px);
+  overflow-y: auto;
+}
+
+.MaxWindowTableHeight {
+  height: calc(100vh - 326px) !important;
+}
+
+.rdsDeploymnt-rightcontent thead, .rdsDeploymnt-rightcontent tbody tr,
+.AppGroup-apptable thead, .AppGroup-apptable tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.rdsDeploymnt-rightcontent .icon {
+  color: #0078d7;
+}
+
+.AddADSUser .icon, .userIconADS .icon {
+  color: #000;
+}
+/* Rds CSS End */
+/* Popup CSS Start */
+.popup-main .modal-header, .popup-main .modal-footer {
+  border: none;
+}
+
+.popup-main .modal-body input[type=text] {
+  height: 30px;
+  border: 1px solid #ddd;
+  width: 100%;
+  padding-left: 10px;
+  margin-bottom: 15px;
+}
+
+.popup-main label {
+  font-weight: normal;
+}
+/* Popup CSS End */
+
+/* Overlay CSS Start */
+.createDeploy, .createTenent,.manageTenent, .createUserName, .newAppGroup, .notification, .newAppPath, .loginDetails {
+  padding: 20px;
+  box-sizing: border-box;
+  background: #fff;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  width: 400px;
+  z-index: 9;
+}
+
+.Addapps {
+  padding: 20px;
+  float: left;
+  box-sizing: border-box;
+  background: #fff;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  width: 65%;
+  z-index: 20;
+  display: none;
+}
+
+.AddADSUser {
+  padding: 20px;
+  box-sizing: border-box;
+  background: #fff;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  width: 400px;
+  z-index: 9;
+  display: none;
+}
+
+  .Addapps p, .AddADSUser p {
+    margin: 0px;
+    padding-top: 5px;
+  }
+
+.deplyStatus, .TenantStatus {
+  float: left;
+}
+
+  .deplyStatus ul.tabs li.disable,
+  .TenantStatus ul.tabs li.disable {
+    cursor: not-allowed;
+  }
+
+.createDeployHead, .createTenantHead {
+  margin: 10px 0px;
+  overflow: hidden;
+}
+
+.rdsNotification > .close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: #000;
+}
+
+.close {
+  position: absolute;
+  top: 35px;
+  right: 20px;
+  color: #000;
+  opacity: 0.8;
+}
+
+.createDeploy h4, .createTenent h4, .manageTenent h4 {
+  margin: 10px 0px;
+}
+
+.createDeploy p, .createTenent p, .manageTenent p, loginDetails p {
+  font-size: 12px;
+}
+
+  .createDeploy p a, .createTenent p a, .manageTenent p a {
+    color: #0078d7;
+  }
+
+    .createDeploy p a i, .createTenent p a i, .manageTenent p a i {
+      font-size: 10px;
+      color: #0078d7;
+    }
+
+.Deployment-details label {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.createDeploy input[type=text],
+.createTenent input[type=text],
+.manageTenent input[type=text],
+.DeployUrl input[type=text],
+.DeployUrl input[type=password] {
+  height: 30px;
+  border: 1px solid #ddd;
+  width: 100%;
+  padding-left: 10px;
+}
+
+textarea {
+  border: 1px solid #ddd;
+  margin: 5px 0px;
+  width: 100%;
+  padding-left: 10px;
+  resize: none;
+}
+
+.DeployUrl {
+  margin-top: 10px;
+}
+
+  .DeployUrl p {
+    color: #8d8d8d;
+    margin-top: 8px;
+  }
+
+  .DeployUrl label {
+    font-weight: normal;
+    color: #000;
+  }
+
+  .DeployUrl input[type=radio] {
+    width: 15px;
+    height: 15px;
+    margin-right: 10px;
+    float: left;
+  }
+
+    .DeployUrl input[type=radio] ~ label {
+      margin-top: 2px;
+    }
+
+  .DeployUrl ul {
+    margin: 0px;
+    padding: 0px;
+  }
+
+    .DeployUrl ul li {
+      float: left;
+      margin-right: 15px;
+    }
+
+      .DeployUrl ul li button {
+        background: transparent;
+        border: none;
+        color: #0078d7;
+      }
+
+  .DeployUrl textarea {
+    resize: none;
+    height: 100px;
+    overflow-y: auto;
+  }
+
+.botomBtn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
+.btnBottom {
+  bottom: 300px !important;
+}
+
+.btnPlaceAtBottom {
+  bottom: 0px !important;
+}
+
+.botomBtn ul {
+  margin: 0px;
+  padding: 0px;
+}
+
+  .botomBtn ul li {
+    list-style: none;
+    float: left;
+    padding: 8px 0px;
+    margin: 10px;
+  }
+
+    .botomBtn ul li:first-child input[type=button] {
+      background: #ccc;
+      cursor: pointer;
+      color: #000;
+    }
+
+    .botomBtn ul li:nth-child(2) input[type=button] {
+      /*background: #0078d7;*/
+      background: #121313;
+      color: #fff;
+    }
+
+.btnSubmit {
+  background: #121313;
+  color: #fff;
+  border: none;
+  width: 100px;
+  height: 30px;
+}
+
+.botomBtn ul li:nth-child(2) input[type=button]:disabled {
+  background: #a5a5a5;
+  cursor: not-allowed;
+}
+
+.botomBtn ul li input[type=button] {
+  background: transparent;
+  border: none;
+  width: 100px;
+  height: 30px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.ngLoader {
+  position: fixed;
+  top: 48%;
+  left: 48%;
+  width: 75px;
+  height: 75px;
+  z-index: 1
+}
+
+  .ngLoader div {
+    margin-top: 25%;
+  }
+
+  .ngLoader img {
+    width: 100%;
+  }
+
+.overlay, .adminOverlay {
+  position: fixed;
+  z-index: 1;
+  width: 100%;
+  height: calc(100vh - 50px);
+  overflow-y: auto;
+  left: 0px;
+  background: rgba(82, 82, 86, 0.3);
+  top: 50px;
+  box-sizing: border-box;
+  transition: width 0.5s;
+}
+
+.borderLine {
+  position: absolute;
+  border: 1px solid #8d8d8d;
+  top: 48px;
+  left: 53px;
+  width: 34px;
+}
+
+.deplyStatus ul.tabs,
+.TenantStatus ul.tabs {
+  margin: 0px;
+  padding: 0px;
+  list-style: none;
+}
+
+  .deplyStatus ul.tabs li,
+  .TenantStatus ul.tabs li {
+    background: none;
+    color: #222;
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 1px solid #8d8d8d;
+    margin: 0px 30px 0px 0px;
+  }
+
+    .deplyStatus ul.tabs li.current,
+    .TenantStatus ul.tabs li.current {
+      /*background: #0078d7;*/
+      background: #121313;
+      color: #fff;
+      border: 1px solid #121313;
+    }
+
+.deplyStatus .tab-content,
+.TenantStatus .tab-content {
+  display: none;
+}
+
+  .deplyStatus .tab-content.current,
+  .TenantStatus .tab-content.current {
+    display: inherit;
+  }
+
+.contentWrap {
+  min-width: 1200px;
+}
+
+.filter {
+  padding: 10px 42px 10px 10px;
+  margin-left: 5px !important;
+  width: 95% !important;
+}
+/* Overlay CSS End */
+
+/* Accordion Panel CSS Start */
+.deployment-accordion_list {
+  margin: 0px;
+  padding: 0px;
+  list-style: none;
+}
+
+.deployment-accordion a,
+.deployment-accordion label {
+  display: block;
+  padding: 5px 0px 3px 10px;
+  color: #48719e;
+  -webkit-transition: all .25s ease-in;
+  transition: all .25s ease-in;
+  font-size: 14px;
+  border-left: 10px solid transparent;
+}
+
+.hostPad a, .hostPad label {
+  padding: 5px 0px 4px 60px !important;
+}
+
+.deployment-accordion a:focus,
+.deployment-accordion a:hover,
+.deployment-accordion label:focus,
+.deployment-accordion label:hover {
+  /*color: #ffffff;*/
+  /*background: #dfeaf6;*/
+  /*background : #8fa6bf*/
+}
+
+.deployment-accordion label {
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.group-list {
+  margin: 0px;
+  padding: 0px;
+}
+
+  .group-list a,
+  .group-list label {
+    padding-left: 22px;
+  }
+
+/*.group-list a:focus,
+    .group-list a:hover,
+    .group-list label:focus,
+    .group-list label:hover {
+      background: #dfeaf6;
+    }*/
+
+.sub-group-list-open,
+.sub-sub-group-list {
+  margin: 0px;
+  padding: 0px;
+}
+
+.sub-group-list a,
+.sub-group-list label {
+  padding-left: 42px;
+}
+
+/*.sub-group-list a:focus,
+    .sub-group-list a:hover,
+    .sub-group-list label:focus,
+    .sub-group-list label:hover {
+      background: #dfeaf6;
+    }*/
+
+.sub-sub-group-list a,
+.sub-sub-group-list label {
+  padding-left: 60px;
+}
+
+/*.sub-sub-group-list a:focus,
+    .sub-sub-group-list a:hover,
+    .sub-sub-group-list label:focus,
+    .sub-sub-group-list label:hover {
+      background: #dfeaf6;
+    }*/
+
+.sub-group-list li label[for=sub-sub-group-2] a {
+  padding: 0px;
+}
+
+.sub-group-list .thridlevel-adj label > a {
+  padding-left: 20px;
+  padding-top: 2px;
+}
+
+.deployment-accordion {
+  height: calc(100vh - 175px);
+  overflow-y: auto;
+}
+
+.btn-primary {
+  background: #121313;
+}
+
+.group-list,
+.sub-group-list {
+  height: 100%;
+  max-height: 0;
+  overflow: hidden;
+  -webkit-transition: max-height 0.5s ease-in-out;
+  transition: max-height 0.5s ease-in-out;
+}
+
+.sub-sub-group-list {
+  height: 100%;
+  overflow: hidden;
+  -webkit-transition: max-height 0.5s ease-in-out;
+  transition: max-height 0.5s ease-in-out;
+}
+
+.deployment-accordion_list input[type=checkbox]:checked + label + ul {
+  /* reset the height when checkbox is checked */
+  max-height: 1000px;
+}
+
+.deployment-accordion label > span {
+  float: left;
+  -webkit-transition: -webkit-transform .1s ease;
+  transition: transform .1s ease;
+  margin: 4px 10px 0px 0px;
+  color: #0078d7;
+  font-size: 10px;
+}
+
+.sub-menu {
+  padding-left: 0px !important;
+  padding-top: 0px !important;
+  text-decoration: none !important;
+}
+
+.deployment-accordion_list input[type=checkbox]:checked + label > span {
+  -webkit-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  transform: rotate(90deg);
+}
+
+.sub-sub-group-list li:hover {
+  background: #dfeaf6;
+}
+
+/*ul.sub-sub-group-list li a {
+  white-space: nowrap;
+  width: 282px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}*/
+/* Accordion Panel CSS End */
+
+/* Wrapper CSS Start */
+#wrapper {
+  padding-left: 0;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  -o-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+  margin-top: -20px;
+}
+
+  #wrapper .icon {
+    color: #000 !important;
+    font-size: 20px;
+    padding-right: 10px;
+  }
+
+  #wrapper a {
+    font-size: 15px;
+  }
+
+  #wrapper.toggled {
+    padding-left: 250px;
+  }
+
+#sidebar-wrapper {
+  z-index: 1000;
+  position: fixed;
+  left: 250px;
+  width: 60px;
+  height: 100%;
+  margin-left: -250px;
+  overflow-y: auto;
+  background: #E6E6E6;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  -o-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+  width: 250px;
+}
+
+#page-content-wrapper {
+  width: 100%;
+  position: absolute;
+  padding: 15px;
+}
+
+#wrapper.toggled #page-content-wrapper {
+  position: absolute;
+  margin-right: -250px;
+}
+/* Wrapper CSS End */
+
+/* Sidebar CSS Start */
+.sidebar-nav {
+  position: absolute;
+  top: 0;
+  width: 250px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+  .sidebar-nav li {
+    text-indent: 20px;
+    line-height: 40px;
+    padding-top: 20px;
+  }
+
+    .sidebar-nav li a {
+      display: block;
+      text-decoration: none;
+      color: #000;
+    }
+
+      .sidebar-nav li a:hover {
+        text-decoration: none;
+        color: #000;
+        background: #CFD1D3;
+      }
+
+      .sidebar-nav li a:active,
+      .sidebar-nav li a:focus {
+        text-decoration: none;
+      }
+
+  .sidebar-nav > .sidebar-brand {
+    height: 65px;
+    font-size: 18px;
+    line-height: 60px;
+  }
+
+    .sidebar-nav > .sidebar-brand a {
+      color: #999999;
+    }
+
+      .sidebar-nav > .sidebar-brand a:hover {
+        color: #fff;
+        background: none;
+      }
+/* Sidebar Styles End */
+
+/* Deployment Tabs CSS Start **/
+.Deployment-details {
+  margin: 10px 15px;
+}
+
+  .Deployment-details .row {
+    margin-bottom: 5px;
+  }
+
+.rdsDeploymnt-rightcontent .Deployment-details i.icon-check {
+  color: #22b722;
+  margin-right: 3px;
+  font-weight: bold;
+  padding-top: 2px;
+  font-size: 13px;
+}
+
+.browse {
+  margin-left: 20px;
+  display: block;
+  font-size: 14px;
+}
+
+  .browse i {
+    margin-right: 3px;
+    transform: rotate(270deg);
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    -ms-transform: rotate(270deg);
+    -o-transform: rotate(270deg);
+  }
+/* Deployment Tabs CSS End */
+
+/* Tabbable Css Start */
+.tabbable-line .nav-tabs {
+  border: none;
+  margin: 0px 20px;
+}
+
+  .tabbable-line .nav-tabs > li {
+    margin-right: 2px;
+  }
+
+    .tabbable-line .nav-tabs > li > a {
+      border: 0;
+      margin-right: 0;
+      color: #737373;
+      padding: 10px 15px 5px;
+    }
+
+      .tabbable-line .nav-tabs > li > a > i {
+        color: #a6a6a6;
+      }
+
+    .tabbable-line .nav-tabs > li.open,
+    .tabbable-line .nav-tabs > li:hover {
+      border-bottom: 3px solid #e4e8ea;
+    }
+
+      .tabbable-line .nav-tabs > li.open > a,
+      .tabbable-line .nav-tabs > li:hover > a {
+        border: 0;
+        background: none !important;
+        color: #333333;
+      }
+
+        .tabbable-line .nav-tabs > li.open > a > i,
+        .tabbable-line .nav-tabs > li:hover > a > i {
+          color: #a6a6a6;
+        }
+
+      .tabbable-line .nav-tabs > li.open .dropdown-menu,
+      .tabbable-line .nav-tabs > li:hover .dropdown-menu {
+        margin-top: 0px;
+      }
+
+    .tabbable-line .nav-tabs > li.active {
+      border-bottom: 3px solid #0078d7;
+      position: relative;
+    }
+
+      .tabbable-line .nav-tabs > li.active > a {
+        border: 0;
+        color: #333333;
+        background: transparent;
+      }
+
+        .tabbable-line .nav-tabs > li.active > a > i {
+          color: #404040;
+        }
+
+.tabbable-line .tab-content {
+  margin-top: -3px;
+  border: 0;
+  padding: 15px 0;
+  overflow: hidden;
+}
+
+.createDeploy .tab-content,
+.createTenent .tab-content {
+  height: calc(100vh - 185px);
+  overflow-y: auto;
+}
+.manageTenent .tab-content {
+  height: calc(100vh - 185px);
+  overflow-y: auto;
+}
+
+.portlet .tabbable-line > .tab-content {
+  padding-bottom: 0;
+}
+/** Tabbable Css End **/
+
+/* Component Pages CSS Start */
+.alert {
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.validationFailed {
+  border: 1px solid red;
+}
+
+.validationFailedBorder {
+  border-color: red !important;
+}
+
+.alert-hide {
+  display: none;
+}
+
+.table-hover > tbody > tr:hover {
+  background-color: #dfeaf6;
+}
+
+.rowSelect {
+  /*background-color: #dfeaf6;*/
+  background-color: #c4d7ea;
+}
+/* Component Pages Css End */
+
+/* Breadcrum CSS Start */
+app-breadcrum {
+  display: inline-flex !important;
+}
+
+.breadcrumb-item {
+  padding: 15px 5px !important;
+}
+
+  .breadcrumb-item a {
+    cursor: pointer !important;
+  }
+
+.breadArrow {
+  font-size: 10px;
+  margin-right: 5px;
+}
+
+app-breadcrum a {
+  cursor: default !important;
+}
+/* Breadcrum CSS End */
+/** Other Css **/
+/*.appGroup-Tableheight tbody {
+  height:initial;
+}*/
+
+.AppGrouptoggle {
+  position: absolute;
+  bottom: 0px;
+  left: 9px;
+  right: 0px;
+  height: 50%;
+  background-color: #fff;
+  border-top: 1px solid #CDCDCD;
+}
+
+.AppGrouptoggleMax {
+  height: 93%;
+}
+
+.maximizePosition {
+  position: relative;
+  top: -2px;
+}
+
+.paddingTop20 {
+  padding-top: 20px;
+}
+
+.paddingLeft0 {
+  padding-left: 0px;
+}
+
+.txtalignRight {
+  text-align: right;
+}
+
+i.icon-close, i.icon-win-minimize, i.icon-win-maximize {
+  color: #000 !important;
+}
+
+.paddingLeftRight5 {
+  padding: 0px 5px;
+}
+
+.postionRelTop15 {
+  position: relative;
+  top: 15px;
+}
+
+div.AllDeployTable > table > thead > tr > th {
+  font-weight: 600;
+}
+
+.tableSelection thead {
+  width: 100%;
+}
+
+.tableSelection tbody {
+  max-height: calc(100vh - 326px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: 100%;
+  width: 100%;
+  word-break: break-word;
+}
+
+.tableSelection thead th {
+  background-color: #E6E6E6;
+}
+
+.tableSelection thead, .tableSelection tbody, .tableSelection tr, .tableSelection td, .tableSelection th {
+  font-size: 12px;
+}
+
+  .tableSelection tbody tr:hover {
+    cursor: pointer;
+  }
+
+  .tableSelection tbody td, .tableSelection thead > tr > th {
+    border-bottom-width: 0;
+  }
+
+  .tableSelection tbody td, .tableSelection thead th {
+    text-align: left;
+  }
+
+.textLeft tbody td, .textLeft thead th {
+  text-align: left !important;
+}
+
+.modal-close {
+  top: 15px !important;
+}
+
+#deleteModal .modal-dialog {
+  top: 30%;
+}
+
+#deleteModalApps .modal-dialog {
+  top: 30%;
+}
+
+#deleteModalAppGroups .modal-dialog {
+  top: 30%;
+}
+
+#deleteModal .modal-dialog {
+  top: 30%;
+}
+
+#deleteModalAppUser .modal-dialog {
+  top: 30%;
+}
+
+.modal-header .icon-close {
+  float: right;
+  cursor: pointer;
+  color: #8d8d8d !important;
+}
+
+.ManageLink {
+  border: 0px;
+  background-color: transparent;
+  color: #0078d7;
+  padding-left: 0px;
+}
+
+.content-main {
+  float: left;
+  transition: all 0.5s;
+  background: #ffffff;
+  min-height: calc(100vh - 52px);
+  width: calc(100% - 50px);
+  position: relative;
+  margin-top: 52px;
+  margin-left: 50px;
+}
+
+  .content-main.expand {
+    width: calc(100% - 250px);
+    overflow-x: auto;
+    margin-left: 250px;
+  }
+
+ 
+
+  .modal {
+    pointer-events: none;
+}
+
+.modal .modal-dialog {
+  pointer-events: auto;
+}
+
+.multi_tenent {
+  float: left;
+  background: #ececec;
+  padding: 20px 30px;
+  box-sizing: border-box;
+}
+
+  .multi_tenent h5 {
+    color: #8d8d8d;
+    margin: 0px;
+    font-weight: normal;
+  }
+
+  .multi_tenent p {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+.logo {
+  width: 20px;
+  float: left;
+}
+
+.navbar {
+  margin-bottom: 0px;
+}
+
+.headerNav {
+  position: fixed;
+  z-index: 3;
+  width: 100%;
+  height: 53px;
+  /*background-color: #4796ef;*/
+  background: #121313;
+  border-color: #121313 !important;
+}
+
+.tab-content #tab_default_1, .tab-content tab3,
+.tab-content #tab_default_4 {
+  padding: 0px 10px;
+}
+
+.arrowIcn {
+  font-size: 10px;
+}
+
+.deploymentHost {
+  width: 15px;
+  top: -1px;
+  position: relative;
+}
+
+.tenantUser {
+  width: 12px;
+  top: -1px;
+  position: relative;
+}
+
+.margintprght {
+  margin: 4px 3px 0px 0px !important;
+}
+
+.height-fix {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.displayFlex {
+  display: flex;
+}
+
+table tbody tr td.hoverUnderline:hover {
+  text-decoration: underline;
+}
+
+table tbody tr td.hoverUnderline {
+  color: #0078d7;
+}
+/** Other Css End **/
+/** Loader Css End **/
+.load-container {
+  display: none;
+  position: fixed;
+  z-index: 99999;
+  top: 20%;
+  left: 48%;
+  width: 100px;
+}
+
+.loader {
+  color: #0078d7;
+  font-size: 12px;
+  margin: 100px auto;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  position: relative;
+  text-indent: -9999em;
+  -webkit-animation: load4 1.3s infinite linear;
+  animation: load4 1.3s infinite linear;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+@-webkit-keyframes load4 {
+  0%, 100% {
+    box-shadow: 0 -3em 0 0.2em, 2em -2em 0 0em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 0;
+  }
+
+  12.5% {
+    box-shadow: 0 -3em 0 0, 2em -2em 0 0.2em, 3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+  }
+
+  25% {
+    box-shadow: 0 -3em 0 -0.5em, 2em -2em 0 0, 3em 0 0 0.2em, 2em 2em 0 0, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+  }
+
+  37.5% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em, -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
+  }
+
+  50% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em, -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
+  }
+
+  62.5% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0, -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
+  }
+
+  75% {
+    box-shadow: 0em -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
+  }
+
+  87.5% {
+    box-shadow: 0em -3em 0 0, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
+  }
+}
+
+@keyframes load4 {
+  0%, 100% {
+    box-shadow: 0 -3em 0 0.2em, 2em -2em 0 0em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 0;
+  }
+
+  12.5% {
+    box-shadow: 0 -3em 0 0, 2em -2em 0 0.2em, 3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+  }
+
+  25% {
+    box-shadow: 0 -3em 0 -0.5em, 2em -2em 0 0, 3em 0 0 0.2em, 2em 2em 0 0, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+  }
+
+  37.5% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em, -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
+  }
+
+  50% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em, -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
+  }
+
+  62.5% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0, -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
+  }
+
+  75% {
+    box-shadow: 0em -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
+  }
+
+  87.5% {
+    box-shadow: 0em -3em 0 0, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
+  }
+}
+/** Loader Css End **/
+
+/*Custom Checkbox for Table Start*/
+
+.control-group {
+  display: inline-block;
+  text-align: left;
+  vertical-align: top;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.1);
+}
+
+
+.control {
+  font-size: 12px;
+  position: relative;
+  display: block;
+  margin-bottom: 0px;
+  cursor: pointer;
+}
+
+  .control input {
+    position: absolute;
+    z-index: -1;
+    opacity: 0;
+  }
+
+.control__indicator {
+  position: absolute;
+  top: 0px;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  background: #e6e6e6;
+  border: 1px solid #00bcf2;
+}
+
+/* Hover and focus states */
+.control:hover input ~ .control__indicator,
+.control input:focus ~ .control__indicator {
+  background: #ccc;
+}
+
+/* Checked state */
+.control input:checked ~ .control__indicator {
+  background: #00bcf2;
+}
+
+/* Checked state */
+.control input:checked ~ .control__indicator {
+  background: #00bcf2;
+}
+
+/* Hover state whilst checked */
+.control:hover input:not([disabled]):checked ~ .control__indicator,
+.control input:checked:focus ~ .control__indicator {
+  background: #00bcf2;
+}
+
+/* Disabled state */
+.control input:disabled ~ .control__indicator {
+  pointer-events: none;
+  opacity: .6;
+  background: #e6e6e6;
+}
+
+/* Check mark */
+.control__indicator:after {
+  position: absolute;
+  display: none;
+  content: '';
+}
+
+/* Show check mark */
+.control input:checked ~ .control__indicator:after {
+  display: block;
+}
+
+/* Checkbox tick */
+.control--checkbox .control__indicator:after {
+  top: 0px;
+  left: 5px;
+  width: 4px;
+  height: 8px;
+  transform: rotate(45deg);
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  margin-top: 2px;
+}
+
+/* Disabled tick colour */
+.control--checkbox input:disabled ~ .control__indicator:after {
+  border-color: #7b7b7b;
+}
+/*Custom Checkbox for Table End*/
+
+i.iconAlignment {
+  font-size: 13px !important;
+  top: 2px !important;
+}
+
+i.iconAlignmentInfra {
+  font-size: 13px !important;
+  top: -1px !important;
+}
+
+.saveasFileBorderRadius {
+  border-radius: 0px !important;
+}
+/*Custom Checkbox for Table Start*/
+
+/*date picker style */
+#addHostDatePicker .selector.selectorarrow.selectorarrowleft {
+  width: 300px !important;
+  height: 212px !important;
+  border-radius: 0px;
+  margin-top: 0px;
+}
+
+#addHostDatePicker .mydp {
+  border-radius: 0px;
+}
+
+#addHostDatePicker table.caltable {
+  height: 180px !important;
+  bottom: 500px !important;
+}
+
+#addHostDatePicker tbody {
+  height: 170px !important;
+  position: absolute;
+}
+
+#addHostDatePicker button.headertodaybtn.headertodaybtnenabled {
+  border-radius: 0px;
+  border: none;
+  font-size: 12px;
+}
+
+#addHostDatePicker button.headerbtn.mydpicon.icon-mydpleft.headerbtnenabled,
+#addHostDatePicker button.headerbtn.mydpicon.icon-mydpright.headerbtnenabled {
+  font-size: 18px;
+  top: 1px;
+  position: relative;
+}
+/* End of date picker style */
+
+/* Media Queries Start */
+@media(min-width:768px) {
+  #wrapper {
+    padding-left: 0;
+  }
+
+    #wrapper.toggled {
+      padding-left: 250px;
+    }
+
+  #sidebar-wrapper {
+    width: 0;
+  }
+
+  #wrapper.toggled #sidebar-wrapper {
+    width: 250px;
+  }
+
+  #page-content-wrapper {
+    padding: 20px;
+    position: relative;
+  }
+
+  #wrapper.toggled #page-content-wrapper {
+    position: relative;
+    margin-right: 0;
+  }
+}
+/* Media Queries End */
+
+.dropdown-menu {
+  /*left: -197px;*/
+  top: 52px
+}
+
+.leftMinus229 {
+  left: -229px;
+}
+
+.file {
+  visibility: hidden;
+  position: absolute;
+}
+
+.imginputHght {
+  border-radius: 0px;
+  background-color: #fff;
+  font-size: 14px;
+  height: 35px;
+}
+
+.input-lg {
+  height: 30px;
+}
+
+li.login-details {
+  color: #fff;
+  height: 53px;
+}
+
+.login-details:hover {
+  background-color: #484848 !important;
+}
+
+.login-details-active {
+  background-color: #484848 !important;
+}
+
+.login-details-inactive {
+  background-color: #121313 !important;
+}
+
+.notification-Dropdown .dropdown-menu {
+  left: 150px !important;
+}
+
+.signout-Dropdown .dropdown-menu {
+  left: -197px;
+}
+
+.signout-block:hover {
+  background-color: #666666;
+  padding-bottom: 1px;
+}
+
+.signout-block:active {
+  background-color: #666666;
+  padding-bottom: 1px;
+}
+
+.signout {
+  text-align: right;
+  cursor: pointer;
+  margin-top: 10px;
+  color: #fff;
+  padding-right: 20px;
+}
+
+.notificationpopup {
+  width: 391px;
+  height: calc(100vh - 50px);
+  padding: 20px;
+  color: black;
+  z-index: 9999;
+  margin-top: 3px;
+  position: absolute;
+  left: -172px;
+  overflow-y: auto;
+  background-color: white;
+  /*border: 1px solid gray;*/
+  box-shadow: 0 6px 12px rgba(0,0,0,.175);
+}
+
+/*----- Pagination styles -------*/
+.pagination {
+  margin-top: 5px;
+}
+
+  .pagination ul li, .pagination ul li span, .pagination .current, .pagination ul li a {
+    padding: 6px !important;
+    font-size: 14px !important;
+  }
+
+    .pagination ul li a {
+      margin-top: -4px !important
+    }
+.ngx-pagination .current {
+  background: #0078d7 !important;
+}
+
+.profile_icon {
+  border-radius: 30px;
+  margin-left: 10px;
+  width: 40px;
+  height: 40px;
+  float: left;
+  background-color: #00a3ec;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: center;
+  margin-top: 7px;
+  margin-right: 4px;
+}
+
+.isActive {
+  background-color: #0078d7 !important;
+  color: white !important;
+}
+#loadmore:hover{
+  text-decoration:underline !important;
+}

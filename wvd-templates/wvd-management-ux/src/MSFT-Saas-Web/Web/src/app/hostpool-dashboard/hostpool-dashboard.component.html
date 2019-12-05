@@ -1,0 +1,1776 @@
+<div class="create-notifications">
+  <simple-notifications [options]="options"></simple-notifications>
+</div>
+
+<!-- Loader -->
+<div *ngIf="refreshHostpoolLoading" class="ngLoader">
+  <div>
+    <img src="assets/Images/loading.gif" />
+  </div>
+</div>
+
+<div class="appGroup-Tableheight">
+  <div class="rdsNotification" *ngIf="showHostpoolTab">
+    <div class="info">
+      <i class="icon icon-info" aria-hidden="true"></i>
+      <p>No Hosts in Host pool <span>"{{hostPoolDetails.hostPoolName}}"</span>.</p>
+    </div>
+    <div class="createDeply"> <a id="linkRibbonHostpoolBoard" (click)="OpenAddHostDialog()"><i class="icon icon-plus"
+          aria-hidden="true"></i> Add Host</a> </div>
+    <a class="close" (click)="showHostpoolTab=false;"><i class="icon icon-close" aria-hidden="true"></i></a>
+  </div>
+  <!-- A Ribbon Flag that displays Error Message -->
+  <div class="rdsErrorNotification" *ngIf="error">
+    <div class="info">
+      <i class="icon icon-info" aria-hidden="true"></i>
+      <span>{{errorMessage}}</span>
+    </div>
+    <a class="close" (click)="error = false"><i class="icon icon-close" aria-hidden="true"></i></a>
+  </div>
+  <div class="addDeploy">
+    <h3>Host pool "{{hostPoolName}}"</h3>
+    <div class="tabbable-panel">
+      <div class="tabbable-line">
+        <ul class="nav nav-tabs">
+          <li class="active">
+            <a href="#tab_default_1" data-toggle="tab">
+              General
+            </a>
+          </li>
+          <li>
+            <a href="#tab_default_2" data-toggle="tab" (click)=HideAppGroupDetails() >
+              Hosts
+            </a>
+          </li>
+          <li>
+            <a href="#tab_default_31" data-toggle="tab" (click)=HideHostDetails() >
+              App Groups
+            </a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="tab_default_1">
+            <div class="col-xs-8">
+              <div class="Deployment-details" *ngIf="!hostpoolDetailsErrorFound">
+                <div class="row">
+                  <div class="col-md-5">
+                    <label>Type</label><br />
+                    <p>
+                      <ng-template #HostTypeAvailable>Persistance</ng-template>
+                      <ng-template #HostTypeNotAvailable>Non-Persistance</ng-template>
+                      <span
+                        *ngIf="hostPoolDetails.persistent ; then HostTypeAvailable else HostTypeNotAvailable"></span>
+                    </p>
+                  </div>
+                  <!-- <div class="col-md-3">
+                    <label>Active Hosts (Total Hosts)</label>
+                    <p>{{hostPoolDetails.noOfActivehosts}}</p>
+                  </div> -->
+                  <!-- <div class="col-md-3">
+                    <label>App Groups</label>
+                    <p>{{hostPoolDetails.noOfAppgroups}}</p>
+                  </div> -->
+                </div>
+                <div class="row">
+                  <div class="col-md-5">
+                    <label>Host pool Unique Name</label>
+                    <p>
+                      <ng-template #HostNameAvilable>{{hostPoolDetails.hostPoolName}}</ng-template>
+                      <ng-template #HostNameNotAvilable>NA</ng-template>
+                      <span
+                        *ngIf="hostPoolDetails.hostPoolName ; then HostNameAvilable else HostNameNotAvilable"></span>
+                    </p>
+                  </div>
+                  <!-- <div class="col-md-3">
+                    <label>User Profile Data Location</label>
+                    <p>
+                      <ng-template #HostdiskPathAvilable>{{hostPoolDetails.diskPath}}</ng-template>
+                      <ng-template #HostdiskPathNotAvilable>N/A</ng-template>
+                      <span *ngIf="hostPoolDetails.diskPath ; then HostdiskPathAvilable else HostdiskPathNotAvilable"></span>
+                    </p>
+                  </div> -->
+                  <div class="col-md-3">
+                    <label>Maximum Session Limit</label>
+                    <p>{{hostPoolDetails.maxSessionLimit}}</p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-5">
+                    <label>Host pool Friendly Name</label>
+                    <p>
+                      <ng-template #HostfndNameAvilable>{{hostPoolDetails.friendlyName}}</ng-template>
+                      <ng-template #HostfndNameNotAvilable>NA</ng-template>
+                      <span
+                        *ngIf="hostPoolDetails.friendlyName ; then HostfndNameAvilable else HostfndNameNotAvilable"></span>
+                    </p>
+                  </div>
+                  <div class="col-md-5">
+                    <label>Description</label>
+                    <p>
+                      <ng-template #HostdescriptionAvilable>{{hostPoolDetails.description}}</ng-template>
+                      <ng-template #HostdescriptionNotAvilable>NA</ng-template>
+                      <span
+                        *ngIf="hostPoolDetails.description ; then HostdescriptionAvilable else HostdescriptionNotAvilable"></span>
+                    </p>
+                  </div>
+                  <div class="col-md-3"></div>
+                </div>
+              </div>
+              <div *ngIf="hostpoolDetailsErrorFound">
+                <div class="EmptyTableMsg">
+                  <div style="text-align:center">
+                    <br /><br />
+                    <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                      style="position: relative; width: 10%; left: 44%;" />
+                    <h5 style="color:#808080;font-weight:400;">Error</h5>
+                    <p style="color:#808080"> Problem with server, Please try again </p>
+                    <button class="btn btn-sm btn-primary" style="border-radius:0px;" id=""
+                      (click)="RefreshData()">Refresh</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane" id="tab_default_2">
+            <div>
+              <div class="col-md-8">
+                <ul>
+                  <li><button type="button" id="linkHostpoolDashboard" (click)="OpenAddHostDialog()"><i
+                        class="icon icon-plus" aria-hidden="true"></i> Add Host</button></li>
+                  <li><button type="button" id="btnEditHosts" [disabled]="editHostDisabled" data-toggle="modal"
+                      data-target="#editHostModal"><i class="icon icon-edit" aria-hidden="true"></i> Edit</button></li>
+                  <li><button type="button" id="btnDeleteHosts" [disabled]="deleteHostDisabled" data-toggle="modal"
+                      data-target="#deleteModal"><i class="icon icon-delete" aria-hidden="true"></i> Delete</button>
+                  </li>
+                  <li><button type="button" id="btnRestartHosts" data-toggle="modal"
+                    data-target="#RestartModal"  [disabled]="restartHostDisabled" 
+                   ><i class="icon icon-refresh" aria-hidden="true"></i> Restart</button>
+                  </li>
+                  <li><button type="button" id="btndrainHosts" [disabled]="drainHostDisabled"   data-toggle="modal"
+                    data-target="#DrainModeModal"
+                    ><i class="icon icon-download" aria-hidden="true" ></i> Drain Mode</button>
+                  </li>
+                  <li><button type="button" (click)="RefreshHost()"><i class="icon icon-refresh" aria-hidden="true"></i>
+                      Refresh</button></li>
+                </ul>
+              </div>
+              <div class="col-md-3 pull-right">
+                <div class="search marginTop10">
+                  <div class="input-group" id="searchFormTop">
+                    <input type="text" class="form-control" name="q" id="q" placeholder="Search"
+                      [(ngModel)]="searchBySHSName" (ngModelChange)="GetSearchBySessionHostName(searchBySHSName)"
+                      [ngModelOptions]="{standalone: true}">
+                    <span class="input-group-btn">
+                      <button class="btn btn-default" type="button"><i class="icon icon-search"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xs-12">
+              <table class="table tableSelection table-hover ">
+                <thead>
+                  <tr>
+                    <th style="width: 6%;text-align: left">
+                      <div class="control-group">
+                        <label class="control control--checkbox">
+                          <input type="checkbox" class="solcheckbox" [checked]="sessionHostCheckedMain"
+                            (click)="SessionHostCheckAll($event)">
+                          <span class="control__indicator"></span>
+                        </label>
+                      </div>
+                    </th>
+                    <th style="width:18%;text-align:left;">Host Name</th>
+                    <th style="width:18%;text-align:left;">Allow New Sessions</th>
+                    <th style="width:18%;text-align: left;">Agent Version</th>
+                    <!-- <th style="width:15%;text-align: center;">Max Session Limit</th> -->
+                    <th style="width:20%;">Last Heart Beat</th>
+                    <th style="width:20%;text-align: left;">Last Updated Time</th>
+                  </tr>
+                </thead>
+                <tbody *ngIf="!(hostListErrorFound || showHostEmpty)">
+                  <tr
+                    *ngFor="let SHSList of sessionHostListsSearch | paginate: { itemsPerPage: listItems, currentPage: Hostslist, id: 'Hosts' }; let hostIndex=index"
+                    class="TableData" id="row-tenant-{{SHSList.sessionHostName}}"
+                    [ngClass]="{'rowSelect':sessionHostchecked[absoluteIndex(hostIndex, listItems, Hostslist)]}"
+                    (click)="HostClicked(absoluteIndex(hostIndex, listItems, Hostslist), SHSList.sessionHostName,$event)">
+                    <td style="width: 6%;text-align: left">
+                      <div class="control-group">
+                        <label class="control control--checkbox">
+                          <input type="checkbox" class="solcheckbox"
+                            (click)="SessionHostIsChecked(absoluteIndex(hostIndex, listItems, Hostslist), SHSList.sessionHostName,$event)"
+                            [checked]="sessionHostchecked[absoluteIndex(hostIndex, listItems, Hostslist)]">
+                          <span class="control__indicator"></span>
+                        </label>
+                      </div>
+                    </td>
+                    <td style="width:18%;text-align:left;word-wrap:break-word;">{{SHSList.sessionHostName}}</td>
+                    <td style="width:18%;text-align:left;">{{SHSList.allowNewSession}}</td>
+                    <td style="width:18%;text-align: left;">{{SHSList.agentVersion}}</td>
+                    <!-- <td style="width:15%;text-align: center;">N\A</td> -->
+                    <td style="width:20%;word-wrap:break-word;">{{SHSList.lastHeartBeat}}</td>
+                    <td style="width:20%;text-align: left;word-wrap:break-word;">{{SHSList.lastUpdateTime}}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- pagination code -->
+              <!-- <ul class="pagination  pull-right" *ngIf="!(showHostpoolTab || hostListErrorFound)">
+                <li [ngClass]="{disabled:HostCurrentPageNo === 1 ,  link:HostCurrentPageNo === 1}">
+                  <a (click)="previousPageHost()">Previous</a>
+                </li>
+                <li class="CurrentIndex" *ngFor="let item of Hostcounter(currentNoOfPagesHostCount);let i=index">
+                  <a [ngClass]="{'isActive': curentHostIndex === i }" (click)="CurrentPageHost(i)">{{i + 1 }}</a>
+                </li>
+                <li [ngClass]="{disabled:currentNoOfPagesHostCount === HostCurrentPageNo ,  link:currentNoOfPagesHostCount === HostCurrentPageNo}">
+                  <a (click)="NextPageHost()">Next</a>
+                </li>
+              </ul> -->
+              <div class="row" style="margin: 0;" *ngIf="!(showHostpoolTab || hostListErrorFound)">
+                <pagination-controls (pageChange)="Hostslist = $event" class="pagination pull-right" id="Hosts">
+                </pagination-controls>
+              </div>
+              <div *ngIf="showHostEmpty">
+                <div class="EmptyTableMsg">
+                  <div style="text-align:center">
+                    <br /><br />
+                    <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                      style="position: relative; width: 10%; left: 44%;" />
+                    <h5 style="color:#808080;font-weight:400;"> No Host to display</h5>
+                    <p style="color:#808080"> To Add a host, click Add Host button and generate a key to add a host </p>
+                    <button class="btn btn-sm btn-primary linkHostpoolDashboardtable" style="border-radius:0px;" id=""
+                      (click)="OpenAddHostDialog()">Add Host</button>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="hostListErrorFound">
+                <div class="EmptyTableMsg">
+                  <div style="text-align:center">
+                    <br /><br />
+                    <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                      style="position: relative; width: 10%; left: 44%;" />
+                    <h5 style="color:#808080;font-weight:400;">Error</h5>
+                    <p style="color:#808080"> Problem with server, Please try again </p>
+                    <button class="btn btn-sm btn-primary" style="border-radius:0px;" id=""
+                      (click)="RefreshHost()">Refresh</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+               
+            
+            
+          </div>
+          <div class="AppGrouptoggle" id="HostDashboard" *ngIf="showHostDashBoard" [@slidemodal]="state" style="transform: translateY(0px);">
+              <div class="col-xs-12 paddingTop20">
+                <div class="col-xs-10">
+                  <h5 *ngIf="hostDetails.sessionHostName" class="paddingLeft0"> "{{hostDetails.sessionHostName}}"
+                    Details of <span> {{hostDetails.hostPoolName}}</span></h5>
+                </div>
+                <div class="col-xs-2 txtalignRight postionRelTop15">
+                  <a class="paddingLeftRight5" *ngIf="selectedClassMin" (click)="MinWindowOpen($event)"
+                    title="Minimize">
+                    <i class="icon icon-win-minimize "></i>
+                  </a> <!---->
+                  <a class="paddingLeftRight5"  *ngIf="selectedClassMax" (click)="MaxWindowOpen($event)"
+                    title="Maximize">
+                    <img src="../../assets/Images/maximize.png" class="maximizePosition" />
+                  </a><!---->
+                  <a class="paddingLeftRight5" id="userSessionbottomBtnClose" (click)="userSesionBottomClose($event)"><i
+                      class="icon icon-close" aria-hidden="true" style="font-size:12px;"></i></a>
+                </div>
+
+                <div class="col-xs-12">
+                  <ul class="nav nav-tabs">
+                    <li class="active">
+                      <a href="#tab_default_4" data-toggle="tab">
+                        Summary
+                      </a>
+                    </li>
+                    <li >
+                      <a href="#tab_default_5" data-toggle="tab">
+                        User Sessions
+                      </a>
+                    </li>
+
+                  </ul>
+                  <div class="tab-content">
+                    <div class="tab-pane active" id="tab_default_4">
+                      <div class="col-xs-12">
+                        <div class="Deployment-details" *ngIf="!detailsErrorFound">
+                          <div class="row">
+                            <div class="col-md-5">
+                              <label>Name</label>
+                              <p>{{hostDetails.sessionHostName}}</p>
+                            </div>
+                            <div class="col-md-3">
+                            </div>
+                            <div class="col-md-3" >
+                              <label>UserSessions</label>
+                              <p>{{userSessionsCount}}</p>
+                            
+                            </div>
+                        
+                          </div>
+                          <div class="row">
+                            <div class="col-md-5">
+                              <label>Allow New Sessions</label>
+                              <p>{{hostDetails.allowNewSession}}</p>
+
+                            </div>
+                            <div class="col-md-3">
+                            </div>
+                            <div class="col-md-3" >
+                              <label>Last Heart Beat</label>
+                              <p>{{hostDetails.lastHeartBeat}}</p>
+                            </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-md-5">
+                              <label>Last Updated Time</label>
+                              <p>{{hostDetails.lastUpdateTime}}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="EmptyTableMsg" *ngIf="detailsErrorFound">
+                          <div style="text-align:center">
+                            <br /><br />
+                            <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                              style="position: relative; width: 10%; left: 44%;" />
+                            <h5 style="color:#808080;font-weight:400;"> Error</h5>
+                            <p style="color:#808080"> Problem with serve, Please try again </p>
+                            <button class="btn btn-sm btn-primary" (click)="RefreshBtnClick()">Refresh</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tab-pane" id="tab_default_5" >
+                      <div class="col-xs-12 no-pad">
+                        <div class="">
+                          <div class="col-xs-12">
+                            <div class="col-md-9">
+                              <ul>
+                                <li><button type="button" id="linklogOff" data-target="#logoffModal" data-toggle="modal" [disabled]="isLogOffDisabled"><i
+                                      class="icon icon-plus" aria-hidden="true"></i> LogOff Sessions(s)
+                                  </button></li>
+                                <li><button type="button" id="linkSendMessage" (click)="OpenSendMessagePanel($event)" [disabled]="isSendMsgDisabled" ><i
+                                      class="icon icon-plus" aria-hidden="true"></i> Send Message </button></li>
+                                <li><button type="button" (click)="RefreshUserSessions()"><i class="icon icon-refresh"
+                                      aria-hidden="true"></i> Refresh</button></li>
+                              </ul>
+                            </div>
+                            <div class="col-md-3 pull-right">
+                              <div class="search marginTop10">
+                                <div class="input-group" id="searchFormTop">
+                                  <input type="text" class="form-control" name="q" id="q" placeholder="Search"
+                                    [(ngModel)]="SearchBySessionList" (ngModelChange)="GetSearchByUserSessionList(SearchBySessionList)"
+                                    [ngModelOptions]="{standalone: true}">
+                                  <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button"><i
+                                        class="icon icon-search"></i></button>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                         
+                            <div class="col-md-12">
+                              <div class="table-responsive">
+                                <table class="table AppGroup-apptable tableSelection table-hover">
+                                  <thead>
+                                    <tr>
+                                      <th style="width: 4%;text-align: left">
+                                        <div class="control-group">
+                                          <label class="control control--checkbox">
+                                            <input type="checkbox" class="solcheckbox" [checked]="checkedMainUserSession"
+                                              (click)="UserSessionCheckAll($event)">
+                                            <span class="control__indicator"></span>
+                                          </label>
+                                        </div>
+                                      </th>
+                                    
+                                      <th style="width:10%">Session ID</th>
+                                      <th style="width:15%;text-align:center">User Name</th>
+                                      <th style="width:15%;text-align:center">Application Type</th>
+                                      <th style="width:15%;text-align:center">Session State</th>
+                                      <th style="width:15%;text-align:center">Created Time</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody *ngIf="!(SessionsListErrorFound)">
+                                    <tr
+                                      *ngFor="let session of userSessionSearchList | paginate: { itemsPerPage: userSessionlistItems, currentPage: userSessionslist, id:'sessions' }; let sessionIndex=index"
+                                      [ngClass]="{'rowSelect':checkedUserSessions[absoluteIndex(sessionIndex, userSessionlistItems, userSessionslist)]}"
+                                      id="row-sessions-{{session.sessionId}}"
+                                      (click)="UserSessionRowClick(session.sessionId, absoluteIndex(sessionIndex, userSessionlistItems, userSessionslist))"
+                                     >
+                                      <td style="width: 4%;text-align: left">
+                                        <div class="control-group">
+                                          <label class="control control--checkbox">
+                                            <input type="checkbox" class="solcheckbox"
+                                              (click)="UserSessionIsChecked(absoluteIndex(sessionIndex, userSessionlistItems, userSessionslist))"
+                                              [checked]="checkedUserSessions[absoluteIndex(sessionIndex, userSessionlistItems, userSessionslist)]">
+                                            <span class="control__indicator"></span>
+                                          </label>
+                                        </div>
+                                      </td>
+                                      <td style="width:10%">
+                                        <span _ngcontent-c3="" class="marginRight3">
+                                          <i class="icon icon-win-contact iconAlignment"></i>
+                                        </span>{{session.sessionId}} 
+                                      </td>
+                                      <td style="width:15%;text-align:center">{{session.adUserName}}</td>
+                                      <td style="width:15%;text-align:center">{{session.applicationType}}</td>
+                                      <td style="width:15%;text-align:center">{{session.sessionState}}</td>
+                                      <td style="width:15%;text-align:center">{{session.createTime}}</td>
+                                     
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <div class="row" style="margin: 0; position:fixed; right:20px; bottom:0px;"
+                                  >
+                                  <pagination-controls (pageChange)="userSessionslist = $event" class="pagination pull-right"
+                                  id="sessions"></pagination-controls>
+                                </div>
+                                
+                                <div *ngIf="editedLbodyUsers">
+                                  <div class="EmptyTableMsg">
+                                    <div style="text-align:center">
+                                      <br /><br />
+                                      <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                                        style="position: relative; width: 10%; left: 44%;" />
+                                      <h5 style="color:#808080;font-weight:400;"> No User Sessions to display</h5>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div *ngIf="SessionsListErrorFound">
+                                  <div class="EmptyTableMsg">
+                                    <div style="text-align:center">
+                                      <br /><br />
+                                      <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                                        style="position: relative; width: 10%; left: 44%;" />
+                                      <h5 style="color:#808080;font-weight:400;"> Error</h5>
+                                      <p style="color:#808080"> Problem with server, Please try again </p>
+                                      <button class="btn btn-sm btn-primary" (click)="RefreshUserSessions()">Refresh</button>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div *ngIf="UserSessionLoader" class="ngLoader">
+                                   <img src="assets/Images/loading.gif" />
+                                </div>
+                              </div>
+                            </div>
+
+
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <div class="tab-pane" id="tab_default_31">
+            <div class="col-xs-12 no-pad">
+              <div class="col-md-8">
+                <ul>
+                  <li><button type="button" (click)="OpenNewAppGroup()"><i class="icon icon-plus"
+                        aria-hidden="true"></i> Create App Group</button></li>
+                  <li><button type="button" [disabled]="isEditAppgroupDisabled" data-toggle="modal"
+                      data-target="#editModal"><i class="icon icon-edit" aria-hidden="true"></i> Edit App Group</button>
+                  </li>
+                  <li><button type="button" id="btnDeleteAppGroup" [disabled]="isDeleteAppgroupDisabled"
+                      data-toggle="modal" data-target="#deleteModalAppGroups"><i class="icon icon-delete"
+                        aria-hidden="true"></i> Delete App Group</button></li>
+                  <li><button type="button" (click)="RefreshAppgroups()"><i class="icon icon-refresh"
+                        aria-hidden="true"></i> Refresh</button></li>
+                </ul>
+              </div>
+              <div class="col-md-3 pull-right">
+                <div class="search marginTop10">
+                  <div class="input-group" id="searchFormTop">
+                    <input type="text" class="form-control" name="q" id="q" placeholder="Search"
+                      [(ngModel)]="searchByAppName" (ngModelChange)="GetSearchByAppName(searchByAppName)"
+                      [ngModelOptions]="{standalone: true}">
+                    <span class="input-group-btn">
+                      <button class="btn btn-default" type="button"><i class="icon icon-search"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xs-12">
+              <div class="table-responsive appGroup-heightadj" id="appGroup-heightadj">
+                <table class="table tableSelection table-hover">
+                  <thead>
+                    <tr>
+                      <th style="width: 4%;text-align: left">
+                        <div class="control-group">
+                          <label class="control control--checkbox">
+                            <input type="checkbox" class="solcheckbox" [checked]="checkedMainAppGroup"
+                              (click)="AppGroupCheckAll($event)">
+                            <span class="control__indicator"></span>
+                          </label>
+                        </div>
+                      </th>
+                      <th style="width:18%;text-align:left;">App Group Name</th>
+                      <th style="width:18%;text-align:center;">Friendly Name</th>
+                      <th style="width:18%;text-align:center;">Type</th>
+                      <th style="width:18%;text-align:center;">Description</th>
+                   
+                    </tr>
+                  </thead>
+                  <tbody *ngIf="!(appGroupListErrorFound || editedBodyAppGroup)">
+                    <tr
+                      *ngFor="let List of appGroupsListSearch | paginate: { itemsPerPage: listItems, currentPage: appGroupsPageNo, id:'appGroups' }; let AInd=index"
+                      [ngClass]="{'rowSelect':checked[absoluteIndex(AInd, listItems, appGroupsPageNo)]}"
+                      id="row-tenant-{{List.Id}}"
+                      (click)="AppGroupsListRowClicked(absoluteIndex(AInd, listItems, appGroupsPageNo),$event)">
+                      <td style="width: 4%;text-align: left">
+                        <div class="control-group">
+                          <label class="control control--checkbox">
+                            <input type="checkbox" class="solcheckbox AppGroupbottomBtnClose"
+                              (click)="IsCheckedAppGroup(absoluteIndex(AInd, listItems, appGroupsPageNo),$event)"
+                              [checked]="checked[absoluteIndex(AInd, listItems, appGroupsPageNo)]">
+                            <span class="control__indicator"></span>
+                          </label>
+                        </div>
+                      </td>
+                      <td style="width:18%;text-align:left;">{{List.appGroupName}}<span *ngIf="List.friendlyName != ''">
+                          ({{List.friendlyName}})</span></td>
+                      <td style="width:18%;text-align:center;"><span>{{List.friendlyName=="" || List.friendlyName==null ? 'NA':List.friendlyName }}</span></td>
+                      <td style="width:18%;text-align:center;">
+                        {{List.resourceType == 0 ? "Remote App Group" : "Desktop App Group"}}</td>
+                      <td style="width:18%;text-align:center;">{{List.description=="" || List.description==null ? 'NA':List.description}}</td>
+                     
+                    </tr>
+                  </tbody>
+                </table>
+             
+                <div class="row" style="margin: 0;" *ngIf="!(editedBodyAppGroup || appGroupListErrorFound)">
+                  <pagination-controls (pageChange)="appGroupsPageNo = $event" class="pagination pull-right"
+                    id="appGroups"></pagination-controls>
+                </div>
+                <div>
+                  <div class="EmptyTableMsg" *ngIf="editedBodyAppGroup">
+                    <div style="text-align:center">
+                      <br /><br />
+                      <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                        style="position: relative; width: 10%; left: 44%;" />
+                      <h5 style="color:#808080;font-weight:400;"> No App Group to display</h5>
+                      <p style="color:#808080"> To create a app group, click Create App Group button and select a remote
+                        app or desktop </p>
+                      <button class="btn btn-sm btn-primary" (click)="OpenNewAppGroup()">Create App Group</button>
+                    </div>
+                  </div>
+                  <div class="EmptyTableMsg" *ngIf="appGroupListErrorFound">
+                    <div style="text-align:center">
+                      <br /><br />
+                      <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                        style="position: relative; width: 10%; left: 44%;" />
+                      <h5 style="color:#808080;font-weight:400;"> Error</h5>
+                      <p style="color:#808080"> Problem with server, Please try again </p>
+                      <button class="btn btn-sm btn-primary" (click)="RefreshData()">Refresh</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+          <div class="AppGrouptoggle" id="AppGroupDashboard" *ngIf="showAppGroupDashBoard" [@slidemodal]="state">
+
+              <div class="col-xs-12 paddingTop20">
+                <div class="col-xs-10">
+                  <h5 *ngIf="appGroupDetails.appGroupName" class="paddingLeft0">"{{appGroupDetails.appGroupName}}"
+                    Details of <span>{{hostPoolDetails.hostPoolName}}</span></h5>
+                </div>
+                <div class="col-xs-2 txtalignRight postionRelTop15">
+                  <a class="paddingLeftRight5" *ngIf="selectedClassMin" (click)="MinWindowOpen($event)"
+                    title="Minimize">
+                    <i class="icon icon-win-minimize "></i>
+                  </a>
+                  <a class="paddingLeftRight5" *ngIf="selectedClassMax" (click)="MaxWindowOpen($event)"
+                    title="Maximize">
+                    <img src="../../assets/Images/maximize.png" class="maximizePosition" />
+                  </a>
+                  <a class="paddingLeftRight5" id="appGroupbottomBtnClose" (click)="AppGroupbottomClose($event)"><i
+                      class="icon icon-close" aria-hidden="true" style="font-size:12px;"></i></a>
+                </div>
+              </div>
+              <div class="col-xs-12">
+                <ul class="nav nav-tabs">
+                  <li class="active">
+                    <a href="#tab_default_4" data-toggle="tab">
+                      Summary
+                    </a>
+                  </li>
+                  <li *ngIf="removeAppsTab">
+                    <a href="#tab_default_5" data-toggle="tab">
+                      Apps
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#tab_default_6" data-toggle="tab">
+                      Users
+                    </a>
+                  </li>
+                </ul>
+                <div class="tab-content">
+                  <div class="tab-pane active" id="tab_default_4">
+                    <div class="col-xs-12">
+                      <div class="Deployment-details" *ngIf="!detailsErrorFound">
+                        <div class="row">
+                          <div class="col-md-5">
+                            <label>Name</label>
+                            <p>{{appGroupDetails.appGroupName}} <span
+                                *ngIf="appGroupDetails.friendlyName && appGroupDetails.friendlyName != ''">
+                                ({{appGroupDetails.friendlyName}})</span></p>
+                          </div>
+                          <div class="col-md-3">
+                          </div>
+                          <div class="col-md-3" *ngIf="removeAppsTab">
+                            <label>Apps</label>
+                            <p>{{appsCount}}</p>
+                          </div>
+                          <div class="col-md-3" *ngIf="!removeAppsTab">
+                            <label>Users</label>
+                            <p>{{usersCount}}</p>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-md-5">
+                            <label>Type</label>
+                            <p>{{appGroupDetails.resourceType == 0 ? "Remote App Group" : "Desktop App Group"}}</p>
+                          </div>
+                          <div class="col-md-3">
+                          </div>
+                          <div class="col-md-3" *ngIf="removeAppsTab">
+                            <label>Users</label>
+                            <p>{{usersCount}}</p>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-md-5">
+                            <label>Description</label>
+                            <p>{{appGroupDetails.description != null && appGroupDetails.description !="" ? appGroupDetails.description:'NA'  }}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="EmptyTableMsg" *ngIf="detailsErrorFound">
+                        <div style="text-align:center">
+                          <br /><br />
+                          <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                            style="position: relative; width: 10%; left: 44%;" />
+                          <h5 style="color:#808080;font-weight:400;"> Error</h5>
+                          <p style="color:#808080"> Problem with serve, Please try again </p>
+                          <button class="btn btn-sm btn-primary" (click)="RefreshBtnClick()">Refresh</button>
+                        </div>
+                      </div>
+                      <div *ngIf="UserSessionLoader" class="ngLoader">
+                        <img src="assets/Images/loading.gif" />
+                     </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane" id="tab_default_5" *ngIf="removeAppsTab">
+                    <div class="col-xs-12 no-pad">
+                      <div class="">
+                        <div class="col-xs-12">
+                          <div class="col-md-9">
+                            <ul>
+                              <li><button type="button" id="linkAddAppGallery" (click)="OpenAddAppsFromGallery()"><i
+                                    class="icon icon-plus" aria-hidden="true"></i> Publish Apps from the Start
+                                  menu</button></li>
+                              <li><button type="button" id="linkAddAppPath" (click)="OpenAddAppsFromPath($event)"><i
+                                    class="icon icon-plus" aria-hidden="true"></i> Publish App from Path</button></li>
+                              <li><button type="button" data-toggle="modal" [disabled]="isDeleteAppsDisabled"
+                                  data-target="#deleteModalApps" id="btnDeleteAppPath"><i class="icon icon-delete"
+                                    aria-hidden="true"></i> Remove Apps</button></li>
+                                    <li><button type="button"  [disabled]="isEditAppsDisabled" (click)="OpenEditApp($event)"
+                                      id="btnEditApp"><i class="icon icon-edit"
+                                        aria-hidden="true"></i> Edit</button></li>
+                              <li><button type="button" (click)="RefreshApps()"><i class="icon icon-refresh"
+                                    aria-hidden="true"></i> Refresh</button></li>
+                            </ul>
+                          </div>
+                          <div class="col-md-3 pull-right">
+                            <div class="search marginTop10">
+                              <div class="input-group" id="searchFormTop">
+                                <input type="text" class="form-control" name="q" id="q" placeholder="Search"
+                                  [(ngModel)]="SearchByAppList" (ngModelChange)="GetSearchByAppList(SearchByAppList)"
+                                  [ngModelOptions]="{standalone: true}">
+                                <span class="input-group-btn">
+                                  <button class="btn btn-default" type="button"><i
+                                      class="icon icon-search"></i></button>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col-md-12">
+                          <!--<div class="table-responsive">-->
+                          <table class="table AppGroup-apptable tableSelection table-hover">
+                            <thead>
+                              <tr>
+                                <th style="width: 4%;text-align: left">
+                                  <div class="control-group">
+                                    <label class="control control--checkbox">
+                                      <input type="checkbox" class="solcheckbox" [checked]="checkedMainApp"
+                                        (click)="AppCheckAll($event)">
+                                      <span class="control__indicator"></span>
+                                    </label>
+                                  </div>
+                                </th>
+                                <th style="width:15%">Name</th>
+                                <th style="width:30%">Path</th>
+                                <th style="width:20%">Friendly Name</th>
+                                <th style="width:20%">Require Command Line</th>
+                              </tr>
+                            </thead>
+                            <tbody *ngIf="!(appListErrorFound || editedBodyApp)">
+                              <tr
+                                *ngFor="let List of appGroupsAppListSearch | paginate: { itemsPerPage: applistItems, currentPage: appslist, id:'apps' }; let AppInd=index"
+                                [ngClass]="{'rowSelect':checkedApps[absoluteIndex(AppInd, applistItems, appslist)]}"
+                                id="row-users-{{List.appAlias}}"
+                                (click)="AppListRowClicked(List.remoteAppName, absoluteIndex(AppInd, applistItems, appslist))">
+                                <td style="width: 4%;text-align: left">
+                                  <div class="control-group">
+                                    <label class="control control--checkbox">
+                                      <input type="checkbox" class="solcheckbox appGroupbottomBtnClose"
+                                        (click)="IsCheckedApp(absoluteIndex(AppInd, applistItems, appslist))"
+                                        [checked]="checkedApps[absoluteIndex(AppInd, applistItems, appslist)]">
+                                      <span class="control__indicator"></span>
+                                    </label>
+                                  </div>
+                                </td>
+                                <td style="width:15%;text-align:left;">{{List.remoteAppName}}</td>
+                                <td style="width:30%;"><span>{{List.filePath}}</span></td>
+                                <td style="width:20%;"><span> {{List.friendlyName}}  </span></td>
+                                <td style="width:20%;text-align:left;"><span>{{List.requiredCommandLine =="" || List.requiredCommandLine==null ? "NA": List.requiredCommandLine}}</span></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <!-- pagination code -->
+                          <!-- <ul class="pagination  pull-right" *ngIf="!(editedBodyApp || appListErrorFound)">
+                                <li [ngClass]="{disabled:appsCurrentPageNo === 1 ,  link:appsCurrentPageNo === 1}">
+                                  <a (click)="appsPreviousPage()">Previous</a>
+                                </li>
+                                <li class="CurrentIndex"
+                                  *ngFor="let item of appsCounter(currentNoOfAppsPagesCount);let i=index">
+                                  <a [ngClass]="{'isActive': appsCurentIndex === i }"
+                                    (click)="appsCurrentPage(i)">{{i + 1 }}</a>
+                                </li>
+                                <li
+                                  [ngClass]="{disabled:currentNoOfAppsPagesCount === appsCurrentPageNo ,  link:currentNoOfAppsPagesCount === appsCurrentPageNo}">
+                                  <a (click)="appsNextPage()">Next</a>
+                                </li>
+                              </ul> -->
+                          <!-- pagination code -->
+                          <div class="row" style="margin: 0; position:fixed; right:20px; bottom:0px;"
+                            *ngIf="!(editedBodyApp || appListErrorFound)">
+                            <pagination-controls  (pageChange)="appslist = $event" class="pagination pull-right"
+                              id="apps"></pagination-controls>
+                          </div>
+                          <!--<div>-->
+                          <div class="EmptyTableMsg" *ngIf="editedBodyApp">
+                            <div style="text-align:center">
+                              <br /><br />
+                              <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                                style="position: relative; width: 10%; left: 44%;" />
+                              <h5 style="color:#808080;font-weight:400;"> No Apps to display</h5>
+                              <p style="color:#808080"> To Publish App, click Publish App button</p>
+                              <button class="btn btn-sm btn-primary" (click)="OpenAddAppsFromPath($event)">Publish
+                                App</button>
+                            </div>
+                          </div>
+                          <div class="EmptyTableMsg" *ngIf="appListErrorFound">
+                            <div style="text-align:center">
+                              <br /><br />
+                              <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                                style="position: relative; width: 10%; left: 44%;" />
+                              <h5 style="color:#808080;font-weight:400;"> Error</h5>
+                              <p style="color:#808080"> Problem with serve, Please try again </p>
+                              <button class="btn btn-sm btn-primary" (click)="RefreshApps()">Refresh</button>
+                            </div>
+                          </div>
+                          <!--</div>-->
+                          <!--</div>-->
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane" id="tab_default_6">
+                    <div class="col-xs-12">
+                      <div class="col-md-9">
+                        <ul>
+                          <li><button type="button" id="linkAddADSUser" (click)="OpenAddUser()"><i
+                                class="icon icon-plus" aria-hidden="true"></i> Add User</button></li>
+                          <li><button type="button" id="btndeleteUser" [disabled]="isDeleteUserDisabled"
+                              data-target="#deleteModalAppUser" data-toggle="modal"><i class="icon icon-delete"
+                                aria-hidden="true"></i> Remove Users</button></li>
+                          <li><button type="button" (click)="RefreshUsers()"><i class="icon icon-refresh"
+                                aria-hidden="true"></i> Refresh</button></li>
+                        </ul>
+                      </div>
+                      <div class="col-md-3 pull-right">
+                        <div class="search marginTop10">
+                          <div class="input-group" id="searchUserFormTop">
+                            <input type="text" class="form-control" name="q" id="q" placeholder="Search"
+                              [(ngModel)]="SearchByAppUser" (ngModelChange)="GetSearchByAppUser(SearchByAppUser)"
+                              [ngModelOptions]="{standalone: true}">
+                            <span class="input-group-btn">
+                              <button class="btn btn-default" type="button"><i class="icon icon-search"></i></button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-12">
+                      <div class="table-responsive">
+                        <table class="table AppGroup-apptable tableSelection table-hover">
+                          <thead>
+                            <tr>
+                              <th style="width: 4%;text-align: left">
+                                <div class="control-group">
+                                  <label class="control control--checkbox">
+                                    <input type="checkbox" class="solcheckbox" [checked]="checkedMainUser"
+                                      (click)="AppUsersCheckAll($event)">
+                                    <span class="control__indicator"></span>
+                                  </label>
+                                </div>
+                              </th>
+                              <!--<th style="width:10%">Name</th>-->
+                              <th style="width:30%">User Profile Name</th>
+                              <th style="width:15%;text-align:center">Status</th>
+                              <th style="width:15%;text-align:center">Last Time Active</th>
+                              <th style="width:15%;text-align:center">Last Used Host</th>
+                            </tr>
+                          </thead>
+                          <tbody *ngIf="!(usersListErrorFound || editedLbodyUsers)">
+                            <tr
+                              *ngFor="let UserList of appUsersListSearch | paginate: { itemsPerPage: userlistItems, currentPage: userslist, id:'users' }; let UserInd=index"
+                              [ngClass]="{'rowSelect':checkedUsers[absoluteIndex(UserInd, userlistItems, userslist)]}"
+                              id="row-users-{{UserList.Name}}"
+                              (click)="AppUserRowClick(UserList.userPrincipalName, absoluteIndex(UserInd, userlistItems, userslist))">
+                              <td style="width: 4%;text-align: left">
+                                <div class="control-group">
+                                  <label class="control control--checkbox">
+                                    <input type="checkbox" class="solcheckbox"
+                                      (click)="AppUsersIsChecked(absoluteIndex(UserInd, userlistItems, userslist))"
+                                      [checked]="checkedUsers[absoluteIndex(UserInd, userlistItems, userslist)]">
+                                    <span class="control__indicator"></span>
+                                  </label>
+                                </div>
+                              </td>
+                              <!--<td style="width:10%">
+                                    <span _ngcontent-c3="" class="marginRight3">
+                                      <i class="icon icon-win-contact iconAlignment"></i>
+                                    </span>
+                                  </td>-->
+                              <td style="width:30%; word-wrap: break-word;">
+                                <span _ngcontent-c3="" class="marginRight3">
+                                  <i class="icon icon-win-contact iconAlignment" style="float:left;"></i>
+                                </span>{{UserList.userPrincipalName}}
+                              </td>
+                              <td style="width:15%;text-align:center">{{UserList.sessionState}}</td>
+                              <td style="width:15%;text-align:center">{{UserList.createTime}}</td>
+                              <td style="width:15%;text-align:center">{{UserList.sessionHostName}}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <!-- pagination code -->
+                        <!-- <ul class="pagination  pull-right" *ngIf="!(editedLbodyUsers || usersListErrorFound)">
+                              <li [ngClass]="{disabled:usersCurrentPageNo === 1 ,  link:usersCurrentPageNo === 1}">
+                                <a (click)="usersPreviousPage()">Previous</a>
+                              </li>
+                              <li class="CurrentIndex"
+                                *ngFor="let item of usersCounter(currentNoOfUsersPagesCount);let i=index">
+                                <a [ngClass]="{'isActive': usersCurentIndex === i }"
+                                  (click)="usersCurrentPage(i)">{{i + 1}}</a>
+                              </li>
+                              <li
+                                [ngClass]="{disabled:currentNoOfUsersPagesCount === usersCurrentPageNo ,  link:currentNoOfUsersPagesCount === usersCurrentPageNo}">
+                                <a (click)="usersNextPage()">Next</a>
+                              </li>
+                            </ul> -->
+                        <!-- pagination code -->
+                        <div class="row" style="margin: 0; position:fixed; right:20px; bottom:0px;"
+                          *ngIf="!(editedLbodyUsers || usersListErrorFound)">
+                          <pagination-controls (pageChange)="userslist = $event" class="pagination pull-right"
+                            id="users"></pagination-controls>
+                        </div>
+                        <div *ngIf="editedLbodyUsers">
+                          <div class="EmptyTableMsg">
+                            <div style="text-align:center">
+                              <br /><br />
+                              <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                                style="position: relative; width: 10%; left: 44%;" />
+                              <h5 style="color:#808080;font-weight:400;"> No App Users to display</h5>
+                              <p style="color:#808080"> To Add a User, click Add User button </p>
+                              <button class="btn btn-sm btn-primary" (click)="OpenAddUser()">Add User</button>
+                            </div>
+                          </div>
+                        </div>
+                        <div *ngIf="usersListErrorFound">
+                          <div class="EmptyTableMsg">
+                            <div style="text-align:center">
+                              <br /><br />
+                              <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                                style="position: relative; width: 10%; left: 44%;" />
+                              <h5 style="color:#808080;font-weight:400;"> Error</h5>
+                              <p style="color:#808080"> Problem with serve, Please try again </p>
+                              <button class="btn btn-sm btn-primary" (click)="RefreshUsers()">Refresh</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add host  start-->
+<div class="overlay" *ngIf="showHostCreate">
+  <div class="createTenent" id="CreateHostpool">
+    <input type="hidden" id="TenantDashboardCreateOpen" value="{{isCreateOpen}}" />
+    <form [formGroup]="tenantDashboard">
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <h4>Add Host</h4>
+          <div style="clear:both"></div>
+          <div id="tab-1" class="tab-content current">
+            <p class="marginBottom30">
+              Now we can only support you to add hosts by installing the registration key in your machines. Once the key
+              is installed in the target machines. You can see and manage the registered hosts in this portal.
+            </p>
+            <div class="DeployUrl">
+              <p>Please configure the expiration date before generating the key.The registration key will expire in
+                <span class="important-Field">*</span></p>
+              <div class="col-xs-10 no-pad" id="addHostDatePicker">
+                <my-date-picker [options]="myDatePickerOptions" formControlName="local"
+                  (ngModelChange)="ChangeData($event)" placeholder="Select Date to Generate/Re-generate Key">
+                </my-date-picker>
+                <span *ngIf="isDate" class="important-Field" style="font-weight: normal; font-size: 13px;">Please select
+                  expire date</span>
+              </div>
+              <div class="col-xs-12 no-pad">
+                <div class="DeployUrl">
+                  <p>Registration key expires at : {{expiryDate}}</p>
+                  <textarea rows="3" cols="47" name="Description" readonly (keydown)="$event.preventDefault();" [(ngModel)]="responsevalue"
+                    formControlName="Description" placeholder="Regenerate Key value" #foo>  </textarea>
+                </div>
+                <div class="DeployUrl">
+                  <div class="form-group">
+                    <ul>
+                      <li><button type="button" [disabled]="!tenantDashboard.valid" value="copyGeneratekey"
+                          (click)="GenarateKey(tenantDashboard.value)" ngxClipboard
+                          [cbContent]=tenantDashboard.value.Description><i class="icon icon-file-multiple"
+                            aria-hidden="true"></i> Copy</button></li>
+                      <li><button type="button" data-toggle="modal" [disabled]="!tenantDashboard.valid"
+                          data-target="#saveModal" (click)="SaveFile(tenantDashboard.value)"><i
+                            class="icon icon-download" aria-hidden="true"></i> Save as </button></li>
+                      <li><button type="button" [disabled]="!tenantDashboard.valid"
+                          (click)="ReGenerateKeyValue(tenantDashboard.value)"><i class="icon icon-key"
+                            aria-hidden="true"></i> Re-generate key</button></li>
+                    </ul>
+                    <br />
+                    <p style="color:red;font-size:12px;">{{responseMessage}}</p>
+
+                  </div>
+                </div>
+              </div>
+              <div class="alert alert-danger alert-hide">
+                <strong>Warning!</strong> <span id="warningText-HostPoolUniName"></span>
+              </div>
+              <div class="alert alert-success alert-hide">
+                <strong>Success!</strong><span id="successText-HostPoolUniName"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="close" id="AddhostSlideclose" (click)="CancelHostCreate()"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="AddhostbtnCancel" (click)="CancelHostCreate()" />
+          </li>
+          <li>
+            <input type="button" [disabled]="!expiryDate || tenantDashboard.valid" value="Generate key"
+              id="btnGeneratekey" (click)="GenerateKeyValue(tenantDashboard.value)" />
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Add host  end-->
+<!-- Delete host  start-->
+<div class="modal fade" id="deleteModal" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content popup-main">
+      <div class="modal-header">
+        <i class="icon icon-close" aria-hidden="true" (click)="GetAllSessionHost()" data-dismiss="modal"></i>
+        <h4 class="modal-title">Delete Host Confirmation</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete '<span style="font-weight:bold;">{{hostDeleteData}}</span>' Host(s) ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="DeleteHost()" data-dismiss="modal">Yes</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="DrainModeModal" class="modal fade"  role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content popup-main">
+      <div class="modal-header">
+        <i class="icon icon-close" aria-hidden="true" data-dismiss="modal"></i>
+        <h4 class="modal-title">Set Drain Mode Confirmation</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to set drain mode of host <span style="font-weight:bold;">'{{hostDeleteData}}'</span> ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="ChangeDrainMode()" data-dismiss="modal">Procceed</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div> 
+
+<div id="RestartModal" class="modal fade"  role="dialog">
+    <div class="modal-dialog">
+      <!-- Modal content-->
+      <div class="modal-content popup-main">
+        <div class="modal-header">
+          <i class="icon icon-close" aria-hidden="true" data-dismiss="modal"></i>
+          <h4 class="modal-title">Change Drain Mode Confirmation</h4>
+        </div>
+        <div *ngIf="!HostAllowNewSession" class="modal-body">
+          <p> You need to set the drain mode(allow new session)  false to  restart host.</p>
+        </div>
+        <div *ngIf="HostAllowNewSession" class="modal-body">
+          <p> If you restart host, existing user sessions will be closed. Are you sure you want to restart host '<span style="font-weight:bold;">{{hostDeleteData}}</span>' ?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" (click)="RestartHost()" [disabled]="!HostAllowNewSession" data-dismiss="modal">Procceed</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!--edit hosts starts-->
+<div class="modal fade" id="editHostModal" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content popup-main">
+      <div class="modal-header">
+        <i class="icon icon-close" aria-hidden="true" data-dismiss="modal"></i>
+        <h4 class="modal-title">Edit Host</h4>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="hostFormEdit">
+          <div class="row">
+            <div class="col-sm-12">
+              <label>Host Name <span class="important-Field">*</span></label>
+              <input type="text" name="sessionHostName" formControlName="sessionHostName" (keydown)="$event.preventDefault();" readonly />
+            </div>
+            <div class="col-sm-12">
+              <label>Allow New Sessions</label>
+            </div>
+            <div class="col-sm-12">
+              <label class="radio-inline">
+                <input type="radio" value="Yes" name="allowNewSession" formControlName="allowNewSession"
+                  id="allowNewSessionId" />Yes
+              </label>
+              <label class="radio-inline">
+                <input type="radio" value="No" name="allowNewSession" formControlName="allowNewSession"
+                  id="allowNewSessionId" />No
+              </label>
+            </div>
+            <div class="col-sm-12">
+              <div class="alert alert-danger alert-hide">
+                <strong>Warning!</strong> <span id="warningText-modal-edit"></span>
+              </div>
+            </div>
+            <div class="col-sm-12">
+              <div class="alert alert-success alert-hide">
+                <strong>Success!</strong><span id="successText-modal-edit"></span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="UpdateHost(hostFormEdit.value)">Update</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--edit hosts ends-->
+<!-- Create New App Group start-->
+<div class="overlay" *ngIf="showAppGroupCreateDialog">
+  <div class="newAppGroup" id="">
+    <input type="hidden" id="AppGroupNew" value="{{isCreateOpen}}" />
+    <form [formGroup]="formCreateNewAppGroup">
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <div class="col-xs-12 no-pad">
+            <h4>Create App Group</h4>
+            <div class="DeployUrl">
+              <div class="col-xs-12 no-pad marginBottom15">
+                <div class="form-group">
+                  <label>App Group Name <span class="important-Field">*</span></label>
+                  <input type="text" name="txtAppGroupName" placeholder="ex- Contoso App Group"
+                    (ngModelChange)="AppGroupNameChange($event)" formControlName="txtAppGroupName" />
+                  <div *ngIf="formCreateNewAppGroup.controls['txtAppGroupName'].hasError('pattern')" class="colorRed">
+                    Please enter valid App Group Name
+                  </div>
+                  <div *ngIf="createAppGroupName" class="colorRed">
+                    Please enter App Group Name
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 no-pad marginBottom15">
+                <label>App Group Friendly Name – <span class="ashColor">optional</span></label>
+                <input type="text" name="txtAppGroupFrndName" formControlName="txtAppGroupFrndName" />
+              </div>
+              <div class="col-sm-12 no-pad">
+                <label>Description – <span class="ashColor">optional</span></label>
+                <textarea class="height50" rows="1" cols="47" name="txtAppGroupDesc"
+                  formControlName="txtAppGroupDesc"></textarea>
+              </div>
+            </div>
+          </div>
+          <div style="clear:both"></div>
+          <div id="tab-1" class="tab-content current">
+            <div class="DeployUrl">
+              <p>App Group Type</p>
+              <p class="red">Value cannot be modified after creation.</p>
+              <input type="radio" value="Desktop" name="radiobtnAppType" [(ngModel)]="searchByDesktop"
+                id="RadioBtnNonpersistent" formControlName="radiobtnAppType" /><label>Desktop</label>
+              <p class="marginLeft25 fontsizeSmaller">Desktop app group allows users to install and uninstall
+                applications in a remote session. You don’t need to assign apps to the users.</p>
+              <input type="radio" value="RemoteApp" name="radiobtnAppType" [(ngModel)]="searchByDesktop"
+                formControlName="radiobtnAppType" /><label>RemoteApp</label>
+              <p class="marginLeft25 fontsizeSmaller">RemoteApp® group doesn’t allow users to install and uninstall
+                applications in a remote session. You would need to assign apps to the users beforehand.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="close" id="newAppSlideClose" (click)="HideNewAppGroup()"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="newAppbtnCancel" (click)="HideNewAppGroup()" />
+          </li>
+          <li>
+            <input type="button" value="Save"
+              [disabled]="btnSaveDisable || formCreateNewAppGroup.controls['txtAppGroupName'].hasError('pattern')"
+              (click)="CreateNewAppGroup(formCreateNewAppGroup.value)" />
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Create New App Group end-->
+<!-- Edit New App Group start-->
+<div class="modal fade" id="editModal" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content popup-main">
+      <div class="modal-header">
+        <i class="icon icon-close" aria-hidden="true" data-dismiss="modal"></i>
+        <h4 class="modal-title">Edit App Group</h4>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="appgroupFormEdit">
+          <div class="row">
+            <div class="col-sm-12">
+              <label>App Group Name <span class="important-Field">*</span></label>
+              <input type="text" name="appGroupName" formControlName="appGroupName" (keydown)="$event.preventDefault();" readonly />
+            </div>
+            <div class="col-sm-12">
+              <label>App Group Friendly Name – <span class="ashColor">optional</span></label>
+              <input type="text" name="friendlyName" formControlName="friendlyName" />
+            </div>
+            <div class="col-sm-12">
+              <label>Description</label>
+              <textarea rows="3" cols="47" name="description" formControlName="description"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="UpdateAppGroup(appgroupFormEdit.value)">Update</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal" id="Cancelupdatedeployment"
+          #closeModal>Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Edit  App Group end-->
+<!-- Remove App Group start-->
+<div class="modal fade" id="deleteModalAppGroups" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content popup-main">
+      <div class="modal-header">
+        <i class="icon icon-close" aria-hidden="true" (click)="GetAllAppGroupsList(hostPoolName)" data-dismiss="modal"></i>
+        <h4 class="modal-title">Delete App Group Confirmation</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete '<span id="deleteModalSelectedAppGroupName"
+            style="font-weight:bold;">{{deleteCountSelectedAppgroups}}</span>' App Group(s)?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="DeleteAppGroups()" data-dismiss="modal">Yes</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Remove App Group end-->
+<!-- Add App from Path starts-->
+<div class="overlay" *ngIf="showAddAppDialog">
+  <div class="newAppPath" id="AddAppPath">
+    <!--<input type="hidden" id="AppGroupNew" value="{{isCreateOpen}}" />-->
+    <form [formGroup]="newAppCreateGroup2">
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <h4>Publish App from Path</h4>
+          <div class="col-xs-12 no-pad">
+            <div class="DeployUrl">
+
+            </div>
+            <div style="clear:both"></div>
+            <div id="" class="tab-content current">
+              <div class="DeployUrl" id="">
+                <div class="col-xs-12 form-group">
+                  <label for="usr">Path<span class="important-Field">*</span></label>
+                  <input type="text" id="imagepath" placeholder="Enter Valid Path" formControlName="AppPath">
+                  <!--(ngModelChange)="PathChange($event)"-->
+                  <div *ngIf="newAppCreateGroup2.controls['AppPath'].hasError('pattern')" class="colorRed">
+                    Please enter valid path
+                  </div>
+                </div>
+                <div class="col-xs-12  form-group">
+                  <label for="usr">App Name<span class="important-Field">*</span></label>
+                  <input type="text" id="appName" formControlName="Name" placeholder="Enter Name of RemoteApp" />
+                  <div *ngIf="newAppCreateGroup2.controls['Name'].hasError('pattern')" class="colorRed">
+                    Please enter valid Name
+                  </div>
+                </div>
+                <div class="col-xs-12  form-group">
+                  <label for="usr">Icon Index<span class="important-Field">*</span></label>
+                  <input type="number"  id="IconIndex" formControlName="IconIndex" placeholder="Enter Icon Index " value="0" style="width:100%"/>
+                  <div *ngIf="newAppCreateGroup2.controls['IconIndex'].hasError('pattern')" class="colorRed">
+                    Please enter Icon Index
+                  </div>
+                </div>
+                <div class="col-xs-12 form-group">
+                  <label for="usr">Icon Path
+                    <span class="important-Field">*</span>
+                  </label>
+                  <input type="text" id="IconPath"  placeholder="Enter Valid Icon Path" formControlName="IconPath">
+                  <!--(ngModelChange)="PathChange($event)"-->
+                  <div *ngIf="newAppCreateGroup2.controls['IconPath'].hasError('pattern')" class="colorRed">
+                    Please enter valid icon path
+                  </div>
+                </div>
+                <div class="col-xs-12 form-group">
+                  <label for="usr">Friendly Name
+                  </label>
+                  <input type="text" id="friendlyName"  placeholder="Enter Friendly Name" formControlName="friendlyName">
+                </div>
+                <div class="col-xs-12 form-group">
+                  <label for="usr">Command Line
+                  </label>
+                  <input type="text" id="requiredCommandLine"  placeholder="Enter Command Line" formControlName="requiredCommandLine">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="close" id="AddUserSlideClose" (click)="HideAppPathDialog()"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="AddUserbtnCancel" (click)="HideAppPathDialog()" />
+          </li>
+          <li>
+            <input type="button" value="Publish" [disabled]="newAppCreateGroup2.invalid"
+              (click)="CreatingAppFromPath(newAppCreateGroup2.value)" />
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Add App from Path End-->
+
+<!--edit App-->
+<div class="overlay" *ngIf="showEditAppDialog">
+  <div class="newAppPath" id="EditAppPath">
+    <!--<input type="hidden" id="AppGroupNew" value="{{isCreateOpen}}" />-->
+    <form [formGroup]="newAppEditGroup">
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <h4>Edit App </h4>
+          <div class="col-xs-12 no-pad">
+            <div class="DeployUrl">
+
+            </div>
+            <div style="clear:both"></div>
+            <div id="" class="tab-content current">
+              <div class="DeployUrl" id="">
+                <div class="col-xs-12 form-group">
+                  <label for="usr">Path<span class="important-Field">*</span></label>
+                  <input type="text" id="imagepath" placeholder="Enter Valid Path" formControlName="AppPath">
+                  <!--(ngModelChange)="PathChange($event)"-->
+                  <div *ngIf="newAppEditGroup.controls['AppPath'].hasError('pattern')" class="colorRed">
+                    Please enter valid path
+                  </div>
+                </div>
+                <div class="col-xs-12  form-group">
+                  <label for="usr">App Name<span class="important-Field">*</span></label>
+                  <input type="text" id="appName" formControlName="Name" placeholder="Enter Name of RemoteApp" />
+                  <div *ngIf="newAppEditGroup.controls['Name'].hasError('pattern')" class="colorRed">
+                    Please enter valid Name
+                  </div>
+                </div>
+                <div class="col-xs-12  form-group">
+                  <label for="usr">Icon Index<span class="important-Field">*</span></label>
+                  <input type="number"  id="IconIndex" formControlName="IconIndex" placeholder="Enter Icon Index " value="0" style="width:100%"/>
+                </div>
+                <div class="col-xs-12 form-group">
+                  <label for="usr">Icon Path
+                    <span class="important-Field">*</span>
+                  </label>
+                  <input type="text" id="IconPath"  placeholder="Enter Valid Icon Path" formControlName="IconPath">
+                  
+                </div>
+                <div class="col-xs-12 form-group">
+                  <label for="usr">Friendly Name
+                  </label>
+                  <input type="text" id="friendlyName"  placeholder="Enter Friend Name" formControlName="friendlyName">
+                </div>
+                <div class="col-xs-12 form-group">
+                  <label for="usr">Require Command Line
+                  </label>
+                  <input type="text" id="requiredCommandLine"  placeholder="Enter Command Line" formControlName="requiredCommandLine">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="close" id="AddUserSlideClose" (click)="HideAppEditDialog()"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="editAppbtnCancel" (click)="HideAppEditDialog()" />
+          </li>
+          <li>
+            <input type="button" value="Update" [disabled]="newAppEditGroup.invalid"
+              (click)="UpdateApp(newAppEditGroup.value)" />
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!--Remove Apps from path starts-->
+<div class="modal fade" id="deleteModalApps" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content popup-main">
+      <div class="modal-header">
+        <i class="icon icon-close" aria-hidden="true" (click)="GetAllAppGroupApps()" data-dismiss="modal"></i>
+        <h4 class="modal-title">Remove App Confirmation</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove '<span id="deleteModalSelectedAppUserName"
+            style="font-weight:bold;">{{deleteCountSelectedApp}}</span>' App(s)?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="DeleteRemoteapps()" data-dismiss="modal">Yes</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--Remove Apps froms  ends-->
+<!-- Add users from Active Directory Start-->
+<div class="overlay" *ngIf="showAddUserDialog">
+  <div class="createUserName">
+    <input type="hidden" id="AddAppCreateOpen" value="{{isCreateOpen}}" />
+    <form [formGroup]="addUserForm" autocomplete="off">
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <h4>User Principal Name</h4>
+          <div class="col-xs-12 no-pad">
+            <div style="clear:both"></div>
+            <div id="" class="tab-content current">
+              <div class="DeployUrl" id="">
+                <div class="form-group">
+                  <label>User Principal Name <span class="important-Field">*</span></label>
+                  <input type="text" name="name" formControlName="UserPrincipalName"
+                    (ngModelChange)="UserPrincipalNameChange($event)" style="width: 359px;"
+                    placeholder="Ex. example@demo.onmicrosoft.com"  />
+                  <div *ngIf="addUserForm.controls['UserPrincipalName'].hasError('pattern')" class="colorRed">
+                    Please enter valid User Principal Name(Ex: cris@contoso.com)
+                  </div>
+                  <div *ngIf="userPrincipalName" class="colorRed">
+                    Please enter User Principal Name
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="close" id="AddADSUserClose" (click)="HideAppUserDialog()"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="AddADSUserCancel" (click)="HideAppUserDialog()" />
+          </li>
+          <li>
+            <input type="button" value="Add" id="btnAddADSUser"
+              [disabled]="userprincipalButtonDisable || addUserForm.controls['UserPrincipalName'].hasError('pattern')"
+              (click)="CreateNewAppUser(addUserForm.value)" />
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Add users from Active Directory End-->
+<!--Remove App user starts-->
+<div class="modal fade" id="deleteModalAppUser" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content popup-main">
+      <div class="modal-header">
+        <i class="icon icon-close" aria-hidden="true" (click)="GetAppGroupUsers()" data-dismiss="modal"></i>
+        <h4 class="modal-title">Remove App User Confirmation</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove '<span id="deleteModalSelectedAppUserName"
+            style="font-weight:bold;">{{deleteCountSelectedUser}}</span>' App User(s)?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="DeleteAppUser()" data-dismiss="modal">Yes</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--Remove App user end-->
+<!-- Add App from Gallery starts-->
+<div class="overlay" *ngIf="showAddAppGalleryDialog">
+  <div class="newAppPath" id="AddAppPath" style="width:960px">
+    <input type="hidden" id="AppGroupNew" value="{{isCreateOpen}}" />
+    <form>
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <h4>Publish Apps from the Start menu</h4>
+          <div class="col-xs-12">
+            <table class="table tableSelection table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 4%;text-align: left">
+                    <div class="control-group">
+                      <label class="control control--checkbox">
+                        <input type="checkbox" class="solcheckbox" [checked]="checkedMainGApp"
+                          (click)="GalleryAppCheckAll($event)">
+                        <span class="control__indicator"></span>
+                      </label>
+                    </div>
+                  </th>
+                  <th style="width:15%;text-align:left;">Friendly Name</th>
+                  <th style="width:15%;text-align:left;">Alias Name</th>
+                  <th style="width:12%;text-align: center;">Path</th>
+                </tr>
+              </thead>
+              <tbody *ngIf="!(GAppslist || appGalleryErrorFound)">
+                <tr
+                  *ngFor="let Gapps of appGroupAppListGallery | paginate: { itemsPerPage: galleryAppPageSize, currentPage: pageNo, id: 'GalleryApps' }; let AGAInd=index"
+                  class="TableData"
+                  [ngClass]="{'rowSelect':checkedGApps[absoluteIndex(AGAInd, galleryAppPageSize, pageNo)]}"
+                  id="row-users-{{Gapps.appAlias}}"
+                  (click)="GalleryAppListRowClicked(absoluteIndex(AGAInd, galleryAppPageSize, pageNo))">
+                  <td style="width: 4%;text-align: left">
+                    <div class="control-group">
+                      <label class="control control--checkbox">
+                        <input type="checkbox" class="solcheckbox"
+                          (click)="GalleryAppIsChecked(absoluteIndex(AGAInd, galleryAppPageSize, pageNo))"
+                          [checked]="checkedGApps[absoluteIndex(AGAInd, galleryAppPageSize, pageNo)]">
+                        <span class="control__indicator"></span>
+                      </label>
+                    </div>
+                  </td>
+                  <td style="width:15%;text-align:left;">{{Gapps.friendlyName}}</td>
+                  <td style="width:15%;text-align:left;">{{Gapps.appAlias}}</td>
+                  <td style="width:12%;text-align: center;">{{Gapps.filePath}}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="row" style="margin: 0;" *ngIf="!(GAppslist || appGalleryErrorFound)">
+              <pagination-controls (pageChange)="pageNo = $event" class="pagination pull-right" id="GalleryApps">
+              </pagination-controls>
+            </div>
+          </div>
+          <div class="EmptyTableMsg" *ngIf="GAppslist">
+            <div style="text-align:center">
+              <br /><br />
+              <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                style="position: relative; width: 10%; left: 44%;" />
+              <h5 style="color:#808080;font-weight:400;"> No Apps found to display</h5>
+              <p style="color:#808080"> To publish apps, click Publish Apps from path </p>
+              <button class="btn btn-sm btn-primary" (click)="OpenAddAppsFromPath($event)">Publish Apps from
+                path</button>
+            </div>
+          </div>
+          <div *ngIf="appGalleryErrorFound">
+            <div class="EmptyTableMsg">
+              <div style="text-align:center">
+                <br /><br />
+                <img src="../../assets/Images/sad-cloud.png" class="img img-responsive"
+                  style="position: relative; width: 10%; left: 44%;" />
+                <h5 style="color:#808080;font-weight:400;">Error</h5>
+                <p style="color:#808080"> Problem with server, Please try again </p>
+                <button class="btn btn-sm btn-primary" style="border-radius:0px;" id=""
+                  (click)="GetAllAppGroupAppsGallery()">Refresh</button>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="galleryAppLoader" class="ngLoader" style="left: 65%;">
+            <img src="assets/Images/loading.gif" />
+          </div>
+        </div>
+      </div>
+      <a class="close" id="AddUserSlideClose" (click)="HideAppGalleryDialog()"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="AddUserbtnCancel" (click)="HideAppGalleryDialog()" />
+          </li>
+          <li>
+            <input type="button" value="Publish" id="" [disabled]="newGAppAdd" (click)="CreatingAppFromGallery()" />
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Add App from Path Gallery End-->
+<!-- Add csv File starts-->
+<div class="overlay" *ngIf="false">
+  <div class="newAppPath" id="AddCsvFile">
+    <input type="hidden" id="AppGroupNew" value="{{isCreateOpen}}" />
+    <form [formGroup]="newAppCreateGroup1">
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <h4>Add users from csv file</h4>
+          <div class="col-xs-12 no-pad">
+            <div class="DeployUrl"></div>
+            <div style="clear:both"></div>
+            <div id="" class="tab-content current">
+              <div class="DeployUrl" id="">
+                <div class="col-xs-12">
+                  <label>Path</label>
+                  <input type="text" name="Browse" formControlName="Browse" />
+                </div>
+                <div class="col-xs-offset-8 col-xs-4">
+                  <a href="" class="browse"><i class="icon icon-folder-up"></i>Browse</a>
+                </div>
+                <div class="col-xs-12"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="close" id="AddCsvSlideClose" (click)="showUserCsvCreate=false"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="AddCsvbtnCancel" (click)="showUserCsvCreate=false" />
+          </li>
+          <li>
+            <input type="button" value="Upload" id="" />
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Add csv File End-->
+<!-- Log Off Modal -->
+<div class="modal fade" id="logoffModal" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content popup-main">
+      <div class="modal-header">
+        <i class="icon icon-close" aria-hidden="true" data-dismiss="modal"></i>
+        <h4 class="modal-title">Log Off Confirmation</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to logoff '<span id="logoffModalSelectedUserSession"
+            style="font-weight:bold;">{{CountSelectedUserSession}}</span>' session(s)?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="LogOffUserSessions()" data-dismiss="modal">Proceed</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Send message Panel-->
+<div class="overlay" *ngIf="showSendMessageDialog">
+  <div class="createUserName">
+ 
+    <form [formGroup]="sendMessageForm" autocomplete="off">
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <h4>Send Message</h4>
+          <div class="col-xs-12 no-pad">
+            <div style="clear:both"></div>
+            <div id="" class="tab-content current">
+              <div class="DeployUrl" id="">
+                <div class="form-group">
+                  <label>Title <span class="important-Field">*</span></label>
+                  <input type="text" name="name" formControlName="Title"
+                    (ngModelChange)="TitleChange($event)" style="width: 359px;"
+                     />
+                  <div *ngIf="sendMessageForm.controls['Title'].hasError('pattern')" class="colorRed">
+                    Please enter title
+                  </div>
+                  <div *ngIf="Title" class="colorRed">
+                    Please enter title
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Message <span class="important-Field">*</span></label>
+                  <textarea   name="name" formControlName="Message"
+                    (ngModelChange)="MessageChange($event)" style="width: 359px;"
+                     ></textarea>
+                  <div *ngIf="sendMessageForm.controls['Message'].hasError('pattern')" class="colorRed">
+                    Please enter message 
+                  </div>
+                  <div *ngIf="Message" class="colorRed">
+                    Please enter message 
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="close" id="SendMessageClose" (click)="HideSendMessageDialog()"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="SendMessageCancel" (click)="HideSendMessageDialog()" />
+          </li>
+          <li>
+            <input type="button" value="Send" id="btnSendMessage"
+              [disabled]=" sendMesageButtonDisable || sendMessageForm.controls['Title'].hasError('pattern') || sendMessageForm.controls['Message'].hasError('pattern')"
+              (click)="SendMessage(sendMessageForm.value)" />
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Restart Host Panel-->
+<!-- <div class="overlay" *ngIf="showRestartDialog">
+  <div class="createUserName">
+   
+    <form [formGroup]="restartHostForm" autocomplete="off">
+      <div class="createTenantHead">
+        <div class="TenantStatus">
+          <h4>Restart Host</h4>
+          <div class="col-xs-12 no-pad">
+            <div style="clear:both"></div>
+            <div id="" class="tab-content current">
+              <div class="DeployUrl" id="">
+                <div class="form-group">
+                  <label>Subscription ID <span class="important-Field">*</span></label>
+                  <input type="text" name="name" formControlName="SubscriptionId"
+                    (ngModelChange)="SubscriptionChange($event)" style="width: 359px;"
+                     />
+                  <div *ngIf="restartHostForm.controls['SubscriptionId'].hasError('pattern')" class="colorRed">
+                    Please enter Subscription Id
+                  </div>
+                  <div *ngIf="SubscriptionId" class="colorRed">
+                    Please enter Subscription Id
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Resource Group Name <span class="important-Field">*</span></label>
+                  <input type="text" name="name" formControlName="ResourceGroup"
+                    (ngModelChange)="ResourceGroupChange($event)" style="width: 359px;"
+                     />
+                  <div *ngIf="restartHostForm.controls['ResourceGroup'].hasError('pattern')" class="colorRed">
+                    Please enter ResourceGroup
+                  </div>
+                  <div *ngIf="ResourceGroup" class="colorRed">
+                    Please enter ResourceGroup
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="close" id="restartHostClose" (click)="HideRestartHostDialog()"><i class="icon icon-close"
+          aria-hidden="true"></i></a>
+      <div class="botomBtn">
+        <ul>
+          <li>
+            <input type=button value="Cancel" id="RestartHostCancel" (click)="HideRestartHostDialog()" />
+          </li>
+          <li>
+            <input type="button" value="Send" id="btnRestartHost"
+              [disabled]="restartHostForm.controls['SubscriptionId'].hasError('pattern') || restartHostForm.controls['ResourceGroup'].hasError('pattern')"
+              (click)="RestartHost(restartHostForm.value)" />
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+</div> -->
