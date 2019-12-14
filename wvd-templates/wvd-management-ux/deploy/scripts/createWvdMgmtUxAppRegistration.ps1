@@ -10,26 +10,26 @@ This script depends on two PowerShell modules: Az and AzureAD . To install Az an
 .ROLE
 Administrator
 
-.PARAMETER appName
+.PARAMETER AppName
  Required
  Provide name of the application name, enter a unique app name.
 
-.PARAMETER subscriptionId
+.PARAMETER SubscriptionId
  Required
  Provide Subscription Id of the Azure.
 
- Example: .\createWvdMgmtUxAppRegistration.ps1  -appName "Name of the Application" -subscriptionId "Your Azure SubscriptionID"
+ Example: .\createWvdMgmtUxAppRegistration.ps1  -AppName "Name of the Application" -SubscriptionId "Your Azure SubscriptionId"
 #>
 
 param(
 
 	[Parameter(Mandatory = $true)]
 	[ValidateNotNullOrEmpty()]
-	[string]$appName,
+	[string]$AppName,
 
 	[Parameter(Mandatory = $true)]
 	[ValidateNotNullOrEmpty()]
-	[string]$subscriptionId
+	[string]$SubscriptionId
 
 )
 
@@ -49,7 +49,7 @@ if ($context -eq $null)
 }
 
 # Select the subscription
-Select-AzSubscription -SubscriptionId $subscriptionId
+Select-AzSubscription -SubscriptionId $SubscriptionId
 
 # Get the Role Assignment of the authenticated user
 $RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account
@@ -58,18 +58,18 @@ $RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account
 if ($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefinitionName -eq "Contributor")
 {
 	# Check whether the AD Application exist/ not
-	$existingApplication = Get-AzADApplication -DisplayName $appName -ErrorAction SilentlyContinue
+	$existingApplication = Get-AzADApplication -DisplayName $AppName -ErrorAction SilentlyContinue
 	if ($existingApplication -ne $null)
 	{
 		$appId = $existingApplication.ApplicationId
-		Write-Output "An AAD Application already exists with appName $appName(Application Id: $appId). Choose a different appName" -Verbose
+		Write-Output "An AAD Application already exists with AppName $AppName(Application Id: $appId). Choose a different AppName" -Verbose
 		exit
 	}
 
 	try
 	{
-		# Create a new AD Application with provided appName
-		$azAdApplication = New-AzureADApplication -DisplayName $appName -PublicClient $false -AvailableToOtherTenants $false
+		# Create a new AD Application with provided AppName
+		$azAdApplication = New-AzureADApplication -DisplayName $AppName -PublicClient $false -AvailableToOtherTenants $false
 	}
 	catch
 	{
@@ -96,7 +96,7 @@ if ($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefin
 
 	# Get the applicationId
 	$applicationId = $azAdApplication.AppId
-	Write-Output "Azure AAD Application creation completed successfully with appName $appName (Application Id is: $applicationId)" -Verbose
+	Write-Output "Azure AAD Application creation completed successfully with AppName $AppName (Application Id is: $applicationId)" -Verbose
 
 	# Create new Service Principal
 	Write-Output "Creating a new Service Principal" -Verbose
