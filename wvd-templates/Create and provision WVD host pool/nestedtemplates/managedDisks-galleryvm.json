@@ -20,7 +20,11 @@
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
                 "Windows-10-Enterprise-multi-session",
                 "Windows-10-Enterprise-1903",
-                "2016-Datacenter"
+                "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1809",
+                "Windows-10-Enterprise-multi-session-1809",
+                "Windows-10-Enterprise-1809",
+                "2016-Datacenter",
+                "2012-R2-Datacenter"
             ],
             "metadata": {
                 "description": "Gallery image SKU."
@@ -135,10 +139,30 @@
                 "galleryOffer": "Windows-10",
                 "gallerySku": "19h1-entn"
             },
+            "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1809": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "office-365",
+                "gallerySku": "rs5-evd-o365pp"
+            },
+            "Windows-10-Enterprise-multi-session-1809": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "Windows-10",
+                "gallerySku": "rs5-evd"
+            },
+            "Windows-10-Enterprise-1809": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "Windows-10",
+                "gallerySku": "rs5-enterprise"
+            },
             "2016-Datacenter": {
                 "galleryPublisher": "MicrosoftwindowsServer",
                 "galleryOffer": "WindowsServer",
                 "gallerySku": "2016-Datacenter"
+            },
+            "2012-R2-Datacenter": {
+                "galleryPublisher": "MicrosoftwindowsServer",
+                "galleryOffer": "WindowsServer",
+                "gallerySku": "2012-R2-Datacenter"
             }
         },
         "storageAccountType": "[parameters('rdshVMDiskType')]",
