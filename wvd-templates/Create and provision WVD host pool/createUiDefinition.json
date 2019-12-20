@@ -192,17 +192,32 @@
 								"Standard_B2s",
 								"Standard_B4ms",
 								"Standard_B8ms",
+								"Standard_B12ms",
+								"Standard_B16ms",
+								"Standard_B20ms",
 								"Standard_D2_v3",
+								"Standard_D2a_v4",
+								"Standard_D2as_v4",
 								"Standard_D2s_v3",
 								"Standard_D4_v3",
+								"Standard_D4a_v4",
+								"Standard_D4as_v4",
 								"Standard_D4s_v3",
 								"Standard_D8_v3",
+								"Standard_D8a_v4",
+								"Standard_D8as_v4",
 								"Standard_D8s_v3",
 								"Standard_D16_v3",
+								"Standard_D16a_v4",
+								"Standard_D16as_v4",
 								"Standard_D16s_v3",
 								"Standard_D32_v3",
+								"Standard_D32a_v4",
+								"Standard_D32as_v4",
 								"Standard_D32s_v3",
 								"Standard_D64_v3",
+								"Standard_D64a_v4",
+								"Standard_D64as_v4",
 								"Standard_D64s_v3",
 								"Standard_E2_v3",
 								"Standard_E2s_v3",
@@ -233,6 +248,7 @@
 								"Standard_F16s",
 								"Standard_F16s_v2",
 								"Standard_F32s_v2",
+								"Standard_F48s_v2",
 								"Standard_F64s_v2",
 								"Standard_F72s_v2",
 								"Standard_H8",
@@ -241,6 +257,7 @@
 								"Standard_H16m",
 								"Standard_H16r",
 								"Standard_H16mr",
+								"Standard_HB60rs",
 								"Standard_L4s",
 								"Standard_L8s",
 								"Standard_L8s_v2",
@@ -273,12 +290,19 @@
 								"Standard_ND12s",
 								"Standard_ND24rs",
 								"Standard_ND24s",
+								"Standard_NV4as_v4",
 								"Standard_NV6",
 								"Standard_NV6s_v2",
+								"Standard_NV8as_v4",
 								"Standard_NV12",
 								"Standard_NV12s_v2",
+								"Standard_NV12s_v3",
+								"Standard_NV16as_v4",
 								"Standard_NV24",
-								"Standard_NV24s_v2"
+								"Standard_NV24s_v2",
+								"Standard_NV24s_v3",
+								"Standard_NV32as_v4",
+								"Standard_NV48s_v3"
 							]
 						},
 						"recommendedSizes": [
@@ -292,7 +316,7 @@
 							"sku": "rs5-evd"
 						},
 						"visible": true,
-						"count": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]"
+						"count": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1),'a', ' '), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1),'a', ' '), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]"
 					},
 					{
 						"name": "rdshNamePrefix",
@@ -564,7 +588,7 @@
 								},
 								"constraints": {
 									"minAddressPrefixSize": "/30",
-									"minAddressCount": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
+									"minAddressCount": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1),'a', ' '), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1),'a', ' '), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
 									"requireContiguousAddresses": false
 								}
 							}
@@ -706,7 +730,7 @@
 			"rdshCustomImageSourceName": "[coalesce(steps('virtualMachineSettings').rdshCustomImageSourceName, '')]",
 			"rdshCustomImageSourceResourceGroup": "[coalesce(steps('virtualMachineSettings').rdshCustomImageSourceResourceGroup, '')]",
 			"rdshNamePrefix": "[steps('configureVirtualMachines').rdshNamePrefix]",
-			"rdshNumberOfInstances": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
+			"rdshNumberOfInstances": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1),'a', ' '), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1),'a', ' '), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
 			"rdshVMDiskType": "[coalesce(steps('virtualMachineSettings').rdshVMDiskTypeAll, steps('virtualMachineSettings').rdshVMDiskTypeStandard)]",
 			"rdshVmSize": "[steps('configureVirtualMachines').virtualMachineSize]",
 			"enableAcceleratedNetworking": false,
