@@ -361,7 +361,8 @@
 						"toolTip": "Enter the name of the Azure managed image to be used as the source OS for the virtual machines.",
 						"constraints": {
 							"required": true,
-							"regex": ".*"
+							"regex": "^[A-Za-z0-9]([\\w\\.-]*\\w)*$",
+							"validationMessage": "The name must begin with a letter or number, end with a letter, number or underscore, and may contain only letters, numbers, underscores, periods, or hyphens."
 						},
 						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomImage')]"
 					},
@@ -372,7 +373,8 @@
 						"toolTip": "Enter the name of the existing resouce group that contains the Azure managed image.",
 						"constraints": {
 							"required": true,
-							"regex": ".*"
+							"regex": "^[-\\w\\._\\(\\)]{0,89}[-\\w_\\(\\)]$",
+							"validationMessage": "The only allowed characters are alphanumeric, underscore, parentheses, hyphen, and period (except at the end). 90 characters is the maximum length. If your resource group name contains Unicode characters, please move your image to a resource group whose name meets these requirements."
 						},
 						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomImage')]"
 					},
