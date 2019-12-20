@@ -43,6 +43,9 @@
             "allowedValues": [
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
                 "Windows-10-Enterprise-multi-session",
+                "Windows-10-Enterprise",
+                "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1903",
+                "Windows-10-Enterprise-multi-session-1903",
                 "Windows-10-Enterprise-1903",
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1809",
                 "Windows-10-Enterprise-multi-session-1809",
