@@ -105,7 +105,7 @@ if ($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefin
 	# Get the Service Principal
 	Get-AzADServicePrincipal -ApplicationId $applicationId
 	$ServicePrincipalName = $ServicePrincipal.ServicePrincipalNames
-	Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose
+	Write-Output "Service Principal creation completed successfully for AppName $AppName (Application Id is: $applicationId)" -Verbose
 
 	#Collecting WVD Serviceprincipal Api Permission and set to client app registration
 	$WVDServPrincipalApi = Get-AzADServicePrincipal -ApplicationId "5a0aa725-4958-4b0c-80a9-34562e23f3b7"
