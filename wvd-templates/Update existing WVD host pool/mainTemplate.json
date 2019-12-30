@@ -388,11 +388,16 @@
             "condition": "[greater(parameters('rdshNumberOfInstances'), 1)]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), '0/', 'dscextension')]",
+            // note: if rdshNumberOfInstances < 2, for the sake of validity of the template, it is important to set a unique name such as 'vmName--1/dscextension' event though this resource will not be deloyed because of the condition above
+            "name": "[concat(variables('rdshPrefix'), if(greater(parameters('rdshNumberOfInstances'), 1), 0, -1), '/', 'dscextension')]",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "rdsh-domain-join-loop"
             ],
+            "copy": {
+                "name": "first-rdsh-dsc",
+                "count": 1
+            },
             "properties": {
                 "publisher": "Microsoft.Powershell",
                 "type": "DSC",
@@ -426,16 +431,17 @@
             "condition": "[greater(parameters('rdshNumberOfInstances'), 2)]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
+            // note: if rdshNumberOfInstances < 3, for the sake of validity of the template, it is important to set a unique name such as 'vmName--2/dscextension' event though this resource will not be deloyed because of the condition above
+            "name": "[concat(variables('rdshPrefix'), if(greater(parameters('rdshNumberOfInstances'), 2), copyindex(1), -2), '/', 'dscextension')]",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "rdsh-domain-join-loop",
-                // note: if the following conditional dependencies are not dployed, arm will auto remove them
-                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'),'0/extensions/dscextension')]"
+                // note: if the following conditional dependencies are not deployed, arm will auto remove them
+                "first-rdsh-dsc"
             ],
             "copy": {
                 "name": "additional-rdsh-dsc-loop",
-                "count": "[if(less(parameters('rdshNumberOfInstances'), 3), 1, sub(parameters('rdshNumberOfInstances'), 2))]"
+                "count": "[if(greater(parameters('rdshNumberOfInstances'), 2), sub(parameters('rdshNumberOfInstances'), 2), 1)]"
             },
             "properties": {
                 "publisher": "Microsoft.Powershell",
@@ -473,8 +479,8 @@
             "location": "[parameters('location')]",
             "dependsOn": [
                 "rdsh-domain-join-loop",
-                // note: if the following conditional dependencies are not dployed, arm will auto remove them
-                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'), '0/extensions/dscextension')]",
+                // note: if the following conditional dependencies are not deployed, arm will auto remove them
+                "first-rdsh-dsc",
                 "additional-rdsh-dsc-loop"
                 //"[if(greater(parameters('rdshNumberOfInstances'), 2), 'additional-rdsh-dsc-loop', if(equals(parameters('rdshNumberOfInstances'), 2), concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'), '0/extensions/dscextension'), 'rdsh-domain-join-loop'))]"
             ],
