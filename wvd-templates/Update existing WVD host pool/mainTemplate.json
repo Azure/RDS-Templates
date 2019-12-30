@@ -435,7 +435,7 @@
             ],
             "copy": {
                 "name": "additional-rdsh-dsc-loop",
-                "count": "[if(less(parameters('rdshNumberOfInstances'), 3), 0, sub(parameters('rdshNumberOfInstances'), 2))]"
+                "count": "[if(less(parameters('rdshNumberOfInstances'), 3), 1, sub(parameters('rdshNumberOfInstances'), 2))]"
             },
             "properties": {
                 "publisher": "Microsoft.Powershell",
@@ -502,6 +502,7 @@
                         "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]",
+                        "SubscriptionId": "[variables('subscriptionId')]",
                         "userLogoffDelayInMinutes": "[parameters('userLogoffDelayInMinutes')]",
                         "userNotificationMessege": "[parameters('userNotificationMessage')]",
                         "messageTitle": "[variables('messageTitle')]",

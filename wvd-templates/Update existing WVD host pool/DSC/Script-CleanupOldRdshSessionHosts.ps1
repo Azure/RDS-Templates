@@ -40,8 +40,8 @@ param(
 	[AllowEmptyString()]
 	[string]$AadTenantId = "",
 
-	# [Parameter(mandatory = $true)]
-	# [string]$SubscriptionId,
+	[Parameter(mandatory = $true)]
+	[string]$SubscriptionId,
 
 	[Parameter(mandatory = $true)]
 	[int]$userLogoffDelayInMinutes,
@@ -161,6 +161,55 @@ if ($null -ne $OSVersionInfo) {
 	if ($null -ne $OSVersionInfo.InstallationType) {
 		$rdshIsServer = @{ $true = $true; $false = $false }[$OSVersionInfo.InstallationType -eq "Server"]
 	}
+}
+
+$RequiredModules = @("AzureRM.Resources","Azurerm.Profile","Azurerm.Compute","Azurerm.Network","Azurerm.Storage")
+
+Write-Output "checking if nuget package exists"
+
+if (!(Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue -ListAvailable)) {
+    Write-Output "installing nuget package inside vm: $env:COMPUTERNAME"
+    Install-PackageProvider -Name nuget -Force
+}
+foreach ($ModuleName in $RequiredModules) {
+    do {
+        #Check if Module exists
+        $InstalledModule = Get-InstalledModule -Name $ModuleName -ErrorAction SilentlyContinue
+        if (!$InstalledModule) {
+            Write-Output "Installing azureRMModule '$ModuleName' inside vm: $env:COMPUTERNAME"
+            Install-Module $ModuleName -AllowClobber -Force
+        }
+    } until ($InstalledModule)
+}
+
+Import-Module AzureRM.Resources
+Import-Module Azurerm.Profile
+Import-Module Azurerm.Compute
+Import-Module Azurerm.Network
+Import-Module Azurerm.Storage
+
+#Authenticate AzureRM
+#//todo try catch
+if ($isServicePrincipal -eq "True") {
+	$authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
+}
+else {
+	$authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -SubscriptionId $SubscriptionId
+}
+
+$obj = $authentication | Out-String
+
+if ($authentication) {
+	Write-Log -Message "AzureRM Login successfully Done. Result:`n$obj"
+}
+else {
+	Write-Log -Error "AzureRM Login Failed, Error:`n$obj"
+}
+if ($authentication.Context.Subscription.Id -eq $SubscriptionId) {
+	Write-Log -Message "Successfully logged into AzureRM"
+}
+else {
+	Write-Log -Error "Subscription Id $SubscriptionId not in context"
 }
 
 # collect new session hosts
