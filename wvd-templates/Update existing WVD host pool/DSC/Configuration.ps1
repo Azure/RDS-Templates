@@ -12,6 +12,7 @@ function isRdshServer {
 
     return $rdshIsServer
 }
+
 configuration RegisterSessionHost
 {
     param

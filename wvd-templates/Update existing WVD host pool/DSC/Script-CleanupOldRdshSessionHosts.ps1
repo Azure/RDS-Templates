@@ -77,10 +77,13 @@ $ErrorActionPreference = "Stop"
 # Testing if it is a ServicePrincipal and validade that AadTenant ID in this case is not null or empty
 ValidateServicePrincipal -IsServicePrincipal $isServicePrincipal -AADTenantId $AadTenantId
 
-# extract RD Powershell module from deploy agent .zip
-Write-Log -Message "Creating a folder inside rdsh vm for extracting RD Powershell module"
 $DeployAgentLocation = "C:\DeployAgent"
-ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $DeployAgentLocation
+if (-not (Test-Path "$DeployAgentLocation\PowerShellModules"))
+{
+	Write-Log -Message "Creating a folder inside RDSH VM for extracting RD Powershell module"
+	# extract RD Powershell module from deploy agent .zip
+	ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $DeployAgentLocation
+}
 
 Write-Log -Message "Changing current folder to Deployagent folder: $DeployAgentLocation"
 Set-Location "$DeployAgentLocation"
