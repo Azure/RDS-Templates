@@ -109,8 +109,8 @@ try
 }
 catch
 {
-	Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$_"
-	throw "Windows Virtual Desktop Authentication Failed, Error:`n$_"
+	Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
+	throw "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
 }
 
 $obj = $authentication | Out-String
@@ -392,7 +392,7 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
 				Write-Log -Message "VM has been stopped: $VMName"
 			}
 			else {
-				Write-Log -Message "Waiting for to stop $VMName VM..."
+				Write-Log -Message "Waiting for to stop $VMName VM... [current state: $($ProvisioningState.PowerState)]"
 			}
 		}
 	}

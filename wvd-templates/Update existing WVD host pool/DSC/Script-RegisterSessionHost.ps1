@@ -117,8 +117,8 @@ else
 	}
 	catch
 	{
-		Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$_"
-		throw "Windows Virtual Desktop Authentication Failed, Error:`n$_"
+		Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
+		throw "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
 	}
 
 	$obj = $authentication | Out-String
