@@ -215,7 +215,7 @@ else {
 # collect new session hosts
 $NewSessionHostNames = @{}
 for ($i = 0; $i -lt $rdshNumberOfInstances; ++$i) {
-	$NewSessionHostNames.Add("${rdshPrefix}${i}.${DomainName}", $true)
+	$NewSessionHostNames.Add("${rdshPrefix}${i}.${DomainName}".ToLower(), $true)
 }
 
 Write-Log -Message "List of new Session Host servers in $HostPoolName :`n$($NewSessionHostNames.Keys | Out-String)"
@@ -228,7 +228,7 @@ Write-Log -Message "List of Session Host servers in $HostPoolName :`n$ShslogObj"
 $SessionHostNames = 0
 $SessionHostNames = @()
 foreach ($SessionHost in $ListOfSessionHosts) {
-	if (!$NewSessionHostNames.ContainsKey($SessionHost.SessionHostName))
+	if (!$NewSessionHostNames.ContainsKey($SessionHost.SessionHostName.ToLower()))
 	{
 		$SessionHostNames += $SessionHost.SessionHostName
 	}
@@ -241,7 +241,7 @@ $ListOfUserSessions = Get-RdsUserSession -TenantName "$TenantName" -HostPoolName
 if ($ListOfUserSessions) {
 	foreach ($UserSession in $ListOfUserSessions) {
 		$SessionHostName = $UserSession.SessionHostName
-		if ($NewSessionHostNames.ContainsKey($SessionHostName))
+		if ($NewSessionHostNames.ContainsKey($SessionHostName.ToLower()))
 		{
 			continue
 		}
@@ -396,7 +396,7 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
 }
 
 $AllSessionHosts = Get-RdsSessionHost -TenantName "$TenantName" -HostPoolName "$HostPoolName"
-$OldSessionHosts = $AllSessionHosts.SessionHostName | Where-Object { !$NewSessionHostNames.ContainsKey($_) }
+$OldSessionHosts = $AllSessionHosts.SessionHostName | Where-Object { !$NewSessionHostNames.ContainsKey($_.ToLower()) }
 if ($OldSessionHosts) {
 	Write-Log -Error "Old Session Hosts were not removed from hostpool $HostPoolName"
 	throw "Old Session Hosts were not removed from hostpool $HostPoolName"
