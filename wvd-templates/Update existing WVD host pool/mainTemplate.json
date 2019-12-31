@@ -388,8 +388,7 @@
             "condition": "[greater(parameters('rdshNumberOfInstances'), 1)]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            // note: if rdshNumberOfInstances < 2, for the sake of validity of the template, it is important to set a unique name such as 'vmName--1/dscextension' event though this resource will not be deloyed because of the condition above
-            "name": "[concat(variables('rdshPrefix'), if(greater(parameters('rdshNumberOfInstances'), 1), 0, -1), '/', 'dscextension')]",
+            "name": "[concat(variables('rdshPrefix'), '1/', 'dscextension')]",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "rdsh-domain-join-loop"
@@ -405,7 +404,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\SessionHost",
+                    "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
                     "properties": {
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
@@ -431,8 +430,7 @@
             "condition": "[greater(parameters('rdshNumberOfInstances'), 2)]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            // note: if rdshNumberOfInstances < 3, for the sake of validity of the template, it is important to set a unique name such as 'vmName--2/dscextension' event though this resource will not be deloyed because of the condition above
-            "name": "[concat(variables('rdshPrefix'), if(greater(parameters('rdshNumberOfInstances'), 2), copyindex(1), -2), '/', 'dscextension')]",
+            "name": "[concat(variables('rdshPrefix'), copyindex(2), '/', 'dscextension')]",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "rdsh-domain-join-loop",
@@ -450,7 +448,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\SessionHost",
+                    "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
                     "properties": {
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
@@ -475,14 +473,13 @@
         {
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), sub(parameters('rdshNumberOfInstances'), 1), '/', 'dscextension')]",
+            "name": "[concat(variables('rdshPrefix'), '0/', 'dscextension')]",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "rdsh-domain-join-loop",
                 // note: if the following conditional dependencies are not deployed, arm will auto remove them
                 "first-rdsh-dsc",
                 "additional-rdsh-dsc-loop"
-                //"[if(greater(parameters('rdshNumberOfInstances'), 2), 'additional-rdsh-dsc-loop', if(equals(parameters('rdshNumberOfInstances'), 2), concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'), '0/extensions/dscextension'), 'rdsh-domain-join-loop'))]"
             ],
             "properties": {
                 "publisher": "Microsoft.Powershell",
@@ -491,7 +488,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\SessionHost",
+                    "configurationFunction": "Configuration.ps1\\RegisterSessionHostAndCleanup",
                     "properties": {
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
                         "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
@@ -515,8 +512,7 @@
                         "deleteordeallocateVMs": "[parameters('ActionOnPreviousVirtualMachines')]",
                         "DomainName": "[parameters('domainToJoin')]",
                         "rdshNumberOfInstances": "[parameters('rdshNumberOfInstances')]",
-                        "rdshPrefix": "[variables('rdshPrefix')]",
-                        "Last": true
+                        "rdshPrefix": "[variables('rdshPrefix')]"
                     }
                 },
                 "ProtectedSettings": {
