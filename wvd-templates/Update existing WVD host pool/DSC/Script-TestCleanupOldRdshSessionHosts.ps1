@@ -12,36 +12,36 @@ Readers
 
 #>
 param(
-	[Parameter(mandatory = $true)]
-	[string]$RDBrokerURL,
+    [Parameter(mandatory = $true)]
+    [string]$RDBrokerURL,
 
-	[Parameter(mandatory = $true)]
-	[string]$definedTenantGroupName,
+    [Parameter(mandatory = $true)]
+    [string]$definedTenantGroupName,
 
-	[Parameter(mandatory = $true)]
-	[string]$TenantName,
+    [Parameter(mandatory = $true)]
+    [string]$TenantName,
 
-	[Parameter(mandatory = $true)]
-	[string]$HostPoolName,
+    [Parameter(mandatory = $true)]
+    [string]$HostPoolName,
 
-	[Parameter(mandatory = $true)]
-	[pscredential]$TenantAdminCredentials,
+    [Parameter(mandatory = $true)]
+    [pscredential]$TenantAdminCredentials,
 
-	[Parameter(mandatory = $false)]
-	[string]$isServicePrincipal = "False",
+    [Parameter(mandatory = $false)]
+    [string]$isServicePrincipal = "False",
 
-	[Parameter(mandatory = $false)]
-	[AllowEmptyString()]
-	[string]$AadTenantId = "",
+    [Parameter(mandatory = $false)]
+    [AllowEmptyString()]
+    [string]$AadTenantId = "",
 
-	[Parameter(mandatory = $true)]
-	[string]$DomainName,
+    [Parameter(mandatory = $true)]
+    [string]$DomainName,
 
-	[Parameter(mandatory = $true)]
-	[int]$rdshNumberOfInstances,
+    [Parameter(mandatory = $true)]
+    [int]$rdshNumberOfInstances,
 
-	[Parameter(mandatory = $true)]
-	[string]$rdshPrefix
+    [Parameter(mandatory = $true)]
+    [string]$rdshPrefix
 )
 
 $ScriptPath = [System.IO.Path]::GetDirectoryName($PSCommandPath)
@@ -56,11 +56,10 @@ $ErrorActionPreference = "Stop"
 ValidateServicePrincipal -IsServicePrincipal $isServicePrincipal -AADTenantId $AadTenantId
 
 $DeployAgentLocation = "C:\DeployAgent"
-if (-not (Test-Path "$DeployAgentLocation\PowerShellModules"))
-{
-	Write-Log -Message "Creating a folder inside RDSH VM for extracting RD Powershell module"
-	# extract RD Powershell module from deploy agent .zip
-	ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $DeployAgentLocation
+if (-not (Test-Path "$DeployAgentLocation\PowerShellModules")) {
+    Write-Log -Message "Creating a folder inside RDSH VM for extracting RD Powershell module"
+    # extract RD Powershell module from deploy agent .zip
+    ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $DeployAgentLocation
 }
 
 Write-Log -Message "Changing current folder to Deployagent folder: $DeployAgentLocation"
@@ -72,72 +71,62 @@ Write-Log -Message "Imported Windows Virtual Desktop PowerShell modules successf
 
 
 # Authenticating to Windows Virtual Desktop
-try
-{
-	if ($isServicePrincipal -eq "True")
-	{
-		Write-Log -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
-		$authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
-	}
-	else
-	{
-		Write-Log -Message "Authenticating using user $($TenantAdminCredentials.username) "
-		$authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
-	}
+try {
+    if ($isServicePrincipal -eq "True") {
+        Write-Log -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
+    }
+    else {
+        Write-Log -Message "Authenticating using user $($TenantAdminCredentials.username) "
+        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
+    }
 }
-catch
-{
-	Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
-	throw "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
+catch {
+    Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
+    throw "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
 }
 
 $obj = $authentication | Out-String
 
-if ($authentication)
-{
-	Write-Log -Message "Windows Virtual Desktop Authentication successfully Done. Result:`n$obj"
+if ($authentication) {
+    Write-Log -Message "Windows Virtual Desktop Authentication successfully Done. Result:`n$obj"
 }
-else
-{
-	Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
-	throw "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
+else {
+    Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
+    throw "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
 }
 
 # Set context to the appropriate tenant group
 $currentTenantGroupName = (Get-RdsContext).TenantGroupName
 if ($definedTenantGroupName -ne $currentTenantGroupName) {
-	Write-Log -Message "Running switching to the $definedTenantGroupName context"
-	Set-RdsContext -TenantGroupName $definedTenantGroupName
+    Write-Log -Message "Running switching to the $definedTenantGroupName context"
+    Set-RdsContext -TenantGroupName $definedTenantGroupName
 }
-try
-{
-	$tenants = Get-RdsTenant -Name "$TenantName"
-	if (!$tenants)
-	{
-		Write-Log "No tenants exist or you do not have proper access."
-	}
+try {
+    $tenants = Get-RdsTenant -Name "$TenantName"
+    if (!$tenants) {
+        Write-Log "No tenants exist or you do not have proper access."
+    }
 }
-catch
-{
-	Write-Log -Message $_
-	throw $_
+catch {
+    Write-Log -Message $_
+    throw $_
 }
 
 # Checking if host pool exists.
 Write-Log -Message "Checking Hostpool exists inside the Tenant"
 $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
-if (!$HostPool)
-{
-	Write-Log -Error "$HostpoolName Hostpool does not exist in $TenantName Tenant"
-	throw "$HostpoolName Hostpool does not exist in $TnenatName Tenant"
+if (!$HostPool) {
+    Write-Log -Error "$HostpoolName Hostpool does not exist in $TenantName Tenant"
+    throw "$HostpoolName Hostpool does not exist in $TnenatName Tenant"
 }
 
 Write-Log -Message "Hostpool exists inside tenant: $TenantName"
 
 # collect new session hosts
-$NewSessionHostNames = @{}
+$NewSessionHostNames = @{ }
 for ($i = 0; $i -lt $rdshNumberOfInstances; ++$i) {
-	$NewSessionHostNames.Add("${rdshPrefix}${i}.${DomainName}".ToLower(), $true)
+    $NewSessionHostNames.Add("${rdshPrefix}${i}.${DomainName}".ToLower(), $true)
 }
 
 Write-Log -Message "New Session Host servers in hostpool $HostPoolName :`n$($NewSessionHostNames.Keys | Out-String)"
@@ -148,8 +137,8 @@ $OldSessionHosts = $SessionHosts.SessionHostName | Where-Object { !$NewSessionHo
 Write-Log -Message "Old Session Host servers (if any) in hostpool: $HostPoolName :`n$($OldSessionHosts | Out-String)"
 
 if ($OldSessionHosts) {
-	Write-Log -Error "Old Session Hosts exist in hostpool $HostPoolName"
-	return $false
+    Write-Log -Error "Old Session Hosts exist in hostpool $HostPoolName"
+    return $false
 }
 
 return $true

@@ -6,7 +6,7 @@ function isRdshServer {
     
     if ($null -ne $OSVersionInfo) {
         if ($null -ne $OSVersionInfo.InstallationType) {
-            $rdshIsServer = @{$true = $true; $false = $false}[$OSVersionInfo.InstallationType -eq "Server"]
+            $rdshIsServer = @{$true = $true; $false = $false }[$OSVersionInfo.InstallationType -eq "Server"]
         }
     }
 
@@ -63,7 +63,7 @@ configuration RegisterSessionHost
 
         Script RegisterSessionHost {
             GetScript  = {
-                return @{'Result' = ''}
+                return @{'Result' = '' }
             }
             SetScript  = {
                 & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
@@ -152,7 +152,7 @@ configuration RegisterSessionHostAndCleanup
 
         Script RegisterSessionHost {
             GetScript  = {
-                return @{'Result' = ''}
+                return @{'Result' = '' }
             }
             SetScript  = {
                 & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
@@ -164,7 +164,7 @@ configuration RegisterSessionHostAndCleanup
 
         Script CleanupOldRdshSessionHosts {
             GetScript  = {
-                return @{'Result' = ''}
+                return @{'Result' = '' }
             }
             SetScript  = {
                 & "$using:ScriptPath\Script-CleanupOldRdshSessionHosts.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -AdAdminCredentials $using:AdAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -SubscriptionId $using:SubscriptionId -userLogoffDelayInMinutes $using:userLogoffDelayInMinutes -userNotificationMessege $using:userNotificationMessege -messageTitle $using:messageTitle -deleteordeallocateVMs $using:deleteordeallocateVMs -DomainName $using:DomainName -rdshNumberOfInstances $using:rdshNumberOfInstances -rdshPrefix $using:rdshPrefix
