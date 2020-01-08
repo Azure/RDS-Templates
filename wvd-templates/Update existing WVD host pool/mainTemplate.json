@@ -434,7 +434,7 @@
             "location": "[parameters('location')]",
             "dependsOn": [
                 "rdsh-domain-join-loop",
-                // note: if the following conditional dependencies are not deployed, arm will auto remove them
+                // note: If the following conditional dependencies are not deployed, ARM will auto remove them from this dependency list
                 "first-rdsh-dsc"
             ],
             "copy": {
@@ -477,7 +477,7 @@
             "location": "[parameters('location')]",
             "dependsOn": [
                 "rdsh-domain-join-loop",
-                // note: if the following conditional dependencies are not deployed, arm will auto remove them
+                // note: If the following conditional dependencies are not deployed, ARM will auto remove them from this dependency list
                 "first-rdsh-dsc",
                 "additional-rdsh-dsc-loop"
             ],
