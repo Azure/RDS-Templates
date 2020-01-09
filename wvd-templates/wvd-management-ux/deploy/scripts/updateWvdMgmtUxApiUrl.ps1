@@ -14,11 +14,11 @@ Administrator
  Required
  Provide name of the web application which you have used to deploy webapp through ARM Template.
 
-.PARAMETER SubscriptionId
+.PARAMETER AzureSubscriptionId
  Required
  Provide Subscription Id of the Azure.
 
- Example: .\updateWvdMgmtUxApiUrl.ps1  -AppName "Name of the Application" -SubscriptionID "Your Azure SubscriptionID"
+ Example: .\updateWvdMgmtUxApiUrl.ps1  -AppName "Name of the Application" -AzureSubscriptionID "Your Azure SubscriptionID"
 #>
 
 param(
@@ -29,16 +29,15 @@ param(
 
 	[Parameter(Mandatory = $true)]
 	[ValidateNotNullOrEmpty()]
-	[string]$SubscriptionId
+	[string]$AzureSubscriptionId
 
 )
 
 # Set the ExecutionPolicy
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
 
 # Import Az and AzureAD modules
 Import-Module Az
-Import-Module AzureAD
 
 
 # Function to get the publishing profile credentials
@@ -69,7 +68,7 @@ if ($context -eq $null)
 }
 
 # Select the subscription
-Get-AzSubscription -SubscriptionId $subscriptionId | Select-AzSubscription
+Select-AzSubscription -SubscriptionId $AzureSubscriptionId
 
 # Get the Role Assignment of the authenticated user
 $RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account

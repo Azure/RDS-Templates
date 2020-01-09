@@ -14,11 +14,11 @@ Administrator
  Required
  Provide name of the application name, enter a unique app name.
 
-.PARAMETER SubscriptionId
+.PARAMETER AzureSubscriptionId
  Required
  Provide Subscription Id of the Azure.
 
- Example: .\createWvdMgmtUxAppRegistration.ps1  -AppName "Name of the Application" -SubscriptionId "Your Azure SubscriptionId"
+ Example: .\createWvdMgmtUxAppRegistration.ps1  -AppName "Name of the Application" -AzureSubscriptionID "Your Azure SubscriptionID"
 #>
 
 param(
@@ -29,12 +29,12 @@ param(
 
 	[Parameter(Mandatory = $true)]
 	[ValidateNotNullOrEmpty()]
-	[string]$SubscriptionId
+	[string]$AzureSubscriptionId
 
 )
 
 # Set the ExecutionPolicy
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
 
 # Import Az and AzureAD modules
 Import-Module Az
@@ -49,7 +49,7 @@ if ($context -eq $null)
 }
 
 # Select the subscription
-Select-AzSubscription -SubscriptionId $SubscriptionId
+Select-AzSubscription -SubscriptionId $AzureSubscriptionId
 
 # Get the Role Assignment of the authenticated user
 $RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account
@@ -91,21 +91,21 @@ if ($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefin
 	Write-Output "Creating a new Application in AAD" -Verbose
 
 	# Create an app credential to the Application
-	$secureClientSecret = ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
-	New-AzADAppCredential -ObjectId $azAdApplication.ObjectId -Password $secureClientSecret -StartDate $StartDate -EndDate $EndDate
+	$SecureClientSecret = ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
+	New-AzADAppCredential -ObjectId $azAdApplication.ObjectId -Password $SecureClientSecret -StartDate $StartDate -EndDate $EndDate
 
-	# Get the applicationId
-	$applicationId = $azAdApplication.AppId
-	Write-Output "Azure AAD Application creation completed successfully with AppName $AppName (Application Id is: $applicationId)" -Verbose
+	# Get the ClientId
+	$ClientId = $azAdApplication.AppId
+	Write-Output "Azure AAD Application creation completed successfully with AppName $AppName (Application Id is: $ClientId)" -Verbose
 
 	# Create new Service Principal
 	Write-Output "Creating a new Service Principal" -Verbose
-	$ServicePrincipal = New-AzADServicePrincipal -ApplicationId $applicationId
+	$ServicePrincipal = New-AzADServicePrincipal -ApplicationId $ClientId
 
 	# Get the Service Principal
-	Get-AzADServicePrincipal -ApplicationId $applicationId
+	Get-AzADServicePrincipal -ApplicationId $ClientId
 	$ServicePrincipalName = $ServicePrincipal.ServicePrincipalNames
-	Write-Output "Service Principal creation completed successfully for AppName $AppName (Application Id is: $applicationId)" -Verbose
+	Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose
 
 	#Collecting WVD Serviceprincipal Api Permission and set to client app registration
 	$WVDServPrincipalApi = Get-AzADServicePrincipal -ApplicationId "5a0aa725-4958-4b0c-80a9-34562e23f3b7"
@@ -136,9 +136,9 @@ if ($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefin
 	# Add the WVD API,Log Analytics API and Microsoft Graph API permissions to the ADApplication
 	Set-AzureADApplication -ObjectId $azAdApplication.ObjectId -RequiredResourceAccess $AzureAdResouceAcessObject,$AzureServMgmtApiResouceAcessObject,$AzureGraphApiAccessObject -ErrorAction Stop
 
-	$global:servicePrincipalCredentials = New-Object System.Management.Automation.PSCredential ($applicationId, $secureClientSecret)
 	# Get the Client Id/Application Id and Client Secret
-	Write-Output "Credentials for the service principal are stored in the `$servicePrincipalCredentials object"
+	Write-Output "Client Id : $ClientId"
+	Write-Output "Client Secret Key: $ClientSecret"
 }
 else
 {
