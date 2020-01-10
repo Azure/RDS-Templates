@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "_artifactsLocation": {
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Update%20existing%20WVD%20host%20pool",
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/",
             "type": "string",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
@@ -268,7 +268,7 @@
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
-        "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json')]",
+        "vmTemplateUri": "[concat(parameters('_artifactsLocation'), 'Update%20existing%20WVD%20host%20pool/nestedtemplates/', variables('vmTemplateName'), '.json')]",
         "rdshVmNamesOutput": {
             "copy": [
                 {
@@ -403,7 +403,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[concat(parameters('_artifactsLocation'), 'DSC/Configuration.zip', parameters('_artifactsLocationSasToken'))]",
                     "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
                     "properties": {
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
@@ -447,7 +447,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[concat(parameters('_artifactsLocation'), 'DSC/Configuration.zip', parameters('_artifactsLocationSasToken'))]",
                     "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
                     "properties": {
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
@@ -487,7 +487,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[concat(parameters('_artifactsLocation'), 'DSC/Configuration.zip', parameters('_artifactsLocationSasToken'))]",
                     "configurationFunction": "Configuration.ps1\\RegisterSessionHostAndCleanup",
                     "properties": {
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
