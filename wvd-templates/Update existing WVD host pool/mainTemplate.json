@@ -432,9 +432,11 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(2), '/', 'dscextension')]",
             "location": "[parameters('location')]",
+            "metadata": {
+                "comments": "If the following conditional dependencies are not deployed, ARM will auto remove them from this dependsOn list"
+            },
             "dependsOn": [
                 "rdsh-domain-join-loop",
-                // note: If the following conditional dependencies are not deployed, ARM will auto remove them from this dependency list
                 "first-rdsh-dsc"
             ],
             "copy": {
@@ -475,9 +477,11 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), '0/', 'dscextension')]",
             "location": "[parameters('location')]",
+            "metadata": {
+                "comments": "If the following conditional dependencies are not deployed, ARM will auto remove them from this dependsOn list"
+            },
             "dependsOn": [
                 "rdsh-domain-join-loop",
-                // note: If the following conditional dependencies are not deployed, ARM will auto remove them from this dependency list
                 "first-rdsh-dsc",
                 "additional-rdsh-dsc-loop"
             ],
