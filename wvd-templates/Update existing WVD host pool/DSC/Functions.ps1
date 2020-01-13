@@ -17,7 +17,7 @@ class PsRdsSessionHost {
     [int]$TimeoutInSec = 900
     [bool]$CheckForAvailableState = $false
 
-    PsRdsSessionHost() {}
+    PsRdsSessionHost() { }
 
     PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName) {
         $this.TenantName = $TenantName
@@ -42,7 +42,7 @@ class PsRdsSessionHost {
             throw "PsRdsSessionHost: Invalid operation: $operation. Valid Operations are get or set"
         }
 
-        $specificToSet = @{$true = "-AllowNewSession `$true"; $false = ""}[$operation -eq "set"]
+        $specificToSet = @{$true = "-AllowNewSession `$true"; $false = "" }[$operation -eq "set"]
         $commandToExecute = "$operation-RdsSessionHost -TenantName `"`$(`$this.TenantName)`" -HostPoolName `"`$(`$this.HostPoolName)`" -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
 
         $sessionHost = (Invoke-Expression $commandToExecute )
@@ -114,7 +114,7 @@ class PsRdsSessionHost {
     }
 }
 
-function Write-Log { 
+function Write-Log {
     [CmdletBinding()] 
     param
     ( 
@@ -124,7 +124,7 @@ function Write-Log {
         [string]$Error 
     ) 
      
-    try { 
+    try {
         $DateTime = Get-Date -Format "MM-dd-yy HH:mm:ss"
         $Invocation = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber)" 
         if ($Message) {
@@ -133,10 +133,10 @@ function Write-Log {
         else {
             Add-Content -Value "$DateTime - $Invocation - $Error" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log" 
         }
-    } 
-    catch { 
+    }
+    catch {
         Write-Error $_.Exception.Message 
-    } 
+    }
 }
 
 function ValidateServicePrincipal {
@@ -162,7 +162,7 @@ function Is1809OrLater {
     if ($OSVersionInfo -ne $null) {
         if ($OSVersionInfo.ReleaseId -ne $null) {
             Write-Log -Message "Build: $($OSVersionInfo.ReleaseId)"
-            $rdshIs1809OrLaterBool = @{$true = $true; $false = $false}[$OSVersionInfo.ReleaseId -ge 1809]
+            $rdshIs1809OrLaterBool = @{$true = $true; $false = $false }[$OSVersionInfo.ReleaseId -ge 1809]
         }
     }
     return $rdshIs1809OrLaterBool
