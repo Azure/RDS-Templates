@@ -265,7 +265,7 @@
         "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
-        "vmTemplateUri": "[uri(parameters('_artifactsLocation'), concat('Create%20and%20provision%20WVD%20host%20pool/nestedtemplates/', variables('vmTemplateName'), '.json', parameters('_artifactsLocationSasToken')))]",
+        "vmTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/', variables('vmTemplateName'), '.json', parameters('_artifactsLocationSasToken')))]",
         "rdshVmNamesOutput": {
             "copy": [
                 {
