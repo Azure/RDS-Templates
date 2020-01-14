@@ -41,60 +41,29 @@ param(
     [int]$rdshNumberOfInstances,
 
     [Parameter(mandatory = $true)]
-    [string]$rdshPrefix
+    [string]$rdshPrefix,
+
+    [Parameter(mandatory = $false)]
+    [string]$RDPSModSource = 'attached'
 )
 
 $ScriptPath = [System.IO.Path]::GetDirectoryName($PSCommandPath)
 
 # Dot sourcing Functions.ps1 file
-.(Join-Path $ScriptPath "Functions.ps1")
+. (Join-Path $ScriptPath "Functions.ps1")
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
 
+write-log -message 'Script being executed: Test cleanup old session hosts'
+
 # Testing if it is a ServicePrincipal and validade that AadTenant ID in this case is not null or empty
 ValidateServicePrincipal -IsServicePrincipal $isServicePrincipal -AADTenantId $AadTenantId
 
-$DeployAgentLocation = "C:\DeployAgent"
-if (-not (Test-Path "$DeployAgentLocation\PowerShellModules")) {
-    Write-Log -Message "Creating a folder inside RDSH VM for extracting RD Powershell module"
-    # extract RD Powershell module from deploy agent .zip
-    ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $DeployAgentLocation
-}
-
-Write-Log -Message "Changing current folder to Deployagent folder: $DeployAgentLocation"
-Set-Location "$DeployAgentLocation"
-
-# Importing Windows Virtual Desktop PowerShell module
-Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
-Write-Log -Message "Imported Windows Virtual Desktop PowerShell modules successfully"
-
+ImportRDPSMod -Source $RDPSModSource -ArtifactsPath $ScriptPath
 
 # Authenticating to Windows Virtual Desktop
-try {
-    if ($isServicePrincipal -eq "True") {
-        Write-Log -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
-        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
-    }
-    else {
-        Write-Log -Message "Authenticating using user $($TenantAdminCredentials.username) "
-        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
-    }
-}
-catch {
-    Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
-    throw "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
-}
-
-$obj = $authentication | Out-String
-
-if ($authentication) {
-    Write-Log -Message "Windows Virtual Desktop Authentication successfully Done. Result:`n$obj"
-}
-else {
-    Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
-    throw "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
-}
+. AuthenticateRdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal:($isServicePrincipal -eq 'True') -TenantId $AadTenantId
 
 # Set context to the appropriate tenant group
 $currentTenantGroupName = (Get-RdsContext).TenantGroupName

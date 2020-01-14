@@ -280,7 +280,8 @@
                 }
             ]
         },
-        "vmCreation-linkedTemplate_name": "[concat(variables('rdshPrefix'), 'vmCreation-linkedTemplate')]"
+        "vmCreation-linkedTemplate_name": "[concat(variables('rdshPrefix'), 'vmCreation-linkedTemplate')]",
+        "RDPSModSource": "attached"
     },
     "resources": [
         {
@@ -416,7 +417,8 @@
                             "password": "PrivateSettingsRef:tenantAdminPassword"
                         },
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
+                        "AadTenantId": "[parameters('aadTenantId')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {
@@ -462,7 +464,8 @@
                             "password": "PrivateSettingsRef:tenantAdminPassword"
                         },
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
+                        "AadTenantId": "[parameters('aadTenantId')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {
@@ -516,7 +519,8 @@
                         "deleteordeallocateVMs": "[parameters('ActionOnPreviousVirtualMachines')]",
                         "DomainName": "[parameters('domainToJoin')]",
                         "rdshNumberOfInstances": "[parameters('rdshNumberOfInstances')]",
-                        "rdshPrefix": "[variables('rdshPrefix')]"
+                        "rdshPrefix": "[variables('rdshPrefix')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {
