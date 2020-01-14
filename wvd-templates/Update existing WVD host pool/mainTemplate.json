@@ -275,7 +275,7 @@
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
-        "vmTemplateUri": "[concat(parameters('_artifactsLocation'), 'nestedtemplates/', variables('vmTemplateName'), '.json')]",
+        "vmTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/', variables('vmTemplateName'), '.json', parameters('_artifactsLocationSasToken')))]",
         "rdshVmNamesOutput": {
             "copy": [
                 {
@@ -414,7 +414,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'), 'DSC/Configuration.zip', parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
                     "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
                     "properties": {
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
@@ -460,7 +460,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'), 'DSC/Configuration.zip', parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
                     "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
                     "properties": {
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
@@ -502,7 +502,7 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'), 'DSC/Configuration.zip', parameters('_artifactsLocationSasToken'))]",
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
                     "configurationFunction": "Configuration.ps1\\RegisterSessionHostAndCleanup",
                     "properties": {
                         "RDBrokerURL": "[parameters('rdBrokerURL')]",
