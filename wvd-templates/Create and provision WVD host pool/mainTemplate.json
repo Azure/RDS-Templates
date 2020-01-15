@@ -404,7 +404,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
-                    "configurationFunction": "Configuration.ps1\\FirstSessionHost",
+                    "configurationFunction": "Configuration.ps1\\CreateHostPoolAndRegisterSessionHost",
                     "properties": {
                         "TenantAdminCredentials": {
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
@@ -451,7 +451,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
-                    "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
+                    "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
                     "properties": {
                         "TenantAdminCredentials": {
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
