@@ -35,16 +35,30 @@ param(
 
     [Parameter(mandatory = $false)]
     [AllowEmptyString()]
-    [string]$AadTenantId = ""
+    [string]$AadTenantId = "",
+
+    [Parameter(mandatory = $false)]
+    [string]$RDPSModSource = 'attached'
 )
 
 $ScriptPath = [System.IO.Path]::GetDirectoryName($PSCommandPath)
 
 # Dot sourcing Functions.ps1 file
-.(Join-Path $ScriptPath "Functions.ps1")
+. (Join-Path $ScriptPath "Functions.ps1")
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
+
+write-log -message 'Script being executed: Register session hosts'
+
+# Checking if RDInfragent is registered or not in rdsh vm
+$CheckRegistry = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
+Write-Log -Message "Checking whether VM was Registered with RDInfraAgent"
+if ($CheckRegistry) {
+    Write-Log -Message "VM was already registered with RDInfraAgent, script execution was stopped"
+    return
+}
+Write-Log -Message "VM not registered with RDInfraAgent, script execution will continue"
 
 # Testing if it is a ServicePrincipal and validade that AadTenant ID in this case is not null or empty
 ValidateServicePrincipal -IsServicePrincipal $isServicePrincipal -AADTenantId $AadTenantId
@@ -56,51 +70,10 @@ ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $Depl
 Write-Log -Message "Changing current folder to Deployagent folder: $DeployAgentLocation"
 Set-Location "$DeployAgentLocation"
 
-
-# Checking if RDInfragent is registered or not in rdsh vm
-$CheckRegistry = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
-
-Write-Log -Message "Checking whether VM was Registered with RDInfraAgent"
-
-
-if ($CheckRegistry) {
-    Write-Log -Message "VM was already registered with RDInfraAgent, script execution was stopped"
-    return
-}
-
-Write-Log -Message "VM not registered with RDInfraAgent, script execution will continue"
-
-# Importing Windows Virtual Desktop PowerShell module
-Import-Module .\PowershellModules\Microsoft.RDInfra.RDPowershell.dll
-
-Write-Log -Message "Imported Windows Virtual Desktop PowerShell modules successfully"
-
+ImportRDPSMod -Source $RDPSModSource -ArtifactsPath $ScriptPath
 
 # Authenticating to Windows Virtual Desktop
-try {
-    if ($isServicePrincipal -eq "True") {
-        Write-Log -Message "Authenticating using service principal $TenantAdminCredentials.username and Tenant id: $AadTenantId "
-        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
-    }
-    else {
-        Write-Log -Message "Authenticating using user $($TenantAdminCredentials.username) "
-        $authentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials
-    }
-}
-catch {
-    Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
-    throw "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
-}
-
-$obj = $authentication | Out-String
-
-if ($authentication) {
-    Write-Log -Message "Windows Virtual Desktop Authentication successfully Done. Result:`n$obj"
-}
-else {
-    Write-Log -Error "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
-    throw "Windows Virtual Desktop Authentication Failed, Error:`n$obj"
-}
+. AuthenticateRdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal:($isServicePrincipal -eq 'True') -TenantId $AadTenantId
 
 # Set context to the appropriate tenant group
 $currentTenantGroupName = (Get-RdsContext).TenantGroupName

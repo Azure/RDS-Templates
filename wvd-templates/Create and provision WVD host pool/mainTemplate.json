@@ -277,7 +277,8 @@
                 }
             ]
         },
-        "vmCreation-linkedTemplate_name": "[concat(variables('rdshPrefix'), 'vmCreation-linkedTemplate')]"
+        "vmCreation-linkedTemplate_name": "[concat(variables('rdshPrefix'), 'vmCreation-linkedTemplate')]",
+        "RDPSModSource": "attached"
     },
     "resources": [
         {
@@ -419,7 +420,8 @@
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]",
                         "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
-                        "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
+                        "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {
@@ -461,7 +463,8 @@
                         "HostPoolName": "[variables('hostPoolName')]",
                         "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
+                        "AadTenantId": "[parameters('aadTenantId')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {
