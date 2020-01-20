@@ -67,7 +67,7 @@
             "metadata": {
                 "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
             },
-            "defaultValue": "[take(toLower(resourceGroup().name),10)]"
+            "defaultValue": "[take(toLower(resourceGroup().name), 10)]"
         },
         "rdshNumberOfInstances": {
             "type": "int",
@@ -239,11 +239,11 @@
         }
     },
     "variables": {
-        "rdshPrefix": "[concat(parameters('rdshNamePrefix'),'-')]",
+        "rdshPrefix": "[concat(parameters('rdshNamePrefix'), '-')]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
-        "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
-        "existingTenantName": "[replace(parameters('existingTenantName'),'\"','')]",
-        "hostPoolName": "[replace(parameters('hostPoolName'),'\"','')]",
+        "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]",
+        "existingTenantName": "[replace(parameters('existingTenantName'), '\"', '')]",
+        "hostPoolName": "[replace(parameters('hostPoolName'), '\"', '')]",
         "hostPoolFriendlyName": "[variables('hostPoolName')]",
         "hostPoolDescription": "Created through ARM template",
         "registrationExpirationHours": "48",
@@ -253,7 +253,7 @@
                     "name": "rdshVmNamesCopy",
                     "count": "[parameters('rdshNumberOfInstances')]",
                     "input": {
-                        "name": "[concat(variables('rdshPrefix'),copyIndex('rdshVmNamesCopy'))]"
+                        "name": "[concat(variables('rdshPrefix'), copyIndex('rdshVmNamesCopy'))]"
                     }
                 }
             ]
@@ -399,6 +399,9 @@
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
+            "metadata": {
+                "comments": "If the following conditional dependencies are not deployed, ARM will auto remove them from this dependsOn list"
+            },
             "dependsOn": [
                 "[concat('Microsoft.Compute/images/', variables('imageName'))]",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]"
@@ -425,7 +428,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('rdshPrefix'), copyindex(), '-nic'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('rdshPrefix'), copyindex(), '-nic'))]"
                         }
                     ]
                 },
@@ -474,6 +477,10 @@
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'), '0/extensions/joindomain')]"
             ],
+            "copy": {
+                "name": "first-rdsh-dsc",
+                "count": 1
+            },
             "properties": {
                 "publisher": "Microsoft.Powershell",
                 "type": "DSC",
@@ -497,7 +504,7 @@
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]",
                         "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
-                        "defaultDesktopUsers": "[concat('\"',parameters('defaultDesktopUsers'),'\"')]"
+                        "defaultDesktopUsers": "[concat('\"', parameters('defaultDesktopUsers'), '\"')]"
                     }
                 },
                 "ProtectedSettings": {
@@ -508,18 +515,18 @@
             }
         },
         {
-            "condition": "[greater(parameters('rdshNumberOfInstances'),1)]",
+            "condition": "[greater(parameters('rdshNumberOfInstances'), 1)]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(1), '/dscextension')]",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'), copyindex(1), '/extensions/joindomain')]",
-                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'), '0/extensions/dscextension')]"
+                "first-rdsh-dsc"
             ],
             "copy": {
                 "name": "additional-rdsh-dsc-loop",
-                "count": "[if(greater(parameters('rdshNumberOfInstances'),1),sub(parameters('rdshNumberOfInstances'),1),1)]"
+                "count": "[if(greater(parameters('rdshNumberOfInstances'), 1), sub(parameters('rdshNumberOfInstances'), 1), 1)]"
             },
             "properties": {
                 "publisher": "Microsoft.Powershell",
