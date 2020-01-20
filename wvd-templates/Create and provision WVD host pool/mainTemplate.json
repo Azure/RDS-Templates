@@ -520,8 +520,11 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(1), '/dscextension')]",
             "location": "[parameters('location')]",
+            "metadata": {
+                "comments": "The following dependencies must be defined (even if conditionally deployed) in this template"
+            },
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'), copyindex(1), '/extensions/joindomain')]",
+                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'), copyindex(if(greater(parameters('rdshNumberOfInstances'), 1), 1, 0)), '/extensions/joindomain')]",
                 "first-rdsh-dsc"
             ],
             "copy": {
