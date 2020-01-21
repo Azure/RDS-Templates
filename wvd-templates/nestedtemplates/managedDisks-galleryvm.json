@@ -133,7 +133,7 @@
             "Windows-10-Enterprise-1903": {
                 "galleryPublisher": "MicrosoftWindowsDesktop",
                 "galleryOffer": "Windows-10",
-                "gallerySku": "19h1-entn"
+                "gallerySku": "19h1-ent"
             },
             "2016-Datacenter": {
                 "galleryPublisher": "MicrosoftwindowsServer",
