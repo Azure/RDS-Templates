@@ -21,7 +21,7 @@ Deploys a new hostpool or modifies an existing hostpool of Wzure Virtual Desktop
 |domain_user_upn|UPN of the user to authenticate with the domain|String|-|If `domain_joined` is set to `true`|
 |domain_password|Password of the user to authenticate with the domain|String|-|If `domain_joined` is set to `true`|
 |tenantLocation|Region in which the RDS tenant exists|String|eastus|No|
-|base_url|The URL in which the RDS components exist|String|<https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool>|No|
+|base_url|The URL in which the RDS components exist|String|<https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates>|No|
 |existing_tenant_group_name|Name of the existing tenant group|String|Default Tenant Group|No|
 |host_pool_description|Description of the RDS host pool|String|Created through Terraform template|No|
 |vm_size|Size of the machine to deploy|String|Standard_F2s|No|
