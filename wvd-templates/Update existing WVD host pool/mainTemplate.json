@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "_artifactsLocation": {
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Update%20existing%20WVD%20host%20pool",
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/",
             "type": "string",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
@@ -198,6 +198,13 @@
             ],
             "defaultValue": "United-States"
         },
+        "enablePersistentDesktop": {
+            "type": "bool",
+            "metadata": {
+                "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
+            },
+            "defaultValue": false
+        },
         "tenantAdminUpnOrApplicationId": {
             "type": "string",
             "metadata": {
@@ -268,7 +275,7 @@
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
-        "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json')]",
+        "vmTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/', variables('vmTemplateName'), '.json', parameters('_artifactsLocationSasToken')))]",
         "rdshVmNamesOutput": {
             "copy": [
                 {
@@ -285,6 +292,7 @@
     "resources": [
         {
             "apiVersion": "2018-10-01",
+            "condition": "[equals(parameters('enablePersistentDesktop'), bool('False'))]",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
             "location": "[parameters('location')]",
@@ -348,6 +356,9 @@
                     },
                     "location": {
                         "value": "[parameters('location')]"
+                    },
+                    "enablePersistentDesktop": {
+                        "value": "[parameters('enablePersistentDesktop')]"
                     }
                 }
             },
@@ -385,12 +396,105 @@
             }
         },
         {
+            "condition": "[greater(parameters('rdshNumberOfInstances'), 1)]",
+            "apiVersion": "2018-10-01",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('rdshPrefix'), '1/', 'dscextension')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "rdsh-domain-join-loop"
+            ],
+            "copy": {
+                "name": "first-rdsh-dsc",
+                "count": 1
+            },
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.73",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
+                    "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
+                    "properties": {
+                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
+                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
+                        "TenantName": "[variables('existingTenantName')]",
+                        "HostPoolName": "[parameters('existingHostpoolName')]",
+                        "Hours": "[variables('registrationExpirationHours')]",
+                        "TenantAdminCredentials": {
+                            "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
+                            "password": "PrivateSettingsRef:tenantAdminPassword"
+                        },
+                        "isServicePrincipal": "[parameters('isServicePrincipal')]",
+                        "AadTenantId": "[parameters('aadTenantId')]"
+                    }
+                },
+                "ProtectedSettings": {
+                    "items": {
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[greater(parameters('rdshNumberOfInstances'), 2)]",
+            "apiVersion": "2018-10-01",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('rdshPrefix'), copyindex(2), '/', 'dscextension')]",
+            "location": "[parameters('location')]",
+            "metadata": {
+                "comments": "If the following conditional dependencies are not deployed, ARM will auto remove them from this dependsOn list"
+            },
+            "dependsOn": [
+                "rdsh-domain-join-loop",
+                "first-rdsh-dsc"
+            ],
+            "copy": {
+                "name": "additional-rdsh-dsc-loop",
+                "count": "[if(greater(parameters('rdshNumberOfInstances'), 2), sub(parameters('rdshNumberOfInstances'), 2), 1)]"
+            },
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.73",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
+                    "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
+                    "properties": {
+                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
+                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
+                        "TenantName": "[variables('existingTenantName')]",
+                        "HostPoolName": "[parameters('existinghostpoolname')]",
+                        "Hours": "[variables('registrationExpirationHours')]",
+                        "TenantAdminCredentials": {
+                            "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
+                            "password": "PrivateSettingsRef:tenantAdminPassword"
+                        },
+                        "isServicePrincipal": "[parameters('isServicePrincipal')]",
+                        "AadTenantId": "[parameters('aadTenantId')]"
+                    }
+                },
+                "ProtectedSettings": {
+                    "items": {
+                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
+                    }
+                }
+            }
+        },
+        {
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), '0/', 'dscextension')]",
             "location": "[parameters('location')]",
+            "metadata": {
+                "comments": "If the following conditional dependencies are not deployed, ARM will auto remove them from this dependsOn list"
+            },
             "dependsOn": [
-                "rdsh-domain-join-loop"
+                "rdsh-domain-join-loop",
+                "first-rdsh-dsc",
+                "additional-rdsh-dsc-loop"
             ],
             "properties": {
                 "publisher": "Microsoft.Powershell",
@@ -398,9 +502,13 @@
                 "typeHandlerVersion": "2.73",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\FirstSessionHost",
+                    "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
+                    "configurationFunction": "Configuration.ps1\\RegisterSessionHostAndCleanup",
                     "properties": {
+                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
+                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
+                        "TenantName": "[variables('existingTenantName')]",
+                        "HostPoolName": "[parameters('existingHostpoolName')]",
                         "TenantAdminCredentials": {
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
                             "password": "PrivateSettingsRef:tenantAdminPassword"
@@ -409,67 +517,23 @@
                             "userName": "[parameters('existingDomainUPN')]",
                             "password": "PrivateSettingsRef:adAdminPassword"
                         },
-                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
-                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
-                        "TenantName": "[variables('existingTenantName')]",
-                        "HostPoolName": "[parameters('existingHostpoolName')]",
                         "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]",
                         "SubscriptionId": "[variables('subscriptionId')]",
-                        "DomainName": "[parameters('domainToJoin')]",
-                        "deleteordeallocateVMs": "[parameters('ActionOnPreviousVirtualMachines')]",
-                        "messageTitle": "[variables('messageTitle')]",
+                        "userLogoffDelayInMinutes": "[parameters('userLogoffDelayInMinutes')]",
                         "userNotificationMessege": "[parameters('userNotificationMessage')]",
-                        "userLogoffDelayInMinutes": "[parameters('userLogoffDelayInMinutes')]"
+                        "messageTitle": "[variables('messageTitle')]",
+                        "deleteordeallocateVMs": "[parameters('ActionOnPreviousVirtualMachines')]",
+                        "DomainName": "[parameters('domainToJoin')]",
+                        "rdshNumberOfInstances": "[parameters('rdshNumberOfInstances')]",
+                        "rdshPrefix": "[variables('rdshPrefix')]"
                     }
                 },
                 "ProtectedSettings": {
                     "items": {
                         "tenantAdminPassword": "[parameters('tenantAdminPassword')]",
                         "adAdminPassword": "[parameters('existingDomainPassword')]"
-                    }
-                }
-            }
-        },
-        {
-            "condition": "[greater(parameters('rdshNumberOfInstances'),1)]",
-            "apiVersion": "2018-10-01",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('rdshPrefix'), copyindex(1),'/', 'dscextension')]",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'),'0/extensions/dscextension')]"
-            ],
-            "copy": {
-                "name": "additional-rdsh-dsc-loop",
-                "count": "[if(greater(parameters('rdshNumberOfInstances'),1),sub(parameters('rdshNumberOfInstances'),1),1)]"
-            },
-            "properties": {
-                "publisher": "Microsoft.Powershell",
-                "type": "DSC",
-                "typeHandlerVersion": "2.73",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
-                    "properties": {
-                        "TenantAdminCredentials": {
-                            "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
-                            "password": "PrivateSettingsRef:tenantAdminPassword"
-                        },
-                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
-                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
-                        "TenantName": "[variables('existingTenantName')]",
-                        "HostPoolName": "[parameters('existinghostpoolname')]",
-                        "Hours": "[variables('registrationExpirationHours')]",
-                        "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
-                    }
-                },
-                "ProtectedSettings": {
-                    "items": {
-                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
                     }
                 }
             }
