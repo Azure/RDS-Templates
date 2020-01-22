@@ -61,7 +61,7 @@ variable "resource_group_name" {
 
 variable "base_url" {
   description = "**OPTIONAL**: The URL in which the RDS components exist"
-  default     = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/Create%20and%20provision%20WVD%20host%20pool"
+  default     = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates"
 }
 
 variable "existing_tenant_group_name" {

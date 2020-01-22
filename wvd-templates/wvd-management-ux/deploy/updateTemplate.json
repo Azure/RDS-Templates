@@ -1,0 +1,105 @@
+{
+    "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
+    "contentVersion": "1.0",
+    "parameters": {
+        "existingApplicationName": {
+            "type": "String",
+            "metadata": {
+                "description": "Choose an unique name--without spaces--for your management UX app. This will be used to generate a unique DNS name for the public IP address of the web app and will be used for the app registration in Azure AD."
+            }
+        },
+        "_artifactsLocation": {
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/",
+            "type": "String",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located."
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "defaultValue": "",
+            "type": "SecureString",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
+            }
+        }
+    },
+    "variables": {
+        "webAPIAppName": "[concat(parameters('existingApplicationName'),'-API')]",
+        "hostingPlanName": "[concat(parameters('existingApplicationName'),'-SPlan')]",
+        "serviceplansku": "S1",
+        "workerSize": "0",
+        "sku": "Free",
+        "webApiPackageURL": "[concat(parameters('_artifactsLocation'),'msft-wvd-saas-api.zip')]",
+        "webApplicationPackageURL": "[concat(parameters('_artifactsLocation'),'msft-wvd-saas-web.zip')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2016-03-01",
+            "name": "[variables('hostingPlanName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[variables('serviceplansku')]",
+                "capacity": "[variables('workerSize')]"
+            },
+            "properties": {
+                "name": "[variables('hostingPlanName')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2016-03-01",
+            "name": "[variables('webAPIAppName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+            ],
+            "kind": "api",
+            "properties": {
+                "serverFarmId": "[variables('hostingPlanName')]"
+            },
+            "resources": [
+                {
+                    "type": "extensions",
+                    "apiVersion": "2015-08-01",
+                    "name": "MSDeploy",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', variables('webAPIAppName'))]"
+                    ],
+                    "properties": {
+                        "packageUri": "[variables('webApiPackageURL')]"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2016-03-01",
+            "name": "[parameters('existingApplicationName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+                "[concat('Microsoft.Web/sites/', variables('webAPIAppName'), '/extensions/MSDeploy')]"
+            ],
+            "kind": "app",
+            "properties": {
+                "serverFarmId": "[variables('hostingPlanName')]"
+            },
+            "resources": [
+                {
+                    "type": "extensions",
+                    "apiVersion": "2015-08-01",
+                    "name": "MSDeploy",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', parameters('existingApplicationName'))]"
+                    ],
+                    "properties": {
+                        "packageUri": "[variables('webApplicationPackageURL')]"
+                    }
+                }
+            ]
+        }
+    ]
+}
