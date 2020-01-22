@@ -274,7 +274,7 @@
             "Windows-10-Enterprise-1903": {
                 "publisher": "MicrosoftWindowsDesktop",
                 "offer": "Windows-10",
-                "sku": "19h1-entn",
+                "sku": "19h1-ent",
                 "version": "latest"
             },
             "2016-Datacenter": {
