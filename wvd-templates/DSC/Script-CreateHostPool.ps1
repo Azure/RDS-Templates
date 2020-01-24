@@ -92,7 +92,7 @@ if ($HostPool) {
 Write-Log -Message "$HostpoolName Hostpool does not exist in $TenantName Tenant"
 
 $HostPool = New-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -Description $Description -FriendlyName $FriendlyName -Persistent:($EnablePersistentDesktop -ieq "true") -ValidationEnv $false
-$HName = $HostPool.name | Out-String -Stream
+$HName = $HostPool.HostPoolName | Out-String -Stream
 Write-Log -Message "Successfully created new Hostpool: $HName"
 
 $ApplicationGroupName = "Desktop Application Group"

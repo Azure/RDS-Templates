@@ -222,7 +222,7 @@ function ExtractDeploymentAgentZipFile {
     
     # Locating and extracting DeployAgent.zip
     Write-Log -Message "Locating DeployAgent.zip within Custom Script Extension folder structure: $ScriptPath"
-    $DeployAgentFromRepo = (Get-ChildItem $ScriptPath\ -Filter DeployAgent.zip -Recurse | Select-Object).FullName
+    $DeployAgentFromRepo = (Get-ChildItem $ScriptPath\ -Filter DeployAgent.zip -Recurse | Select-Object -First 1).FullName
     if ((-not $DeployAgentFromRepo) -or (-not (Test-Path $DeployAgentFromRepo))) {
         throw "DeployAgent.zip file not found at $ScriptPath"
     }
@@ -338,7 +338,7 @@ function ImportRDPSMod {
         # Locating and extracting PowerShellModules.zip
         $ZipName = 'PowerShellModules.zip'
         Write-Log -Message "Locating '$ZipName' within Custom Script Extension folder structure: '$ArtifactsPath'"
-        $ZipPath = (Get-ChildItem "$ArtifactsPath\" -Filter $ZipName -Recurse)[0].FullName
+        $ZipPath = (Get-ChildItem "$ArtifactsPath\" -Filter $ZipName -Recurse | Select-Object -First 1).FullName
         if ((-not $ZipPath) -or (-not (Test-Path $ZipPath))) {
             throw "'$ZipName' file not found at '$ArtifactsPath'"
         }
@@ -353,7 +353,7 @@ function ImportRDPSMod {
 
         $DLLName = 'Microsoft.RDInfra.RDPowershell.dll'
         Write-Log -Message "Locating '$DLLName' within '$Path'"
-        $DLLPath = (Get-ChildItem "$Path\" -Filter $DLLName -Recurse)[0].FullName
+        $DLLPath = (Get-ChildItem "$Path\" -Filter $DLLName -Recurse | Select-Object -First 1).FullName
         if ((-not $DLLPath) -or (-not (Test-Path $DLLPath))) {
             throw "'$DLLName' file not found at '$Path'"
         }
