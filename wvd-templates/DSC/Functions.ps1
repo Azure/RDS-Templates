@@ -221,11 +221,7 @@ function ExtractDeploymentAgentZipFile {
     New-Item -Path "$DeployAgentLocation" -ItemType directory -Force
     
     # Locating and extracting DeployAgent.zip
-    Write-Log -Message "Locating DeployAgent.zip within Custom Script Extension folder structure: $ScriptPath"
-    $DeployAgentFromRepo = (Get-ChildItem $ScriptPath\ -Filter DeployAgent.zip -Recurse | Select-Object -First 1).FullName
-    if ((-not $DeployAgentFromRepo) -or (-not (Test-Path $DeployAgentFromRepo))) {
-        throw "DeployAgent.zip file not found at $ScriptPath"
-    }
+    $DeployAgentFromRepo = (LocateFile -Name 'DeployAgent.zip' -SearchPath $ScriptPath)
     
     Write-Log -Message "Extracting 'Deployagent.zip' file into '$DeployAgentLocation' folder inside VM"
     Expand-Archive $DeployAgentFromRepo -DestinationPath "$DeployAgentLocation"
@@ -314,21 +310,45 @@ function SetTenantContextAndValidate {
     }
 }
 
+function LocateFile {
+    param (
+        [Parameter(mandatory = $true)]
+        [string]$Name,
+
+        [string]$SearchPath = '.'
+    )
+    
+    Write-Log -Message "Locating '$Name' within: '$SearchPath'"
+    $Path = (Get-ChildItem "$SearchPath\" -Filter $Name -Recurse).FullName
+    if ((-not $Path) -or (-not (Test-Path $Path))) {
+        throw "'$Name' file not found at '$SearchPath'"
+    }
+    if (@($Path).Length -ne 1) {
+        throw "Multiple '$Name' files found at '$SearchPath': [`n$Path`n]"
+    }
+
+    return $Path
+}
+
 function ImportRDPSMod {
     param(
         [string]$Source = 'attached',
         [string]$ArtifactsPath
-
-        # [Parameter(mandatory = $false)]
-        # [string]$DeployAgentLocation = 'C:\DeployAgent'
     )
 
-    #//todo move outside
-    # Write-Log -Message "Creating a folder inside rdsh vm for extracting deployagent zip file"
-    # ExtractDeploymentAgentZipFile -ScriptPath $ScriptPath -DeployAgentLocation $DeployAgentLocation
-    
-    # Write-Log -Message "Changing current folder to Deployagent folder: $DeployAgentLocation"
-    # Set-Location "$DeployAgentLocation"
+    $ModName = 'Microsoft.RDInfra.RDPowershell'
+    $Mod = (get-module $ModName)
+
+    if ($Mod) {
+        Write-Log -Message 'RD PowerShell module already imported (Not going to re-import)'
+        return
+    }
+        
+    $Path = 'C:\_tmp_RDPSMod\'
+    if (test-path $Path) {
+        Write-Log -Message "Remove tmp dir '$Path'"
+        Remove-Item -Path $Path -Force -Recurse
+    }
     
     if ($Source -eq 'attached') {
         if ((-not $ArtifactsPath) -or (-not (test-path $ArtifactsPath))) {
@@ -336,45 +356,31 @@ function ImportRDPSMod {
         }
 
         # Locating and extracting PowerShellModules.zip
-        $ZipName = 'PowerShellModules.zip'
-        Write-Log -Message "Locating '$ZipName' within Custom Script Extension folder structure: '$ArtifactsPath'"
-        $ZipPath = (Get-ChildItem "$ArtifactsPath\" -Filter $ZipName -Recurse | Select-Object -First 1).FullName
-        if ((-not $ZipPath) -or (-not (Test-Path $ZipPath))) {
-            throw "'$ZipName' file not found at '$ArtifactsPath'"
-        }
-        
-        $Path = 'C:\PowerShellModules\'
-        if (test-path $Path) {
-            Remove-Item -Path $Path -Force -Recurse -ErrorAction 'SilentlyContinue'
-        }
+        $ZipPath = (LocateFile -Name 'PowerShellModules.zip' -SearchPath $ArtifactsPath)
 
-        Write-Log -Message "Extracting '$ZipPath' file into '$Path' folder inside VM"
-        Expand-Archive $ZipPath -DestinationPath $Path -Force -ErrorAction 'SilentlyContinue'
-
-        $DLLName = 'Microsoft.RDInfra.RDPowershell.dll'
-        Write-Log -Message "Locating '$DLLName' within '$Path'"
-        $DLLPath = (Get-ChildItem "$Path\" -Filter $DLLName -Recurse | Select-Object -First 1).FullName
-        if ((-not $DLLPath) -or (-not (Test-Path $DLLPath))) {
-            throw "'$DLLName' file not found at '$Path'"
-        }
-
-        Write-Log -Message "Importing WVD PowerShell modules from attached artifacts"
-        Import-Module $DLLPath
-        Write-Log -Message "Imported Windows Virtual Desktop PowerShell modules successfully from attached artifacts"
-        return
-    }
-
-    $Version = ($Source.Trim().ToLower() -split 'gallery@')[1]
-    if ($Version -eq $null -or $Version.Trim() -eq '') {
-        throw "invalid param: Source = $Source"
-    }
-
-    Write-Log -Message "Installing & importing WVD PowerShell modules (version: v$Version) from PowerShell Gallery"
-    if ($Version -eq 'latest') {
-        Install-Module -Name Microsoft.RDInfra.RDPowershell -Scope 'CurrentUser' -AllowClobber -Force
+        Write-Log -Message "Extracting RD PowerShell module file '$ZipPath' into '$Path'"
+        Expand-Archive $ZipPath -DestinationPath $Path -Force
+        Write-Log -Message "Successfully extracted RD PowerShell module file '$ZipPath' into '$Path'"
     }
     else {
-        Install-Module -Name Microsoft.RDInfra.RDPowershell -Scope 'CurrentUser' -AllowClobber -Force -RequiredVersion (new-object System.Version($Version))
+        $Version = ($Source.Trim().ToLower() -split 'gallery@')[1]
+        if ($Version -eq $null -or $Version.Trim() -eq '') {
+            throw "invalid param: Source = $Source"
+        }
+
+        Write-Log -Message "Downloading RD PowerShell module (version: v$Version) from PowerShell Gallery into '$Path'"
+        if ($Version -eq 'latest') {
+            Save-Module -Name $ModName -Path $Path -Force
+        }
+        else {
+            Save-Module -Name $ModName -Path $Path -Force -RequiredVersion (new-object System.Version($Version))
+        }
+        Write-Log -Message "Successfully downloaded RD PowerShell module (version: v$Version) from PowerShell Gallery into '$Path'"
     }
-    Write-Log -Message "Installed & imported Windows Virtual Desktop PowerShell modules (version: v$Version) successfully from PowerShell Gallery"
+
+    $DLLPath = (LocateFile -Name "$ModName.dll" -SearchPath $Path)
+
+    Write-Log -Message "Importing RD PowerShell module DLL '$DLLPath"
+    Import-Module $DLLPath -Force
+    Write-Log -Message "Successfully imported RD PowerShell module DLL '$DLLPath"
 }
