@@ -274,6 +274,7 @@
                 }
             ]
         },
+        "RDPSModSource": "attached",
         "galleryImage": {
             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus": {
                 "publisher": "MicrosoftWindowsDesktop",
@@ -290,7 +291,7 @@
             "Windows-10-Enterprise-1903": {
                 "publisher": "MicrosoftWindowsDesktop",
                 "offer": "Windows-10",
-                "sku": "19h1-entn",
+                "sku": "19h1-ent",
                 "version": "latest"
             },
             "2016-Datacenter": {
@@ -520,7 +521,8 @@
                         "HostPoolName": "[parameters('existingHostpoolName')]",
                         "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
+                        "AadTenantId": "[parameters('aadTenantId')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {
@@ -566,7 +568,8 @@
                         "HostPoolName": "[parameters('existinghostpoolname')]",
                         "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
+                        "AadTenantId": "[parameters('aadTenantId')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {
@@ -620,7 +623,8 @@
                         "deleteordeallocateVMs": "[parameters('ActionOnPreviousVirtualMachines')]",
                         "DomainName": "[parameters('domainToJoin')]",
                         "rdshNumberOfInstances": "[parameters('rdshNumberOfInstances')]",
-                        "rdshPrefix": "[variables('rdshPrefix')]"
+                        "rdshPrefix": "[variables('rdshPrefix')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {

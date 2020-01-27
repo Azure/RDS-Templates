@@ -112,17 +112,17 @@ class PsRdsSessionHost {
     }
 }
 
-function Write-Log { 
-    [CmdletBinding()] 
+function Write-Log {
+    [CmdletBinding()]
     param
-    ( 
-        [Parameter(Mandatory = $false)] 
+    (
+        [Parameter(Mandatory = $false)]
         [string]$Message,
-        [Parameter(Mandatory = $false)] 
+        [Parameter(Mandatory = $false)]
         [string]$Error
-    ) 
+    )
      
-    try { 
+    try {
         $DateTime = Get-Date -Format "MM-dd-yy HH:mm:ss"
         $Invocation = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber)"
         if ($Message) {
@@ -132,27 +132,27 @@ function Write-Log {
             Add-Content -Value "$DateTime - $Invocation - $Error" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
         }
     }
-    catch { 
+    catch {
         Write-Error $_.Exception.Message
     }
 }
 
 function AddDefaultUsers {
     param
-    ( 
-        [Parameter(Mandatory = $true)] 
+    (
+        [Parameter(Mandatory = $true)]
         [string]$TenantName,
 
-        [Parameter(Mandatory = $true)] 
+        [Parameter(Mandatory = $true)]
         [string]$HostPoolName,
 
-        [Parameter(Mandatory = $true)] 
+        [Parameter(Mandatory = $true)]
         [string]$ApplicationGroupName,
 
-        [Parameter(Mandatory = $false)] 
+        [Parameter(Mandatory = $false)]
         [string]$DefaultUsers
 
-    ) 
+    )
 
     # Checking for null parameters
     Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
@@ -178,14 +178,14 @@ function AddDefaultUsers {
 
 function ValidateServicePrincipal {
     param
-    ( 
-        [Parameter(Mandatory = $true)] 
+    (
+        [Parameter(Mandatory = $true)]
         [string]$isServicePrincipal,
 
-        [Parameter(Mandatory = $false)] 
+        [Parameter(Mandatory = $false)]
         [AllowEmptyString()]
         [string]$AadTenantId = ""
-    ) 
+    )
 
     if ($isServicePrincipal -eq "True") {
         if ([string]::IsNullOrEmpty($AadTenantId)) {
@@ -207,12 +207,12 @@ function Is1809OrLater {
 
 function ExtractDeploymentAgentZipFile {
     param
-    ( 
-        [Parameter(Mandatory = $true)] 
+    (
+        [Parameter(Mandatory = $true)]
         [string]$ScriptPath,
-        [Parameter(Mandatory = $true)] 
+        [Parameter(Mandatory = $true)]
         [string]$DeployAgentLocation
-    ) 
+    )
 
     if (Test-Path $DeployAgentLocation) {
         Remove-Item -Path $DeployAgentLocation -Force -Confirm:$false -Recurse
@@ -221,14 +221,166 @@ function ExtractDeploymentAgentZipFile {
     New-Item -Path "$DeployAgentLocation" -ItemType directory -Force
     
     # Locating and extracting DeployAgent.zip
-    Write-Log -Message "Locating DeployAgent.zip within Custom Script Extension folder structure: $ScriptPath"
-    $DeployAgentFromRepo = (Get-ChildItem $ScriptPath\ -Filter DeployAgent.zip -Recurse | Select-Object).FullName
-    if ((-not $DeployAgentFromRepo) -or (-not (Test-Path $DeployAgentFromRepo))) {
-        throw "DeployAgent.zip file not found at $ScriptPath"
-    }
+    $DeployAgentFromRepo = (LocateFile -Name 'DeployAgent.zip' -SearchPath $ScriptPath)
     
     Write-Log -Message "Extracting 'Deployagent.zip' file into '$DeployAgentLocation' folder inside VM"
-    Expand-Archive $DeployAgentFromRepo -DestinationPath "$DeployAgentLocation" 
-    
+    Expand-Archive $DeployAgentFromRepo -DestinationPath "$DeployAgentLocation"
 }
 
+function isRdshServer {
+    $rdshIsServer = $true
+
+    $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+    
+    if ($null -ne $OSVersionInfo) {
+        if ($null -ne $OSVersionInfo.InstallationType) {
+            $rdshIsServer = @{$true = $true; $false = $false }[$OSVersionInfo.InstallationType -eq "Server"]
+        }
+    }
+
+    return $rdshIsServer
+}
+
+function AuthenticateRdsAccount {
+    param(
+        [Parameter(mandatory = $true)]
+        [string]$DeploymentUrl,
+    
+        [Parameter(mandatory = $true)]
+        [pscredential]$Credential,
+    
+        [switch]$ServicePrincipal,
+    
+        [Parameter(mandatory = $false)]
+        [AllowEmptyString()]
+        [string]$TenantId = ""
+    )
+    
+    if ($ServicePrincipal) {
+        Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId "
+    }
+    else {
+        $PSBoundParameters.Remove('ServicePrincipal')
+        $PSBoundParameters.Remove('TenantId')
+        Write-Log -Message "Authenticating using user $($Credential.username)"
+    }
+
+    $authentication = $null
+    try {
+        $authentication = Add-RdsAccount @PSBoundParameters
+        if (!$authentication) {
+            throw $authentication
+        }
+    }
+    catch {
+        $errMsg = "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
+        Write-Log -Error "$errMsg"
+        throw "$errMsg"
+    }
+    Write-Log -Message "Windows Virtual Desktop Authentication successfully Done. Result:`n$($authentication | Out-String)"
+}
+
+function SetTenantContextAndValidate {
+    param(
+        [Parameter(mandatory = $true)]
+        [string]$definedTenantGroupName,
+
+        [Parameter(mandatory = $true)]
+        [string]$TenantName
+    )
+    #//todo refactor
+    #//todo try catch ?
+    # Set context to the appropriate tenant group
+    $currentTenantGroupName = (Get-RdsContext).TenantGroupName
+    if ($definedTenantGroupName -ne $currentTenantGroupName) {
+        Write-Log -Message "Running switching to the $definedTenantGroupName context"
+        Set-RdsContext -TenantGroupName $definedTenantGroupName
+    }
+    try {
+        $tenants = Get-RdsTenant -Name "$TenantName"
+        if (!$tenants) {
+            Write-Log "No tenants exist or you do not have proper access."
+            #//todo throw ?
+        }
+    }
+    catch {
+        #//todo refactor msg ?
+        Write-Log -Message $_
+        throw $_
+    }
+}
+
+function LocateFile {
+    param (
+        [Parameter(mandatory = $true)]
+        [string]$Name,
+
+        [string]$SearchPath = '.'
+    )
+    
+    Write-Log -Message "Locating '$Name' within: '$SearchPath'"
+    $Path = (Get-ChildItem "$SearchPath\" -Filter $Name -Recurse).FullName
+    if ((-not $Path) -or (-not (Test-Path $Path))) {
+        throw "'$Name' file not found at '$SearchPath'"
+    }
+    if (@($Path).Length -ne 1) {
+        throw "Multiple '$Name' files found at '$SearchPath': [`n$Path`n]"
+    }
+
+    return $Path
+}
+
+function ImportRDPSMod {
+    param(
+        [string]$Source = 'attached',
+        [string]$ArtifactsPath
+    )
+
+    $ModName = 'Microsoft.RDInfra.RDPowershell'
+    $Mod = (get-module $ModName)
+
+    if ($Mod) {
+        Write-Log -Message 'RD PowerShell module already imported (Not going to re-import)'
+        return
+    }
+        
+    $Path = 'C:\_tmp_RDPSMod\'
+    if (test-path $Path) {
+        Write-Log -Message "Remove tmp dir '$Path'"
+        Remove-Item -Path $Path -Force -Recurse
+    }
+    
+    if ($Source -eq 'attached') {
+        if ((-not $ArtifactsPath) -or (-not (test-path $ArtifactsPath))) {
+            throw "invalid param: ArtifactsPath = '$ArtifactsPath'"
+        }
+
+        # Locating and extracting PowerShellModules.zip
+        $ZipPath = (LocateFile -Name 'PowerShellModules.zip' -SearchPath $ArtifactsPath)
+
+        Write-Log -Message "Extracting RD PowerShell module file '$ZipPath' into '$Path'"
+        Expand-Archive $ZipPath -DestinationPath $Path -Force
+        Write-Log -Message "Successfully extracted RD PowerShell module file '$ZipPath' into '$Path'"
+    }
+    else {
+        $Version = ($Source.Trim().ToLower() -split 'gallery@')[1]
+        if ($Version -eq $null -or $Version.Trim() -eq '') {
+            throw "invalid param: Source = $Source"
+        }
+
+        Write-Log -Message "Downloading RD PowerShell module (version: v$Version) from PowerShell Gallery into '$Path'"
+        if ($Version -eq 'latest') {
+            Save-Module -Name $ModName -Path $Path -Force
+        }
+        else {
+            Save-Module -Name $ModName -Path $Path -Force -RequiredVersion (new-object System.Version($Version))
+        }
+        Write-Log -Message "Successfully downloaded RD PowerShell module (version: v$Version) from PowerShell Gallery into '$Path'"
+    }
+
+    $DLLPath = (LocateFile -Name "$ModName.dll" -SearchPath $Path)
+
+    Write-Log -Message "Importing RD PowerShell module DLL '$DLLPath"
+    Import-Module $DLLPath -Force
+    Write-Log -Message "Successfully imported RD PowerShell module DLL '$DLLPath"
+}

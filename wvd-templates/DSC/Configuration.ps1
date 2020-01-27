@@ -1,4 +1,5 @@
-configuration FirstSessionHost
+
+configuration CreateHostPoolAndRegisterSessionHost
 {
     param
     (
@@ -14,10 +15,10 @@ configuration FirstSessionHost
         [Parameter(mandatory = $true)]
         [string]$HostPoolName,
     
-        [Parameter(mandatory = $false)]
+        [Parameter(mandatory = $true)]
         [string]$Description,
     
-        [Parameter(mandatory = $false)]
+        [Parameter(mandatory = $true)]
         [string]$FriendlyName,
     
         [Parameter(mandatory = $true)]
@@ -25,7 +26,7 @@ configuration FirstSessionHost
     
         [Parameter(mandatory = $true)]
         [PSCredential]$TenantAdminCredentials,
-
+	
         [Parameter(mandatory = $false)]
         [string]$isServicePrincipal = "False",
     
@@ -37,142 +38,59 @@ configuration FirstSessionHost
         [string]$EnablePersistentDesktop = "False",
 
         [Parameter(Mandatory = $true)]
-        [string]$DefaultDesktopUsers
-    )
+        [string]$DefaultDesktopUsers,
 
-    $rdshIsServer = $true
-    $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
-
-    $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-    
-    if ($OSVersionInfo -ne $null)
-    {
-        if ($OSVersionInfo.InstallationType -ne $null)
-        {
-            $rdshIsServer=@{$true = $true; $false = $false}[$OSVersionInfo.InstallationType -eq "Server"]
-        }
-    }
-
-    Node localhost
-    {
-        LocalConfigurationManager
-        {
-            RebootNodeIfNeeded = $true
-            ConfigurationMode = "ApplyOnly"
-        }
-
-        if ($rdshIsServer)
-        {
-            "$(get-date) - rdshIsServer = true: $rdshIsServer" | out-file c:\windows\temp\rdshIsServerResult.txt -Append
-            WindowsFeature RDS-RD-Server
-            {
-                Ensure = "Present"
-                Name = "RDS-RD-Server"
-            }
-        }
-
-        Script ExecuteRdAgentInstall
-        {
-            GetScript = {
-                return @{'Result' = ''}
-            }
-            SetScript = {
-                & "$using:ScriptPath\Script-FirstRdshServer.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -HostPoolName $using:HostPoolName -FriendlyName $using:FriendlyName -Description $using:Description -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -EnablePersistentDesktop $using:EnablePersistentDesktop -DefaultDesktopUsers $using:DefaultDesktopUsers
-            }
-            TestScript = {
-                return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
-            }
-        }
-    }
-}
-
-configuration AdditionalSessionHosts
-{
-    param
-    (
-        [Parameter(mandatory = $true)]
-        [string]$RDBrokerURL,
-    
-        [Parameter(mandatory = $true)]
-        [string]$DefinedTenantGroupName,
-    
-        [Parameter(mandatory = $true)]
-        [string]$TenantName,
-    
-        [Parameter(mandatory = $true)]
-        [string]$HostPoolName,
-
-        [Parameter(mandatory = $true)]
-        [string]$Hours,
-      
-        [Parameter(mandatory = $true)]
-        [PSCredential]$TenantAdminCredentials,
-    
         [Parameter(mandatory = $false)]
-        [string]$IsServicePrincipal = "False",
-    
-        [Parameter(Mandatory = $false)]
-        [string]$AadTenantId = ""
+        [string]$RDPSModSource = 'attached'
     )
 
+    $ErrorActionPreference = 'Stop'
 
-    $rdshIsServer = $true
     $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
+    . (Join-Path $ScriptPath "Functions.ps1")
 
-    $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-    
-    if ($OSVersionInfo -ne $null)
-    {
-        if ($OSVersionInfo.InstallationType -ne $null)
-        {
-            $rdshIsServer=@{$true = $true; $false = $false}[$OSVersionInfo.InstallationType -eq "Server"]
-        }
-    }
+    $rdshIsServer = isRdshServer
 
     Node localhost
     {
-        LocalConfigurationManager
-        {
+        LocalConfigurationManager {
             RebootNodeIfNeeded = $true
-            ConfigurationMode = "ApplyOnly"
+            ConfigurationMode  = "ApplyOnly"
         }
 
-        if ($rdshIsServer)
-        {
+        if ($rdshIsServer) {
             "$(get-date) - rdshIsServer = true: $rdshIsServer" | out-file c:\windows\temp\rdshIsServerResult.txt -Append
-            WindowsFeature RDS-RD-Server
-            {
+            WindowsFeature RDS-RD-Server {
                 Ensure = "Present"
-                Name = "RDS-RD-Server"
+                Name   = "RDS-RD-Server"
             }
         }
-        Script ExecuteRdAgentInstallClient
-        {
-            GetScript = {
-                return @{'Result' = ''}
+
+        Script CreateHostPool {
+            GetScript  = {
+                return @{'Result' = '' }
             }
-            SetScript = {
-                & "$using:ScriptPath\Script-AdditionalRdshServers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -TenantAdminCredentials $using:TenantAdminCredentials -HostPoolName $using:HostPoolName -Hours $using:Hours -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
+            SetScript  = {
+                & "$using:ScriptPath\Script-CreateHostPool.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Description $using:Description -FriendlyName $using:FriendlyName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -EnablePersistentDesktop $using:EnablePersistentDesktop -RDPSModSource $using:RDPSModSource
+            }
+            TestScript = {
+                return (& "$using:ScriptPath\Script-TestHostPoolExists.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
+            }
+        }
+
+        Script RegisterSessionHostAndAddDefaultUsers {
+            GetScript  = {
+                return @{'Result' = '' }
+            }
+            SetScript  = {
+                & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource
+                & "$using:ScriptPath\Script-AddDefaultUsers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -DefaultDesktopUsers $using:DefaultDesktopUsers -RDPSModSource $using:RDPSModSource
             }
             TestScript = {
                 return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
             }
         }
     }
-}
-
-function isRdshServer {
-    $rdshIsServer = $true
-
-    $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-    
-    if ($null -ne $OSVersionInfo) {
-        if ($null -ne $OSVersionInfo.InstallationType) {
-            $rdshIsServer = @{$true = $true; $false = $false }[$OSVersionInfo.InstallationType -eq "Server"]
-        }
-    }
-
-    return $rdshIsServer
 }
 
 configuration RegisterSessionHost
@@ -200,12 +118,19 @@ configuration RegisterSessionHost
         [Parameter(mandatory = $false)]
         [string]$isServicePrincipal = "False",
     
-        [Parameter(Mandatory = $false)]
+        [Parameter(mandatory = $false)]
         [AllowEmptyString()]
-        [string]$AadTenantId = ""
+        [string]$AadTenantId = "",
+
+        [Parameter(mandatory = $false)]
+        [string]$RDPSModSource = 'attached'
     )
 
+    $ErrorActionPreference = 'Stop'
+
     $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
+    . (Join-Path $ScriptPath "Functions.ps1")
+
     $rdshIsServer = isRdshServer
 
     Node localhost
@@ -228,7 +153,7 @@ configuration RegisterSessionHost
                 return @{'Result' = '' }
             }
             SetScript  = {
-                & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
+                & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource
             }
             TestScript = {
                 return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
@@ -265,7 +190,7 @@ configuration RegisterSessionHostAndCleanup
         [Parameter(mandatory = $false)]
         [string]$isServicePrincipal = "False",
     
-        [Parameter(Mandatory = $false)]
+        [Parameter(mandatory = $false)]
         [AllowEmptyString()]
         [string]$AadTenantId = "",
         
@@ -291,10 +216,17 @@ configuration RegisterSessionHostAndCleanup
         [int]$rdshNumberOfInstances,
 
         [Parameter(mandatory = $false)]
-        [string]$rdshPrefix
+        [string]$rdshPrefix,
+
+        [Parameter(mandatory = $false)]
+        [string]$RDPSModSource = 'attached'
     )
 
+    $ErrorActionPreference = 'Stop'
+
     $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
+    . (Join-Path $ScriptPath "Functions.ps1")
+
     $rdshIsServer = isRdshServer
 
     Node localhost
@@ -317,7 +249,7 @@ configuration RegisterSessionHostAndCleanup
                 return @{'Result' = '' }
             }
             SetScript  = {
-                & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId
+                & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource
             }
             TestScript = {
                 return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
@@ -329,10 +261,10 @@ configuration RegisterSessionHostAndCleanup
                 return @{'Result' = '' }
             }
             SetScript  = {
-                & "$using:ScriptPath\Script-CleanupOldRdshSessionHosts.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -AdAdminCredentials $using:AdAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -SubscriptionId $using:SubscriptionId -userLogoffDelayInMinutes $using:userLogoffDelayInMinutes -userNotificationMessege $using:userNotificationMessege -messageTitle $using:messageTitle -deleteordeallocateVMs $using:deleteordeallocateVMs -DomainName $using:DomainName -rdshNumberOfInstances $using:rdshNumberOfInstances -rdshPrefix $using:rdshPrefix
+                & "$using:ScriptPath\Script-CleanupOldRdshSessionHosts.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -AdAdminCredentials $using:AdAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -SubscriptionId $using:SubscriptionId -userLogoffDelayInMinutes $using:userLogoffDelayInMinutes -userNotificationMessege $using:userNotificationMessege -messageTitle $using:messageTitle -deleteordeallocateVMs $using:deleteordeallocateVMs -DomainName $using:DomainName -rdshNumberOfInstances $using:rdshNumberOfInstances -rdshPrefix $using:rdshPrefix -RDPSModSource $using:RDPSModSource
             }
             TestScript = {
-                return (& "$using:ScriptPath\Script-TestCleanupOldRdshSessionHosts.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -DomainName $using:DomainName -rdshNumberOfInstances $using:rdshNumberOfInstances -rdshPrefix $using:rdshPrefix)
+                return (& "$using:ScriptPath\Script-TestCleanupOldRdshSessionHosts.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -DomainName $using:DomainName -rdshNumberOfInstances $using:rdshNumberOfInstances -rdshPrefix $using:rdshPrefix -RDPSModSource $using:RDPSModSource)
             }
         }
     }

@@ -258,6 +258,7 @@
                 }
             ]
         },
+        "RDPSModSource": "attached",
         "galleryImage": {
             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus": {
                 "publisher": "MicrosoftWindowsDesktop",
@@ -488,7 +489,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
-                    "configurationFunction": "Configuration.ps1\\FirstSessionHost",
+                    "configurationFunction": "Configuration.ps1\\CreateHostPoolAndRegisterSessionHost",
                     "properties": {
                         "TenantAdminCredentials": {
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
@@ -504,7 +505,8 @@
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]",
                         "EnablePersistentDesktop": "[parameters('enablePersistentDesktop')]",
-                        "defaultDesktopUsers": "[concat('\"', parameters('defaultDesktopUsers'), '\"')]"
+                        "defaultDesktopUsers": "[concat('\"', parameters('defaultDesktopUsers'), '\"')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {
@@ -538,7 +540,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[uri(parameters('_artifactsLocation'), concat('DSC/Configuration.zip', parameters('_artifactsLocationSasToken')))]",
-                    "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
+                    "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
                     "properties": {
                         "TenantAdminCredentials": {
                             "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
@@ -550,7 +552,8 @@
                         "HostPoolName": "[variables('hostPoolName')]",
                         "Hours": "[variables('registrationExpirationHours')]",
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
+                        "AadTenantId": "[parameters('aadTenantId')]",
+                        "RDPSModSource": "[variables('RDPSModSource')]"
                     }
                 },
                 "ProtectedSettings": {
