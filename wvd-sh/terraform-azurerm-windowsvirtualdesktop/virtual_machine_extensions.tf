@@ -122,7 +122,7 @@ resource "azurerm_virtual_machine_extension" "additional_session_host_dscextensi
   settings = <<SETTINGS
 {
     "modulesURL": "${var.base_url}/DSC/Configuration.zip",
-    "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
+    "configurationFunction": "Configuration.ps1\\RegisterSessionHost",
      "properties": {
         "TenantAdminCredentials":{
             "userName":"${var.tenant_app_id}",
