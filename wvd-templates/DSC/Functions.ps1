@@ -330,21 +330,13 @@ function LocateFile {
     return $Path
 }
 
-function ImportRDPSMod {
+function DownloadRDPSMod {
     param(
-        [string]$Source = 'attached',
+        [string]$Path = 'C:\_tmp_RDPSMod\',
+        [string]$Source = 'attached', # options: 'attached', 'gallery@latest', 'gallery@<valid_version>' such as 'gallery@1.0.1288.1'
         [string]$ArtifactsPath
     )
-
-    $ModName = 'Microsoft.RDInfra.RDPowershell'
-    $Mod = (get-module $ModName)
-
-    if ($Mod) {
-        Write-Log -Message 'RD PowerShell module already imported (Not going to re-import)'
-        return
-    }
         
-    $Path = 'C:\_tmp_RDPSMod\'
     if (test-path $Path) {
         Write-Log -Message "Remove tmp dir '$Path'"
         Remove-Item -Path $Path -Force -Recurse
@@ -352,7 +344,7 @@ function ImportRDPSMod {
     
     if ($Source -eq 'attached') {
         if ((-not $ArtifactsPath) -or (-not (test-path $ArtifactsPath))) {
-            throw "invalid param: ArtifactsPath = '$ArtifactsPath'"
+            throw "Invalid param: ArtifactsPath = '$ArtifactsPath'"
         }
 
         # Locating and extracting PowerShellModules.zip
@@ -365,10 +357,11 @@ function ImportRDPSMod {
     else {
         $Version = ($Source.Trim().ToLower() -split 'gallery@')[1]
         if ($Version -eq $null -or $Version.Trim() -eq '') {
-            throw "invalid param: Source = $Source"
+            throw "Invalid param: Source = '$Source'. Options are 'attached', 'gallery@latest', 'gallery@<valid_version>' such as 'gallery@1.0.1288.1'"
         }
 
         Write-Log -Message "Downloading RD PowerShell module (version: v$Version) from PowerShell Gallery into '$Path'"
+        $ModName = 'Microsoft.RDInfra.RDPowershell'
         if ($Version -eq 'latest') {
             Save-Module -Name $ModName -Path $Path -Force
         }
@@ -377,6 +370,35 @@ function ImportRDPSMod {
         }
         Write-Log -Message "Successfully downloaded RD PowerShell module (version: v$Version) from PowerShell Gallery into '$Path'"
     }
+}
+
+function ImportRDPSMod {
+    param(
+        [string]$Source = 'attached', # options: 'attached', 'gallery@latest', 'gallery@<valid_version>' such as 'gallery@1.0.1288.1'
+        [string]$ArtifactsPath
+    )
+
+    $ModName = 'Microsoft.RDInfra.RDPowershell'
+    $Mod = (get-module $ModName)
+
+    if ($Mod) {
+        Write-Log -Message 'RD PowerShell module already imported. Not re-importing but checking if the required version is imported'
+
+        $Path = 'C:\_tmp_version_check_RDPSMod\'
+        DownloadRDPSMod -Path $Path -Source $Source -ArtifactsPath $ArtifactsPath
+
+        $DLLPath = (LocateFile -Name "$ModName.dll" -SearchPath $Path)
+        $DLLVersion = (get-childitem $DLLPath).VersionInfo.FileVersion
+        Remove-Item -Path $Path -Force -Recurse
+
+        if ($DLLVersion -ne $Mod.Version) {
+            Write-Log -Message "WARNING: The version of RD PowerShell module that is already imported (v$($Mod.Version)) is different than the required version (v$DLLVersion). This may result in unexpected errors."
+        }
+        return
+    }
+
+    $Path = 'C:\_tmp_RDPSMod\'
+    DownloadRDPSMod -Path $Path -Source $Source -ArtifactsPath $ArtifactsPath
 
     $DLLPath = (LocateFile -Name "$ModName.dll" -SearchPath $Path)
 
