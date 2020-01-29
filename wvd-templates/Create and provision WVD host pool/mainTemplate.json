@@ -357,7 +357,7 @@
                 "platformFaultDomainCount": 2
             },
             "sku": {
-                "name": "Aligned"
+                "name": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]"
             }
         },
         {

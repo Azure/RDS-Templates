@@ -43,6 +43,9 @@ By selecting a custom VHD from blob storage, you can create your own image local
 - **Rdsh Image Source**, select **CustomVHD**.
 - **Vm Image Vhd Uri**
 - **Rdsh Use Managed Disks**. If you select **false** for **Rdsh Use Managed Disks**, enter the name of the resource group containing the storage account and image for the **Storage Account Resource Group Name** parameter. Otherwise, leave the **Storage Account Resource Group Name** parameter empty.
+  
+  > [!WARNING]
+  **Rdsh Use Managed Disks** will **not** be allowed to be **false**, starting **March 1st, 2020**.
 
 Ignore the following parameters:
 - **Rdsh Gallery Image SKU**
