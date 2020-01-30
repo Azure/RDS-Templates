@@ -361,7 +361,7 @@
             }
         },
         {
-            "condition": "[equals(variables('rdshImageSourceLower'), 'customvhd')]",
+            "condition": "[and(variables('rdshManagedDisks'), equals(variables('rdshImageSourceLower'), 'customvhd'))]",
             "type": "Microsoft.Compute/images",
             "apiVersion": "2018-10-01",
             "name": "[variables('imageName')]",
