@@ -20,12 +20,11 @@ Invoke-WebRequest -Uri $fileURI/$Filename -OutFile "C:\$Filename"
 #New-Item -Path "C:\msft-wvd-saas-offering" -ItemType directory -Force -ErrorAction SilentlyContinue
 Expand-Archive "C:\AzureModules.zip" -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
 
-Import-Module AzureRM.Resources
-Import-Module AzureRM.Profile
-Import-Module AzureRM.Websites
-Import-Module Azure
-Import-Module AzureRM.Automation
-Import-Module AzureAD
+Import-Module Az.Accounts -Global
+Import-Module Az.Resources -Global
+Import-Module Az.Websites -Global
+Import-Module Az.Automation -Global
+Import-Module AzureAD -Global
 
 Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
@@ -33,10 +32,11 @@ Get-ExecutionPolicy -List
 #The name of the Automation Credential Asset this runbook will use to authenticate to Azure.
 $CredentialAssetName = 'ManagementUXDeploy'
 
+#Authenticate Azure
 #Get the credential with the above name from the Automation Asset store
-$Credentials = Get-AutomationPSCredential -Name $CredentialAssetName
-Add-AzureRmAccount -Environment 'AzureCloud' -Credential $Credentials
-Select-AzureRmSubscription -SubscriptionId $SubscriptionId
+$AzCredentials = Get-AutomationPSCredential -Name $CredentialAssetName
+Connect-AzAccount -Environment 'AzureCloud' -Credential $AzCredentials
+Select-AzSubscription -SubscriptionId $SubscriptionId
 
 New-Item -Path "C:\msft-wvd-saas-web" -ItemType directory -Force -ErrorAction SilentlyContinue
 $WebAppDirectory = "C:\msft-wvd-saas-web"
@@ -47,7 +47,7 @@ function Get-PublishingProfileCredentials ($resourceGroupName,$webAppName) {
 	$resourceType = "Microsoft.Web/sites/config"
 	$resourceName = "$webAppName/publishingcredentials"
 
-	$publishingCredentials = Invoke-AzureRmResourceAction -ResourceGroupName $resourceGroupName -ResourceType $resourceType -ResourceName $resourceName -Action list -ApiVersion 2015-08-01 -Force
+	$publishingCredentials = Invoke-AzResourceAction -ResourceGroupName $resourceGroupName -ResourceType $resourceType -ResourceName $resourceName -Action list -ApiVersion 2015-08-01 -Force
 
 	return $publishingCredentials
 }
@@ -77,17 +77,22 @@ function RunCommand ($dir,$command,$resourceGroupName,$webAppName,$slotName = $n
 try
 {
 	# Get Url of Web-App
-	$GetWebApp = Get-AzureRmWebApp -Name $WebApp -ResourceGroupName $ResourceGroupName
+	$GetWebApp = Get-AzWebApp -Name $WebApp -ResourceGroupName $ResourceGroupName
 	$WebUrl = $GetWebApp.DefaultHostName
 
 	#$requiredAccessName=$ResourceURL.Split("/")[3]
 	$redirectURL = "https://" + "$WebUrl" + "/"
 
+    #Get the credential with the above name from the Automation Asset store
+    $Credentials = Get-AutomationPSCredential -Name $CredentialAssetName
+    #Connect to AzureAD
+    Connect-AzureAD -Credential $Credentials
+
 	#Static value of wvdInfra web appname/appid
 	$wvdinfraWebAppId = "5a0aa725-4958-4b0c-80a9-34562e23f3b7"
-	$serviceIdinfo = Get-AzureRmADServicePrincipal -ErrorAction SilentlyContinue | Where-Object { $_.ApplicationId -eq $wvdinfraWebAppId }
+	$serviceIdinfo = Get-AzADServicePrincipal -ErrorAction SilentlyContinue | Where-Object { $_.ApplicationId -eq $wvdinfraWebAppId }
 
-	$wvdInfraWebAppObjId = $serviceIdinfo.Id.GUID
+	$wvdInfraWebAppObjId = $serviceIdinfo.Id
 	#generate unique ID based on subscription ID
 	$unique_subscription_id = ($SubscriptionId).Replace('-','').substring(0,19)
 
@@ -96,11 +101,11 @@ try
 	$wvdSaaS_clientapp_display_name = "wvdSaaS" + $ResourceGroupName.ToLowerInvariant() + $unique_subscription_id.ToLowerInvariant()
 	
 	#Creating ClientApp Ad application in azure Active Directory
-	Connect-AzureAD -Credential $Credentials
 	$clientAdApp = New-AzureADApplication -DisplayName $wvdSaaS_clientapp_display_name -ReplyUrls $redirectURL -PublicClient $true -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
 
 	#Collecting WVD Serviceprincipal Api Permission
 	$WVDServicePrincipal = Get-AzureADServicePrincipal -ObjectId $wvdInfraWebAppObjId #-SearchString $wvdInfraWebAppName | Where-Object {$_.DisplayName -eq $wvdInfraWebAppName}
+    
 	$AzureAdResouceAcessObject = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
 	$AzureAdResouceAcessObject.ResourceAppId = $WVDServicePrincipal.AppId
 	foreach ($permission in $WVDServicePrincipal.Oauth2Permissions) {
@@ -108,8 +113,8 @@ try
 	}
 
 	#Collecting AzureService Management Api permission
-	$AzureServMgmtApi = Get-AzureRmADServicePrincipal -ApplicationId "797f4846-ba00-4fd7-ba43-dac1f8f63013"
-	$AzureAdServMgmtApi = Get-AzureADServicePrincipal -ObjectId $AzureServMgmtApi.Id.GUID
+	$AzureServMgmtApi = Get-AzADServicePrincipal -ApplicationId "797f4846-ba00-4fd7-ba43-dac1f8f63013"
+	$AzureAdServMgmtApi = Get-AzureADServicePrincipal -ObjectId $AzureServMgmtApi.Id
 	$AzureServMgmtApiResouceAcessObject = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
 	$AzureServMgmtApiResouceAcessObject.ResourceAppId = $AzureAdServMgmtApi.AppId
 	foreach ($SerVMgmtAPipermission in $AzureAdServMgmtApi.Oauth2Permissions) {
@@ -134,7 +139,7 @@ if ($ApiApp)
 	    # Get publishing profile from Api-App
 
 		Write-Output "Getting the Publishing profile information from Api-App"
-		$ApiAppXML = (Get-AzureRmWebAppPublishingProfile -Name $ApiApp `
+		$ApiAppXML = (Get-AzWebAppPublishingProfile -Name $ApiApp `
  				-ResourceGroupName $ResourceGroupName `
  				-OutputFile null)
 		$ApiAppXML = [xml]$ApiAppXML
@@ -165,7 +170,7 @@ if ($ApiApp)
 			"ResourceUrl" = "$ResourceURL";
 			"RedirectURI" = "https://" + "$WebUrl" + "/";
 		}
-		Set-AzureRmWebApp -AppSettings $ApiAppSettings -Name $ApiApp -ResourceGroupName $ResourceGroupName
+		Set-AzWebApp -AppSettings $ApiAppSettings -Name $ApiApp -ResourceGroupName $ResourceGroupName
 
 		#Checking Extracted files are uploaded or not
 		$returnvalue = RunCommand -dir "site\wwwroot\" -Command "ls web.config" -ResourceGroupName $resourceGroupName -webAppName $ApiApp
@@ -199,7 +204,7 @@ if ($WebApp -and $ApiApp)
 
 
 		# Get Url of Api-App 
-		$GetUrl = Get-AzureRmResource -ResourceName $ApiApp -ResourceGroupName $ResourceGroupName -ExpandProperties
+		$GetUrl = Get-AzResource -ResourceName $ApiApp -ResourceGroupName $ResourceGroupName -ExpandProperties
 		$GetApiUrl = $GetUrl.Properties | Select-Object defaultHostName
 		$ApiUrl = $GetApiUrl.DefaultHostName
 
@@ -209,7 +214,7 @@ if ($WebApp -and $ApiApp)
 
 		# Get publishing profile from web app
 		Write-Output "Getting the Publishing profile information from Web-App"
-		$WebAppXML = (Get-AzureRmWebAppPublishingProfile -Name $WebApp `
+		$WebAppXML = (Get-AzWebAppPublishingProfile -Name $WebApp `
  				-ResourceGroupName $ResourceGroupName `
  				-OutputFile null)
 
@@ -275,20 +280,20 @@ Invoke-WebRequest -Uri `$fileURI/scripts/AzureModules.zip -OutFile "C:\AzureModu
 
 Expand-Archive "C:\AzureModules.zip" -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
 
-Import-Module AzureRM.profile
-Import-Module AzureRM.Automation
-Import-Module AzureRM.Resources
+Import-Module Az.profile
+Import-Module Az.Automation
+Import-Module Az.Resources
 #The name of the Automation Credential Asset this runbook will use to authenticate to Azure.
 `$CredentialAssetName = 'ManagementUXDeploy'
 #Get the credential with the above name from the Automation Asset store
 `$Credentials = Get-AutomationPSCredential -Name `$CredentialAssetName
-Add-AzureRmAccount -Environment "AzureCloud" -Credential `$Credentials
-Select-AzureRmSubscription -SubscriptionId `$SubscriptionId
-`$AutomationAccount = Get-AzureRmAutomationAccount -ResourceGroupName `$ResourceGroupName -Name `$AutomationAccountName
+Add-AzAccount -Environment "AzureCloud" -Credential `$Credentials
+Select-AzSubscription -SubscriptionId `$SubscriptionId
+`$AutomationAccount = Get-AzAutomationAccount -ResourceGroupName `$ResourceGroupName -Name `$AutomationAccountName
 if(`$AutomationAccount){
-#Remove-AzureRmAutomationAccount -Name `$AutomationAccountName -ResourceGroupName `$ResourceGroupName -Force
-`$resourcedetails = Get-AzureRmResource -Name `$AutomationAccountName -ResourceGroupName `$ResourceGroupName
-Remove-AzureRmResource -ResourceId `$resourcedetails.ResourceId -Force
+#Remove-AzAutomationAccount -Name `$AutomationAccountName -ResourceGroupName `$ResourceGroupName -Force
+`$resourcedetails = Get-AzResource -Name `$AutomationAccountName -ResourceGroupName `$ResourceGroupName
+Remove-AzResource -ResourceId `$resourcedetails.ResourceId -Force
 }else{
 exit
 }
@@ -296,21 +301,21 @@ exit
 
 $runbookName = 'removewvdsaasacctbook'
 #Create a Run Book
-New-AzureRmAutomationRunbook -Name $runbookName -Type PowerShell -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName
+New-AzAutomationRunbook -Name $runbookName -Type PowerShell -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName
 
 #Import modules to Automation Account
-$modules = "AzureRM.profile,Azurerm.compute,azurerm.resources"
+$modules = "Az.profile,Az.compute,Az.resources"
 $modulenames = $modules.Split(",")
 foreach ($modulename in $modulenames) {
-	Set-AzureRmAutomationModule -Name $modulename -AutomationAccountName $AutomationAccountName -ResourceGroupName $ResourcegroupName
+	Set-AzAutomationModule -Name $modulename -AutomationAccountName $AutomationAccountName -ResourceGroupName $ResourcegroupName
 }
 
 #Importe powershell file to Runbooks
-Import-AzureRmAutomationRunbook -Path "C:\RemoveAccount.ps1" -Name $runbookName -Type PowerShell -ResourceGroupName $ResourcegroupName -AutomationAccountName $AutomationAccountName -Force
+Import-AzAutomationRunbook -Path "C:\RemoveAccount.ps1" -Name $runbookName -Type PowerShell -ResourceGroupName $ResourcegroupName -AutomationAccountName $AutomationAccountName -Force
 
 #Publishing Runbook
-Publish-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $AutomationAccountName
+Publish-AzAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $AutomationAccountName
 
 #Providing parameter values to powershell script file
 $params = @{ "ResourcegroupName" = $ResourcegroupName; "SubscriptionId" = $SubscriptionId; "AutomationAccountName" = $AutomationAccountName; "fileURI" = $fileURI }
-Start-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $AutomationAccountName -Parameters $params | Out-Null
+Start-AzAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $AutomationAccountName -Parameters $params | Out-Null

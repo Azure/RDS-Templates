@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "logicAppName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the logic app to create."
+      }
+    },
+    "webhookURI": {
+      "type": "string",
+      "metadata": {
+        "description": "Webhook URI of automation account"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "recurrenceInterval": {
+      "type": "int",
+      "metadata": {
+        "description": "Specifies the recurrence interval of the job in minutes"
+      }
+    },
+    "actionSettingsBody": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the body in Action settings ('Note': Input should be in json format)"
+      }
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2016-06-01",
+      "name": "[parameters('logicAppName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "LogicApp"
+      },
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "HTTP_Webhook": {
+              "inputs": {
+                "subscribe": {
+                  "body": "[parameters('actionSettingsBody')]",
+                  "method": "POST",
+                  "uri": "[parameters('webhookURI')]"
+                },
+                "unsubscribe": {}
+              },
+              "runAfter": {},
+              "type": "HttpWebhook"
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {},
+          "parameters": {},
+          "triggers": {
+            "Recurrence": {
+              "recurrence": {
+                "frequency": "Minute",
+                "interval": "[parameters('recurrenceInterval')]"
+              },
+              "type": "Recurrence"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
