@@ -269,3 +269,85 @@ configuration RegisterSessionHostAndCleanup
         }
     }
 }
+
+# Note: Do not use this in new code, it is here for backwards compatibility and may be removed soon.
+configuration FirstSessionHost
+{
+    param
+    (
+        [Parameter(mandatory = $true)]
+        [string]$RDBrokerURL,
+    
+        [Parameter(mandatory = $true)]
+        [string]$DefinedTenantGroupName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$TenantName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$HostPoolName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$Description,
+    
+        [Parameter(mandatory = $true)]
+        [string]$FriendlyName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$Hours,
+    
+        [Parameter(mandatory = $true)]
+        [PSCredential]$TenantAdminCredentials,
+	
+        [Parameter(mandatory = $false)]
+        [string]$isServicePrincipal = "False",
+    
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [string]$AadTenantId = "",
+    
+        [Parameter(Mandatory = $false)]
+        [string]$EnablePersistentDesktop = "False",
+
+        [Parameter(Mandatory = $true)]
+        [string]$DefaultDesktopUsers,
+
+        [Parameter(mandatory = $false)]
+        [string]$RDPSModSource = 'attached'
+    )
+
+    . CreateHostPoolAndRegisterSessionHost @PSBoundParameters
+}
+
+# Note: Do not use this in new code, it is here for backwards compatibility and may be removed soon.
+configuration AdditionalSessionHosts
+{
+    param
+    (
+        [Parameter(mandatory = $true)]
+        [string]$RDBrokerURL,
+    
+        [Parameter(mandatory = $true)]
+        [string]$DefinedTenantGroupName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$TenantName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$HostPoolName,
+
+        [Parameter(mandatory = $true)]
+        [string]$Hours,
+      
+        [Parameter(mandatory = $true)]
+        [PSCredential]$TenantAdminCredentials,
+    
+        [Parameter(mandatory = $false)]
+        [string]$IsServicePrincipal = "False",
+    
+        [Parameter(Mandatory = $false)]
+        [string]$AadTenantId = ""
+    )
+
+    . RegisterSessionHost @PSBoundParameters
+}
