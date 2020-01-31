@@ -468,9 +468,6 @@
                 "name": "rdsh-vm-loop-unmanaged",
                 "count": "[parameters('rdshNumberOfInstances')]"
             },
-            "metadata": {
-                "comments": "If the following conditional dependencies are not deployed, ARM will auto remove them from this dependsOn list"
-            },
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]"
             ],
