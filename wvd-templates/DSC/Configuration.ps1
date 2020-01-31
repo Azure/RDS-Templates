@@ -272,6 +272,49 @@ configuration RegisterSessionHostAndCleanup
 
 configuration FirstSessionHost
 {
+    param
+    (
+        [Parameter(mandatory = $true)]
+        [string]$RDBrokerURL,
+    
+        [Parameter(mandatory = $true)]
+        [string]$DefinedTenantGroupName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$TenantName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$HostPoolName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$Description,
+    
+        [Parameter(mandatory = $true)]
+        [string]$FriendlyName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$Hours,
+    
+        [Parameter(mandatory = $true)]
+        [PSCredential]$TenantAdminCredentials,
+	
+        [Parameter(mandatory = $false)]
+        [string]$isServicePrincipal = "False",
+    
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [string]$AadTenantId = "",
+    
+        [Parameter(Mandatory = $false)]
+        [string]$EnablePersistentDesktop = "False",
+
+        [Parameter(Mandatory = $true)]
+        [string]$DefaultDesktopUsers,
+
+        [Parameter(mandatory = $false)]
+        [string]$RDPSModSource = 'attached'
+    )
+    
     . CreateHostPoolAndRegisterSessionHost @PSBoundParameters
 }
 
