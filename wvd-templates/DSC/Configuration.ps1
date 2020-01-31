@@ -269,3 +269,10 @@ configuration RegisterSessionHostAndCleanup
         }
     }
 }
+
+configuration FirstSessionHost
+{
+    . CreateHostPoolAndRegisterSessionHost @PSBoundParameters
+}
+
+#//todo add AdditionalSessionHosts
