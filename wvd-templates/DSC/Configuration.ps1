@@ -270,6 +270,7 @@ configuration RegisterSessionHostAndCleanup
     }
 }
 
+# Note: Do not use this in new code, it is here for backwards compatibility and may be removed soon.
 configuration FirstSessionHost
 {
     param
@@ -318,6 +319,7 @@ configuration FirstSessionHost
     . CreateHostPoolAndRegisterSessionHost @PSBoundParameters
 }
 
+# Note: Do not use this in new code, it is here for backwards compatibility and may be removed soon.
 configuration AdditionalSessionHosts
 {
     param
