@@ -105,10 +105,10 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		}
 	}
 
-	#Collect the credentials from Azure Automation Account Assets
+	# Collect the credentials from Azure Automation Account Assets
 	$Connection = Get-AutomationConnection -Name $ConnectionAssetName
 
-	#Authenticating to Azure
+	# Authenticating to Azure
 	Clear-AzContext -Force
 	$AZAuthentication = Connect-AzAccount -ApplicationId $Connection.ApplicationId -TenantId $AADTenantId -CertificateThumbprint $Connection.CertificateThumbprint -ServicePrincipal
 	if ($AZAuthentication -eq $null) {
@@ -122,7 +122,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Authenticating as service principal for Azure. Result: `n$AzObj" }
 		Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 	}
-	#Set the Azure context with Subscription
+	# Set the Azure context with Subscription
 	$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
 	if ($AzContext -eq $null) {
 		Write-Error "Please provide a valid subscription"
@@ -134,7 +134,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 	}
 
-	#Authenticating to WVD
+	# Authenticating to WVD
 	try {
 		$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AadTenantId
 	}
@@ -178,7 +178,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 
 	}
 
-	#Function to Check if the session host is allowing new connections
+	# Function to Check if the session host is allowing new connections
 	function Check-ForAllowNewConnections
 	{
 		param(
@@ -251,10 +251,10 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		return $IsHostAvailable
 	}
 
-	#Converting date time from UTC to Local
+	# Converting date time from UTC to Local
 	$CurrentDateTime = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference
 
-	#Set context to the appropriate tenant group
+	# Set context to the appropriate tenant group
 	$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
 	if ($TenantGroupName -ne $CurrentTenantGroupName) {
 		Write-Output "Running switching to the $TenantGroupName context"
@@ -266,12 +266,12 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 	$BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
 
-	#check the calculated end time is later than begin time in case of time zone
+	# check the calculated end time is later than begin time in case of time zone
 	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
 		$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
 	}
 
-	#Checking givne host pool name exists in Tenant
+	# Checking givne host pool name exists in Tenant
 	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
 	if ($HostpoolInfo -eq $null) {
 		Write-Output "Hostpoolname '$HostpoolName' does not exist in the tenant of '$TenantName'. Ensure that you have entered the correct values."
@@ -914,7 +914,7 @@ else {
 		}
 		return $IsHostAvailable
 	}
-
+	
 	#Converting date time from UTC to Local
 	$CurrentDateTime = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference
 
@@ -966,7 +966,7 @@ else {
 	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime)
 	{
 		Write-Output "It is in peak hours now"
-		Write-Output "Sarting session hosts as needed based on current workloads."
+		Write-Output "Starting session hosts as needed based on current workloads."
 
 		# Peak hours check and remove the MinimumnoofRDSH value dynamically stored in automation variable 												   
 		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
@@ -1000,7 +1000,7 @@ else {
 			#$AllSessionHosts = Compare-Object $ListOfSessionHosts $SkipSessionhosts | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }
 			$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 
-			Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)"
+			Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
 			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
 				# Check if the Azure vm is running       
 				if ($RoleInstance.PowerState -eq "VM running") {
@@ -1010,9 +1010,7 @@ else {
 					$AvailableSessionCapacity = $AvailableSessionCapacity + $RoleSize.NumberOfCores * $SessionThresholdPerCPU
 					[int]$TotalRunningCores = [int]$TotalRunningCores + $RoleSize.NumberOfCores
 				}
-
 			}
-
 		}
 		Write-Output "Current number of running hosts:$NumberOfRunningHost"
 		if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
@@ -1233,8 +1231,6 @@ else {
 									}
 								}
 							}
-
-
 							# Check the session count before shutting down the VM
 							if ($ExistingSession -eq 0) {
 								# Shutdown the Azure VM
@@ -1242,10 +1238,6 @@ else {
 								Stop-SessionHost -VMName $VMName
 							}
 						}
-
-
-
-
 						#wait for the VM to stop
 						$IsVMStopped = $false
 						while (!$IsVMStopped) {
@@ -1267,7 +1259,6 @@ else {
 								}
 							}
 						}
-
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 						#decrement number of running session host
 						[int]$NumberOfRunningHost = [int]$NumberOfRunningHost - 1
@@ -1276,7 +1267,6 @@ else {
 				}
 			}
 		}
-
 		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
@@ -1327,7 +1317,6 @@ else {
 								Write-Output "Azure VM has been started: $($RoleInstance.Name) ..."
 							}
 						}
-
 						# Wait for the sessionhost is available
 						$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost.SessionHostName
 						if ($SessionHostIsAvailable) {
