@@ -7,13 +7,15 @@ Click the button below to deploy:
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
 
-# Create and provision new Windows Virtual Desktop hostpool
+# ARM Template to Create and provision new Windows Virtual Desktop hostpool
 
 This template creates virtual machines and registers them as session hosts to a new or existing Windows Virtual Desktop host pool. There are multiple sets of parameters you must enter to successfully deploy the template:
 - VM image
 - VM configuration
 - Domain and network properties
 - Authentication to Windows Virtual Desktop
+
+Follow the guidance below for entering the appropriate parameters for your scenario.
 
 > **Reporting issues:**
 > Microsoft Support is not handling issues for any published tools in this repository. These tools are published as is with no implied support. However, we would like to welcome you to open issues using GitHub issues to collaborate and improve these tools. You can open [an issue](https://github.com/Azure/rds-templates/issues) and add the label **1-Create-and-provision-host-pool** to associate it with this tool.
@@ -26,12 +28,12 @@ When creating the virtual machines, you have three options:
 
 Enter the appropriate parameters depending on the image option you choose.
 
-### Azure Gallery
-By selecting Azure Gallery, you can select up-to-date images provided by Microsoft and other publishers. Enter or select values for the following parameters:
+### Azure Gallery Image
+By selecting Azure Gallery Image, you can select up-to-date images provided by Microsoft and other publishers. Enter or select values for the following parameters:
 - **Rdsh Image Source**, select **Gallery**.
 - **Rdsh Gallery Image SKU**
 
-Ignore the following parameters :
+Ignore the following parameters:
 - **Vm Image Vhd Uri**
 - **Rdsh Custom Image Source Name**
 - **Rdsh Custom Image Source Resource Group**
@@ -43,6 +45,9 @@ By selecting a custom VHD from blob storage, you can create your own image local
 - **Rdsh Image Source**, select **CustomVHD**.
 - **Vm Image Vhd Uri**
 - **Rdsh Use Managed Disks**. If you select **false** for **Rdsh Use Managed Disks**, enter the name of the resource group containing the storage account and image for the **Storage Account Resource Group Name** parameter. Otherwise, leave the **Storage Account Resource Group Name** parameter empty.
+  
+  > [!WARNING]
+  **Rdsh Use Managed Disks** will **not** be allowed to be **false**, starting **March 1st, 2020**.
 
 Ignore the following parameters:
 - **Rdsh Gallery Image SKU**
@@ -83,7 +88,7 @@ Enter the following properties to connect the virtual machines to the appropriat
 ## Windows Virtual Desktop host pool type
 The following property will change the default template behavior from setting up a non-persistent environment to persistent if changed to True.
 
-- **Enable Persistent Desktop**. Default value is False, change to True to creat the host pool with persistent desktops.
+- **Enable Persistent Desktop**. Default value is False, change to True to create the host pool with persistent desktops.
 
 ## Authentication to Windows Virtual Desktop
 Enter the following information to authenticate to Windows Virtual Desktop and register the new virtual machines as session hosts to a new or existing host pool.
