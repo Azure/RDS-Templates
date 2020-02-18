@@ -552,7 +552,13 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
-			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
+            [int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
+			if($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH){
+            Write-Output "Don't enter the value of 'OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
+            $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Don't enter the value of 'OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now." }
+			Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+            Exit
+            }
 		}
 
 		# Breadth first session hosts shutdown in off peak hours
@@ -603,7 +609,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 									if ($LimitSecondsToForceLogOffUser -ne 0) {
 										# Send notification
 										try {
-											Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
+											Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
 										}
 										catch {
 											Write-Output "Failed to send message to user with error: $($_.exception.message)"
@@ -701,6 +707,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
+                $NoConnectionsofhost = $NoConnectionsofhost-$DefinedMinimumNumberOfRDSH
 				if ($NoConnectionsofhost -gt $DefinedMinimumNumberOfRDSH) {
 					[int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - $NoConnectionsofhost
 					Set-AzAutomationVariable -Name "OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -Encrypted $false -Value $MinimumNumberOfRDSH
@@ -1158,6 +1165,10 @@ else {
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
 			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
+            if($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH){
+            Write-Output "Don't enter the value of 'OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
+            Exit
+            }
 		}
 
 		# Breadth first session hosts shutdown in off peak hours
@@ -1199,7 +1210,7 @@ else {
 									if ($LimitSecondsToForceLogOffUser -ne 0) {
 										# Send notification
 										try {
-											Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
+											Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
 										}
 										catch {
 											Write-Output "Failed to send message to user with error: $($_.exception.message)"
@@ -1278,6 +1289,7 @@ else {
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
+                $NoConnectionsofhost = $NoConnectionsofhost-$DefinedMinimumNumberOfRDSH
 				if ($NoConnectionsofhost -gt $DefinedMinimumNumberOfRDSH) {
 					[int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - $NoConnectionsofhost
 					Set-AzAutomationVariable -Name "OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -Encrypted $false -Value $MinimumNumberOfRDSH
