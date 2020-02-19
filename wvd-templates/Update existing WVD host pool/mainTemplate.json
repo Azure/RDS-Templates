@@ -52,7 +52,7 @@
                 "Windows-10-Enterprise-1903",
                 "2016-Datacenter"
             ],
-            "defaultValue": "Windows-10-Enterprise-multi-session"
+            "defaultValue": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus"
         },
         "rdshCustomImageSourceName": {
             "type": "string",
