@@ -396,15 +396,15 @@
 							"allowedValues": [
 								{
 									"label": "Windows 10 Enterprise multi-session with Office 365 ProPlus",
-									"value": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus"
+									"value": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1909"
 								},
 								{
 									"label": "Windows 10 Enterprise multi-session",
-									"value": "Windows-10-Enterprise-multi-session"
+									"value": "Windows-10-Enterprise-multi-session-1909"
 								},
 								{
-									"label": "Windows 10 Enterprise, Version 1903",
-									"value": "Windows-10-Enterprise-1903"
+									"label": "Windows 10 Enterprise",
+									"value": "Windows-10-Enterprise-1909"
 								},
 								{
 									"label": "Windows Server 2016 Datacenter",
