@@ -241,6 +241,11 @@ function isRdshServer {
     return $rdshIsServer
 }
 
+
+<#
+.Description
+Call this function using dot source notation like ". AuthenticateRdsAccount" because the Add-RdsAccount function this calls creates variables using the AllScope option that other WVD poweshell module functions like Set-RdsContext require. Note that this creates a variable named "$authentication" that will overwrite any existing variable with that name in the scope this is dot sourced to.
+#>
 function AuthenticateRdsAccount {
     param(
         [Parameter(mandatory = $true)]
@@ -255,7 +260,7 @@ function AuthenticateRdsAccount {
         [AllowEmptyString()]
         [string]$TenantId = ""
     )
-    
+
     if ($ServicePrincipal) {
         Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId "
     }
@@ -264,7 +269,7 @@ function AuthenticateRdsAccount {
         $PSBoundParameters.Remove('TenantId')
         Write-Log -Message "Authenticating using user $($Credential.username)"
     }
-
+    
     $authentication = $null
     try {
         $authentication = Add-RdsAccount @PSBoundParameters
@@ -273,11 +278,34 @@ function AuthenticateRdsAccount {
         }
     }
     catch {
-        $errMsg = "Windows Virtual Desktop Authentication Failed, Error:`n$($_ | Out-String)"
-        Write-Log -Error "$errMsg"
-        throw "$errMsg"
+        #This creates a new script scope so that these variables aren't included in this function scope since this function is being called using dot source notation.
+        & {
+            Set-StrictMode -Version Latest
+            
+            $innerExAsStr = ""
+            $numInnerExceptions = 0
+            if ($_.Exception -is [System.AggregateException] -and $_.Exception.InnerExceptions) {
+                $numInnerExceptions = $_.Exception.InnerExceptions.Count
+                foreach ($innerEx in $_.Exception.InnerExceptions) {
+                    if ($innerExAsStr.Length -gt 0) {
+                        $innerExAsStr += "`n"
+                    } 
+                    $innerExAsStr += $innerEx
+                }
+            }
+            
+            $errMsg = "Error authenticating Windows Virtual Desktop account, ServicePrincipal=" + $ServicePrincipal
+            $errMsg += " Error Details:`n$($_ | Out-String)"
+            if ($innerExAsStr.Length -gt 0) {
+                $errMsg += " Inner Errors (there are " + $numInnerExceptions + "): `n$($innerExAsStr | Out-String)"
+            } 
+
+            Write-Log -Error $errMsg
+            throw [System.Exception]::new($errMsg, $PSItem.Exception)
+        }
+
     }
-    Write-Log -Message "Windows Virtual Desktop Authentication successfully Done. Result:`n$($authentication | Out-String)"
+    Write-Log -Message "Windows Virtual Desktop account authentication successful. Result:`n$($authentication | Out-String)"
 }
 
 function SetTenantGroupContextAndValidate {
