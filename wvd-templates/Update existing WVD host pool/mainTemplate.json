@@ -38,15 +38,21 @@
         "rdshGalleryImageSKU": {
             "type": "string",
             "metadata": {
-                "description": "(Required when rdshImageSource = Gallery) Gallery image SKU."
+                "description": "(Required when rdshImageSource = Gallery) Gallery image SKU. Values without a numeric suffix, such as 1903, will use the latest release available in this template."
             },
             "allowedValues": [
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
+                "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1909",
+                "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1903",
                 "Windows-10-Enterprise-multi-session",
+                "Windows-10-Enterprise-multi-session-1909",
+                "Windows-10-Enterprise-multi-session-1903",
+                "Windows-10-Enterprise-Latest",
+                "Windows-10-Enterprise-1909",
                 "Windows-10-Enterprise-1903",
                 "2016-Datacenter"
             ],
-            "defaultValue": "Windows-10-Enterprise-multi-session"
+            "defaultValue": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus"
         },
         "rdshCustomImageSourceName": {
             "type": "string",
@@ -293,13 +299,49 @@
             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus": {
                 "publisher": "MicrosoftWindowsDesktop",
                 "offer": "office-365",
+                "sku": "19h2-evd-o365pp",
+                "version": "latest"
+            },
+             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1909": {
+                "publisher": "MicrosoftWindowsDesktop",
+                "offer": "office-365",
+                "sku": "19h2-evd-o365pp",
+                "version": "latest"
+            },
+             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1903": {
+                "publisher": "MicrosoftWindowsDesktop",
+                "offer": "office-365",
                 "sku": "1903-evd-o365pp",
                 "version": "latest"
             },
             "Windows-10-Enterprise-multi-session": {
                 "publisher": "MicrosoftWindowsDesktop",
                 "offer": "Windows-10",
+                "sku": "19h2-evd",
+                "version": "latest"
+            },
+            "Windows-10-Enterprise-multi-session-1909": {
+                "publisher": "MicrosoftWindowsDesktop",
+                "offer": "Windows-10",
+                "sku": "19h2-evd",
+                "version": "latest"
+            },
+            "Windows-10-Enterprise-multi-session-1903": {
+                "publisher": "MicrosoftWindowsDesktop",
+                "offer": "Windows-10",
                 "sku": "19h1-evd",
+                "version": "latest"
+            },
+            "Windows-10-Enterprise-Latest": {
+                "publisher": "MicrosoftWindowsDesktop",
+                "offer": "Windows-10",
+                "sku": "19h2-ent",
+                "version": "latest"
+            },
+            "Windows-10-Enterprise-1909": {
+                "publisher": "MicrosoftWindowsDesktop",
+                "offer": "Windows-10",
+                "sku": "19h2-ent",
                 "version": "latest"
             },
             "Windows-10-Enterprise-1903": {
