@@ -55,22 +55,7 @@ ImportRDPSMod -Source $RDPSModSource -ArtifactsPath $ScriptPath
 # Authenticating to Windows Virtual Desktop
 . AuthenticateRdsAccount -DeploymentUrl $RDBrokerURL -Credential $TenantAdminCredentials -ServicePrincipal:($isServicePrincipal -eq 'True') -TenantId $AadTenantId
 
-# Set context to the appropriate tenant group
-$currentTenantGroupName = (Get-RdsContext).TenantGroupName
-if ($definedTenantGroupName -ne $currentTenantGroupName) {
-    Write-Log -Message "Running switching to the $definedTenantGroupName context"
-    Set-RdsContext -TenantGroupName $definedTenantGroupName
-}
-try {
-    $tenants = Get-RdsTenant -Name "$TenantName"
-    if (!$tenants) {
-        Write-Log "No tenants exist or you do not have proper access."
-    }
-}
-catch {
-    Write-Log -Message $_
-    throw $_
-}
+SetTenantGroupContextAndValidate -TenantGroupName $definedTenantGroupName -TenantName $TenantName
 
 # Checking if host pool exists
 Write-Log -Message "Checking Hostpool exists inside the Tenant"
