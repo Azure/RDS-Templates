@@ -123,6 +123,7 @@ else {
     Write-Log -Message "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
 }
 
+# check if the session host was successfully registered to host pool, note that the error is thrown because the TestScript configuration of DSC will not be run after SetScript (this script)
 $IsSessionHostRegisterd = (& "$ScriptPath\Script-TestRegisterSessionHost.ps1" -RdBrokerURL $RDBrokerURL -DefinedTenantGroupName $definedTenantGroupName -TenantName $TenantName -HostPoolName $HostPoolName -TenantAdminCredentials $TenantAdminCredentials -isServicePrincipal $isServicePrincipal -aadTenantId $AadTenantId -RDPSModSource $RDPSModSource)
 if (!$IsSessionHostRegisterd) {
     throw "RD Agent failed to register $rdshName VM to $poolName"
