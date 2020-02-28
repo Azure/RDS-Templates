@@ -49,16 +49,7 @@ $ScriptPath = [System.IO.Path]::GetDirectoryName($PSCommandPath)
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
 
-write-log -message 'Script being executed: Register session hosts'
-
-# Checking if RDInfragent is registered or not in rdsh vm
-$CheckRegistry = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
-Write-Log -Message "Checking whether VM was Registered with RDInfraAgent"
-if ($CheckRegistry) {
-    Write-Log -Message "VM was already registered with RDInfraAgent, script execution was stopped"
-    return
-}
-Write-Log -Message "VM not registered with RDInfraAgent, script execution will continue"
+write-log -message 'Script being executed: Register session host'
 
 # Testing if it is a ServicePrincipal and validade that AadTenant ID in this case is not null or empty
 ValidateServicePrincipal -IsServicePrincipal $isServicePrincipal -AADTenantId $AadTenantId
@@ -130,6 +121,11 @@ if ($null -ne $AvailableSh) {
 }
 else {
     Write-Log -Message "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
+}
+
+$IsSessionHostRegisterd = (& "$ScriptPath\Script-TestRegisterSessionHost.ps1" -RdBrokerURL $RDBrokerURL -DefinedTenantGroupName $definedTenantGroupName -TenantName $TenantName -HostPoolName $HostPoolName -TenantAdminCredentials $TenantAdminCredentials -isServicePrincipal $isServicePrincipal -aadTenantId $AadTenantId -RDPSModSource $RDPSModSource)
+if (!$IsSessionHostRegisterd) {
+    throw "RD Agent failed to register $rdshName VM to $poolName"
 }
 
 Write-Log -Message "Successfully added $rdshName VM to $poolName"

@@ -45,23 +45,23 @@ $ScriptPath = [System.IO.Path]::GetDirectoryName($PSCommandPath)
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
 
-write-log -message 'Script being executed: Test if Session Host was registered to the Host Pool'
+write-log -message 'Script being executed: Test if Session Host is registered to the Host Pool'
 
 Write-Log -Message "Check if RD Infra registry exists"
 $RDInfraReg = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
 if (!$RDInfraReg) {
-    Write-Log -Message "Session Host was not registered to the Host Pool (RD Infra registry missing)"
+    Write-Log -Message "Session Host is not registered to the Host Pool (RD Infra registry missing)"
     return $false
 }
 Write-Log -Message "RD Infra registry exists"
 
 Write-Log -Message "Check RD Infra registry to see if RD Agent is registered"
 if ($RDInfraReg.RegistrationToken -ne '') {
-    Write-Log -Message "Session Host was not registered to the Host Pool (RegistrationToken in RD Infra registry is not empty: '$($RDInfraReg.RegistrationToken)')"
+    Write-Log -Message "Session Host is not registered to the Host Pool (RegistrationToken in RD Infra registry is not empty: '$($RDInfraReg.RegistrationToken)')"
     return $false
 }
 if ($RDInfraReg.IsRegistered -ne 1) {
-    Write-Log -Message "Session Host was not registered to the Host Pool (Value of 'IsRegistered' in RD Infra registry is not 1: $($RDInfraReg.IsRegistered))"
+    Write-Log -Message "Session Host is not registered to the Host Pool (Value of 'IsRegistered' in RD Infra registry is not 1: $($RDInfraReg.IsRegistered))"
     return $false
 }
 
