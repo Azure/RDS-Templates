@@ -79,7 +79,7 @@ if (!$HostPool) {
 Write-Log -Message "Hostpool exists inside tenant: $TenantName"
 
 # Getting fqdn of rdsh vm
-$SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
+$SessionHostName = GetCurrSessionHostName
 Write-Log -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
 # Obtaining Registration Info

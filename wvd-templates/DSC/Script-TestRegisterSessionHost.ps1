@@ -78,7 +78,7 @@ ImportRDPSMod -Source $RDPSModSource -ArtifactsPath $ScriptPath
 SetTenantGroupContextAndValidate -TenantGroupName $definedTenantGroupName -TenantName $TenantName
 
 # Getting fqdn of rdsh vm
-$SessionHostName = (Get-WmiObject win32_computersystem).DNSHostName + "." + (Get-WmiObject win32_computersystem).Domain
+$SessionHostName = GetCurrSessionHostName
 Write-Log -Message "Fully qualified domain name of RDSH VM: $SessionHostName"
 
 $SessionHost = Get-RdsSessionHost -TenantName "$TenantName" -HostPoolName "$HostPoolName" -Name "$SessionHostName" -ErrorAction SilentlyContinue

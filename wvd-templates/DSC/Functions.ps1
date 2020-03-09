@@ -398,3 +398,8 @@ function ImportRDPSMod {
     Import-Module $DLLPath -Force
     Write-Log -Message "Successfully imported RD PowerShell module DLL '$DLLPath"
 }
+
+function GetCurrSessionHostName {
+    $Wmi = (Get-WmiObject win32_computersystem)
+    return "$($Wmi.DNSHostName).$($Wmi.Domain)"
+}
