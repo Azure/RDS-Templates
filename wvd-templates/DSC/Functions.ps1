@@ -48,12 +48,12 @@ class PsRdsSessionHost {
         $sessionHost = (Invoke-Expression $commandToExecute )
 
         $StartTime = Get-Date
-        while ($sessionHost -eq $null) {
+        while ($null -eq $sessionHost) {
             Start-Sleep -Seconds 30
             $sessionHost = (Invoke-Expression $commandToExecute)
     
             if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                if ($sessionHost -eq $null) {
+                if ($null -eq $sessionHost) {
                     return $null
                 }
             }
@@ -116,21 +116,21 @@ function Write-Log {
     [CmdletBinding()]
     param
     (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $true)]
         [string]$Message,
-        [Parameter(Mandatory = $false)]
-        [string]$Error
+
+        [switch]$Error
     )
      
     try {
         $DateTime = Get-Date -Format "MM-dd-yy HH:mm:ss"
         $Invocation = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber)"
-        if ($Message) {
-            Add-Content -Value "$DateTime - $Invocation - $Message" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
+
+        if ($Error) {
+            $Message = "[ERROR] $Message"
         }
-        else {
-            Add-Content -Value "$DateTime - $Invocation - $Error" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
-        }
+        
+        Add-Content -Value "$DateTime - $Invocation - $Message" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
     }
     catch {
         Write-Error $_.Exception.Message
@@ -196,8 +196,8 @@ function ValidateServicePrincipal {
 
 function Is1809OrLater {
     $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-    if ($OSVersionInfo -ne $null) {
-        if ($OSVersionInfo.ReleaseId -ne $null) {
+    if ($null -eq $OSVersionInfo) {
+        if ($null -eq $OSVersionInfo.ReleaseId) {
             Write-Log -Message "Build: $($OSVersionInfo.ReleaseId)"
             $rdshIs1809OrLaterBool = @{$true = $true; $false = $false }[$OSVersionInfo.ReleaseId -ge 1809]
         }
@@ -410,7 +410,7 @@ function ImportRDPSMod {
     }
     else {
         $Version = ($Source.Trim().ToLower() -split 'gallery@')[1]
-        if ($Version -eq $null -or $Version.Trim() -eq '') {
+        if ($null -eq $Version -or $Version.Trim() -eq '') {
             throw "invalid param: Source = $Source"
         }
 

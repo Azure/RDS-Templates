@@ -97,10 +97,10 @@ Write-Log -Message "Hostpool exists inside tenant: $TenantName"
 
 $RequiredModules = @("AzureRM.Resources", "Azurerm.Profile", "Azurerm.Compute", "Azurerm.Network", "Azurerm.Storage")
 
-Write-Output "checking if nuget package exists"
+Write-Log "checking if nuget package exists"
 
 if (!(Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue -ListAvailable)) {
-    Write-Output "installing nuget package inside vm: $env:COMPUTERNAME"
+    Write-Log "installing nuget package inside vm: $env:COMPUTERNAME"
     Install-PackageProvider -Name nuget -Force
 }
 foreach ($ModuleName in $RequiredModules) {
@@ -108,7 +108,7 @@ foreach ($ModuleName in $RequiredModules) {
         #Check if Module exists
         $InstalledModule = Get-InstalledModule -Name $ModuleName -ErrorAction SilentlyContinue
         if (!$InstalledModule) {
-            Write-Output "Installing azureRMModule '$ModuleName' inside vm: $env:COMPUTERNAME"
+            Write-Log "Installing azureRMModule '$ModuleName' inside vm: $env:COMPUTERNAME"
             Install-Module $ModuleName -AllowClobber -Force
         }
     } until ($InstalledModule)
@@ -121,27 +121,39 @@ Import-Module Azurerm.Network
 Import-Module Azurerm.Storage
 
 #Authenticate AzureRM
-#//todo try catch
-if ($isServicePrincipal -eq "True") {
-    $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
+$authentication = $null
+try {
+    if ($isServicePrincipal -eq "True") {
+        $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
+    }
+    else {
+        $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -SubscriptionId $SubscriptionId
+    }
+    if (!$authentication) {
+        throw $authentication
+    }
 }
-else {
-    $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -SubscriptionId $SubscriptionId
-}
+catch {
+    $innerExAsStr = ""
+    $numInnerExceptions = 0
+    if ($_.Exception -is [System.AggregateException] -and $_.Exception.InnerExceptions) {
+        $numInnerExceptions = $_.Exception.InnerExceptions.Count
+        $innerExAsStr = $_.Exception.InnerExceptions -join "`n"
+    }
+    
+    $errMsg = "Error authenticating AzureRM account, isServicePrincipal = $isServicePrincipal"
+    $errMsg += " Error Details:`n$($_ | Out-String)"
+    if ($innerExAsStr.Length -gt 0) {
+        $errMsg += " Inner Errors (there are " + $numInnerExceptions + "): `n$($innerExAsStr | Out-String)"
+    } 
 
-$obj = $authentication | Out-String
+    Write-Log -Error $errMsg
+    throw [System.Exception]::new($errMsg, $PSItem.Exception)
+}
+Write-Log -Message "AzureRM account authentication successful. Result:`n$($authentication | Out-String)"
 
-if ($authentication) {
-    Write-Log -Message "AzureRM Login successfully Done. Result:`n$obj"
-}
-else {
-    Write-Log -Error "AzureRM Login Failed, Error:`n$obj"
-}
-if ($authentication.Context.Subscription.Id -eq $SubscriptionId) {
-    Write-Log -Message "Successfully logged into AzureRM"
-}
-else {
-    Write-Log -Error "Subscription Id $SubscriptionId not in context"
+if ($authentication.Context.Subscription.Id -ne $SubscriptionId) {
+    Write-Log -Error "AzureRM auth subscription ID '$($authentication.Context.Subscription.Id)' doesn't match the subscription ID of the deployment '$SubscriptionId'"
 }
 
 # collect new session hosts
