@@ -284,11 +284,11 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
             }
 
             #$avSet=Get-AzureRmVM | Where-Object {$_.Name -eq $VMName} | Remove-AzureRmAvailabilitySet -Force
-            $avset = Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName
-            if ($avset.VirtualMachinesReferences.Id -eq $null) {
-                Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName -ErrorAction SilentlyContinue | Remove-AzureRmAvailabilitySet -Force
-                Write-Log -Message "Successfully removed availabilityset"
-            }
+            #$avset = Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName
+            #if ($avset.VirtualMachinesReferences.Id -eq $null) {
+            #    Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName -ErrorAction SilentlyContinue | Remove-AzureRmAvailabilitySet -Force
+            #    Write-Log -Message "Successfully removed availabilityset"
+            #}
             $checkResources = Get-AzureRmResource -ResourceGroupName $a.ResourceGroupName
             if (!$checkResources) {
                 Remove-AzureRmResourceGroup -Name $a.ResourceGroupName -Force

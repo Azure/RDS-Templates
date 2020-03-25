@@ -288,26 +288,9 @@
     },
     "resources": [
         {
-            "apiVersion": "2018-10-01",
-            "condition": "[equals(parameters('enablePersistentDesktop'),bool('False'))]",
-            "type": "Microsoft.Compute/availabilitySets",
-            "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
-            "location": "[parameters('location')]",
-            "properties": {
-                "platformUpdateDomainCount": 5,
-                "platformFaultDomainCount": 2
-            },
-            "sku": {
-                "name": "[variables('avSetSKU')]"
-            }
-        },
-        {
             "apiVersion": "2018-05-01",
             "name": "[variables('vmCreation-linkedTemplate_name')]",
             "type": "Microsoft.Resources/deployments",
-            "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
-            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
