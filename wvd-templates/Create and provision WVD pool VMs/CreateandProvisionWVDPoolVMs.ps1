@@ -72,14 +72,28 @@ do {
 
     #kick off an ARM deployment to deploy the number of VMs just calculated
     New-AzResourceGroupDeployment `
+        -Name "testdeploy" `
         -ResourceGroupName $resourceGroupName `
-        -TemplateFile <path-to-template> `
-        -vmcount $vmsToDeploy
+        -virtualMachineCount $vmsToDeploy `
+        -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" `
+        -DeploymentDebugLogLevel ResponseContent
+#        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
 
     #sleep for a bit
 
     #wake up and check if we have less deployments running than specified percentage of the batch size 
-    
+
+    #get the count of deployments
+    $countofVMDeployments = get-azresourcegroupdeploymentoperation -DeploymentName testdeploy10 -ResourceGroupName wvdrg3 `
+    | Where-Object {$_.properties.targetResource -match "virtualMachines"} `
+    | select -ExpandProperty properties `
+
+    #gets all the deployments that have succeeded
+    $countofVMDeploymentsCompleted = get-azresourcegroupdeploymentoperation -DeploymentName testdeploy10 -ResourceGroupName wvdrg3 `
+        | Where-Object {$_.properties.targetResource -match "virtualMachines"} `
+        | select -ExpandProperty properties `
+        | Where-Object {$_.provisioningState -match "Succeeded"}
+
     #if so, then drop through the while loop so we can kick off another batch
     #update the count of existing
     $existingVMs = Get-AzVM -ResourceGroupName $resourceGroupName
