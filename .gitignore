@@ -714,3 +714,5 @@ $RECYCLE.BIN/
 /wvd-sh/wvd-monitoring-ux/src/MSFT.WVD.Monitoring/Logs
 /wvd-templates/diagnostics-sample/src/MSFT.WVD.Diagnostics/Logs
 /wvd-sh/wvd-Diagnostics-ux
+.vscode/launch.json
+.vscode/tasks.json
