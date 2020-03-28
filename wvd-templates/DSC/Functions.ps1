@@ -196,8 +196,8 @@ function ValidateServicePrincipal {
 
 function Is1809OrLater {
     $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-    if ($null -eq $OSVersionInfo) {
-        if ($null -eq $OSVersionInfo.ReleaseId) {
+    if ($null -ne $OSVersionInfo) {
+        if ($null -ne $OSVersionInfo.ReleaseId) {
             Write-Log -Message "Build: $($OSVersionInfo.ReleaseId)"
             $rdshIs1809OrLaterBool = @{$true = $true; $false = $false }[$OSVersionInfo.ReleaseId -ge 1809]
         }

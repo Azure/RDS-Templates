@@ -297,7 +297,7 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
 
             #$avSet=Get-AzureRmVM | Where-Object {$_.Name -eq $VMName} | Remove-AzureRmAvailabilitySet -Force
             $avset = Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName
-            if ($avset.VirtualMachinesReferences.Id -eq $null) {
+            if ($null -eq $avset.VirtualMachinesReferences.Id) {
                 # //todo handle err action [if avail set doesn't exist]
                 Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName -ErrorAction SilentlyContinue | Remove-AzureRmAvailabilitySet -Force
                 Write-Log -Message "Successfully removed availabilityset"
