@@ -298,6 +298,7 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
             #$avSet=Get-AzureRmVM | Where-Object {$_.Name -eq $VMName} | Remove-AzureRmAvailabilitySet -Force
             $avset = Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName
             if ($avset.VirtualMachinesReferences.Id -eq $null) {
+                # //todo handle err action [if avail set doesn't exist]
                 Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName -ErrorAction SilentlyContinue | Remove-AzureRmAvailabilitySet -Force
                 Write-Log -Message "Successfully removed availabilityset"
             }
@@ -315,6 +316,7 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
                 Get-ADComputer -Identity $VMName | Remove-ADObject -Recursive -Confirm:$false
                 Remove-DnsServerResourceRecord -ZoneName $ZoneName -RRType "A" -Name $VMName -Force -Confirm:$false
             } -ArgumentList ($ZoneName, $VMName) -ErrorAction SilentlyContinue
+            # //todo handle if !$result
             if ($result) {
                 Write-Log -Message "Successfully removed $VMName from domaincontroller"
                 Write-Log -Message "successfully removed dns record of $VMName"
