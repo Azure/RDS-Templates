@@ -2,8 +2,7 @@
 [int]$allocationBatchSize=25
 [string]$batchNamingPrefix="WVDDeploymentBatch"
 [string]$vmNamingPrefix="WVDVM"
-[single]$minimumConcurrentAllocationsPercentage=0.8
-[int]$sleepTimeMin=1
+[int]$sleepTimeMin=0
 $resourceGroupName="WVDTestRG"
 $location="EastUS"
 $VMNamingPrefix="megaVM"
@@ -60,35 +59,41 @@ $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
 #deploy up to maxSimulanteousDeployments each one having the allocation batch size
 #sleep for a bit
 #wake up and check if we have less than maxSimulanteousDeployments deployments running
-#if so, then kick off a deployment of the allocation batch size
+#if so, then kick off a deployment of the allocation batch size or the rest of the VMs needed - whichever is smaller
 #if not, do nothing
 
 #start looping through creating VMs
 [int]$deploymentIteration=0
 do {
 
-    #get the count of active deployments from the *previous* batch
-    $countofVMDeployments = get-azresourcegroupdeploymentoperation `
-        -DeploymentName "$($batchNamingPrefix)$($deploymentIteration)" -ResourceGroupName $resourceGroupName `
-        | Where-Object {$_.properties.targetResource -match "virtualMachines"} `
-        | Select-Object -ExpandProperty properties 
+    #loop through all the deployments which aren't already marked as completed
+    #if they are done, update the Completed property
+    foreach ($deployment in $deployments) {
+        if ($deployment.Completed -ne $false) {
+            $runningOperationsCount = (get-azresourcegroupdeploymentoperation `
+            -DeploymentName "$($batchNamingPrefix)$($deploymentIteration)" -ResourceGroupName $resourceGroupName `
+            | Select-Object -ExpandProperty properties `
+            | Where-Object {($_.provisioningState -match "Running")}).count
 
-    #get the count of the completed deployments from the *previous* batch
-    $countofVMDeploymentsCompleted = get-azresourcegroupdeploymentoperation -DeploymentName testdeploy10 -ResourceGroupName wvdrg3 `
-    | Where-Object {$_.properties.targetResource -match "virtualMachines"} `
-    | Select-Object -ExpandProperty properties `
-    | Where-Object {$_.provisioningState -match "Succeeded"}
+            if ($runningOperationsCount -eq 0)
+            {
+                $deployment.Completed=$true
+            }
+        }
+    }
 
-    #see if ratio is below target ratio
-    [int]$vmsToDeployIncrement = 0
-    [int]$ARMBatch = 0
-    if (1-$countofVMDeploymentsCompleted/$countofVMDeployments -lt $minimumConcurrentAllocationsPercentage)
+    #see if we need to kick off any deployments
+    $needMoreDeployments = $false
+    if ($deployments | Where-Object {$_.Completed = $false} -lt $maxSimulanteousDeployments) {
+        $needMoreDeployments = $true
+    }
+
+    #kick of any necessary deployments to ensure we are always running $maxSimulanteousDeployments
+    [int]$vmsToDeploy = 0
+    if ($needMoreDeployments)
     {
-        #deploy more VMs
-
         #see how many VMs exist
-        $existingVMs = Get-AzVM -ResourceGroupName $resourceGroupName
-        $countExistingVMs = $existingVMs.count
+        $countExistingVMs = (Get-AzVM -ResourceGroupName $resourceGroupName).Count
 
         #now, figure out how many more VMs need created
         $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
@@ -96,33 +101,24 @@ do {
         #deploy either the total desired or the allocation pool count - whichever is smaller
         Switch ($allocationBatchSize > $countAdditionalVMs)
         {
-            $true { $vmsToDeployIncrement = $countAdditionalVMs }
-            $false { $vmsToDeployIncrement = $allocationBatchSize * (1-$minimumConcurrentAllocationsPercentage)}
+            $true { $vmsToDeploy = $countAdditionalVMs }
+            $false { $vmsToDeploy = $allocationBatchSize }
         }
 
-        #if the ARM deployment is more than 200, tweak the naming prefix
-        #otherwise, all we do is redeploy the ones already out there
-        if ($vmsToDeployIncrement -gt 200) {
-            $ARMBatch += 1
-        }
-
-        #kick off an ARM deployment to deploy the number of VMs just calculated
-        #because we are doing this via a template, just increment the total VM count
-        #it has the additional benefit of potentially fixing up any busted VMs
-        #because ARM templates are declarative
-        $vmsToDeploy += $vmsToDeployIncrement
+        #kick off an ARM deployment to deploy a batch of VMs
+        $deploymentName="$($batchNamingPrefix)$($deploymentIteration)"
         New-AzResourceGroupDeployment `
-        -Name $deployment.Name `
+        -Name $deploymentName `
         -ResourceGroupName $resourceGroupName `
         -virtualMachineCount $vmsToDeploy `
         -AsJob `
         -virtualMachineNamePrefix $($vmNamingPrefix)-$($ARMBatch)
         -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" `
     #        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
-        
+
         #add the new deployment to the array for tracking purposes
         $deployment = New-Object -TypeName PSObject
-        $deployment | Add-Member -Name 'Name' -MemberType Noteproperty -Value "$($batchNamingPrefix)$($deploymentIteration)"
+        $deployment | Add-Member -Name 'Name' -MemberType Noteproperty -Value $deploymentName
         $deployment | Add-Member -Name 'Completed' -MemberType Noteproperty -Value $false
         $deployments += $deployment
     }
@@ -155,3 +151,6 @@ do {
     $deploymentIteration += 1
 
 } while ($countAdditionalVMs > $allocationPoolSize)
+
+#after everything is done, redeploy any deployed with failed VMs
+#this will ensure any transient failures are addressed
