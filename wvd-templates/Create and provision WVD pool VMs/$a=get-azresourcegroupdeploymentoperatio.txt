@@ -1,0 +1,9 @@
+$a=get-azresourcegroupdeploymentoperation -DeploymentName testdeploy10 -ResourceGroupName wvdrg3
+Where-Object {$_.properties.targetResource -match "virtualMachines"} | select -ExpandProperty targetResource
+
+
+$b = $a | Where-Object {$_.properties.targetResource -match "virtualMachines"}
+$b = $a | Where-Object {$_.properties.targetResource -match "virtualMachines"} | select -ExpandProperty properties
+
+
+$b = get-azresourcegroupdeploymentoperation -DeploymentName testdeploy10 -ResourceGroupName wvdrg3 | Where-Object {$_.properties.targetResource -match "virtualMachines"} | select -ExpandProperty properties | Where-Object {$_.provisioningState -match "Succeeded"}
