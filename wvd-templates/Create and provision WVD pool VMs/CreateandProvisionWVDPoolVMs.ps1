@@ -10,9 +10,12 @@ $targetVNETName="megaVNET"
 $targetSubnetName="default"
 [int]$maxSimulanteousDeployments=3
 [array]$deployments = @()
-
+[string]$userName="user01"
+[string]$password=(-join(65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90|%{[char]$_}|Get-Random -C 2)) + (-join(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122|%{[char]$_}|Get-Random -C 2)) + (-join(65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90|%{[char]$_}|Get-Random -C 2)) + (-join(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122|%{[char]$_}|Get-Random -C 2)) + (-join(64,33,35,36|%{[char]$_}|Get-Random -C 1))  + (-join(49,50,51,52,53,54,55,56,57|%{[char]$_}|Get-Random -C 3)) 
 
 #Connect-AzAccount
+#for testing
+$resourceGroupName += New-Guid
 
 #create resource group if necessary
 Get-AzResourceGroup -Name $resourceGroupname -ErrorVariable notPresent -ErrorAction SilentlyContinue
@@ -68,23 +71,41 @@ do {
 
     #loop through all the deployments which aren't already marked as completed
     #if they are done, update the Completed property
+    #NOTE: for some reason Get-AzDeployment doesn't return any results (RBAC?) so am forced to use custom array
     foreach ($deployment in $deployments) {
-        if ($deployment.Completed -ne $false) {
-            $runningOperationsCount = (get-azresourcegroupdeploymentoperation `
-            -DeploymentName "$($batchNamingPrefix)$($deploymentIteration)" -ResourceGroupName $resourceGroupName `
-            | Select-Object -ExpandProperty properties `
-            | Where-Object {($_.provisioningState -match "Running")}).count
+        if ($deployment.Completed -eq $false) {
 
-            if ($runningOperationsCount -eq 0)
-            {
-                $deployment.Completed=$true
+            #get all the operations running
+            $runningOperations = get-azresourcegroupdeploymentoperation `
+            -DeploymentName $deployment.Name -ResourceGroupName $resourceGroupName `
+            | Select-Object -ExpandProperty properties `
+            | Where-Object {($_.provisioningState -match "Running")}
+
+            #if there are any, then see if any are VMs
+            #there HAVE to be VM operations at some point so if none exist then we haven't gotten far enough just bail
+            if ($runningOperations.Count -gt 0) {
+                
+                #filter down to just VMs
+                $vmOperations = $runningOperationsCount | Where-Object {$_.properties.targetResource -match "virtualMachines"}
+                if ($vmOperations.Count -gt 0) {
+
+                    #find just the VM operations that are still running
+                    $runningVMOperations = $vmOperations | Select-Object -ExpandProperty properties `
+                    | Where-Object {$_.provisioningState -match "Running"}
+
+                    #if none are still running, then we either fully completed or failed - either is good here
+                    if ($runningVMOperations.Count -eq 0)
+                    {
+                        $deployment.Completed=$true
+                    }
+                }
             }
         }
     }
 
     #see if we need to kick off any deployments
     $needMoreDeployments = $false
-    if ($deployments | Where-Object {$_.Completed = $false} -lt $maxSimulanteousDeployments) {
+    if (($deployments | Where-Object {$_.Completed = $false}).Count -lt $maxSimulanteousDeployments) {
         $needMoreDeployments = $true
     }
 
@@ -99,20 +120,26 @@ do {
         $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
 
         #deploy either the total desired or the allocation pool count - whichever is smaller
-        Switch ($allocationBatchSize > $countAdditionalVMs)
+        Switch ($allocationBatchSize -gt $countAdditionalVMs)
         {
             $true { $vmsToDeploy = $countAdditionalVMs }
             $false { $vmsToDeploy = $allocationBatchSize }
         }
 
+        #build the creds
+        [securestring]$securePassword = $password | ConvertTo-SecureString -AsPlainText -Force
+
         #kick off an ARM deployment to deploy a batch of VMs
-        $deploymentName="$($batchNamingPrefix)$($deploymentIteration)"
+        [string]$uniqueIDforBatch = New-Guid
+        $deploymentName="$($batchNamingPrefix)$($deploymentIteration)-$($uniqueIDforBatch)"
         New-AzResourceGroupDeployment `
         -Name $deploymentName `
         -ResourceGroupName $resourceGroupName `
         -virtualMachineCount $vmsToDeploy `
+        -virtualMachineAdminUserName $userName `
+        -virtualMachineAdminPassword $securePassword `
         -AsJob `
-        -virtualMachineNamePrefix $($vmNamingPrefix)-$($ARMBatch)
+        -virtualMachineNamePrefix "$($vmNamingPrefix)-$($deploymentIteration)-" `
         -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" `
     #        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
 
@@ -124,12 +151,12 @@ do {
     }
 
     #sleep for a bit
-    Start-Sleep -s 60*$sleepTimeMin
+    Start-Sleep -s (60*$sleepTimeMin)
 
     #increment the loop counter so the next iteration gets a different deployment name
     $deploymentIteration += 1
 
-} while ($countAdditionalVMs > $allocationPoolSize)
+} while ($countAdditionalVMs -gt $allocationBatchSize)
 
 #after everything is done, redeploy any deployed with failed VMs
 #this will ensure any transient failures are addressed
