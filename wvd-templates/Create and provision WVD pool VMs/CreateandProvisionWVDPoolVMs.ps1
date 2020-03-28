@@ -126,27 +126,6 @@ do {
     #sleep for a bit
     Start-Sleep -s 60*$sleepTimeMin
 
-    #wake up and check if we have less deployments running than specified percentage of the batch size 
-
-    #get the count of active deployments from the *previous* batch
-    $countofVMDeployments = get-azresourcegroupdeploymentoperation -DeploymentName testdeploy10 -ResourceGroupName wvdrg3 `
-    | Where-Object {$_.properties.targetResource -match "virtualMachines"} `
-    | Select-Object -ExpandProperty properties `
-
-    #gets all the deployments that have succeeded
-    $countofVMDeploymentsCompleted = get-azresourcegroupdeploymentoperation -DeploymentName testdeploy10 -ResourceGroupName wvdrg3 `
-        | Where-Object {$_.properties.targetResource -match "virtualMachines"} `
-        | Select-Object -ExpandProperty properties `
-        | Where-Object {$_.provisioningState -match "Succeeded"}
-
-    #if so, then drop through the while loop so we can kick off another batch
-    #update the count of existing
-    $existingVMs = Get-AzVM -ResourceGroupName $resourceGroupName
-    $countExistingVMs = $existingVMs.count
-
-    #update the count of how many more we need
-    $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
-
     #increment the loop counter so the next iteration gets a different deployment name
     $deploymentIteration += 1
 
