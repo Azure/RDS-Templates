@@ -284,13 +284,10 @@ function AuthenticateRdsAccount {
             
             $innerExAsStr = ""
             $numInnerExceptions = 0
-            if($_.Exception -is [System.AggregateException] -and $_.Exception.InnerExceptions)
-            {
+            if ($_.Exception -is [System.AggregateException] -and $_.Exception.InnerExceptions) {
                 $numInnerExceptions = $_.Exception.InnerExceptions.Count
-                foreach ($innerEx in $_.Exception.InnerExceptions)
-                {
-                    if($innerExAsStr.Length -gt 0)
-                    {
+                foreach ($innerEx in $_.Exception.InnerExceptions) {
+                    if ($innerExAsStr.Length -gt 0) {
                         $innerExAsStr += "`n"
                     } 
                     $innerExAsStr += $innerEx
@@ -299,9 +296,8 @@ function AuthenticateRdsAccount {
             
             $errMsg = "Error authenticating Windows Virtual Desktop account, ServicePrincipal=" + $ServicePrincipal
             $errMsg += " Error Details:`n$($_ | Out-String)"
-            if($innerExAsStr.Length -gt 0)
-            {
-                $errMsg += " Inner Errors (there are " + $numInnerExceptions +"): `n$($innerExAsStr | Out-String)"
+            if ($innerExAsStr.Length -gt 0) {
+                $errMsg += " Inner Errors (there are " + $numInnerExceptions + "): `n$($innerExAsStr | Out-String)"
             } 
 
             Write-Log -Error $errMsg
@@ -333,7 +329,7 @@ function SetTenantGroupContextAndValidate {
             Set-RdsContext -TenantGroupName $TenantGroupName
         }
         catch {
-            $errMsg ="Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group. Error Details: $($PSItem | Out-String)"
+            $errMsg = "Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group. Error Details: $($PSItem | Out-String)"
             Write-Log -Error $errMsg
             throw [System.Exception]::new($errMsg, $PSItem.Exception)
         }
