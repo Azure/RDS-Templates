@@ -9,6 +9,8 @@ $location="EastUS"
 $VMNamingPrefix="megaVM"
 $targetVNETName="megaVNET"
 $targetSubnetName="default"
+[int]$maxSimulanteousDeployments=3
+[array]$deployments = @()
 
 
 #Connect-AzAccount
@@ -55,22 +57,11 @@ $countExistingVMs = $existingVMs.count
 $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
 
 #general logic flow is as follows:
-#deploy up to the allocation batch size
+#deploy up to maxSimulanteousDeployments each one having the allocation batch size
 #sleep for a bit
-#wake up and check if we have less deployments running than specified percentage of the batch size 
-#if so, then kick off a deployment of VMs equal to the delta
+#wake up and check if we have less than maxSimulanteousDeployments deployments running
+#if so, then kick off a deployment of the allocation batch size
 #if not, do nothing
-
-#deploy the first batch
-[int]$vmsToDeploy=$allocationBatchSize
-New-AzResourceGroupDeployment `
--Name "$($batchNamingPrefix)0" `
--ResourceGroupName $resourceGroupName `
--virtualMachineCount $vmsToDeploy `
--asJob `
--TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" `
-#        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
-
 
 #start looping through creating VMs
 [int]$deploymentIteration=0
@@ -121,14 +112,19 @@ do {
         #because ARM templates are declarative
         $vmsToDeploy += $vmsToDeployIncrement
         New-AzResourceGroupDeployment `
-        -Name "$($batchNamingPrefix)$($deploymentIteration)" `
+        -Name $deployment.Name `
         -ResourceGroupName $resourceGroupName `
         -virtualMachineCount $vmsToDeploy `
         -AsJob `
         -virtualMachineNamePrefix $($vmNamingPrefix)-$($ARMBatch)
         -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" `
     #        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
-
+        
+        #add the new deployment to the array for tracking purposes
+        $deployment = New-Object -TypeName PSObject
+        $deployment | Add-Member -Name 'Name' -MemberType Noteproperty -Value "$($batchNamingPrefix)$($deploymentIteration)"
+        $deployment | Add-Member -Name 'Completed' -MemberType Noteproperty -Value $false
+        $deployments += $deployment
     }
 
     #sleep for a bit
