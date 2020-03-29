@@ -1,8 +1,8 @@
-[int]$desiredPoolVMCount=24
+[int]$desiredPoolVMCount=10
 [int]$allocationBatchSize=1
 [string]$batchNamingPrefix="WVDDeploymentBatch"
 [string]$vmNamingPrefix="WVDVM"
-[int]$sleepTimeMin=0
+[int]$sleepTimeMin=3
 $resourceGroupName="WVDTestRG"
 $location="EastUS"
 $VMNamingPrefix="megaVM"
@@ -78,24 +78,23 @@ do {
         if ($deployment.Completed -eq $false) {
 
             #get all the operations running
-            $runningOperations = get-azresourcegroupdeploymentoperation `
+            $runningOperations = @(get-azresourcegroupdeploymentoperation `
             -DeploymentName $deployment.Name -ResourceGroupName $resourceGroupName `
-            | Select-Object -ExpandProperty properties `
-            | Where-Object {($_.provisioningState -match "Running")}
+            | Select-Object -ExpandProperty properties)
+#            | Where-Object {(($_.provisioningState -match "Running") -or ($_.provisioningState -match "Succeeded"))}
 
             #if there are any, then see if any are VMs
-            #there HAVE to be VM operations at some point so if none exist then we haven't gotten far enough just bail
+            #there HAVE to be VM operations at some point so if none exist then we haven't gotten far enough
             if ($runningOperations.Count -gt 0) {
                 
                 #filter down to just VMs
-                $vmOperations = $runningOperationsCount | Where-Object {$_.properties.targetResource -match "virtualMachines"}
+                $vmOperations = @($runningOperations | Where-Object {$_.targetResource -match "virtualMachines"})
                 if ($vmOperations.Count -gt 0) {
 
                     #find just the VM operations that are still running
-                    $runningVMOperations = $vmOperations | Select-Object -ExpandProperty properties `
-                    | Where-Object {$_.provisioningState -match "Running"}
+                    $runningVMOperations = @($vmOperations | Where-Object {$_.provisioningState -match "Running"})
 
-                    #if none are still running, then we either fully completed or failed - either is good here
+                    #if none are still running, then we either fully completed or failed - either is acceptable here
                     if ($runningVMOperations.Count -eq 0)
                     {
                         $deployment.Completed=$true
@@ -138,7 +137,7 @@ do {
         #kick off an ARM deployment to deploy a batch of VMs
         [string]$uniqueIDforBatch = New-Guid
         $deploymentName="$($batchNamingPrefix)$($deploymentIteration)-$($uniqueIDforBatch)"
-        New-AzResourceGroupDeployment `
+        (New-AzResourceGroupDeployment `
         -Name $deploymentName `
         -ResourceGroupName $resourceGroupName `
         -virtualMachineCount $vmsToDeploy `
@@ -147,7 +146,7 @@ do {
         -AsJob `
         -virtualMachineNamePrefix "$($vmNamingPrefix)-$($deploymentIteration)-" `
         -dnsPrefixForPublicIP "$($dnsPrefixForPublicIP)".ToLower() `
-        -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" `
+        -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" ).Name = $deploymentName
     #        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
 
         #add the new deployment to the array for tracking purposes
@@ -155,13 +154,13 @@ do {
         $deployment | Add-Member -Name 'Name' -MemberType Noteproperty -Value $deploymentName
         $deployment | Add-Member -Name 'Completed' -MemberType Noteproperty -Value $false
         $deployments += $deployment
+
+        #increment the loop counter so the next iteration gets a different deployment name
+        $deploymentIteration += 1
     }
 
     #sleep for a bit
     Start-Sleep -s (60*$sleepTimeMin)
-
-    #increment the loop counter so the next iteration gets a different deployment name
-    $deploymentIteration += 1
 
 } while ($countAdditionalVMs -gt $allocationBatchSize)
 
