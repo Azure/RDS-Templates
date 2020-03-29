@@ -25,7 +25,8 @@
             "allowedValues": [
                 "CustomVHD",
                 "CustomImage",
-                "Gallery"
+                "Gallery",
+                "SharedImageGallery"
             ]
         },
         "vmImageVhdUri": {
@@ -66,6 +67,27 @@
             "defaultValue": "",
             "metadata": {
                 "description": "(Required when rdshImageSource = CustomImage) Resource group name for the managed disk, if you choose to provide one."
+            }
+        },
+        "SharedImageGalleryName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "(Required when rdshImageSource = SharedImageGallery) Shared Image Gallery Name."
+            }
+        },
+        "SharedImageGalleryImageDefinitionName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "(Required when rdshImageSource = SharedImageGallery) Shared Image Gallery Image Definition Nme."
+            }
+        },
+        "SharedImageGalleryImageVersionName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "(Required when rdshImageSource = SharedImageGallery) Shared Image Gallery Image Version Name."
             }
         },
         "rdshNamePrefix": {
@@ -366,6 +388,9 @@
         },
         "imageName": "[concat(variables('rdshPrefix'), 'image')]",
         "VMImageReference": {
+            "sharedimagegallery": {
+                "id": "[resourceId('Microsoft.Compute/galleries/images/versions', parameters('SharedImageGalleryName'), parameters('SharedImageGalleryImageDefinitionName'), parameters('SharedImageGalleryImageVersionName'))]"
+            },
             "customimage": {
                 "id": "[resourceId(parameters('rdshCustomImageSourceResourceGroup'), 'Microsoft.Compute/images', parameters('rdshCustomImageSourceName'))]"
             },
