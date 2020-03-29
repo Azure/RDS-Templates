@@ -89,7 +89,6 @@ SetTenantGroupContextAndValidate -TenantGroupName $definedTenantGroupName -Tenan
 Write-Log -Message "Checking Hostpool exists inside the Tenant"
 $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
 if (!$HostPool) {
-    Write-Log -Error "$HostpoolName Hostpool does not exist in $TenantName Tenant"
     throw "$HostpoolName Hostpool does not exist in $TenantName Tenant"
 }
 
@@ -327,6 +326,5 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
 $AllSessionHosts = Get-RdsSessionHost -TenantName "$TenantName" -HostPoolName "$HostPoolName"
 $OldSessionHosts = $AllSessionHosts.SessionHostName | Where-Object { !$NewSessionHostNames.ContainsKey($_.ToLower()) }
 if ($OldSessionHosts) {
-    Write-Log -Error "Old Session Hosts were not removed from hostpool $HostPoolName"
     throw "Old Session Hosts were not removed from hostpool $HostPoolName"
 }

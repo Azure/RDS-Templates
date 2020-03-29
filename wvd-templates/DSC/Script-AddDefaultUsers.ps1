@@ -64,7 +64,6 @@ SetTenantGroupContextAndValidate -TenantGroupName $definedTenantGroupName -Tenan
 Write-Log -Message "Checking Hostpool exists inside the Tenant"
 $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
 if (!$HostPool) {
-    Write-Log -Error "$HostpoolName Hostpool does not exist in $TenantName Tenant"
     throw "$HostpoolName Hostpool does not exist in $TenantName Tenant"
 }
 

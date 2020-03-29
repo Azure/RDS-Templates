@@ -311,9 +311,7 @@ function SetTenantGroupContextAndValidate {
         } -ErrMsg "Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant"
         
         if (!$tenants) {
-            $errMsg = "No tenant with name ""$TenantName"" exists or the account doesn't have access to it." 
-            Write-Log -Error $errMsg
-            throw $errMsg
+            throw "No tenant with name ""$TenantName"" exists or the account doesn't have access to it."
         }
     }
 }
