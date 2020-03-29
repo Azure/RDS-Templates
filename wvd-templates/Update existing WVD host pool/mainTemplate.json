@@ -302,13 +302,13 @@
                 "sku": "19h2-evd-o365pp",
                 "version": "latest"
             },
-             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1909": {
+            "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1909": {
                 "publisher": "MicrosoftWindowsDesktop",
                 "offer": "office-365",
                 "sku": "19h2-evd-o365pp",
                 "version": "latest"
             },
-             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1903": {
+            "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1903": {
                 "publisher": "MicrosoftWindowsDesktop",
                 "offer": "office-365",
                 "sku": "1903-evd-o365pp",
