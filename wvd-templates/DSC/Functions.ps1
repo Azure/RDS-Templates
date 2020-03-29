@@ -273,7 +273,7 @@ function AuthenticateRdsAccount {
 
     $Params = $PSBoundParameters
     
-    $authentication = TryCatchHandleErrWithDetails -ScriptBlock {
+    $authentication = . TryCatchHandleErrWithDetails -ScriptBlock {
         $authentication = $null
         $authentication = Add-RdsAccount @Params
         if (!$authentication) {
@@ -301,12 +301,12 @@ function SetTenantGroupContextAndValidate {
     if ($TenantGroupName -ne $currentTenantGroupName) {
         Write-Log -Message "Running switching to the $TenantGroupName context"
 
-        TryCatchHandleErrWithDetails -ScriptBlock {
+        . TryCatchHandleErrWithDetails -ScriptBlock {
             #As of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the TenantGroupName doesn't exist.
             Set-RdsContext -TenantGroupName $TenantGroupName
         } -ErrMsg "Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group"
         
-        $tenants = TryCatchHandleErrWithDetails -ScriptBlock {
+        $tenants = . TryCatchHandleErrWithDetails -ScriptBlock {
             return (Get-RdsTenant -Name $TenantName)
         } -ErrMsg "Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant"
         
@@ -407,7 +407,7 @@ function TryCatchHandleErrWithDetails {
     )
 
     try {
-        return (& $ScriptBlock)
+        return (. $ScriptBlock)
     }
     catch {
         $innerExAsStr = ""

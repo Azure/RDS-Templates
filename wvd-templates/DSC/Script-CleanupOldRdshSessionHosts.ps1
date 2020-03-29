@@ -121,7 +121,7 @@ Import-Module Azurerm.Network
 Import-Module Azurerm.Storage
 
 #Authenticate AzureRM
-$authentication = TryCatchHandleErrWithDetails -ScriptBlock {
+$authentication = . TryCatchHandleErrWithDetails -ScriptBlock {
     $authentication = $null
     if ($isServicePrincipal -eq "True") {
         $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
