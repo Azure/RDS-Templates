@@ -270,10 +270,12 @@ function AuthenticateRdsAccount {
         $PSBoundParameters.Remove('TenantId')
         Write-Log -Message "Authenticating using user $($Credential.username)"
     }
+
+    $Params = $PSBoundParameters
     
     $authentication = TryCatchHandleErrWithDetails -ScriptBlock {
         $authentication = $null
-        $authentication = Add-RdsAccount @PSBoundParameters
+        $authentication = Add-RdsAccount @Params
         if (!$authentication) {
             throw $authentication
         }
