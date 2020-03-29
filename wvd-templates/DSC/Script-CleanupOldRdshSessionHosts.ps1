@@ -121,8 +121,8 @@ Import-Module Azurerm.Network
 Import-Module Azurerm.Storage
 
 #Authenticate AzureRM
-$authentication = $null
-try {
+$authentication = TryCatchHandleErrWithDetails -ScriptBlock {
+    $authentication = $null
     if ($isServicePrincipal -eq "True") {
         $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
     }
@@ -132,24 +132,8 @@ try {
     if (!$authentication) {
         throw $authentication
     }
-}
-catch {
-    $innerExAsStr = ""
-    $numInnerExceptions = 0
-    if ($_.Exception -is [System.AggregateException] -and $_.Exception.InnerExceptions) {
-        $numInnerExceptions = $_.Exception.InnerExceptions.Count
-        $innerExAsStr = $_.Exception.InnerExceptions -join "`n"
-    }
-    
-    $errMsg = "Error authenticating AzureRM account, isServicePrincipal = $isServicePrincipal"
-    $errMsg += " Error Details:`n$($_ | Out-String)"
-    if ($innerExAsStr.Length -gt 0) {
-        $errMsg += " Inner Errors (there are " + $numInnerExceptions + "): `n$($innerExAsStr | Out-String)"
-    } 
-
-    Write-Log -Error $errMsg
-    throw [System.Exception]::new($errMsg, $PSItem.Exception)
-}
+    return $authentication
+} -ErrMsg "Error authenticating AzureRM account, isServicePrincipal = $isServicePrincipal"
 Write-Log -Message "AzureRM account authentication successful. Result:`n$($authentication | Out-String)"
 
 if ($authentication.Context.Subscription.Id -ne $SubscriptionId) {

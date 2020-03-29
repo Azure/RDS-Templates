@@ -271,41 +271,15 @@ function AuthenticateRdsAccount {
         Write-Log -Message "Authenticating using user $($Credential.username)"
     }
     
-    $authentication = $null
-    try {
+    $authentication = TryCatchHandleErrWithDetails -ScriptBlock {
+        $authentication = $null
         $authentication = Add-RdsAccount @PSBoundParameters
         if (!$authentication) {
             throw $authentication
         }
-    }
-    catch {
-        #This creates a new script scope so that these variables aren't included in this function scope since this function is being called using dot source notation.
-        & {
-            Set-StrictMode -Version Latest
-            
-            $innerExAsStr = ""
-            $numInnerExceptions = 0
-            if ($_.Exception -is [System.AggregateException] -and $_.Exception.InnerExceptions) {
-                $numInnerExceptions = $_.Exception.InnerExceptions.Count
-                foreach ($innerEx in $_.Exception.InnerExceptions) {
-                    if ($innerExAsStr.Length -gt 0) {
-                        $innerExAsStr += "`n"
-                    } 
-                    $innerExAsStr += $innerEx
-                }
-            }
-            
-            $errMsg = "Error authenticating Windows Virtual Desktop account, ServicePrincipal=" + $ServicePrincipal
-            $errMsg += " Error Details:`n$($_ | Out-String)"
-            if ($innerExAsStr.Length -gt 0) {
-                $errMsg += " Inner Errors (there are " + $numInnerExceptions + "): `n$($innerExAsStr | Out-String)"
-            } 
-
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
-        }
-
-    }
+        return $authentication
+    } -ErrMsg "Error authenticating Windows Virtual Desktop account, ServicePrincipal = $ServicePrincipal"
+    
     Write-Log -Message "Windows Virtual Desktop account authentication successful. Result:`n$($authentication | Out-String)"
 }
 
@@ -325,26 +299,15 @@ function SetTenantGroupContextAndValidate {
     if ($TenantGroupName -ne $currentTenantGroupName) {
         Write-Log -Message "Running switching to the $TenantGroupName context"
 
-        try {
+        TryCatchHandleErrWithDetails -ScriptBlock {
             #As of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the TenantGroupName doesn't exist.
             Set-RdsContext -TenantGroupName $TenantGroupName
-        }
-        catch {
-            $errMsg = "Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group. Error Details: $($PSItem | Out-String)"
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
-        }
-
-        $tenants = $null
-        try {
-            $tenants = Get-RdsTenant -Name $TenantName
-        }
-        catch {
-            $errMsg = "Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant. Error Details: $($PSItem | Out-String)"
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
-        }
-
+        } -ErrMsg "Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group"
+        
+        $tenants = TryCatchHandleErrWithDetails -ScriptBlock {
+            return (Get-RdsTenant -Name $TenantName)
+        } -ErrMsg "Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant"
+        
         if (!$tenants) {
             $errMsg = "No tenant with name ""$TenantName"" exists or the account doesn't have access to it." 
             Write-Log -Error $errMsg
@@ -431,4 +394,33 @@ function ImportRDPSMod {
 function GetCurrSessionHostName {
     $Wmi = (Get-WmiObject win32_computersystem)
     return "$($Wmi.DNSHostName).$($Wmi.Domain)"
+}
+
+function TryCatchHandleErrWithDetails {
+    param(
+        [parameter(Mandatory = $true)]
+        [ScriptBlock]$ScriptBlock,
+
+        [string]$ErrMsg = "Some error occurred"
+    )
+
+    try {
+        return (& $ScriptBlock)
+    }
+    catch {
+        $innerExAsStr = ""
+        $numInnerExceptions = 0
+        if ($PSItem.Exception -is [System.AggregateException] -and $PSItem.Exception.InnerExceptions) {
+            $numInnerExceptions = $PSItem.Exception.InnerExceptions.Count
+            $innerExAsStr = $PSItem.Exception.InnerExceptions -join "`n"
+        }
+        
+        $ErrMsg += ": Error Details:`n$($PSItem | Out-String)"
+        if ($innerExAsStr.Length -gt 0) {
+            $ErrMsg += " Inner Errors (there are " + $numInnerExceptions + "): `n$($innerExAsStr | Out-String)"
+        } 
+
+        Write-Log -Error $ErrMsg
+        throw [System.Exception]::new($ErrMsg, $PSItem.Exception)
+    }
 }
