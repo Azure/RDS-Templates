@@ -417,9 +417,9 @@ function TryCatchHandleErrWithDetails {
             $innerExAsStr = $PSItem.Exception.InnerExceptions -join "`n"
         }
         
-        $ErrMsg += ": Error Details:`n$($PSItem | Out-String)"
+        $ErrMsg = "$ErrMsg`nError Details:`n$($PSItem | Out-String)"
         if ($innerExAsStr.Length -gt 0) {
-            $ErrMsg += " Inner Errors (there are " + $numInnerExceptions + "): `n$($innerExAsStr | Out-String)"
+            $ErrMsg = "$ErrMsg`nInner Errors (there are $numInnerExceptions):`n$($innerExAsStr | Out-String)"
         } 
 
         Write-Log -Error $ErrMsg
