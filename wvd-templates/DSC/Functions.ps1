@@ -119,6 +119,7 @@ function Write-Log {
         [Parameter(Mandatory = $true)]
         [string]$Message,
 
+        # //todo use diff name for this var, maybe $Err ? https://github.com/PowerShell/PSScriptAnalyzer/blob/master/RuleDocumentation/AvoidAssignmentToAutomaticVariable.md
         [switch]$Error
     )
      
