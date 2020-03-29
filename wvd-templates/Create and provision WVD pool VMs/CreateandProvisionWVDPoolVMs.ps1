@@ -8,11 +8,13 @@ $location="EastUS"
 $VMNamingPrefix="megaVM"
 $targetVNETName="megaVNET"
 $targetSubnetName="default"
-[int]$maxSimulanteousDeployments=3
-[array]$deployments = @()
 [string]$userName="user01"
+#build a random DNS name that meets Azure's criteria
+$dnsPrefixForPublicIP = -join ((65..90) + (97..122) | Get-Random -Count 10 | % {[char]$_})
 #create a random password that meet's Azure's rules - https://gallery.technet.microsoft.com/office/Generate-Random-Password-ca4c9f07
 [string]$password=(-join(65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90|%{[char]$_}|Get-Random -C 2)) + (-join(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122|%{[char]$_}|Get-Random -C 2)) + (-join(65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90|%{[char]$_}|Get-Random -C 2)) + (-join(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122|%{[char]$_}|Get-Random -C 2)) + (-join(64,33,35,36|%{[char]$_}|Get-Random -C 1))  + (-join(49,50,51,52,53,54,55,56,57|%{[char]$_}|Get-Random -C 3)) 
+#build the password as a secure string
+[securestring]$securePassword = $password | ConvertTo-SecureString -AsPlainText -Force
 [string]$dnsPrefixForPublicIP
 
 #Connect-AzAccount
@@ -127,12 +129,6 @@ do {
             $false { $vmsToDeploy = $allocationBatchSize }
         }
 
-        #build the creds
-        [securestring]$securePassword = $password | ConvertTo-SecureString -AsPlainText -Force
-
-        #build a DNS name
-        $dnsPrefixForPublicIP = -join ((65..90) + (97..122) | Get-Random -Count 10 | % {[char]$_})
-
         #TODO: Need to add error handling for when the deployment is invalid for some reason (quota, validation failure, etc.)
         #kick off an ARM deployment to deploy a batch of VMs
         [string]$uniqueIDforBatch = New-Guid
@@ -148,6 +144,8 @@ do {
         -dnsPrefixForPublicIP "$($dnsPrefixForPublicIP)".ToLower() `
         -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" ).Name = $deploymentName
     #        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
+
+        
 
         #add the new deployment to the array for tracking purposes
         $deployment = New-Object -TypeName PSObject
