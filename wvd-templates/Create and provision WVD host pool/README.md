@@ -40,7 +40,7 @@ Ignore the following parameters:
 - **Rdsh Custom Image Source Resource Group**
 - **Rdsh Use Managed Disks**
 - **Storage Account Resource Group Name**
-- **Shared Image Gallery version**
+- **Shared Image Gallery image version**
 
 ### Custom VHD from blob storage
 By selecting a custom VHD from blob storage, you can create your own image locally through Hyper-V or on an Azure VM. Enter or select values for the following parameters:
@@ -55,7 +55,7 @@ Ignore the following parameters:
 - **Rdsh Gallery Image SKU**
 - **Rdsh Custom Image Source Name**
 - **Rdsh Custom Image Source Resource Group**
-- **Shared Image Gallery version**
+- **Shared Image Gallery image version**
 
 ### Custom Azure Image resource from a resource group
 By selecting a custom Azure Image resource from a resource group, you can create your own image locally through Hyper-V or an Azure VM but have the portability and flexibility of image management through an Azure Image resource. Enter or select values for the following parameters:
@@ -68,18 +68,20 @@ Ignore the following parameters:
 - **Rdsh Gallery Image SKU**
 - **Rdsh Use Managed Disks**
 - **Storage Account Resource Group Name**
-- **Shared Image Gallery version**
+- **Shared Image Gallery image version**
 
 ### Custom image from a Shared Image Gallery
 By selecting a custom image resource from a Shared Image Gallery, you can create your own image locally through Hyper-V or an Azure VM but have the portability and flexibility of image management through an Azure Shared Image Gallery. Enter or select values for the following parameters:
 - **Rdsh Image Source**, select **SharedImageGallery**.
-- **Shared Image Gallery version**
+- **Shared Image Gallery image version**
 
 Ignore the following parameters:
 - **Vm Image Vhd Uri**
 - **Rdsh Gallery Image SKU**
 - **Rdsh Use Managed Disks**
 - **Storage Account Resource Group Name**
+- **Rdsh Custom Image Source Name**
+- **Rdsh Custom Image Source Resource Group**
 
 ## VM configuration
 Enter the remaining configuration parameters for the virtual machines.
