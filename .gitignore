@@ -716,3 +716,4 @@ $RECYCLE.BIN/
 /wvd-sh/wvd-Diagnostics-ux
 .vscode/launch.json
 .vscode/tasks.json
+wvd-templates/Create and provision WVD pool VMs/TestDeployment.ps1
