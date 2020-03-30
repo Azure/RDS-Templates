@@ -22,10 +22,11 @@ Follow the guidance below for entering the appropriate parameters for your scena
 > Microsoft Support is not handling issues for any published tools in this repository. These tools are published as is with no implied support. However, we would like to welcome you to open issues using GitHub issues to collaborate and improve these tools. You can open [an issue](https://github.com/Azure/rds-templates/issues) and add the label **2-Update-existing-WVD-host-pool** to associate it with this tool.
 
 ## VM image
-When creating the new virtual machines, you have three options:
+When creating the new virtual machines, you have four options:
 - Azure Gallery image
 - Custom VHD from blob storage
 - Custom Azure Image resource from a resource group
+- Shared Image Gallery
 
 Enter the appropriate parameters depending on the image option you choose.
 
@@ -40,6 +41,9 @@ Ignore the following parameters:
 - **Rdsh Custom Image Source Resource Group**
 - **Rdsh Use Managed Disks**
 - **Storage Account Resource Group Name**
+- **Shared Image Gallery Name**
+- **Shared Image Gallery Image Definition Name**
+- **Shared Image Gallery Image Version Name**
 
 ### Custom VHD from blob storage
 By selecting a custom VHD from blob storage, you can create your own image locally through Hyper-V or on an Azure VM. Enter or select values for the following parameters:
@@ -54,6 +58,9 @@ Ignore the following parameters:
 - **Rdsh Gallery Image SKU**
 - **Rdsh Custom Image Source Name**
 - **Rdsh Custom Image Source Resource Group**
+- **Shared Image Gallery Name**
+- **Shared Image Gallery Image Definition Name**
+- **Shared Image Gallery Image Version Name**
 
 ### Custom Azure Image resource from a resource group
 By selecting a custom Azure Image resource from a resource group, you can create your own image locally through Hyper-V or an Azure VM but have the portability and flexibility of image management through an Azure Image resource. Enter or select values for the following parameters:
@@ -66,6 +73,24 @@ Ignore the following parameters:
 - **Rdsh Gallery Image SKU**
 - **Rdsh Use Managed Disks**
 - **Storage Account Resource Group Name**
+- **Shared Image Gallery Name**
+- **Shared Image Gallery Image Definition Name**
+- **Shared Image Gallery Image Version Name**
+
+### Shared Image Gallery
+By selecting Shared Image Gallery, you can create your own image locally through Hyper-V or an Azure VM but have the portability and flexibility of image management through an Azure Shared Image Gallery. Enter or select values for the following parameters:
+- **Rdsh Image Source**, select **SharedImageGallery**.
+- **Shared Image Gallery Name**
+- **Shared Image Gallery Image Definition Name**
+- **Shared Image Gallery Image Version Name**
+
+Ignore the following parameters:
+- **Vm Image Vhd Uri**
+- **Rdsh Gallery Image SKU**
+- **Rdsh Use Managed Disks**
+- **Storage Account Resource Group Name**
+- **Rdsh Custom Image Source Name**
+- **Rdsh Custom Image Source Resource Group**
 
 ## VM configuration
 Enter the remaining configuration parameters for the virtual machines.
