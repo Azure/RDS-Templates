@@ -75,6 +75,7 @@ do {
     #loop through all the deployments which aren't already marked as completed
     #if they are done, update the Completed property
     #NOTE: for some reason Get-AzDeployment doesn't return any results (RBAC?) so am forced to use custom array
+    #TODO: Switch this to checking on the job status
     foreach ($deployment in $deployments) {
         if ($deployment.Completed -eq $false) {
 
@@ -144,16 +145,28 @@ do {
         -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" ).Name = $deploymentName
     #        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
 
-        
+        #make sure the deployment started OK. If not, then dump the error to the screen
+        if ((Get-Job -Name "$($deploymentName)real").State -ne "Failed") {
 
-        #add the new deployment to the array for tracking purposes
-        $deployment = New-Object -TypeName PSObject
-        $deployment | Add-Member -Name 'Name' -MemberType Noteproperty -Value $deploymentName
-        $deployment | Add-Member -Name 'Completed' -MemberType Noteproperty -Value $false
-        $deployments += $deployment
+            #add the new deployment to the array for tracking purposes
+            Write-Host "Successfully started deployment$($deploymentName)"
+            $deployment = New-Object -TypeName PSObject
+            $deployment | Add-Member -Name 'Name' -MemberType Noteproperty -Value $deploymentName
+            $deployment | Add-Member -Name 'Completed' -MemberType Noteproperty -Value $false
+            $deployments += $deployment
+            Write-Debug "Added $($deploymentName) to tracking array"
+    
+            #increment the loop counter so the next iteration gets a different deployment name
+            $deploymentIteration += 1
+        }    
+        else {
+            Write-Debug "$($deploymentName) failed validation"
+            #job is in a failed state - report the reason
+            $job = Get-Job -Name "$($deploymentName)"
+            throw Receive-Job -Job $job -Keep
+        }
 
-        #increment the loop counter so the next iteration gets a different deployment name
-        $deploymentIteration += 1
+        Write-Debug ""
     }
 
     #sleep for a bit
