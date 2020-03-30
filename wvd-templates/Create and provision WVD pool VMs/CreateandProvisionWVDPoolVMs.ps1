@@ -9,6 +9,7 @@ $VMNamingPrefix="megaVM"
 $targetVNETName="megaVNET"
 $targetSubnetName="default"
 [string]$userName="user01"
+[bool]$isTesting=$true
 #build a random DNS name that meets Azure's criteria
 [string]$dnsPrefixForPublicIP = -join ((65..90) + (97..122) | Get-Random -Count 10 | % {[char]$_})
 #create a random password that meet's Azure's rules - https://gallery.technet.microsoft.com/office/Generate-Random-Password-ca4c9f07
@@ -18,7 +19,9 @@ $targetSubnetName="default"
 
 #Connect-AzAccount
 #for testing
-$resourceGroupName += New-Guid
+if ($isTesting) {
+    $resourceGroupName += New-Guid
+}
 
 #create resource group if necessary
 Get-AzResourceGroup -Name $resourceGroupname -ErrorVariable notPresent -ErrorAction SilentlyContinue
