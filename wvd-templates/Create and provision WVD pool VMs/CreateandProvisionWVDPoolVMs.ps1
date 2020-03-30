@@ -1,5 +1,7 @@
+$isTesting = $true
 [int]$desiredPoolVMCount=10
 [int]$allocationBatchSize=1
+[int]$maxSimulanteousDeployments = 3
 [string]$batchNamingPrefix="WVDDeploymentBatch"
 [int]$sleepTimeMin=3
 $resourceGroupName="WVDTestRG"
@@ -15,10 +17,15 @@ $targetSubnetName="default"
 [string]$password=(-join(65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90|%{[char]$_}|Get-Random -C 2)) + (-join(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122|%{[char]$_}|Get-Random -C 2)) + (-join(65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90|%{[char]$_}|Get-Random -C 2)) + (-join(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122|%{[char]$_}|Get-Random -C 2)) + (-join(64,33,35,36|%{[char]$_}|Get-Random -C 1))  + (-join(49,50,51,52,53,54,55,56,57|%{[char]$_}|Get-Random -C 3)) 
 #build the password as a secure string
 [securestring]$securePassword = $password | ConvertTo-SecureString -AsPlainText -Force
+$deployments = @()
+
+#enforce most current rules to help catch run-time failures
+Set-StrictMode -Version Latest
 
 #Connect-AzAccount
 #for testing
 if ($isTesting) {
+    Write-Debug "Running in Testing mode"
     $resourceGroupName += New-Guid
 }
 
@@ -56,9 +63,16 @@ if ($notPresent)
 [int]$countAdditionalVMs=0
 
 #since we know how many VMs we want, let's figure out how many we need to deploy
-#first, query to see how many already exist
+#query to see how many VMs already exist
 $existingVMs = Get-AzVM -ResourceGroupName $resourceGroupName
-$countExistingVMs = $existingVMs.count
+if (!$existingVMs) {
+    #no VMs in the resource group yet
+    $existingVMs = 0
+}
+else {
+    #VMs already exist, so use the count
+    $existingVMs.Count
+}
 
 #now, figure out how many more VMs need created
 $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
@@ -109,18 +123,25 @@ do {
     }
 
     #see if we need to kick off any deployments
+    #if $deployments is null or current count less than $maxSimultaneousDeployments, then we need to allow deployments
     $needMoreDeployments = $false
-    if (($deployments | Where-Object {$_.Completed -eq $false}).Count -lt $maxSimulanteousDeployments) {
+    if (!$deployments) {
+        #if no deployments at all, then allow more to kick off
         $needMoreDeployments = $true
+    }
+    else {
+        #if we have deployments already, then count all where not complete
+        if (($deployments | Where-Object {$_.Completed -eq $false}).Count -lt $maxSimulanteousDeployments) {
+
+            #less than $maxSimultaneousDeployments, so allow more to kick off
+            $needMoreDeployments = $true
+        }
     }
 
     #kick of any necessary deployments to ensure we are always running $maxSimulanteousDeployments
     [int]$vmsToDeploy = 0
     if ($needMoreDeployments)
     {
-        #see how many VMs exist
-        $countExistingVMs = (Get-AzVM -ResourceGroupName $resourceGroupName).Count
-
         #now, figure out how many more VMs need created
         $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
 
@@ -148,7 +169,7 @@ do {
     #        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
 
         #make sure the deployment started OK. If not, then dump the error to the screen
-        if ((Get-Job -Name "$($deploymentName)real").State -ne "Failed") {
+        if ((Get-Job -Name "$($deploymentName)").State -ne "Failed") {
 
             #add the new deployment to the array for tracking purposes
             Write-Host "Successfully started deployment$($deploymentName)"
