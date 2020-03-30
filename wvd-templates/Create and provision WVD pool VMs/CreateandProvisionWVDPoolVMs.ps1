@@ -172,7 +172,7 @@ do {
         if ((Get-Job -Name "$($deploymentName)").State -ne "Failed") {
 
             #add the new deployment to the array for tracking purposes
-            Write-Host "Successfully started deployment$($deploymentName)"
+            Write-Host "Successfully started deployment $($deploymentName)"
             $deployment = New-Object -TypeName PSObject
             $deployment | Add-Member -Name 'Name' -MemberType Noteproperty -Value $deploymentName
             $deployment | Add-Member -Name 'Completed' -MemberType Noteproperty -Value $false
