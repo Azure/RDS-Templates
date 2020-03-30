@@ -64,14 +64,15 @@ if ($notPresent)
 
 #since we know how many VMs we want, let's figure out how many we need to deploy
 #query to see how many VMs already exist
+$existingVMs = @()
 $existingVMs = Get-AzVM -ResourceGroupName $resourceGroupName
 if (!$existingVMs) {
     #no VMs in the resource group yet
-    $existingVMs = 0
+    $countExistingVMs = 0
 }
 else {
     #VMs already exist, so use the count
-    $existingVMs.Count
+    $countExistingVMs = $existingVMs.Count
 }
 
 #now, figure out how many more VMs need created
@@ -103,17 +104,17 @@ do {
 
             #if there are any, then see if any are VMs
             #there HAVE to be VM operations at some point so if none exist then we haven't gotten far enough
-            if ($runningOperations.Count -gt 0) {
+            if (($runningOperations | Measure-Object).Count -gt 0) {
                 
                 #filter down to just VMs
                 $vmOperations = @($runningOperations | Where-Object {$_.targetResource -match "virtualMachines"})
-                if ($vmOperations.Count -gt 0) {
+                if (($vmOperations | Measure-Object).Count -gt 0) {
 
                     #find just the VM operations that are still running
                     $runningVMOperations = @($vmOperations | Where-Object {$_.provisioningState -match "Running"})
 
                     #if none are still running, then we either fully completed or failed - either is acceptable here
-                    if ($runningVMOperations.Count -eq 0)
+                    if (($runningVMOperations | Measure-Object).Count -eq 0)
                     {
                         $deployment.Completed=$true
                     }
@@ -131,7 +132,7 @@ do {
     }
     else {
         #if we have deployments already, then count all where not complete
-        if (($deployments | Where-Object {$_.Completed -eq $false}).Count -lt $maxSimulanteousDeployments) {
+        if ((($deployments | Where-Object {$_.Completed -eq $false}) | Measure-Object).Count -lt $maxSimulanteousDeployments) {
 
             #less than $maxSimultaneousDeployments, so allow more to kick off
             $needMoreDeployments = $true
