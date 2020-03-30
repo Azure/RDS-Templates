@@ -1,7 +1,6 @@
 [int]$desiredPoolVMCount=10
 [int]$allocationBatchSize=1
 [string]$batchNamingPrefix="WVDDeploymentBatch"
-[string]$vmNamingPrefix="WVDVM"
 [int]$sleepTimeMin=3
 $resourceGroupName="WVDTestRG"
 $location="EastUS"
