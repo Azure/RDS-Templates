@@ -336,12 +336,8 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName
 
 		foreach ($SessionHost in $ListOfSessionHosts) {
-			Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)"
-			$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)" }
-			Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 			$SessionHostName = $SessionHost.SessionHostName | Out-String
 			$VMName = $SessionHostName.Split(".")[0]
-
 
 			# Check if VM is in maintenance
 			$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
@@ -353,6 +349,10 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 				continue
 			}
 			$AllSessionHosts = Compare-Object $ListOfSessionHosts $SkipSessionhosts | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }
+
+            Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
+            $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)" }
+			Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 
 			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
 				# Check if the Azure vm is running       
@@ -578,7 +578,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
 				# Check if the Azure VM is running or not
 				if ($RoleInstance.PowerState -eq "VM running") {
-					Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)"
+					Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
 					$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)" }
 					Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
@@ -1235,7 +1235,7 @@ else {
 			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
 				# Check if the Azure VM is running
 				if ($RoleInstance.PowerState -eq "VM running") {
-					Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)"
+					Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
 					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
 					# Calculate available capacity of sessions  
 					$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
