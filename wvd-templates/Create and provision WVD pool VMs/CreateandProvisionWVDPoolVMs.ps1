@@ -174,6 +174,14 @@ do {
         $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs - $deployingVMs
         Write-Host "$(Get-TimeStamp) Additional VMs needed: $($countAdditionalVMs)"
 
+        #exit strategy
+        #if additonal VMs equal zero (or is negative=bad logic) then bail entirely
+        if ($countAdditionalVMs -le 0)
+        {
+            Write-Host "$(Get-TimeStamp) All VMs needed deployed or deploying - exiting"
+            break
+        }
+
         #deploy either the total desired or the allocation pool count - whichever is smaller
         Switch ($allocationBatchSize -gt $countAdditionalVMs)
         {
@@ -229,7 +237,9 @@ do {
     Write-Host "$(Get-TimeStamp) Sleeping for $(60*$sleepTimeMin) seconds to let deployments run"
     Start-Sleep -s (60*$sleepTimeMin)
 
-} while ($countAdditionalVMs -gt $allocationBatchSize)
+} while ($countAdditionalVMs -eq 0)
+
+Write-Host "$(Get-TimeStamp) Exiting"
 
 #after everything is done, redeploy any deployed with failed VMs
 #this will ensure any transient failures are addressed
