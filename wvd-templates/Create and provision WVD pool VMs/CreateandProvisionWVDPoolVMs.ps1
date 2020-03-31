@@ -230,7 +230,7 @@ do {
     #artificially reduce the sleep time for the first deployments
     #this way, we aren't waiting extra time while we are guaranteed
     #to not have enough deployments running
-    if(($deploymentIteration-1) -le $maxSimulanteousDeployments)
+    if(($deploymentIteration-1) -lt $maxSimulanteousDeployments)
     {
         Write-Host "$(Get-TimeStamp) Haven't attempted enough deployments - reducing sleep time to 60 seconds"
         $sleepTimeMin = 1
