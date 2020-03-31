@@ -3,9 +3,9 @@ function Get-TimeStamp {
     return "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
 }
 
-$isTesting = $true
-[int]$desiredPoolVMCount=5
-[int]$allocationBatchSize=1
+$isDEBUG = $true
+[int]$desiredPoolVMCount=200
+[int]$allocationBatchSize=50
 [int]$maxSimulanteousDeployments = 3
 [array]$deployments = @()
 [int]$sleepTimeMin=5
@@ -22,8 +22,8 @@ Set-StrictMode -Version Latest
 
 #Connect-AzAccount
 #for testing
-if ($isTesting) {
-    Write-Host "$(Get-TimeStamp) Running in Testing mode. Resource will have a GUID appended"
+if ($isDEBUG) {
+    Write-Host "$(Get-TimeStamp) Running in DEBUG mode. Resource group name will have a GUID appended"
     $resourceGroupName += New-Guid
 }
 
@@ -165,13 +165,7 @@ do {
         Write-Host "$(Get-TimeStamp) Desired total VMs: $($desiredPoolVMCount)"
         Write-Host "$(Get-TimeStamp) Existing VMs in pool: $($countExistingVMs)"
 
-        #assume that all previous deployments will complete successfully
-        #so add that to the count of existing VMs
-        #May not be 100% accurate, but should be close in general
-        $deployingVMs = $deploymentIteration * $allocationBatchSize
-        Write-Host "$(Get-TimeStamp) VMs already deploying: $($deployingVMs)"
-
-        $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs - $deployingVMs
+        $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
         Write-Host "$(Get-TimeStamp) Additional VMs needed: $($countAdditionalVMs)"
 
         #exit strategy
@@ -233,13 +227,22 @@ do {
 
     }
 
-    #sleep for a bit
+    #artificially reduce the sleep time for the first deployments
+    #this way, we aren't waiting extra time while we are guaranteed
+    #to not have enough deployments running
+    if(($deploymentIteration-1) -le $maxSimulanteousDeployments)
+    {
+        Write-Host "$(Get-TimeStamp) Haven't attempted enough deployments - reducing sleep time to 60 seconds"
+        $sleepTimeMin = 1
+    }
+
+    #sleep for a bit to allow deployments to run
     Write-Host "$(Get-TimeStamp) Sleeping for $(60*$sleepTimeMin) seconds to let deployments run"
     Start-Sleep -s (60*$sleepTimeMin)
 
-} while ($countAdditionalVMs -eq 0)
+} while ($countAdditionalVMs -ge $allocationBatchSize)
 
 Write-Host "$(Get-TimeStamp) Exiting"
 
-#after everything is done, redeploy any deployed with failed VMs
+#TODO: after everything is done, redeploy any deployed with failed VMs
 #this will ensure any transient failures are addressed
