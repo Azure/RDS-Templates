@@ -518,8 +518,50 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$SkipSessionhosts = 0
 		$SkipSessionhosts = @()
 
-		$AllSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Sort-Object Sessions
-		foreach ($SessionHost in $AllSessionHosts) {
+        
+        # Check if minimum number of rdsh vm's are running
+        $CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
+		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
+		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
+			$NumberOfRunningHost = 0
+			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
+				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
+					$VMName = $SessionHostName.Split(".")[0]
+					$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+					# Check the session host is in maintenance
+					if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
+						continue
+					}
+					# Check if the session host is allowing new connections
+					Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+
+					Start-SessionHost -VMName $VMName
+					# Wait for the VM to Start
+					$IsVMStarted = $false
+					while (!$IsVMStarted) {
+						$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+						if ($RoleInstance.PowerState -eq "VM running") {
+							$IsVMStarted = $true
+						}
+					}
+		            # Wait for the VM to start
+					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+					if ($SessionHostIsAvailable) {
+				    Write-Output "'$SessionHost' session host status is 'Available'"
+					$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
+				    Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+				    }
+                    else {
+                    Write-Output "'$SessionHost' session host does not configured properly with deployagent or does not started properly"
+                    $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host does not configured properly with deployagent or does not started properly" }
+					Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+					}
+				}
+			}
+		}
+
+		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Sort-Object Sessions
+		foreach ($SessionHost in $ListOfSessionHosts) {
 			$SessionHostName = $SessionHost.SessionHostName
 			$VMName = $SessionHostName.Split(".")[0]
 			$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
@@ -1134,6 +1176,49 @@ else {
 		#Initialize variable for to skip the session host which is in maintenance.
 		$SkipSessionhosts = 0
 		$SkipSessionhosts = @()
+        # Check if minimum number rdsh vm's are running in off peak hours
+        $CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
+		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
+		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
+			$NumberOfRunningHost = 0
+			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
+				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
+					$VMName = $SessionHostName.Split(".")[0]
+					$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+					# Check the session host is in maintenance
+					if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
+						continue
+					}
+					# Check if the session host is allowing new connections
+					Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+
+					Start-SessionHost -VMName $VMName
+					# Wait for the VM to Start
+					$IsVMStarted = $false
+					while (!$IsVMStarted) {
+						$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+						if ($RoleInstance.PowerState -eq "VM running") {
+							$IsVMStarted = $true
+						}
+					}
+					# Check if session host is availba
+					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+					if ($SessionHostIsAvailable) {
+						Write-Output "'$SessionHost' session host status is 'Available'"
+					}
+					else {
+						Write-Output "'$SessionHost' session host does not configured properly with deployagent or does not started properly"
+					}
+					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
+					if ($NumberOfRunningHost -ge $MinimumNumberOfRDSH) {
+						break;
+					}
+
+
+				}
+			}
+		}
+
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Sort-Object Sessions
 		foreach ($SessionHost in $ListOfSessionHosts) {
 			$SessionHostName = $SessionHost.SessionHostName
