@@ -87,7 +87,7 @@ do {
         #VMs already exist, so use the count
         $countExistingVMs = ($existingVMs | Measure-Object).Count
     }
-    Write-Host "$(Get-TimeStamp) VMs already in $($resourceGroupName): $($countExistingVMs)"
+    Write-Host "$(Get-TimeStamp) VMs already in resource group $($resourceGroupName): $($countExistingVMs)"
 
     Write-Host "$(Get-TimeStamp) Waking up to try and run another deployment"
     foreach ($deployment in $deployments) {
