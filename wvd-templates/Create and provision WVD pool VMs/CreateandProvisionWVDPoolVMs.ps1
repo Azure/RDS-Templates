@@ -1,23 +1,17 @@
 $isTesting = $true
-[int]$desiredPoolVMCount=10
+[int]$desiredPoolVMCount=5
 [int]$allocationBatchSize=1
 [int]$maxSimulanteousDeployments = 3
+[array]$deployments = @()
+[int]$sleepTimeMin=1
 [string]$batchNamingPrefix="WVDDeploymentBatch"
-[int]$sleepTimeMin=3
 $resourceGroupName="WVDTestRG"
-$location="EastUS"
+$location="centralus"
 $VMNamingPrefix="megaVM"
-$targetVNETName="megaVNET"
-$targetSubnetName="default"
-[string]$userName="user01"
-[bool]$isTesting=$true
-#build a random DNS name that meets Azure's criteria
-[string]$dnsPrefixForPublicIP = -join ((65..90) + (97..122) | Get-Random -Count 10 | % {[char]$_})
-#create a random password that meet's Azure's rules - https://gallery.technet.microsoft.com/office/Generate-Random-Password-ca4c9f07
-[string]$password=(-join(65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90|%{[char]$_}|Get-Random -C 2)) + (-join(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122|%{[char]$_}|Get-Random -C 2)) + (-join(65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90|%{[char]$_}|Get-Random -C 2)) + (-join(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122|%{[char]$_}|Get-Random -C 2)) + (-join(64,33,35,36|%{[char]$_}|Get-Random -C 1))  + (-join(49,50,51,52,53,54,55,56,57|%{[char]$_}|Get-Random -C 3)) 
-#build the password as a secure string
-[securestring]$securePassword = $password | ConvertTo-SecureString -AsPlainText -Force
-$deployments = @()
+$targetVNETName="fabrikam-central"
+$targetSubnetName="desktops"
+$virtualNetworkResourceGroupName = "fabrikamwvd-central"
+
 
 #enforce most current rules to help catch run-time failures
 Set-StrictMode -Version Latest
@@ -40,7 +34,7 @@ if ($notPresent)
 }
 
 #create VNET and subnet if necessary
-Get-AzVirtualNetwork -Name $targetVNETName -ResourceGroup $resourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
+Get-AzVirtualNetwork -Name $targetVNETName -ResourceGroup $virtualNetworkResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent)
 {
     #VNET doesn't exist, so create
@@ -52,7 +46,7 @@ if ($notPresent)
 
     Add-AzVirtualNetworkSubnetConfig `
         -Name $targetSubnetName `
-        -AddressPrefix 10.0.0.0/24 `
+        -AddressPrefix 10.0.0.0/24 `$
         -VirtualNetwork $virtualNetwork
 
     $virtualNetwork | Set-AzVirtualNetwork
@@ -75,9 +69,6 @@ else {
     $countExistingVMs = $existingVMs.Count
 }
 
-#now, figure out how many more VMs need created
-$countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
-
 #general logic flow is as follows:
 #deploy up to maxSimulanteousDeployments each one having the allocation batch size
 #sleep for a bit
@@ -93,6 +84,8 @@ do {
     #if they are done, update the Completed property
     #NOTE: for some reason Get-AzDeployment doesn't return any results (RBAC?) so am forced to use custom array
     #TODO: Switch this to checking on the job status
+
+    Write-Host "Waking up to try and run another deployment"
     foreach ($deployment in $deployments) {
         if ($deployment.Completed -eq $false) {
 
@@ -106,17 +99,22 @@ do {
             #there HAVE to be VM operations at some point so if none exist then we haven't gotten far enough
             if (($runningOperations | Measure-Object).Count -gt 0) {
                 
-                #filter down to just VMs
-                $vmOperations = @($runningOperations | Where-Object {$_.targetResource -match "virtualMachines"})
-                if (($vmOperations | Measure-Object).Count -gt 0) {
+                #filter down to just Create operations
+                $createOperations = @($runningOperations | Where-Object {$_.provisioningOperation -match "Create"})
+                if (($createOperations | Measure-Object).Count -gt 0)
+                {
+                    #filter down to just VMs
+                    $vmOperations = @($createOperations | Where-Object {$_.targetResource -match "virtualMachines"})
+                    if (($vmOperations | Measure-Object).Count -gt 0) {
 
-                    #find just the VM operations that are still running
-                    $runningVMOperations = @($vmOperations | Where-Object {$_.provisioningState -match "Running"})
+                        #find just the VM operations that are still running
+                        $runningVMOperations = @($vmOperations | Where-Object {$_.provisioningState -match "Running"})
 
-                    #if none are still running, then we either fully completed or failed - either is acceptable here
-                    if (($runningVMOperations | Measure-Object).Count -eq 0)
-                    {
-                        $deployment.Completed=$true
+                        #if none are still running, then we either fully completed or failed - either is acceptable here
+                        if (($runningVMOperations | Measure-Object).Count -eq 0)
+                        {
+                            $deployment.Completed=$true
+                        }
                     }
                 }
             }
@@ -128,6 +126,7 @@ do {
     $needMoreDeployments = $false
     if (!$deployments) {
         #if no deployments at all, then allow more to kick off
+        Write-Host "No deployments initiated - allowing a new one to run"
         $needMoreDeployments = $true
     }
     else {
@@ -136,6 +135,12 @@ do {
 
             #less than $maxSimultaneousDeployments, so allow more to kick off
             $needMoreDeployments = $true
+            Write-Host "Less than $($maxSimulanteousDeployments) running - allow a new one to run"
+        }
+        else
+        {
+            Write-Host "More than $($maxSimulanteousDeployments) running - blocking new deployments"
+            $needMoreDeployments = $false
         }
     }
 
@@ -144,30 +149,45 @@ do {
     if ($needMoreDeployments)
     {
         #now, figure out how many more VMs need created
-        $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs
+        Write-Host "Desired total VMs: $($desiredPoolVMCount)"
+        Write-Host "Existing VMs in pool: $($countExistingVMs)"
+
+        #assume that all previous deployments will complete successfully
+        #so add that to the count of existing VMs
+        #May not be 100% accurate, but should be close in general
+        $deployingVMs = $deploymentIteration * $allocationBatchSize
+        Write-Host "VMs already deploying: $($deployingVMs)"
+
+        $countAdditionalVMs = $desiredPoolVMCount - $countExistingVMs - $deployingVMs
+        Write-Host "Additional VMs needed: $($countAdditionalVMs)"
 
         #deploy either the total desired or the allocation pool count - whichever is smaller
         Switch ($allocationBatchSize -gt $countAdditionalVMs)
         {
-            $true { $vmsToDeploy = $countAdditionalVMs }
-            $false { $vmsToDeploy = $allocationBatchSize }
+            $true { 
+                $vmsToDeploy = $countAdditionalVMs 
+                Write-Debug "$($allocationBatchSize)>$($countAdditionalVMs) - Additional VMs smallest. Only deploying what is needed"
+            }
+            $false {
+                 $vmsToDeploy = $allocationBatchSize 
+                 Write-Debug "$($allocationBatchSize)<$($countAdditionalVMs) - Batch size smallest. Deploying full batch"
+            }
         }
 
-        #TODO: Need to add error handling for when the deployment is invalid for some reason (quota, validation failure, etc.)
         #kick off an ARM deployment to deploy a batch of VMs
         [string]$uniqueIDforBatch = New-Guid
         $deploymentName="$($batchNamingPrefix)$($deploymentIteration)-$($uniqueIDforBatch)"
         (New-AzResourceGroupDeployment `
         -Name $deploymentName `
         -ResourceGroupName $resourceGroupName `
-        -virtualMachineCount $vmsToDeploy `
-        -virtualMachineAdminUserName $userName `
-        -virtualMachineAdminPassword $securePassword `
         -AsJob `
-        -virtualMachineNamePrefix "$($vmNamingPrefix)-$($deploymentIteration)-" `
-        -dnsPrefixForPublicIP "$($dnsPrefixForPublicIP)".ToLower() `
-        -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-copy-managed-disks/azuredeploy.json" ).Name = $deploymentName
-    #        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\parameters.json" 
+        -virtualNetworkResourceGroupName $virtualNetworkResourceGroupName `
+        -rdshNumberOfInstances $vmsToDeploy `
+        -location $location `
+        -rdshNamePrefix "$($VMNamingPrefix)$($deploymentIteration)" `
+        -_artifactsLocation "https://raw.githubusercontent.com/Azure/RDS-Templates/noAVSetSlowerHostAvailableCheck_20200218.1900_v1/wvd-templates/" `
+        -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/noAVSetSlowerHostAvailableCheck_20200218.1900_v1/wvd-templates/Create%20and%20provision%20WVD%20host%20pool/mainTemplate.json" `
+        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision WVD pool VMs\param_CreateandProvisionWVDPoolVMs.json_local").Name = $deploymentName
 
         #make sure the deployment started OK. If not, then dump the error to the screen
         if ((Get-Job -Name "$($deploymentName)").State -ne "Failed") {
@@ -184,16 +204,16 @@ do {
             $deploymentIteration += 1
         }    
         else {
-            Write-Debug "$($deploymentName) failed validation"
+            Write-Host "$($deploymentName) failed validation"
             #job is in a failed state - report the reason
             $job = Get-Job -Name "$($deploymentName)"
             throw Receive-Job -Job $job -Keep
         }
 
-        Write-Debug ""
     }
 
     #sleep for a bit
+    Write-Host "Sleeping for $(60*$sleepTimeMin) seconds to let deployments run"
     Start-Sleep -s (60*$sleepTimeMin)
 
 } while ($countAdditionalVMs -gt $allocationBatchSize)
