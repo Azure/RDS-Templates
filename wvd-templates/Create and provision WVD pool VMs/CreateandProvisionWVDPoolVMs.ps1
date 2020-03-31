@@ -3,9 +3,9 @@ function Get-TimeStamp {
     return "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
 }
 
-$isDEBUG = $true
-[int]$desiredPoolVMCount=200
-[int]$allocationBatchSize=50
+$isTest = $true
+[int]$desiredPoolVMCount=50
+[int]$allocationBatchSize=10
 [int]$maxSimulanteousDeployments = 3
 [array]$deployments = @()
 [int]$sleepTimeMin=5
@@ -22,8 +22,8 @@ Set-StrictMode -Version Latest
 
 #Connect-AzAccount
 #for testing
-if ($isDEBUG) {
-    Write-Host "$(Get-TimeStamp) Running in DEBUG mode. Resource group name will have a GUID appended"
+if ($isTest) {
+    Write-Host "$(Get-TimeStamp) Running in TEST mode. Resource group name will have a GUID appended"
     $resourceGroupName += New-Guid
 }
 
@@ -181,11 +181,11 @@ do {
         {
             $true { 
                 $vmsToDeploy = $countAdditionalVMs 
-                Write-Debug "$(Get-TimeStamp) $($allocationBatchSize)>$($countAdditionalVMs) - Additional VMs smallest. Only deploying what is needed"
+                Write-Host "$(Get-TimeStamp) $($allocationBatchSize)>$($countAdditionalVMs) - Additional VMs smallest. Only deploying what is needed"
             }
             $false {
                  $vmsToDeploy = $allocationBatchSize 
-                 Write-Debug "$(Get-TimeStamp) $($allocationBatchSize)<$($countAdditionalVMs) - Batch size smallest. Deploying full batch"
+                 Write-Host "$(Get-TimeStamp) $($allocationBatchSize)<$($countAdditionalVMs) - Batch size smallest. Deploying full batch"
             }
         }
 
@@ -213,7 +213,7 @@ do {
             $deployment | Add-Member -Name 'Name' -MemberType Noteproperty -Value $deploymentName
             $deployment | Add-Member -Name 'Completed' -MemberType Noteproperty -Value $false
             $deployments += $deployment
-            Write-Debug "$(Get-TimeStamp) Added $($deploymentName) to tracking array"
+            Write-Host "$(Get-TimeStamp) Added $($deploymentName) to tracking array"
     
             #increment the loop counter so the next iteration gets a different deployment name
             $deploymentIteration += 1
@@ -240,7 +240,10 @@ do {
     Write-Host "$(Get-TimeStamp) Sleeping for $(60*$sleepTimeMin) seconds to let deployments run"
     Start-Sleep -s (60*$sleepTimeMin)
 
-} while ($countAdditionalVMs -ge $allocationBatchSize)
+    Write-Host "$(Get-TimeStamp) deploymentIteration:$($deploymentIteration)"
+    Write-Host "$(Get-TimeStamp) countAdditionalVMs:$($countAdditionalVMs)"
+    Write-Host "$(Get-TimeStamp) allocationBatchSize:$($allocationBatchSize)"
+} while (($deploymentIteration -ne 0) -and ($countAdditionalVMs -ge $allocationBatchSize))
 
 Write-Host "$(Get-TimeStamp) Exiting"
 
