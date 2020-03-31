@@ -3,19 +3,30 @@ function Get-TimeStamp {
     return "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
 }
 
+#feel free to modify these ones for testing
+[int]$desiredPoolVMCount=50  #how many VMs you want at the end
+[int]$allocationBatchSize=10 #how many VMs to include in a batch. DO NOT EXCEED 200 OR IT WON'T DEPLOY VIA ARM TEMPLATE
+[int]$maxSimulanteousDeployments = 3 #theoretically can be change, but don't change at this time
+$resourceGroupName="WVDTestRG" #this is the name of the resource group that will be created/used for the VMs
+$VMNamingPrefix="megaVM" #this is the prefix that will get put in the VM names. Should be cosmetic
+
+#if this is set to TRUE, then the resource group has a GUID appended on the end
+#this makes it easy to clean up because you can just delete the resource group
+#and all VMs will be deleted
 $isTest = $true
-[int]$desiredPoolVMCount=50
-[int]$allocationBatchSize=10
-[int]$maxSimulanteousDeployments = 3
-[array]$deployments = @()
-[int]$sleepTimeMin=5
+
+#change if you want to, but is purely cosmetic
 [string]$batchNamingPrefix="WVDDeploymentBatch"
-$resourceGroupName="WVDTestRG"
+
+#don't change these unless you have your own WVD environment.
+#they are specific to the current testing environment
+[int]$sleepTimeMin=5
 $location="centralus"
-$VMNamingPrefix="megaVM"
 $targetVNETName="fabrikam-central"
 $targetSubnetName="desktops"
 $virtualNetworkResourceGroupName = "fabrikamwvd-central"
+
+[array]$deployments = @()
 
 #enforce most current rules to help catch run-time failures
 Set-StrictMode -Version Latest
