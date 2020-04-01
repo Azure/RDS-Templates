@@ -26,12 +26,10 @@ $targetVNETName="fabrikam-central"
 $targetSubnetName="desktops"
 $virtualNetworkResourceGroupName = "fabrikamwvd-central"
 
-[array]$deployments = @()
-
 #enforce most current rules to help catch run-time failures
 Set-StrictMode -Version Latest
 
-#stop script on terminating error
+#stop script on terminating errors
 $ErrorActionPreference = 'Stop'
 
 #Connect-AzAccount
@@ -78,6 +76,7 @@ if ($notPresent)
 #if not, do nothing
 
 #start looping through creating VMs
+[array]$deployments = @()
 [int]$deploymentIteration=0
 do {
 
@@ -85,7 +84,6 @@ do {
     #loop through all the deployments which aren't already marked as completed
     #if they are done, update the Completed property
     #NOTE: for some reason Get-AzDeployment doesn't return any results (RBAC?) so am forced to use custom array
-    #TODO: Switch this to checking on the job status
 
     #since we know how many VMs we want, let's figure out how many we need to deploy
     #query to see how many VMs already exist
@@ -103,6 +101,7 @@ do {
     }
     Write-Host "$(Get-TimeStamp) VMs already in resource group $($resourceGroupName): $($countExistingVMs)"
 
+    #TODO: Switch this to checking on the job status
     Write-Host "$(Get-TimeStamp) Waking up to try and run another deployment"
     foreach ($deployment in $deployments) {
         if ($deployment.Completed -eq $false) {
