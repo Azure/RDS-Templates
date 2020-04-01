@@ -31,6 +31,9 @@ $virtualNetworkResourceGroupName = "fabrikamwvd-central"
 #enforce most current rules to help catch run-time failures
 Set-StrictMode -Version Latest
 
+#stop script on terminating error
+$ErrorActionPreference = 'Stop'
+
 #Connect-AzAccount
 #for testing
 if ($isTest) {
