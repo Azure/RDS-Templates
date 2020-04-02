@@ -76,8 +76,6 @@ resource "azurerm_virtual_machine" "main" {
     CustomerCRMID     = "${var.tagCustomerCRMID}"
     ExpirationDate    = "${var.tagExpirationDate}"
     Tier              = "${var.tagTier}"
-    MaintenanceWindow = "${var.tagMaintenanceWindow[count.index]}"
-    OnHours           = "${var.tagOnHours[count.index]}"
     SolutionCentralID = "${var.tagSolutionCentralID}"
     SLA               = "${var.tagSLA}"
     Description       = "${var.tagDescription}"

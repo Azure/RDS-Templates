@@ -37,16 +37,6 @@ variable "tagExpirationDate" {
   default     = ""
 }
 
-variable "tagMaintenanceWindow" {
-  description = "The timeframe that a server can be patched for updates by OMS."
-  default     = [""]
-}
-
-variable "tagOnHours" {
-  description = "The time which the virtual machine is required to run."
-  default     = [""]
-}
-
 variable "tagSLA" {
   description = "The contracted Service Level Agreement for system uptime."
   default     = ""
