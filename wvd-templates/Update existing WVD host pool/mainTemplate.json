@@ -267,6 +267,13 @@
             "metadata": {
                 "description": "(Required for Azure Marketplace.) Leave as is, unless you would like to not use a location that is different from the location of the resouce group."
             }
+        },
+        "createAvailabilitySet": {
+            "type": "bool",
+            "metadata": {
+                "description": "Set this parameter to false if you would not like to create Availability Set. Defaults to true."
+            },
+            "defaultValue": true
         }
     },
     "variables": {
@@ -294,12 +301,13 @@
             ]
         },
         "vmCreation-linkedTemplate_name": "[concat(variables('rdshPrefix'), 'vmCreation-linkedTemplate')]",
-        "RDPSModSource": "attached"
+        "RDPSModSource": "attached",
+        "createAvailabilitySet": "[and(not(parameters('enablePersistentDesktop')), parameters('createAvailabilitySet'))]"
     },
     "resources": [
         {
             "apiVersion": "2018-10-01",
-            "condition": "[equals(parameters('enablePersistentDesktop'), bool('False'))]",
+            "condition": "[variables('createAvailabilitySet')]",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
             "location": "[parameters('location')]",
@@ -364,8 +372,8 @@
                     "location": {
                         "value": "[parameters('location')]"
                     },
-                    "enablePersistentDesktop": {
-                        "value": "[parameters('enablePersistentDesktop')]"
+                    "createAvailabilitySet": {
+                        "value": "[variables('createAvailabilitySet')]"
                     }
                 }
             },
