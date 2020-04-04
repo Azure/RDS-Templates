@@ -95,7 +95,7 @@
 						"name": "createAvailabilitySet",
 						"type": "Microsoft.Common.OptionsGroup",
 						"label": "Create an Availability Set",
-						"toolTip": "//todo decide one of: Using an Availability set limits you to a maximum of 200 virtual machines. Or An Availability sets can contain a maximum of only 200 virtual machines.",
+						"toolTip": "Using an <a target='_blank' href='https://docs.microsoft.com/en-us/azure/virtual-machines/windows/tutorial-availability-sets#availability-set-overview'>Availability set</a> limits you to a maximum of <a target='_blank' href='https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits#virtual-machines-limits---azure-resource-manager'>200 virtual machines</a>.",
 						"defaultValue": "Yes",
 						"constraints": {
 							"allowedValues": [

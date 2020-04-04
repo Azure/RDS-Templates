@@ -107,7 +107,7 @@
         "createAvailabilitySet": {
             "type": "bool",
             "metadata": {
-                "description": "//todo add desc from tooltip from UI"
+                "description": "Set this parameter to true if an Availability set was created. Defaults to true. Using an Availability set limits you to a maximum of 200 virtual machines For more info: https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits#virtual-machines-limits---azure-resource-manager."
             },
             "defaultValue": true
         }
