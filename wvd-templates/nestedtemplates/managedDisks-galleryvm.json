@@ -116,12 +116,12 @@
                 "description": "Location for all resources to be created in."
             }
         },
-        "enablePersistentDesktop": {
+        "createAvailabilitySet": {
             "type": "bool",
             "metadata": {
-                "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
+                "description": "Set this parameter to false if you would not like to create Availability Set. Defaults to true."
             },
-            "defaultValue": false
+            "defaultValue": true
         }
     },
     "variables": {
@@ -179,7 +179,7 @@
         },
         "storageAccountType": "[parameters('rdshVMDiskType')]",
         "availabilitySetId": {
-            "id": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')),json('null'))]"
+            "id": "[if(parameters('createAvailabilitySet'), resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')), json('null'))]"
         }
     },
     "resources": [
@@ -223,7 +223,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
-                "availabilitySet": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),variables('availabilitySetId'),json('null'))]",
+                "availabilitySet": "[if(parameters('createAvailabilitySet'), variables('availabilitySetId'), json('null'))]",
                 "osProfile": {
                     "computerName": "[concat(parameters('rdshPrefix'), copyindex())]",
                     "adminUsername": "[parameters('existingDomainUsername')]",

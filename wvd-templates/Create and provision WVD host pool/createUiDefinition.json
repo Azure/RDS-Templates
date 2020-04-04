@@ -92,6 +92,26 @@
 				"bladeSubtitle": "Select a usage profile and number of users to determine the recommended number of VMs",
 				"elements": [
 					{
+						"name": "createAvailabilitySet",
+						"type": "Microsoft.Common.OptionsGroup",
+						"label": "Create an Availability Set",
+						"toolTip": "//todo decide one of: Using an Availability set limits you to a maximum of 200 virtual machines. Or An Availability sets can contain a maximum of only 200 virtual machines.",
+						"defaultValue": "Yes",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Yes",
+									"value": true
+								},
+								{
+									"label": "No",
+									"value": false
+								}
+							]
+						},
+						"visible": "[not(basics('isPersonalDesktop').value)]"
+					},
+					{
 						"name": "usageProfile",
 						"type": "Microsoft.Common.OptionsGroup",
 						"label": "Usage Profile",
@@ -731,7 +751,8 @@
 			"tenantAdminPassword": "[steps('wvdTenantInfo').tenantAdminPassword]",
 			"isServicePrincipal": "[steps('wvdTenantInfo').tenantAdminIsServicePrincipal]",
 			"aadTenantId": "[coalesce(steps('wvdTenantInfo').tenantAdminServicePrincipalAadTenantId, '')]",
-			"location": "[location()]"
+			"location": "[location()]",
+			"createAvailabilitySet": "[steps('configureVirtualMachines').createAvailabilitySet]"
 		}
 	}
 }
