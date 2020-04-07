@@ -1,20 +1,27 @@
 # Power BI Template for WVD 
 
-This repository contains a Power BI template to show user activity in a WVD environnment. 
+This repository contains a Power BI template to show user activity in a WVD environment. The report was created by [@MaheshSQL](https://github.com/MaheshSQL)
+
+![alt text](https://raw.githubusercontent.com/Jonathan1Wade/RDS-Templates/master/wvd-powerbi/images/PBIdesktopWVD.jpg "Sample dashbaord")
+
+### Detials available in the report include:
+* User and session count
+* User and session activity time
+* Client operating system
+* Drill downs to erros and alerts
 
 
+### Prerequisites:
+* Power BI Pro or Premium license
+* [Log Analyitcs](https://docs.microsoft.com/en-us/azure/virtual-desktop/diagnostics-log-analytics) set up for WVD
+* Account with read access permissions to the Log Analyitcs workspace
 
-### It will require the following:
-1. Power BI Pro or Premium license
-2. [Log Analyitcs](https://docs.microsoft.com/en-us/azure/virtual-desktop/diagnostics-log-analytics) set up for WVD
-3. Account with read access permissions to the Log Analyitcs workspace
-
-## Procedure
-
-
-
-
-
+### Procedure
+1. Set up WVD for logging 
+2. Export M query
+3. Download and open Power BI template
+4. Use connection info porvided in query 
+5. Load report 
 
 
 ### Reporting issues
