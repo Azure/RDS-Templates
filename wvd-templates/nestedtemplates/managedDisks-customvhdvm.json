@@ -104,19 +104,19 @@
                 "description": "Location for all resources to be created in."
             }
         },
-        "enablePersistentDesktop": {
+        "createAvailabilitySet": {
             "type": "bool",
             "metadata": {
-                "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
+                "description": "Set this parameter to true if an Availability set was created. Defaults to true. Using an Availability set limits you to a maximum of 200 virtual machines For more info: https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits#virtual-machines-limits---azure-resource-manager."
             },
-            "defaultValue": false
+            "defaultValue": true
         }
     },
     "variables": {
         "storageAccountType": "[parameters('rdshVMDiskType')]",
         "imageName": "[concat(parameters('rdshPrefix'), 'image')]",
         "availabilitySetId": {
-            "id": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')),json('null'))]"
+            "id": "[if(parameters('createAvailabilitySet'), resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')), json('null'))]"
         }
     },
     "resources": [
@@ -177,7 +177,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
-                "availabilitySet": "[if(equals(parameters('enablePersistentDesktop'),bool('False')),variables('availabilitySetId'),json('null'))]",
+                "availabilitySet": "[if(parameters('createAvailabilitySet'), variables('availabilitySetId'), json('null'))]",
                 "osProfile": {
                     "computerName": "[concat(parameters('rdshPrefix'), copyindex())]",
                     "adminUsername": "[parameters('existingDomainUsername')]",
