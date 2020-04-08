@@ -17,11 +17,12 @@ This repository contains a Power BI template to show user activity in a WVD envi
 * Account with read access permissions to the Log Analyitcs workspace
 
 ### Procedure
-1. Set up WVD for logging 
-2. Export M query
-3. Download and open Power BI template
-4. Use connection info porvided in query 
-5. Load report 
+1. Download Power BI template  
+2. Set up WVD for logging 
+3. Export M query
+4. Download and open Power BI template
+5. Use connection info porvided in query 
+6. Load report 
 
 ![alt text](https://raw.githubusercontent.com/Jonathan1Wade/RDS-Templates/master/wvd-powerbi/images/2%20Getting%20Started.png "Getting Started Guide")
 
