@@ -8,6 +8,7 @@
 				"name": "hostpoolName",
 				"type": "Microsoft.Common.TextBox",
 				"label": "Hostpool name",
+				"toolTip": "Windows Virtual Desktop Host pools are a collection of one or more identical virtual machines within Windows Virtual Desktop tenant environments.",
 				"constraints": {
 					"required": true,
 					"regex": "^[\\w-'][\\w-'\\s]*[\\w-']+$",
@@ -68,6 +69,7 @@
 				"name": "serviceMetadataLocation",
 				"type": "Microsoft.Common.DropDown",
 				"label": "Service metadata location",
+				"toolTip": "Windows Virtual Desktop is currently available for all geographical locations. Initially, service metadata can only be stored in the United States (US) geography.",
 				"defaultValue": "United States",
 				"constraints": {
 					"allowedValues": [
@@ -152,6 +154,7 @@
 						"name": "totalUsers",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Total users",
+						"toolTip": "Enter number of users. This will be used to calculate number of virtual machines to create.",
 						"defaultValue": "100",
 						"constraints": {
 							"required": true,
@@ -164,6 +167,7 @@
 						"name": "virtualMachineCount",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Number of virtual machines",
+						"toolTip": "Number of virtual machines to create.",
 						"defaultValue": "100",
 						"constraints": {
 							"required": true,
@@ -176,6 +180,7 @@
 						"name": "virtualMachineSize",
 						"type": "Microsoft.Compute.SizeSelector",
 						"label": "Virtual machine size",
+						"toolTip": "Size of the virtual machines to create.",
 						"osPlatform": "Windows",
 						"constraints": {
 							"allowedSizes": [
@@ -392,6 +397,7 @@
 						"type": "Microsoft.Common.DropDown",
 						"label": "Image OS version",
 						"defaultValue": "Windows 10 Enterprise multi-session with Office 365 ProPlus",
+						"toolTip": "Selet the OS Image for the virtual machine.",
 						"constraints": {
 							"allowedValues": [
 								{
@@ -419,6 +425,7 @@
 						"type": "Microsoft.Common.DropDown",
 						"label": "Disk Type",
 						"defaultValue": "Premium SSD",
+						"toolTip": "These are the disk types available with the selected VM SKU.",
 						"constraints": {
 							"allowedValues": [
 								{
