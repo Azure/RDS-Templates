@@ -19,7 +19,7 @@ This repository contains a Power BI template to show user activity in a WVD envi
 ### Procedure
 1. Set up WVD for logging 
 2. Export M query
-3. Download and open [Power BI template](https://docs.microsoft.com/en-us/azure/virtual-desktop/diagnostics-log-analytics)
+3. Download and open [Power BI template](https://github.com/Jonathan1Wade/RDS-Templates/blob/master/wvd-powerbi/WVD%20Reporting%20Template.zip?raw=true)
 4. Use connection info porvided in query 
 5. Load report 
 
