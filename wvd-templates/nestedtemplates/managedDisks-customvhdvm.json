@@ -110,13 +110,20 @@
                 "description": "Set this parameter to true if an Availability set was created. Defaults to true. Using an Availability set limits you to a maximum of 200 virtual machines For more info: https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits#virtual-machines-limits---azure-resource-manager."
             },
             "defaultValue": true
+        },
+        "enablePersistentDesktop": {
+            "type": "bool",
+            "metadata": {
+                "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false. Note: Do not use this, it is here for backwards compatibility and may be removed soon."
+            },
+            "defaultValue": false
         }
     },
     "variables": {
         "storageAccountType": "[parameters('rdshVMDiskType')]",
         "imageName": "[concat(parameters('rdshPrefix'), 'image')]",
         "availabilitySetId": {
-            "id": "[if(parameters('createAvailabilitySet'), resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')), json('null'))]"
+            "id": "[if(and(parameters('createAvailabilitySet'), not(parameters('enablePersistentDesktop'))), resourceId('Microsoft.Compute/availabilitySets/', concat(parameters('rdshPrefix'), 'availabilitySet')), json('null'))]"
         }
     },
     "resources": [
@@ -177,7 +184,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
-                "availabilitySet": "[if(parameters('createAvailabilitySet'), variables('availabilitySetId'), json('null'))]",
+                "availabilitySet": "[if(not(equals(variables('availabilitySetId').id, json('null'))), variables('availabilitySetId'), json('null'))]",
                 "osProfile": {
                     "computerName": "[concat(parameters('rdshPrefix'), copyindex())]",
                     "adminUsername": "[parameters('existingDomainUsername')]",
