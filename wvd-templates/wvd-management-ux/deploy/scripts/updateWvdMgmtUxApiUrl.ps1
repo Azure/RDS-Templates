@@ -3,9 +3,8 @@
 Update the main bundle js file with API URL
 .DESCRIPTION
 This script is used to Update the main bundle js file of web application with API URL.
-This script depends on two PowerShell modules: Az and AzureAD . To install Az and AzureAD modules execute the following commands. Use "-AllowClobber" parameter if you have more than one version of PowerShell modules installed.
+This script depends on PowerShell module: Az . To install the Az module execute the following commands. Use "-AllowClobber" parameter if you have more than one version of PowerShell modules installed.
 	PS C:\>Install-Module Az  -AllowClobber
-    PS C:\>Install-Module AzureAD  -AllowClobber
 
 .ROLE
 Administrator
@@ -36,9 +35,9 @@ param(
 # Set the ExecutionPolicy
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
 
-# Import Az and AzureAD modules
+# Import Az module
 Import-Module Az
-Import-Module AzureAD
+
 
 
 # Function to get the publishing profile credentials
@@ -64,12 +63,14 @@ function Get-KuduApiAuthorisationHeaderValue ($resourceGroupName,$AppName) {
 $context = Get-AzContext
 if ($context -eq $null)
 {
-	Write-Error "Please authenticate to Azure & Azure AD using Login-AzAccount and Connect-AzureAD cmdlets and then run this script"
+	Write-Error "Please authenticate to Azure using Login-AzAccount cmdlet and then run this script"
 	exit
 }
 
 # Select the subscription
-Get-AzSubscription -SubscriptionId $subscriptionId | Select-AzSubscription
+if ($context.Subscription.Id -ne $subscriptionId) {
+	Get-AzSubscription -SubscriptionId $subscriptionId | Select-AzSubscription
+}
 
 # Get the Role Assignment of the authenticated user
 $RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account
