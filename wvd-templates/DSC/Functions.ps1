@@ -270,12 +270,10 @@ function AuthenticateRdsAccount {
         $PSBoundParameters.Remove('TenantId')
         Write-Log -Message "Authenticating using user $($Credential.username)"
     }
-
-    $Params = $PSBoundParameters
     
     $authentication = $null
     try {
-        $authentication = Add-RdsAccount @Params
+        $authentication = Add-RdsAccount @PSBoundParameters
         if (!$authentication) {
             throw $authentication
         }
@@ -310,18 +308,18 @@ function SetTenantGroupContextAndValidate {
         catch {
             throw [System.Exception]::new("Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
         }
-        
-        $tenants = $null
-        try {
-            $tenants = (Get-RdsTenant -Name $TenantName)
-        }
-        catch {
-            throw [System.Exception]::new("Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
-        }
-        
-        if (!$tenants) {
-            throw "No tenant with name ""$TenantName"" exists or the account doesn't have access to it."
-        }
+    }
+    
+    $tenants = $null
+    try {
+        $tenants = (Get-RdsTenant -Name $TenantName)
+    }
+    catch {
+        throw [System.Exception]::new("Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
+    }
+    
+    if (!$tenants) {
+        throw "No tenant with name ""$TenantName"" exists or the account doesn't have access to it."
     }
 }
 
