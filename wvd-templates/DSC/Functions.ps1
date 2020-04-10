@@ -263,7 +263,7 @@ function AuthenticateRdsAccount {
     )
 
     if ($ServicePrincipal) {
-        Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId "
+        Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId"
     }
     else {
         $PSBoundParameters.Remove('ServicePrincipal')
@@ -273,14 +273,16 @@ function AuthenticateRdsAccount {
 
     $Params = $PSBoundParameters
     
-    $authentication = . TryCatchHandleErrWithDetails -ScriptBlock {
-        $authentication = $null
+    $authentication = $null
+    try {
         $authentication = Add-RdsAccount @Params
         if (!$authentication) {
             throw $authentication
         }
-        return $authentication
-    } -ErrMsg "Error authenticating Windows Virtual Desktop account, ServicePrincipal = $ServicePrincipal"
+    }
+    catch {
+        throw [System.Exception]::new("Error authenticating Windows Virtual Desktop account, ServicePrincipal = $ServicePrincipal", $PSItem.Exception)
+    }
     
     Write-Log -Message "Windows Virtual Desktop account authentication successful. Result:`n$($authentication | Out-String)"
 }
@@ -301,14 +303,21 @@ function SetTenantGroupContextAndValidate {
     if ($TenantGroupName -ne $currentTenantGroupName) {
         Write-Log -Message "Running switching to the $TenantGroupName context"
 
-        . TryCatchHandleErrWithDetails -ScriptBlock {
+        try {
             #As of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the TenantGroupName doesn't exist.
             Set-RdsContext -TenantGroupName $TenantGroupName
-        } -ErrMsg "Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group"
+        }
+        catch {
+            throw [System.Exception]::new("Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
+        }
         
-        $tenants = . TryCatchHandleErrWithDetails -ScriptBlock {
-            return (Get-RdsTenant -Name $TenantName)
-        } -ErrMsg "Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant"
+        $tenants = $null
+        try {
+            $tenants = (Get-RdsTenant -Name $TenantName)
+        }
+        catch {
+            throw [System.Exception]::new("Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
+        }
         
         if (!$tenants) {
             throw "No tenant with name ""$TenantName"" exists or the account doesn't have access to it."
@@ -421,6 +430,8 @@ function TryCatchHandleErrWithDetails {
         } 
 
         Write-Log -Error $ErrMsg
+
+        $ErrMsg = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber) $ErrMsg"
         throw [System.Exception]::new($ErrMsg, $PSItem.Exception)
     }
 }

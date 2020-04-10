@@ -120,8 +120,8 @@ Import-Module Azurerm.Network
 Import-Module Azurerm.Storage
 
 #Authenticate AzureRM
-$authentication = . TryCatchHandleErrWithDetails -ScriptBlock {
-    $authentication = $null
+$authentication = $null
+try {
     if ($isServicePrincipal -eq "True") {
         $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
     }
@@ -131,8 +131,10 @@ $authentication = . TryCatchHandleErrWithDetails -ScriptBlock {
     if (!$authentication) {
         throw $authentication
     }
-    return $authentication
-} -ErrMsg "Error authenticating AzureRM account, isServicePrincipal = $isServicePrincipal"
+}
+catch {
+    throw [System.Exception]::new("Error authenticating AzureRM account, isServicePrincipal = $isServicePrincipal", $PSItem.Exception)
+}
 Write-Log -Message "AzureRM account authentication successful. Result:`n$($authentication | Out-String)"
 
 if ($authentication.Context.Subscription.Id -ne $SubscriptionId) {
