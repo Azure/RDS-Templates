@@ -9,6 +9,7 @@ function Get-TimeStamp {
 [int]$maxSimulanteousDeployments = 3 #theoretically can be change, but don't change at this time
 $resourceGroupName="WVDTestRG" #this is the name of the resource group that will be created/used for the VMs
 $VMNamingPrefix="megaVM" #this is the prefix that will get put in the VM names. Should be cosmetic
+[int]$sleepTimeMin=5 #how long to sleep between waking up to check on status of batches
 
 #if this is set to TRUE, then the resource group has a GUID appended on the end
 #this makes it easy to clean up because you can just delete the resource group
@@ -20,7 +21,6 @@ $isTest = $true
 
 #don't change these unless you have your own WVD environment.
 #they are specific to the current testing environment
-[int]$sleepTimeMin=1
 $location="centralus"
 $targetVNETName="fabrikam-central"
 $targetSubnetName="desktops"
@@ -31,7 +31,15 @@ $virtualNetworkResourceGroupName = "fabrikamwvd-central"
 #enforce most current rules to help catch run-time failures
 Set-StrictMode -Version Latest
 
-#Connect-AzAccount
+
+# Get the context
+$Context = Get-AzContext
+if ($Context -eq $null)
+{
+	Write-Error "Please authenticate to Azure using Login-AzAccount cmdlet and then run this script"
+	exit
+}
+
 #for testing
 if ($isTest) {
     Write-Host "$(Get-TimeStamp) Running in TEST mode. Resource group name will have a GUID appended"
