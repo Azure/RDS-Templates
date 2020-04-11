@@ -4,8 +4,8 @@ function Get-TimeStamp {
 }
 
 #feel free to modify these ones for testing
-[int]$desiredPoolVMCount=5  #how many VMs you want at the end
-[int]$allocationBatchSize=1 #how many VMs to include in a batch. DO NOT EXCEED 200 OR IT WON'T DEPLOY VIA ARM TEMPLATE
+[int]$desiredPoolVMCount=50  #how many VMs you want at the end
+[int]$allocationBatchSize=10 #how many VMs to include in a batch. DO NOT EXCEED 399 OR IT WON'T DEPLOY VIA ARM TEMPLATE
 [int]$maxSimulanteousDeployments = 3 #theoretically can be change, but don't change at this time
 $resourceGroupName="WVDTestRG" #this is the name of the resource group that will be created/used for the VMs
 $VMNamingPrefix="megaVM" #this is the prefix that will get put in the VM names. Should be cosmetic
