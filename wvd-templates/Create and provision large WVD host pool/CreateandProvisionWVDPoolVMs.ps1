@@ -113,14 +113,14 @@ do {
 
                 $dep= Get-AzResourceGroupDeployment -DeploymentName $deployment.Name -ResourceGroupName $resourceGroupName
                 Write-Host "$(Get-TimeStamp) Marking $($deployment.Name) final state: $($dep.ProvisioningState)"
-                $deployment.State = $dep.ProvisioningState
+                $deployment.ProvisioningState = $dep.ProvisioningState
             }
             elseif (($job).State -eq "Failed") {
                 Write-Host "$(Get-TimeStamp) Marking $($deployment.Name) as completed"
                 $deployment.Completed = $true
 
                 Write-Host "$(Get-TimeStamp) $($deployment.Name) final state: $($job.State)"
-                $deployment.State = "Failed"
+                $deployment.ProvisioningState = "Failed"
             }
 
 #             #get all the operations running
@@ -236,13 +236,13 @@ do {
         $deployment = New-Object -TypeName PSObject
         $deployment | Add-Member -Name 'Name' -MemberType Noteproperty -Value $deploymentName
         $deployment | Add-Member -Name 'Completed' -MemberType Noteproperty -Value $false
-        $deployment | Add-Member -Name 'State' -MemberType NoteProperty -Value "Running"
+        $deployment | Add-Member -Name 'ProvisioningState' -MemberType NoteProperty -Value "Running"
 
         #make sure the deployment started OK. If not, then dump the error to the screen
         $job = Get-Job -Name "$($deploymentName)"
         if (($job).State -ne "Failed") {
 
-            $deployment.State = $job.State
+            $deployment.ProvisioningState = $job.State
 
             #add the new deployment to the array for tracking purposes
             Write-Host "$(Get-TimeStamp) Successfully started deployment $($deploymentName)"
@@ -254,7 +254,7 @@ do {
             $deploymentIteration += 1
         }    
         else {
-            $deployment.State = "Failed"
+            $deployment.ProvisioningState = "Failed"
             Write-Host "$(Get-TimeStamp) $($deploymentName) failed validation"
             #job is in a failed state - report the reason
             $job = Get-Job -Name "$($deploymentName)"
