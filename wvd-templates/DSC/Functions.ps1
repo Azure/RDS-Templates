@@ -14,7 +14,7 @@ class PsRdsSessionHost {
     [string]$TenantName = [string]::Empty
     [string]$HostPoolName = [string]::Empty
     [string]$SessionHostName = [string]::Empty
-    [int]$TimeoutInSec = 900
+    [int]$TimeoutInSec = 1800
     [bool]$CheckForAvailableState = $false
 
     PsRdsSessionHost() { }
@@ -49,7 +49,7 @@ class PsRdsSessionHost {
 
         $StartTime = Get-Date
         while ($sessionHost -eq $null) {
-            Start-Sleep -Seconds 30
+            Start-Sleep -Seconds 300
             $sessionHost = (Invoke-Expression $commandToExecute)
     
             if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
@@ -63,7 +63,7 @@ class PsRdsSessionHost {
             $StartTime = Get-Date
 
             while ($sessionHost.Status -ine "Available") {
-                Start-Sleep -Seconds 60
+                Start-Sleep -Seconds 300
                 $sessionHost = (Invoke-Expression $commandToExecute)
         
                 if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
