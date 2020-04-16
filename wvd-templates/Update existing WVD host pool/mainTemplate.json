@@ -274,6 +274,13 @@
                 "description": "Set this parameter to true if you would like to create Availability set. Defaults to true. Please note that if 'enablePersistentDesktop' is true, this parameter will be ignored and no availability set wil be created. Using an Availability set limits you to a maximum of 200 virtual machines For more info: https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits#virtual-machines-limits---azure-resource-manager."
             },
             "defaultValue": true
+        },
+        "enableVerboseMsiLogging": {
+            "defaultValue": false,
+            "type": "bool",
+            "metadata": {
+                "description": "Enables verbose logging for the msi installers used to uninstall and install the WVD agents"
+            }
         }
     },
     "variables": {
@@ -443,7 +450,8 @@
                         },
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]",
-                        "RDPSModSource": "[variables('RDPSModSource')]"
+                        "RDPSModSource": "[variables('RDPSModSource')]",
+                        "EnableVerboseMsiLogging": "[parameters('enableVerboseMsiLogging')]"
                     }
                 },
                 "ProtectedSettings": {
@@ -490,7 +498,8 @@
                         },
                         "isServicePrincipal": "[parameters('isServicePrincipal')]",
                         "AadTenantId": "[parameters('aadTenantId')]",
-                        "RDPSModSource": "[variables('RDPSModSource')]"
+                        "RDPSModSource": "[variables('RDPSModSource')]",
+                        "EnableVerboseMsiLogging": "[parameters('enableVerboseMsiLogging')]"
                     }
                 },
                 "ProtectedSettings": {
@@ -545,7 +554,8 @@
                         "DomainName": "[parameters('domainToJoin')]",
                         "rdshNumberOfInstances": "[parameters('rdshNumberOfInstances')]",
                         "rdshPrefix": "[variables('rdshPrefix')]",
-                        "RDPSModSource": "[variables('RDPSModSource')]"
+                        "RDPSModSource": "[variables('RDPSModSource')]",
+                        "EnableVerboseMsiLogging": "[parameters('enableVerboseMsiLogging')]"
                     }
                 },
                 "ProtectedSettings": {

@@ -38,13 +38,17 @@ param(
     [string]$AadTenantId = "",
 
     [Parameter(mandatory = $false)]
-    [string]$RDPSModSource = 'attached'
+    [string]$RDPSModSource = 'attached',
+
+    [Parameter(mandatory = $true)]
+    [string]$EnableVerboseMsiLogging
 )
 
 $ScriptPath = [System.IO.Path]::GetDirectoryName($PSCommandPath)
 
+$DSCFunctionsFilePath = (Join-Path $ScriptPath "Functions.ps1")
 # Dot sourcing Functions.ps1 file
-. (Join-Path $ScriptPath "Functions.ps1")
+. ($DSCFunctionsFilePath)
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
@@ -103,15 +107,36 @@ else {
     Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $obj"
 }
 
-# Executing DeployAgent psl file in rdsh vm and add to hostpool
 Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall"
 
-$DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
-    -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
-    -RegistrationToken $Registered.Token `
-    -StartAgent $true
+try {
+    $DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
+        -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
+        -RegistrationToken $Registered.Token `
+        -StartAgent $true `
+        -DSCFunctionsFilePath $DSCFunctionsFilePath `
+        -EnableVerboseMsiLogging:($EnableVerboseMsiLogging -eq 'True')
 
-Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent installed inside VM for existing hostpool: $HostPoolName`n$DAgentInstall"
+    Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent installed inside VM for existing hostpool: $HostPoolName"
+}
+catch {
+    $ErrMsg = "Exception thrown in DeployAgent Script for existing hostpool: $HostPoolName"
+
+    $innerExAsStr = ""
+    $numInnerExceptions = 0
+    if ($PSItem.Exception -is [System.AggregateException] -and $PSItem.Exception.InnerExceptions) {
+        $numInnerExceptions = $PSItem.Exception.InnerExceptions.Count
+        $innerExAsStr = $PSItem.Exception.InnerExceptions -join "`n"
+    }
+
+    $ErrMsg = "$ErrMsg`nError Details:`n$($PSItem | Out-String)"
+    if ($innerExAsStr.Length -gt 0) {
+        $ErrMsg = "$ErrMsg`nInner Errors (there are $numInnerExceptions):`n$($innerExAsStr | Out-String)"
+    } 
+
+    Write-Log -Error $ErrMsg
+    throw [System.Exception]::new($ErrMsg, $PSItem.Exception)
+}
 
 # Get Session Host Info
 Write-Log -Message "Getting rdsh host $SessionHostName information"
