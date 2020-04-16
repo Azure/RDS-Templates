@@ -49,7 +49,8 @@ if ($context -eq $null)
 }
 
 # Select the subscription
-Select-AzSubscription -SubscriptionId $SubscriptionId
+$Subscription = Select-AzSubscription -SubscriptionId $SubscriptionId
+Set-AzContext -SubscriptionObject $Subscription.ExtendedProperties
 
 # Get the Role Assignment of the authenticated user
 $RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account
@@ -57,6 +58,9 @@ $RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account
 # Validate whether the authenticated user having the Owner or Contributor role
 if ($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefinitionName -eq "Contributor")
 {
+	#$requiredAccessName=$ResourceURL.Split("/")[3]
+	$redirectURL = "https://" + "$AppName" + ".azurewebsites.net" + "/"
+	
 	# Check whether the AD Application exist/ not
 	$existingApplication = Get-AzADApplication -DisplayName $AppName -ErrorAction SilentlyContinue
 	if ($existingApplication -ne $null)
@@ -69,7 +73,7 @@ if ($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefin
 	try
 	{
 		# Create a new AD Application with provided AppName
-		$azAdApplication = New-AzureADApplication -DisplayName $AppName -PublicClient $false -AvailableToOtherTenants $false
+		$azAdApplication = New-AzureADApplication -DisplayName $AppName -PublicClient $false -AvailableToOtherTenants $false -ReplyUrls $redirectURL
 	}
 	catch
 	{
@@ -89,7 +93,7 @@ if ($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefin
 	$ClientSecret = $PasswordCredential.Value
 
 	Write-Output "Creating a new Application in AAD" -Verbose
-
+	
 	# Create an app credential to the Application
 	$secureClientSecret = ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
 	New-AzADAppCredential -ObjectId $azAdApplication.ObjectId -Password $secureClientSecret -StartDate $StartDate -EndDate $EndDate
