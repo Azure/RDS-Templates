@@ -33,7 +33,8 @@
 .PARAMETER TargetSubnetName
     Subnet into which to deploy the host pool VMs. This will be created if it doesn't exist.
 .EXAMPLE
-    CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetSubnetName desktops -VirtualNetworkResourceGroupName fabrikamwvd-central
+    CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetSubnetName desktops
+        CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetSubnetName desktops -VirtualNetworkResourceGroupName fabrikamwvd-central
 #>
 
 [CmdletBinding()]
@@ -72,8 +73,8 @@ param
     [Parameter(Mandatory=$true)]
     [string]$TargetSubnetName,
 
-    [Parameter(Mandatory=$true)]
-    [string]$VirtualNetworkResourceGroupName
+    [Parameter(Mandatory=$false)]
+    [string] $VirtualNetworkResourceGroupName
 )
 #great tip from https://www.gngrninja.com/script-ninja/2016/2/12/powershell-quick-tip-simple-logging-with-timestamps
 function Get-TimeStamp {
@@ -95,23 +96,31 @@ if ($Context -eq $null)
     exit
 }
 
+#Set VirtualNetworkResourceGroupName equal to ResoureGroupName if not set
+if (!$VirtualNetworkResourceGroupName)
+{
+    $VirtualNetworkResourceGroupName = $ResourceGroupName
+}
+
 #for testing
 if ($IsTest) {
-    Write-Host "$(Get-TimeStamp) Running in TEST mode. Resource group name will have a GUID appended"
-    $ResourceGroupName += New-Guid
+    Write-Host "$(Get-TimeStamp) Running in TEST mode. Resource Group names will have a GUID appended"
+    [string]$guid = New-Guid
+    $ResourceGroupName += $guid
+    $VirtualNetworkResourceGroupName += $guid
 }
 
 #create resource group if necessary
-Get-AzResourceGroup -Name $resourceGroupname -ErrorVariable notPresent -ErrorAction SilentlyContinue
+Get-AzResourceGroup -Name $ResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent)
 {
     #resource group doesn't exist, so create
     New-AzResourceGroup `
-        -Name $resourceGroupname `
+        -Name $ResourceGroupName `
         -Location $Location
 }
 
-#create VNET and subnet if necessary
+#create VNET if necessary
 Get-AzVirtualNetwork -Name $TargetVNETName -ResourceGroup $VirtualNetworkResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent)
 {
@@ -122,12 +131,14 @@ if ($notPresent)
         -Name $TargetVNETName `
         -AddressPrefix 10.0.0.0/16
 
-    Add-AzVirtualNetworkSubnetConfig `
+        #create subnet if necessary
+        Add-AzVirtualNetworkSubnetConfig `
         -Name $TargetSubnetName `
         -AddressPrefix 10.0.0.0/24 `
         -VirtualNetwork $virtualNetwork
-
-    $virtualNetwork | Set-AzVirtualNetwork
+        
+        $virtualNetwork | Set-AzVirtualNetwork
+}
 }
 
 #general logic flow is as follows:
