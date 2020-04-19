@@ -6,12 +6,9 @@
 if ($WebHookData) {
 
 	# Collect properties of WebhookData
-	$WebhookName = $WebHookData.WebhookName
-	$WebhookHeaders = $WebHookData.RequestHeader
 	$WebhookBody = $WebHookData.RequestBody
 
 	# Collect individual headers. Input converted from JSON.
-	$From = $WebhookHeaders.From
 	$Input = (ConvertFrom-Json -InputObject $WebhookBody)
 }
 else {
@@ -20,7 +17,6 @@ else {
 $AADTenantId = $Input.AADTenantId
 $SubscriptionID = $Input.SubscriptionID
 $TenantGroupName = $Input.TenantGroupName
-$ResourceGroupName = $Input.ResourceGroupName
 $TenantName = $Input.TenantName
 $HostpoolName = $Input.hostpoolname
 $BeginPeakTime = $Input.BeginPeakTime
@@ -614,7 +610,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey) {
 
 							# Ensure the running Azure VM is set as drain mode
 							try {
-								$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+								Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
 							}
 							catch {
 								Write-Output "Unable to set it to allow connections on session host: $SessionHostName with error: $($_.exception.message)"
@@ -1259,7 +1255,7 @@ else {
 						else {
 							# Ensure the running Azure VM is set as drain mode
 							try {
-								$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+								Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
 							}
 							catch {
 								Write-Output "Unable to set it to allow connections on session host: $SessionHostName with error: $($_.exception.message)"
