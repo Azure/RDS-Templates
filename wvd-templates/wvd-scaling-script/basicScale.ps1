@@ -14,8 +14,7 @@ if ($WebHookData) {
 	$From = $WebhookHeaders.From
 	$Input = (ConvertFrom-Json -InputObject $WebhookBody)
 }
-else
-{
+else {
 	Write-Error -Message 'Runbook was not started from Webhook' -ErrorAction stop
 }
 $AADTenantId = $Input.AADTenantId
@@ -45,8 +44,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Co
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #Function to convert from UTC to Local time
-function Convert-UTCtoLocalTime
-{
+function Convert-UTCtoLocalTime {
 	param(
 		$TimeDifferenceInHours
 	)
@@ -65,11 +63,9 @@ function Convert-UTCtoLocalTime
 	return $ConvertedTime
 }
 # With workspace
-if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
-{
+if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey) {
 	# Function for to add logs to log analytics workspace
-	function Add-LogEntry
-	{
+	function Add-LogEntry {
 		param(
 			[Object]$LogMessageObj,
 			[string]$LogAnalyticsWorkspaceId,
@@ -89,7 +85,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 					'_g' { $sep = '"'; $trim = $Key.Length - 2 }
 					default { $sep = '"'; $trim = $Key.Length }
 				}
-				$LogData = $LogData + '"' + $Key.substring(0,$trim) + '":' + $sep + $LogMessageObj.Item($Key) + $sep + ','
+				$LogData = $LogData + '"' + $Key.substring(0, $trim) + '":' + $sep + $LogMessageObj.Item($Key) + $sep + ','
 			}
 			$TimeStamp = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifferenceInHours
 			$LogData = $LogData + '"TimeStamp":"' + $timestamp + '"'
@@ -116,7 +112,8 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Failed to authenticate Azure: $($_.exception.message)" }
 		Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 		exit
-	} else {
+	}
+ else {
 		$AzObj = $AZAuthentication | Out-String
 		Write-Output "Authenticating as service principal for Azure. Result: `n$AzObj"
 		$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Authenticating as service principal for Azure. Result: `n$AzObj" }
@@ -127,7 +124,8 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 	if ($AzContext -eq $null) {
 		Write-Error "Please provide a valid subscription"
 		exit
-	} else {
+	}
+ else {
 		$AzSubObj = $AzContext | Out-String
 		Write-Output "Sets the Azure subscription. Result: `n$AzSubObj"
 		$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Sets the Azure subscription. Result: `n$AzSubObj" }
@@ -179,8 +177,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 	}
 
 	# Function to Check if the session host is allowing new connections
-	function Check-ForAllowNewConnections
-	{
+	function Check-ForAllowNewConnections {
 		param(
 			[string]$TenantName,
 			[string]$HostpoolName,
@@ -195,8 +192,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 
 	}
 	# Start the Session Host 
-	function Start-SessionHost
-	{
+	function Start-SessionHost {
 		param(
 			[string]$VMName,
 			[string]$LogAnalyticsWorkspaceId,
@@ -215,8 +211,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 
 	}
 	# Stop the Session Host
-	function Stop-SessionHost
-	{
+	function Stop-SessionHost {
 		param(
 			[string]$VMName,
 			[string]$LogAnalyticsWorkspaceId,
@@ -234,8 +229,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		}
 	}
 	# Check if the Session host is available
-	function Check-IfSessionHostIsAvailable
-	{
+	function Check-IfSessionHostIsAvailable {
 		param(
 			[string]$TenantName,
 			[string]$HostpoolName,
@@ -307,8 +301,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 
 
 	# Check if it is during the peak or off-peak time
-	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime)
-	{
+	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		Write-Output "It is in peak hours now"
 		$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "It is in peak hours now" }
 		Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
@@ -350,8 +343,8 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			}
 			$AllSessionHosts = Compare-Object $ListOfSessionHosts $SkipSessionhosts | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }
 
-            Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
-            $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)" }
+			Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
+			$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)" }
 			Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 
 			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
@@ -499,8 +492,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			}
 		}
 	}
-	else
-	{
+	else {
 		Write-Output "It is Off-peak hours"
 		$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "It is Off-peak hours" }
 		Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
@@ -519,8 +511,8 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$SkipSessionhosts = @()
 
         
-        # Check if minimum number of rdsh vm's are running
-        $CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
+		# Check if minimum number of rdsh vm's are running
+		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
 			$NumberOfRunningHost = 0
@@ -544,17 +536,17 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 							$IsVMStarted = $true
 						}
 					}
-		            # Wait for the VM to start
+					# Wait for the VM to start
 					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
 					if ($SessionHostIsAvailable) {
-				    Write-Output "'$SessionHost' session host status is 'Available'"
-					$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
-				    Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
-				    }
-                    else {
-                    Write-Output "'$SessionHost' session host does not configured properly with deployagent or does not started properly"
-                    $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host does not configured properly with deployagent or does not started properly" }
-					Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+						Write-Output "'$SessionHost' session host status is 'Available'"
+						$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
+						Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+					}
+					else {
+						Write-Output "'$SessionHost' session host does not configured properly with deployagent or does not started properly"
+						$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host does not configured properly with deployagent or does not started properly" }
+						Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 					}
 				}
 			}
@@ -594,13 +586,13 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
-            [int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
-			if($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH){
-            Write-Output "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
-            $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now." }
-			Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
-            Exit
-            }
+			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
+			if ($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH) {
+				Write-Output "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
+				$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now." }
+				Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+				Exit
+			}
 		}
 
 		# Breadth first session hosts shutdown in off peak hours
@@ -749,7 +741,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
-                $NoConnectionsofhost = $NoConnectionsofhost-$DefinedMinimumNumberOfRDSH
+				$NoConnectionsofhost = $NoConnectionsofhost - $DefinedMinimumNumberOfRDSH
 				if ($NoConnectionsofhost -gt $DefinedMinimumNumberOfRDSH) {
 					[int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - $NoConnectionsofhost
 					Set-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -Encrypted $false -Value $MinimumNumberOfRDSH
@@ -758,8 +750,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		}
 		$HostpoolMaxSessionLimit = $HostpoolInfo.MaxSessionLimit
 		$HostpoolSessionCount = (Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName).Count
-		if ($HostpoolSessionCount -ne 0)
-		{
+		if ($HostpoolSessionCount -ne 0) {
 			# Calculate the how many sessions will allow in minimum number of RDSH VMs in off peak hours and calculate TotalAllowSessions Scale Factor
 			$TotalAllowSessionsInOffPeak = [int]$MinimumNumberOfRDSH * $HostpoolMaxSessionLimit
 			$SessionsScaleFactor = $TotalAllowSessionsInOffPeak * 0.90
@@ -854,7 +845,8 @@ else {
 	if ($AZAuthentication -eq $null) {
 		Write-Output "Failed to authenticate Azure: $($_.exception.message)"
 		exit
-	} else {
+	}
+ else {
 		$AzObj = $AZAuthentication | Out-String
 		Write-Output "Authenticating as service principal for Azure. Result: `n$AzObj"
 	}
@@ -863,7 +855,8 @@ else {
 	if ($AzContext -eq $null) {
 		Write-Error "Please provide a valid subscription"
 		exit
-	} else {
+	}
+ else {
 		$AzSubObj = $AzContext | Out-String
 		Write-Output "Sets the Azure subscription. Result: `n$AzSubObj"
 	}
@@ -902,8 +895,7 @@ else {
 	}
 
 	#Function to Check if the session host is allowing new connections
-	function Check-ForAllowNewConnections
-	{
+	function Check-ForAllowNewConnections {
 		param(
 			[string]$TenantName,
 			[string]$HostpoolName,
@@ -918,8 +910,7 @@ else {
 
 	}
 	# Start the Session Host 
-	function Start-SessionHost
-	{
+	function Start-SessionHost {
 		param(
 			[string]$VMName
 		)
@@ -933,8 +924,7 @@ else {
 
 	}
 	# Stop the Session Host
-	function Stop-SessionHost
-	{
+	function Stop-SessionHost {
 		param(
 			[string]$VMName
 		)
@@ -947,8 +937,7 @@ else {
 		}
 	}
 	# Check if the Session host is available
-	function Check-IfSessionHostIsAvailable
-	{
+	function Check-IfSessionHostIsAvailable {
 		param(
 			[string]$TenantName,
 			[string]$HostpoolName,
@@ -1012,8 +1001,7 @@ else {
 
 
 	# Check if it is during the peak or off-peak time
-	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime)
-	{
+	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		Write-Output "It is in peak hours now"
 		Write-Output "Starting session hosts as needed based on current workloads."
 
@@ -1164,8 +1152,7 @@ else {
 			}
 		}
 	}
-	else
-	{
+	else {
 		Write-Output "It is Off-peak hours"
 		Write-Output "Starting to scale down WVD session hosts ..."
 		Write-Output "Processing hostpool $($HostpoolName)"
@@ -1176,8 +1163,8 @@ else {
 		#Initialize variable for to skip the session host which is in maintenance.
 		$SkipSessionhosts = 0
 		$SkipSessionhosts = @()
-        # Check if minimum number rdsh vm's are running in off peak hours
-        $CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
+		# Check if minimum number rdsh vm's are running in off peak hours
+		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
 			$NumberOfRunningHost = 0
@@ -1250,10 +1237,10 @@ else {
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
 			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
-            if($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH){
-            Write-Output "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
-            Exit
-            }
+			if ($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH) {
+				Write-Output "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
+				Exit
+			}
 		}
 
 		# Breadth first session hosts shutdown in off peak hours
@@ -1374,7 +1361,7 @@ else {
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
-                $NoConnectionsofhost = $NoConnectionsofhost-$DefinedMinimumNumberOfRDSH
+				$NoConnectionsofhost = $NoConnectionsofhost - $DefinedMinimumNumberOfRDSH
 				if ($NoConnectionsofhost -gt $DefinedMinimumNumberOfRDSH) {
 					[int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - $NoConnectionsofhost
 					Set-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -Encrypted $false -Value $MinimumNumberOfRDSH
@@ -1383,8 +1370,7 @@ else {
 		}
 		$HostpoolMaxSessionLimit = $HostpoolInfo.MaxSessionLimit
 		$HostpoolSessionCount = (Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName).Count
-		if ($HostpoolSessionCount -ne 0)
-		{
+		if ($HostpoolSessionCount -ne 0) {
 			# Calculate the how many sessions will allow in minimum number of RDSH VMs in off peak hours and calculate TotalAllowSessions Scale Factor
 			$TotalAllowSessionsInOffPeak = [int]$MinimumNumberOfRDSH * $HostpoolMaxSessionLimit
 			$SessionsScaleFactor = $TotalAllowSessionsInOffPeak * 0.90
