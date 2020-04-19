@@ -76,10 +76,10 @@ param
     [string]$TargetVNETPrefixRange,
 
     [Parameter(Mandatory=$true)]
-    [string]$TargetSubnetName,
+    [string] $TargetSubnetName,
 
     [Parameter(Mandatory=$true)]
-    [string]$TargetSubnetPrefixRange,
+    [string] $TargetSubnetPrefixRange,
 
     [Parameter(Mandatory=$false)]
     [string] $VirtualNetworkResourceGroupName
@@ -142,12 +142,12 @@ if ($notPresent)
 
 #create subnet if necessary
 $virtualNetwork = Get-AzVirtualNetwork -Name $TargetVNETName -ResourceGroup $VirtualNetworkResourceGroupName
-Get-AzureRmVirtualNetworkSubnetConfig -Name $TargetSubnetName -VirtualNetwork $virtualNetwork -ErrorVariable notPresent -ErrorAction SilentlyContinue
+Get-AzVirtualNetworkSubnetConfig -Name $TargetSubnetName -VirtualNetwork $virtualNetwork -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent)
 {
     Add-AzVirtualNetworkSubnetConfig `
     -Name $TargetSubnetName `
-    -AddressPrefix 10.0.0.0/24 `
+    -AddressPrefix $TargetSubnetPrefixRange `
     -VirtualNetwork $virtualNetwork
     
     $virtualNetwork | Set-AzVirtualNetwork
