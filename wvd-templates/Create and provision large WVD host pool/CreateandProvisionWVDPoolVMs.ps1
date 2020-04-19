@@ -80,18 +80,12 @@ function Get-TimeStamp {
     return "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
 }
 
-#don't change these unless you have your own WVD environment.
-#they are specific to the current testing environment
-$Location="centralus"
-$TargetVNETName="fabrikam-central"
-$TargetSubnetName="desktops"
-$VirtualNetworkResourceGroupName = "fabrikamwvd-central"
-
 [array]$deployments = @()
 
 #enforce most current rules to help catch run-time failures
 Set-StrictMode -Version Latest
 
+$ErrorActionPreference="Stop"
 
 # Get the context
 $Context = Get-AzContext
