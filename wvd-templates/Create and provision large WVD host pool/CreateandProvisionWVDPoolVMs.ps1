@@ -33,8 +33,10 @@
 .PARAMETER TargetSubnetName
     Subnet into which to deploy the host pool VMs. This will be created if it doesn't exist.
 .EXAMPLE
-    CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetSubnetName desktops
-        CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetSubnetName desktops -VirtualNetworkResourceGroupName fabrikamwvd-central
+    CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 `
+         -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetVNETPrefixRange 10.0.0.0/16 -TargetSubnetName desktops -TargetSubnetPrefixRange 10.0.0.0/24
+    CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 `
+         -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetVNETPrefixRange 10.0.0.0/16 -TargetSubnetName desktops -TargetSubnetPrefixRange 10.0.0.0/24 -VirtualNetworkResourceGroupName fabrikamwvd-central
 #>
 
 [CmdletBinding()]
@@ -71,7 +73,13 @@ param
     [string]$TargetVNETName,
 
     [Parameter(Mandatory=$true)]
+    [string]$TargetVNETPrefixRange,
+
+    [Parameter(Mandatory=$true)]
     [string]$TargetSubnetName,
+
+    [Parameter(Mandatory=$true)]
+    [string]$TargetSubnetPrefixRange,
 
     [Parameter(Mandatory=$false)]
     [string] $VirtualNetworkResourceGroupName
@@ -126,19 +134,23 @@ if ($notPresent)
 {
     #VNET doesn't exist, so create
     $virtualNetwork = New-AzVirtualNetwork `
-        -ResourceGroupName $ResourceGroupName `
+        -ResourceGroupName $VirtualNetworkResourceGroupName `
         -Location $Location `
         -Name $TargetVNETName `
-        -AddressPrefix 10.0.0.0/16
-
-        #create subnet if necessary
-        Add-AzVirtualNetworkSubnetConfig `
-        -Name $TargetSubnetName `
-        -AddressPrefix 10.0.0.0/24 `
-        -VirtualNetwork $virtualNetwork
-        
-        $virtualNetwork | Set-AzVirtualNetwork
+        -AddressPrefix $TargetVNETPrefixRange
 }
+
+#create subnet if necessary
+$virtualNetwork = Get-AzVirtualNetwork -Name $TargetVNETName -ResourceGroup $VirtualNetworkResourceGroupName
+Get-AzureRmVirtualNetworkSubnetConfig -Name $TargetSubnetName -VirtualNetwork $virtualNetwork -ErrorVariable notPresent -ErrorAction SilentlyContinue
+if ($notPresent)
+{
+    Add-AzVirtualNetworkSubnetConfig `
+    -Name $TargetSubnetName `
+    -AddressPrefix 10.0.0.0/24 `
+    -VirtualNetwork $virtualNetwork
+    
+    $virtualNetwork | Set-AzVirtualNetwork
 }
 
 #general logic flow is as follows:
