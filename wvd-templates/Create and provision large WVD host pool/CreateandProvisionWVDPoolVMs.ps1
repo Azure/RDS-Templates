@@ -33,7 +33,7 @@
 .PARAMETER TargetSubnetName
     Subnet into which to deploy the host pool VMs. This will be created if it doesn't exist.
 .EXAMPLE
-
+    CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetSubnetName desktops -VirtualNetworkResourceGroupName fabrikamwvd-central
 #>
 
 [CmdletBinding()]
