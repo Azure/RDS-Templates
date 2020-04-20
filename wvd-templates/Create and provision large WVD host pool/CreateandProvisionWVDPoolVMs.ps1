@@ -82,7 +82,10 @@ param
     [string] $TargetSubnetPrefixRange,
 
     [Parameter(Mandatory=$false)]
-    [string] $VirtualNetworkResourceGroupName
+    [string] $VirtualNetworkResourceGroupName,
+
+    [Parameter(Mandatory=$true)]
+    [string] $TemplateParameterFile
 )
 #great tip from https://www.gngrninja.com/script-ninja/2016/2/12/powershell-quick-tip-simple-logging-with-timestamps
 function Get-TimeStamp {
@@ -339,7 +342,7 @@ do {
         -rdshNamePrefix "$($VMNamingPrefix)$($deploymentIteration)" `
         -_artifactsLocation "https://raw.githubusercontent.com/Azure/RDS-Templates/noAVSetSlowerHostAvailableCheck_20200218.1900_v1/wvd-templates/" `
         -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/noAVSetSlowerHostAvailableCheck_20200218.1900_v1/wvd-templates/Create%20and%20provision%20WVD%20host%20pool/mainTemplate.json" `
-        -TemplateParameterFile "C:\Users\evanba\source\repos\RDS-Templates\wvd-templates\Create and provision large WVD host pool\param_CreateandProvisionWVDPoolVMs.json_local").Name = $deploymentName
+        -TemplateParameterFile $TemplateParameterFile).Name = $deploymentName
 
         #tracking object for deployment
         $deployment = New-Object -TypeName PSObject
