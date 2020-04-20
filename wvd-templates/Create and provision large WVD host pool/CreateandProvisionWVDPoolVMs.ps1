@@ -167,26 +167,27 @@ do {
     #see how many VMs are in the resource group
     #loop through all the deployments which aren't already marked as completed
     #if they are done, update the Completed property
-    #NOTE: for some reason Get-AzDeployment doesn't return any results (RBAC?) so am forced to use custom array
-    #TODO: Switch this to checking on the job status
+    #NOTE: for some reason Get-AzDeployment doesn't return any results (RBAC?) so forced to use custom array
 
     #since we know how many VMs we want, let's figure out how many we need to deploy
-    #query to see how many VMs already exist
+    #query to see how many VMs already exist in the Resource Group
     [int]$countExistingVMs=0
     [int]$countAdditionalVMs=0
     $existingVMs = @()
     $existingVMs = Get-AzVM -ResourceGroupName $ResourceGroupName
     if (!$existingVMs) {
         #no VMs in the resource group yet
+        Write-Verbose "No VMs in the Resource Group yet"
         $countExistingVMs = 0
     }
     else {
         #VMs already exist, so use the count
+        Write-Verbose "VMs already exist, so counting"
         $countExistingVMs = ($existingVMs | Measure-Object).Count
     }
     Write-Host "$(Get-TimeStamp) VMs already in resource group $($ResourceGroupName): $($countExistingVMs)"
 
-    Write-Host "$(Get-TimeStamp) Waking up to try and run another deployment"
+    Write-Host "$(Get-TimeStamp) Waking up to run a deployment"
     foreach ($deployment in $deployments) {
         if ($deployment.Completed -eq $false) {
 
@@ -279,7 +280,29 @@ do {
         Write-Host "$(Get-TimeStamp) Desired total VMs: $($DesiredPoolVMCount)"
         Write-Host "$(Get-TimeStamp) Existing VMs in pool: $($countExistingVMs)"
 
-        $countAdditionalVMs = $DesiredPoolVMCount - $countExistingVMs
+        #take into account the ones that are being deployed
+        Write-Verbose "deploymentIteration: $($deploymentIteration)"
+        Write-Verbose "MaxSimultaneousDeployments: $($MaxSimultaneousDeployments)"
+        Write-Verbose "AllocationBatchSize: $($AllocationBatchSize)"
+        $deployingVMs = 0
+        if($deploymentIteration -gt $MaxSimultaneousDeployments)
+        {
+            #if we are on an iteration higher than MaxSimultaneousDeployments
+            #then VMs currently being deployment is MaxSimultaneousDeployments * AllocationBatchSize
+            $deployingVMs = $MaxSimultaneousDeployments * $AllocationBatchSize
+        }
+        else
+        {
+            #if current iteration less than or equal to MaxSimultaneousDeployments
+            #then VMs currently being deployed is deploymentIteration * AllocationBatchSize
+            $deployingVMs = $deploymentIteration * $AllocationBatchSize
+        }
+
+        Write-Verbose "DesiredPoolVMCount: $($DesiredPoolVMCount)"
+        Write-Verbose "countExistingVMs: $($countExistingVMs)"
+        Write-Verbose "deployingVMs: $($deployingVMs)"
+
+        $countAdditionalVMs = $DesiredPoolVMCount - $countExistingVMs - $deployingVMs
         Write-Host "$(Get-TimeStamp) Additional VMs needed: $($countAdditionalVMs)"
 
         #exit strategy
@@ -295,11 +318,11 @@ do {
         {
             $true { 
                 $vmsToDeploy = $countAdditionalVMs 
-                Write-Host "$(Get-TimeStamp) $($AllocationBatchSize)>$($countAdditionalVMs) - Additional VMs smallest. Only deploying what is needed"
+                Write-Host "$(Get-TimeStamp) $($AllocationBatchSize)>$($countAdditionalVMs) - Additional VMs smaller. Only deploying what is needed"
             }
             $false {
                 $vmsToDeploy = $AllocationBatchSize 
-                Write-Host "$(Get-TimeStamp) $($AllocationBatchSize)<$($countAdditionalVMs) - Batch size smallest. Deploying full batch"
+                Write-Host "$(Get-TimeStamp) $($AllocationBatchSize)<$($countAdditionalVMs) - Batch size smaller. Deploying full batch"
             }
         }
 
@@ -334,7 +357,7 @@ do {
             Write-Host "$(Get-TimeStamp) Successfully started deployment $($deploymentName)"
 
             $deployments += $deployment
-            Write-Host "$(Get-TimeStamp) Added $($deploymentName) to tracking array"
+            Write-Verbose "$(Get-TimeStamp) Added $($deploymentName) to tracking array"
     
             #increment the loop counter so the next iteration gets a different deployment name
             $deploymentIteration += 1
@@ -354,7 +377,7 @@ do {
     #to not have enough deployments running
     if(($deploymentIteration-1) -lt $MaxSimultaneousDeployments)
     {
-        Write-Host "$(Get-TimeStamp) Haven't attempted enough deployments - reducing sleep time to 60 seconds"
+        Write-Verbose "$(Get-TimeStamp) Haven't attempted enough deployments - reducing sleep time to 60 seconds"
         $SleepTimeMinutes = 1
     }
 
@@ -362,9 +385,9 @@ do {
     Write-Host "$(Get-TimeStamp) Sleeping for $(60*$SleepTimeMinutes) seconds to let deployments run"
     Start-Sleep -s (60*$SleepTimeMinutes)
 
-    Write-Host "$(Get-TimeStamp) deploymentIteration:$($deploymentIteration)"
-    Write-Host "$(Get-TimeStamp) countAdditionalVMs:$($countAdditionalVMs)"
-    Write-Host "$(Get-TimeStamp) allocationBatchSize:$($AllocationBatchSize)"
+    Write-Verbose "$(Get-TimeStamp) deploymentIteration:$($deploymentIteration)"
+    Write-Verbose "$(Get-TimeStamp) countAdditionalVMs:$($countAdditionalVMs)"
+    Write-Verbose "$(Get-TimeStamp) allocationBatchSize:$($AllocationBatchSize)"
 } while (($deploymentIteration -ne 0) -and ($countAdditionalVMs -ge $AllocationBatchSize))
 
 Write-Host "$(Get-TimeStamp) Exiting"
