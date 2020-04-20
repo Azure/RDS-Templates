@@ -11,7 +11,7 @@ try {
 
 	# If runbook was called from Webhook, WebhookData will not be null.
 	if (!$WebHookData) {
-		Write-Error -Message 'Runbook was not started from Webhook' -ErrorAction stop
+		Write-Error -Message 'Runbook was not started from Webhook (WebHookData is empty)' -ErrorAction stop
 		exit
 	}
 
@@ -100,7 +100,7 @@ try {
 		$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType $LogType -TimeStampField "TimeStamp"
 		#Write-Verbose "PostResult: $($PostResult)"
 		if ($PostResult -ne "Accepted") {
-			Write-Error "Error posting to OMS - $PostResult"
+			Write-Error "Error posting to OMS: Result: $PostResult"
 		}
 	}
 
@@ -133,36 +133,43 @@ try {
 
 		#Authenticating to Azure
 		Clear-AzContext -Force
-		$AZAuthentication = Connect-AzAccount -ApplicationId $Connection.ApplicationId -TenantId $AADTenantId -CertificateThumbprint $Connection.CertificateThumbprint -ServicePrincipal
-		if ($null -eq $AZAuthentication) {
-			Write-Log "Failed to authenticate Azure: $($_.exception.message)"
-			exit
-		}
-		else {
-			$AzObj = $AZAuthentication | Out-String
-			Write-Log "Authenticating as service principal for Azure. Result: `n$AzObj"
-		}
-		#Set the Azure context with Subscription
-		$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
-		if ($null -eq $AzContext) {
-			Write-Log -Err "Please provide a valid subscription"
-			exit
-		}
-		else {
-			$AzSubObj = $AzContext | Out-String
-			Write-Log "Sets the Azure subscription. Result: `n$AzSubObj"
-		}
-
-		#Authenticating to WVD
+		$AZAuthentication = $null
 		try {
-			$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AadTenantId
+			$AZAuthentication = Connect-AzAccount -ApplicationId $Connection.ApplicationId -TenantId $AADTenantId -CertificateThumbprint $Connection.CertificateThumbprint -ServicePrincipal
+			if (!$AZAuthentication) {
+				throw $AZAuthentication
+			}
 		}
 		catch {
-			Write-Log "Failed to authenticate WVD: $($_.exception.message)"
-			exit
+			throw [System.Exception]::new('Failed to authenticate Azure', $PSItem.Exception)
 		}
-		$WVDObj = $WVDAuthentication | Out-String
-		Write-Log "Authenticating as service principal for WVD. Result: `n$WVDObj"
+		Write-Log "Successfully authenticated as service principal for Azure. Result: `n$($AZAuthentication | Out-String)"
+
+		#Set the Azure context with Subscription
+		$AzContext = $null
+		try {
+			$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
+			if (!$AzContext) {
+				throw $AzContext
+			}
+		}
+		catch {
+			throw [System.Exception]::new("Failed to set Azure context with provided Subscription ID: $SubscriptionID (Please provide a valid subscription)", $PSItem.Exception)
+		}
+		Write-Log "Successfully set the Azure subscription. Result: `n$($AzContext | Out-String)"
+
+		#Authenticating to WVD
+		$WVDAuthentication = $null
+		try {
+			$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AadTenantId
+			if (!$WVDAuthentication) {
+				throw $WVDAuthentication
+			}
+		}
+		catch {
+			throw [System.Exception]::new('Failed to authenticate WVD', $PSItem.Exception)
+		}
+		Write-Log "Successfully authenticated as service principal for WVD. Result: `n$($WVDAuthentication | Out-String)"
 	}
 
 	<#
@@ -211,8 +218,7 @@ try {
 			Get-AzVM | Where-Object { $_.Name -eq $VMName } | Start-AzVM -AsJob | Out-Null
 		}
 		catch {
-			Write-Log -Err "Failed to start Azure VM: $($VMName) with error: $($_.exception.message)"
-			exit
+			throw [System.Exception]::new("Failed to start Azure VM: $($VMName)", $PSItem.Exception)
 		}
 
 	}
@@ -225,8 +231,7 @@ try {
 			Get-AzVM | Where-Object { $_.Name -eq $VMName } | Stop-AzVM -Force -AsJob | Out-Null
 		}
 		catch {
-			Write-Log -Err "Failed to stop Azure VM: $($VMName) with error: $($_.exception.message)"
-			exit
+			throw [System.Exception]::new("Failed to stop Azure VM: $($VMName)", $PSItem.Exception)
 		}
 	}
 	# Check if the Session host is available
@@ -267,7 +272,7 @@ try {
 	#Checking given host pool name exists in Tenant
 	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
 	if ($null -eq $HostpoolInfo) {
-		Write-Log "Hostpool '$HostpoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values."
+		Write-Log -Err "Hostpool '$HostpoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values."
 		exit
 	}
 
@@ -527,7 +532,7 @@ try {
 		if ($OffPeakUsageMinimumNoOfRDSH) {
 			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
 			if ($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH) {
-				Write-Log "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
+				Write-Log -Err "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
 				Exit
 			}
 		}
@@ -551,8 +556,7 @@ try {
 								Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
 							}
 							catch {
-								Write-Log "Unable to set it to disallow connections on session host: $SessionHostName with error: $($_.exception.message)"
-								exit
+								throw [System.Exception]::new("Unable to set it to disallow connections on session host: $SessionHostName", $PSItem.Exception)
 							}
 							# Notify user to log off session
 							# Get the user sessions in the hostpool
@@ -560,8 +564,7 @@ try {
 								$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.SessionHostName -eq $SessionHostName }
 							}
 							catch {
-								Write-Log "Failed to retrieve user sessions in hostpool: $($HostpoolName) with error: $($_.exception.message)"
-								exit
+								throw [System.Exception]::new("Failed to retrieve user sessions in hostpool: $($HostpoolName)", $PSItem.Exception)
 							}
 							$HostUserSessionCount = ($HostPoolUserSessions | Where-Object -FilterScript { $_.SessionHostName -eq $SessionHostName }).Count
 							Write-Log "Counting the current sessions on the host $SessionHostName :$HostUserSessionCount"
@@ -574,8 +577,7 @@ try {
 											Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
 										}
 										catch {
-											Write-Log "Failed to send message to user with error: $($_.exception.message)"
-											exit
+											throw [System.Exception]::new('Failed to send message to user', $PSItem.Exception)
 										}
 										Write-Log "Script sent a log off message to user: $($Session.UserPrincipalName | Out-String)"
 									}
@@ -597,8 +599,7 @@ try {
 											$ExistingSession = $ExistingSession - 1
 										}
 										catch {
-											Write-Log "Failed to log off user with error: $($_.exception.message)"
-											exit
+											throw [System.Exception]::new('Failed to log off user', $PSItem.Exception)
 										}
 										Write-Log "Forcibly logged off the user: $($Session.UserPrincipalName | Out-String)"
 									}
@@ -725,20 +726,10 @@ try {
 	Write-Log "End WVD host pool scale optimization."
 }
 catch {
-	$innerExAsStr = ''
-	$numInnerExceptions = 0
-	if ($PSItem.Exception -is [System.AggregateException] -and $PSItem.Exception.InnerExceptions) {
-		$numInnerExceptions = $PSItem.Exception.InnerExceptions.Count
-		$innerExAsStr = $PSItem.Exception.InnerExceptions -join "`n"
-	}
+    $ErrContainer = $PSItem
+    # $ErrContainer = $_
 
-	$ErrMsg = "$($PSItem | Out-String)"
-	if ($innerExAsStr.Length -gt 0) {
-		$ErrMsg = "$ErrMsg`nTotal $numInnerExceptions inner error(s):`n$($innerExAsStr | Out-String)"
-	}
-
-	# $ErrMsg = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber) $ErrMsg"
-	Write-Error $ErrMsg
+    Write-Error ($ErrContainer | Format-List -force | Out-String) -ErrorAction:Continue
 	throw
-	# throw [System.Exception]::new($ErrMsg, $PSItem.Exception)
+	# throw [System.Exception]::new($ErrMsg, $ErrContainer.Exception)
 }
