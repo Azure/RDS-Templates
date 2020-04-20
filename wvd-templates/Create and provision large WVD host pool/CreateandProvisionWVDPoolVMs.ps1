@@ -18,9 +18,7 @@
 .PARAMETER Location
     Location where the Resource Group should be created if it doesn't exist
 .PARAMETER VMNamingPrefix
-    Name of Recovery Services Vault that will provide Azure VM Backup service to the VMs. 
-.PARAMETER BackupPolicyName
-    Prefix that will be used for the host pool VMs.
+    Prefix that will be used for the host pool VMs. 
 .PARAMETER SleepTimeMinutes
     Sleep time in between deployment attempts. This is forced to 60 seconds on all deployments up to the first MaxSimultaneousDeployments
 .PARAMETER IsTest
