@@ -118,42 +118,62 @@ if ($IsTest) {
     Write-Host "$(Get-TimeStamp) Running in TEST mode. Resource Group names will have a GUID appended"
     [string]$guid = New-Guid
     $ResourceGroupName += $guid
+    Write-Verbose "$(Get-TimeStamp) Target Resource Group Name: $($ResourceGroupName)"
     $VirtualNetworkResourceGroupName += $guid
+    Write-Verbose "$(Get-TimeStamp) Target VNET Resource Group Name: $($VirtualNetworkResourceGroupName)"
 }
 
 #create resource group if necessary
+Write-Verbose "$(Get-TimeStamp) Checking Resource Group Name: $($ResourceGroupName)"
 Get-AzResourceGroup -Name $ResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent)
 {
     #resource group doesn't exist, so create
+    Write-Verbose "$(Get-TimeStamp) Creating Resource Group $($ResourceGroupName)"
     New-AzResourceGroup `
         -Name $ResourceGroupName `
         -Location $Location
+    Write-Host "$(Get-TimeStamp) Created Resource Group Name: $($ResourceGroupName)"    
+}
+else {
+    Write-Verbose "$(Get-TimeStamp) Resource Group Name: $($ResourceGroupName) already exists"
 }
 
 #create VNET if necessary
+Write-Verbose "$(Get-TimeStamp) Checking VNET Resource Group Name: $($VirtualNetworkResourceGroupName)"
 Get-AzVirtualNetwork -Name $TargetVNETName -ResourceGroup $VirtualNetworkResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent)
 {
     #VNET doesn't exist, so create
+    Write-Verbose "$(Get-TimeStamp) Creating VNET Resource Group Name: $($VirtualNetworkResourceGroupName)"
     $virtualNetwork = New-AzVirtualNetwork `
         -ResourceGroupName $VirtualNetworkResourceGroupName `
         -Location $Location `
         -Name $TargetVNETName `
         -AddressPrefix $TargetVNETPrefixRange
+    Write-Host "$(Get-TimeStamp) Created VNET Resource Group Name: $($VirtualNetworkResourceGroupName)"
+}
+else {
+    Write-Verbose "$(Get-TimeStamp) VNET Resource Group Name: $($VirtualNetworkResourceGroupName) already exists"
 }
 
 #create subnet if necessary
+Write-Verbose "$(Get-TimeStamp) Checking subnet: $($TargetSubnetName)"
 $virtualNetwork = Get-AzVirtualNetwork -Name $TargetVNETName -ResourceGroup $VirtualNetworkResourceGroupName
 Get-AzVirtualNetworkSubnetConfig -Name $TargetSubnetName -VirtualNetwork $virtualNetwork -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent)
 {
+    Write-Verbose "$(Get-TimeStamp) Creating subnet: $($TargetSubnetName)"
     Add-AzVirtualNetworkSubnetConfig `
     -Name $TargetSubnetName `
     -AddressPrefix $TargetSubnetPrefixRange `
     -VirtualNetwork $virtualNetwork
     
     $virtualNetwork | Set-AzVirtualNetwork
+    Write-Host "$(Get-TimeStamp) Created subnet: $($TargetSubnetName)"
+}
+else {
+    Write-Verbose "$(Get-TimeStamp) Subnet: $($TargetSubnetName) already exists"
 }
 
 #general logic flow is as follows:
@@ -180,12 +200,12 @@ do {
     $existingVMs = Get-AzVM -ResourceGroupName $ResourceGroupName
     if (!$existingVMs) {
         #no VMs in the resource group yet
-        Write-Verbose "No VMs in the Resource Group yet"
+        Write-Verbose "$(Get-TimeStamp) No VMs in the Resource Group yet"
         $countExistingVMs = 0
     }
     else {
         #VMs already exist, so use the count
-        Write-Verbose "VMs already exist, so counting"
+        Write-Verbose "$(Get-TimeStamp) VMs already exist, so counting"
         $countExistingVMs = ($existingVMs | Measure-Object).Count
     }
     Write-Host "$(Get-TimeStamp) VMs already in resource group $($ResourceGroupName): $($countExistingVMs)"
@@ -284,9 +304,9 @@ do {
         Write-Host "$(Get-TimeStamp) Existing VMs in pool: $($countExistingVMs)"
 
         #take into account the ones that are being deployed
-        Write-Verbose "deploymentIteration: $($deploymentIteration)"
-        Write-Verbose "MaxSimultaneousDeployments: $($MaxSimultaneousDeployments)"
-        Write-Verbose "AllocationBatchSize: $($AllocationBatchSize)"
+        Write-Verbose "$(Get-TimeStamp) deploymentIteration: $($deploymentIteration)"
+        Write-Verbose "$(Get-TimeStamp) MaxSimultaneousDeployments: $($MaxSimultaneousDeployments)"
+        Write-Verbose "$(Get-TimeStamp) AllocationBatchSize: $($AllocationBatchSize)"
         $deployingVMs = 0
         if($deploymentIteration -gt $MaxSimultaneousDeployments)
         {
@@ -301,9 +321,9 @@ do {
             $deployingVMs = $deploymentIteration * $AllocationBatchSize
         }
 
-        Write-Verbose "DesiredPoolVMCount: $($DesiredPoolVMCount)"
-        Write-Verbose "countExistingVMs: $($countExistingVMs)"
-        Write-Verbose "deployingVMs: $($deployingVMs)"
+        Write-Verbose "$(Get-TimeStamp) DesiredPoolVMCount: $($DesiredPoolVMCount)"
+        Write-Verbose "$(Get-TimeStamp) countExistingVMs: $($countExistingVMs)"
+        Write-Host "$(Get-TimeStamp) deployingVMs: $($deployingVMs)"
 
         $countAdditionalVMs = $DesiredPoolVMCount - $countExistingVMs - $deployingVMs
         Write-Host "$(Get-TimeStamp) Additional VMs needed: $($countAdditionalVMs)"
@@ -321,11 +341,11 @@ do {
         {
             $true { 
                 $vmsToDeploy = $countAdditionalVMs 
-                Write-Host "$(Get-TimeStamp) $($AllocationBatchSize)>$($countAdditionalVMs) - Additional VMs smaller. Only deploying what is needed"
+                Write-Host "$(Get-TimeStamp) AllocationBatchSize: $($AllocationBatchSize) > countAdditional VMs: $($countAdditionalVMs) - Additional VMs smaller. Only deploying what is needed"
             }
             $false {
                 $vmsToDeploy = $AllocationBatchSize 
-                Write-Host "$(Get-TimeStamp) $($AllocationBatchSize)<$($countAdditionalVMs) - Batch size smaller. Deploying full batch"
+                Write-Host "$(Get-TimeStamp) AllocationBatchSize: $($AllocationBatchSize) < countAdditional VMs: $($countAdditionalVMs) - Batch size smaller. Deploying full batch"
             }
         }
 
@@ -359,7 +379,7 @@ do {
             $deployment.ProvisioningState = $job.State
 
             #add the new deployment to the array for tracking purposes
-            Write-Verbose "Resource Group: $($ResourceGroupName)"
+            Write-Verbose "$(Get-TimeStamp) Resource Group: $($ResourceGroupName)"
             Write-Host "$(Get-TimeStamp) Successfully started deployment $($deploymentName)"
 
             $deployments += $deployment
