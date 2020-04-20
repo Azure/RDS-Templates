@@ -1,6 +1,9 @@
 ﻿param(
 	[Parameter(mandatory = $false)]
-	[object]$WebHookData
+	[object]$WebHookData,
+
+	# note: if this is enabled, the script will assume that all the authentication is done in current context before calling this script
+	[switch]$SkipAuth
 )
 try {
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -38,7 +41,9 @@ try {
 	$ConnectionAssetName = $Input.ConnectionAssetName
 
 	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
-	Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+	if (!$SkipAuth) {
+		Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+	}
 
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 	#Function to convert from UTC to Local time
@@ -122,41 +127,43 @@ try {
 		Add-LogEntry -LogMessageObj $LogMessageObj -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType 'WVDTenantScale_CL' -TimeDifferenceInHours $TimeDifference
 	}
 
-	#Collect the credentials from Azure Automation Account Assets
-	$Connection = Get-AutomationConnection -Name $ConnectionAssetName
+	if (!$SkipAuth) {
+		#Collect the credentials from Azure Automation Account Assets
+		$Connection = Get-AutomationConnection -Name $ConnectionAssetName
 
-	#Authenticating to Azure
-	Clear-AzContext -Force
-	$AZAuthentication = Connect-AzAccount -ApplicationId $Connection.ApplicationId -TenantId $AADTenantId -CertificateThumbprint $Connection.CertificateThumbprint -ServicePrincipal
-	if ($null -eq $AZAuthentication) {
-		Write-Log "Failed to authenticate Azure: $($_.exception.message)"
-		exit
-	}
-	else {
-		$AzObj = $AZAuthentication | Out-String
-		Write-Log "Authenticating as service principal for Azure. Result: `n$AzObj"
-	}
-	#Set the Azure context with Subscription
-	$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
-	if ($null -eq $AzContext) {
-		Write-Log -Err "Please provide a valid subscription"
-		exit
-	}
-	else {
-		$AzSubObj = $AzContext | Out-String
-		Write-Log "Sets the Azure subscription. Result: `n$AzSubObj"
-	}
+		#Authenticating to Azure
+		Clear-AzContext -Force
+		$AZAuthentication = Connect-AzAccount -ApplicationId $Connection.ApplicationId -TenantId $AADTenantId -CertificateThumbprint $Connection.CertificateThumbprint -ServicePrincipal
+		if ($null -eq $AZAuthentication) {
+			Write-Log "Failed to authenticate Azure: $($_.exception.message)"
+			exit
+		}
+		else {
+			$AzObj = $AZAuthentication | Out-String
+			Write-Log "Authenticating as service principal for Azure. Result: `n$AzObj"
+		}
+		#Set the Azure context with Subscription
+		$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
+		if ($null -eq $AzContext) {
+			Write-Log -Err "Please provide a valid subscription"
+			exit
+		}
+		else {
+			$AzSubObj = $AzContext | Out-String
+			Write-Log "Sets the Azure subscription. Result: `n$AzSubObj"
+		}
 
-	#Authenticating to WVD
-	try {
-		$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AadTenantId
+		#Authenticating to WVD
+		try {
+			$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AadTenantId
+		}
+		catch {
+			Write-Log "Failed to authenticate WVD: $($_.exception.message)"
+			exit
+		}
+		$WVDObj = $WVDAuthentication | Out-String
+		Write-Log "Authenticating as service principal for WVD. Result: `n$WVDObj"
 	}
-	catch {
-		Write-Log "Failed to authenticate WVD: $($_.exception.message)"
-		exit
-	}
-	$WVDObj = $WVDAuthentication | Out-String
-	Write-Log "Authenticating as service principal for WVD. Result: `n$WVDObj"
 
 	<#
 	.Description
