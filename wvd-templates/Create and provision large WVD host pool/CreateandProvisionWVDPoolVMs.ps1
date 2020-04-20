@@ -31,10 +31,12 @@
 .PARAMETER TargetSubnetName
     Subnet into which to deploy the host pool VMs. This will be created if it doesn't exist.
 .EXAMPLE
+    CreateandProvisionWVDPoolVMs.ps1 -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 `
+         -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetVNETPrefixRange 10.0.0.0/16 -TargetSubnetName desktops -TargetSubnetPrefixRange 10.0.0.0/24 `
+         -TemplateParameterFile 'C:\\Users\\evanba\\Downloads\\param_CreateandProvisionLargeWVDPoolVMs.json'
     CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 `
-         -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetVNETPrefixRange 10.0.0.0/16 -TargetSubnetName desktops -TargetSubnetPrefixRange 10.0.0.0/24
-    CreateandProvisionWVDPoolVMs.ps1 -IsTest $true -DesiredPoolVMCount 5 -AllocationBatchSize 1 -MaxSimultaneousDeployments 3 -ResourceGroupName fabrikamwvd-central -Location centralus -VMNamingPrefix rdsh -SleepTimeMinutes 5 `
-         -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetVNETPrefixRange 10.0.0.0/16 -TargetSubnetName desktops -TargetSubnetPrefixRange 10.0.0.0/24 -VirtualNetworkResourceGroupName fabrikamwvd-central
+         -DeploymentBatchNamingPrefix WVDDeployment -TargetVNETName fabrikam-central -TargetVNETPrefixRange 10.0.0.0/16 -TargetSubnetName desktops -TargetSubnetPrefixRange 10.0.0.0/24 -VirtualNetworkResourceGroupName fabrikamwvd-central `
+         -TemplateParameterFile 'C:\\Users\\evanba\\Downloads\\param_CreateandProvisionLargeWVDPoolVMs.json'
 #>
 
 [CmdletBinding()]
@@ -338,6 +340,8 @@ do {
         -rdshNumberOfInstances $vmsToDeploy `
         -location $Location `
         -rdshNamePrefix "$($VMNamingPrefix)$($deploymentIteration)" `
+        -existingVnetName $TargetVNETName `
+        -existingSubnetName $TargetSubnetName `
         -_artifactsLocation "https://raw.githubusercontent.com/Azure/RDS-Templates/noAVSetSlowerHostAvailableCheck_20200218.1900_v1/wvd-templates/" `
         -TemplateUri "https://raw.githubusercontent.com/Azure/RDS-Templates/noAVSetSlowerHostAvailableCheck_20200218.1900_v1/wvd-templates/Create%20and%20provision%20WVD%20host%20pool/mainTemplate.json" `
         -TemplateParameterFile $TemplateParameterFile).Name = $deploymentName
@@ -355,6 +359,7 @@ do {
             $deployment.ProvisioningState = $job.State
 
             #add the new deployment to the array for tracking purposes
+            Write-Verbose "Resource Group: $($ResourceGroupName)"
             Write-Host "$(Get-TimeStamp) Successfully started deployment $($deploymentName)"
 
             $deployments += $deployment
