@@ -7,7 +7,7 @@ Click the button below to deploy:
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
 
-# ARM Template to Update an exisiting Windows Virtual Desktop hostpool
+# ARM Template to Update an existing Windows Virtual Desktop hostpool
 
 This template will remove or stop the old instance of Windows Virtual Desktop Hostpool session hosts and creates new virtual machines and registers them as session hosts to Windows Virtual Desktop host pool. There are different sets of parameters you must enter to successfully deploy the template:
 - VM image
