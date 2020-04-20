@@ -3,18 +3,20 @@
 	[object]$WebHookData
 )
 try {
+	# Setting ErrorActionPreference to stop script execution when error occurs
+	$ErrorActionPreference = "Stop"
+
 	# If runbook was called from Webhook, WebhookData will not be null.
-	if ($WebHookData) {
-
-		# Collect properties of WebhookData
-		$WebhookBody = $WebHookData.RequestBody
-
-		# Collect individual headers. Input converted from JSON.
-		$Input = (ConvertFrom-Json -InputObject $WebhookBody)
-	}
-	else {
+	if (!$WebHookData) {
 		Write-Error -Message 'Runbook was not started from Webhook' -ErrorAction stop
+		exit
 	}
+
+	# Collect properties of WebhookData
+	$WebhookBody = $WebHookData.RequestBody
+	# Collect individual headers. Input converted from JSON.
+	$Input = (ConvertFrom-Json -InputObject $WebhookBody)
+
 	$AADTenantId = $Input.AADTenantId
 	$SubscriptionID = $Input.SubscriptionID
 	$TenantGroupName = $Input.TenantGroupName
@@ -37,8 +39,7 @@ try {
 
 	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
 	Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
-	# Setting ErrorActionPreference to stop script execution when error occurs
-	$ErrorActionPreference = "Stop"
+
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 	#Function to convert from UTC to Local time
 	function Convert-UTCtoLocalTime {
@@ -70,33 +71,34 @@ try {
 			$TimeDifferenceInHours
 		)
 
-		if ($LogAnalyticsWorkspaceId -ne $null) {
+		if (!$LogAnalyticsWorkspaceId) {
+			return
+		}
 
-			foreach ($Key in $LogMessage.Keys) {
-				switch ($Key.substring($Key.Length - 2)) {
-					'_s' { $sep = '"'; $trim = $Key.Length - 2 }
-					'_t' { $sep = '"'; $trim = $Key.Length - 2 }
-					'_b' { $sep = ''; $trim = $Key.Length - 2 }
-					'_d' { $sep = ''; $trim = $Key.Length - 2 }
-					'_g' { $sep = '"'; $trim = $Key.Length - 2 }
-					default { $sep = '"'; $trim = $Key.Length }
-				}
-				$LogData = $LogData + '"' + $Key.substring(0, $trim) + '":' + $sep + $LogMessageObj.Item($Key) + $sep + ','
+		foreach ($Key in $LogMessage.Keys) {
+			switch ($Key.substring($Key.Length - 2)) {
+				'_s' { $sep = '"'; $trim = $Key.Length - 2 }
+				'_t' { $sep = '"'; $trim = $Key.Length - 2 }
+				'_b' { $sep = ''; $trim = $Key.Length - 2 }
+				'_d' { $sep = ''; $trim = $Key.Length - 2 }
+				'_g' { $sep = '"'; $trim = $Key.Length - 2 }
+				default { $sep = '"'; $trim = $Key.Length }
 			}
-			$TimeStamp = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifferenceInHours
-			$LogData = $LogData + '"TimeStamp":"' + $timestamp + '"'
+			$LogData = $LogData + '"' + $Key.substring(0, $trim) + '":' + $sep + $LogMessageObj.Item($Key) + $sep + ','
+		}
+		$TimeStamp = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifferenceInHours
+		$LogData = $LogData + '"TimeStamp":"' + $timestamp + '"'
 
-			#Write-Verbose "LogData: $($LogData)"
-			$json = "{$($LogData)}"
+		#Write-Verbose "LogData: $($LogData)"
+		$json = "{$($LogData)}"
 
-			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType $LogType -TimeStampField "TimeStamp"
-			#Write-Verbose "PostResult: $($PostResult)"
-			if ($PostResult -ne "Accepted") {
-				Write-Error "Error posting to OMS - $PostResult"
-			}
+		$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType $LogType -TimeStampField "TimeStamp"
+		#Write-Verbose "PostResult: $($PostResult)"
+		if ($PostResult -ne "Accepted") {
+			Write-Error "Error posting to OMS - $PostResult"
 		}
 	}
-		
+
 	function Write-Log {
 		[CmdletBinding()]
 		param (
@@ -126,7 +128,7 @@ try {
 	#Authenticating to Azure
 	Clear-AzContext -Force
 	$AZAuthentication = Connect-AzAccount -ApplicationId $Connection.ApplicationId -TenantId $AADTenantId -CertificateThumbprint $Connection.CertificateThumbprint -ServicePrincipal
-	if ($AZAuthentication -eq $null) {
+	if ($null -eq $AZAuthentication) {
 		Write-Log "Failed to authenticate Azure: $($_.exception.message)"
 		exit
 	}
@@ -136,8 +138,8 @@ try {
 	}
 	#Set the Azure context with Subscription
 	$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
-	if ($AzContext -eq $null) {
-		Write-Error "Please provide a valid subscription"
+	if ($null -eq $AzContext) {
+		Write-Log -Err "Please provide a valid subscription"
 		exit
 	}
 	else {
@@ -257,7 +259,7 @@ try {
 
 	#Checking givne host pool name exists in Tenant
 	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
-	if ($HostpoolInfo -eq $null) {
+	if ($null -eq $HostpoolInfo) {
 		Write-Log "Hostpoolname '$HostpoolName' does not exist in the tenant of '$TenantName'. Ensure that you have entered the correct values."
 		exit
 	}
