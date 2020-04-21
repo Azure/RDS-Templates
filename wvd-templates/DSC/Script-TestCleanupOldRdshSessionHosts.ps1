@@ -90,7 +90,7 @@ $OldSessionHosts = $SessionHosts.SessionHostName | Where-Object { !$NewSessionHo
 Write-Log -Message "Old Session Host servers (if any) in hostpool: $HostPoolName :`n$($OldSessionHosts | Out-String)"
 
 if ($OldSessionHosts) {
-    Write-Log -Error "Old Session Hosts exist in hostpool $HostPoolName"
+    Write-Log -Err "Old Session Hosts exist in hostpool $HostPoolName"
     return $false
 }
 

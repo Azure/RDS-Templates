@@ -119,22 +119,22 @@ function Write-Log {
         [Parameter(Mandatory = $true)]
         [string]$Message,
 
-        # //todo use diff name for this var, maybe $Err ? https://github.com/PowerShell/PSScriptAnalyzer/blob/master/RuleDocumentation/AvoidAssignmentToAutomaticVariable.md
-        [switch]$Error
+        # note: can't use variable named '$Error': https://github.com/PowerShell/PSScriptAnalyzer/blob/master/RuleDocumentation/AvoidAssignmentToAutomaticVariable.md
+        [switch]$Err
     )
      
     try {
         $DateTime = Get-Date -Format "MM-dd-yy HH:mm:ss"
         $Invocation = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber)"
 
-        if ($Error) {
+        if ($Err) {
             $Message = "[ERROR] $Message"
         }
         
         Add-Content -Value "$DateTime - $Invocation - $Message" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
     }
     catch {
-        Write-Error $_.Exception.Message
+        throw [System.Exception]::new("Some error occurred while writing to log file with message: $Message", $PSItem.Exception)
     }
 }
 
@@ -170,8 +170,8 @@ function AddDefaultUsers {
                 Write-Log "Successfully assigned user $user to App Group: $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
             }
             catch {
-                Write-Log -Error "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
-                Write-Log -Error "Error details: $_"
+                Write-Log -Err "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
+                Write-Log -Err ($PSItem | Format-List -Force | Out-String)
             }
         }
     }
@@ -415,21 +415,7 @@ function TryCatchHandleErrWithDetails {
         return (. $ScriptBlock)
     }
     catch {
-        $innerExAsStr = ""
-        $numInnerExceptions = 0
-        if ($PSItem.Exception -is [System.AggregateException] -and $PSItem.Exception.InnerExceptions) {
-            $numInnerExceptions = $PSItem.Exception.InnerExceptions.Count
-            $innerExAsStr = $PSItem.Exception.InnerExceptions -join "`n"
-        }
-        
-        $ErrMsg = "$ErrMsg`nError Details:`n$($PSItem | Out-String)"
-        if ($innerExAsStr.Length -gt 0) {
-            $ErrMsg = "$ErrMsg`nInner Errors (there are $numInnerExceptions):`n$($innerExAsStr | Out-String)"
-        } 
-
-        Write-Log -Error $ErrMsg
-
-        $ErrMsg = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber) $ErrMsg"
+        Write-Log -Err ($PSItem | Format-List -Force | Out-String)
         throw [System.Exception]::new($ErrMsg, $PSItem.Exception)
     }
 }

@@ -65,5 +65,5 @@ if ($HostPool) {
     return $true
 }
 
-Write-Log -Error "$HostpoolName Hostpool does not exist in $TenantName Tenant"
+Write-Log -Err "$HostpoolName Hostpool does not exist in $TenantName Tenant"
 return $false

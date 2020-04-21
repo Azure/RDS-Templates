@@ -119,7 +119,7 @@ if ($null -ne $AvailableSh) {
     Write-Log -Message "Session host $($rdsh.SessionHostName) is now in Available state"
 }
 else {
-    Write-Log -Error "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
+    Write-Log -Err "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
 }
 
 # check if the session host was successfully registered to host pool, note that the error is thrown because the TestScript configuration of DSC will not be run after SetScript (this script)

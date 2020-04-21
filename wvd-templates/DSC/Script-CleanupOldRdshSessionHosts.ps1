@@ -138,7 +138,7 @@ catch {
 Write-Log -Message "AzureRM account authentication successful. Result:`n$($authentication | Out-String)"
 
 if ($authentication.Context.Subscription.Id -ne $SubscriptionId) {
-    Write-Log -Error "AzureRM auth subscription ID '$($authentication.Context.Subscription.Id)' doesn't match the subscription ID of the deployment '$SubscriptionId'"
+    Write-Log -Err "AzureRM auth subscription ID '$($authentication.Context.Subscription.Id)' doesn't match the subscription ID of the deployment '$SubscriptionId'"
 }
 
 # collect new session hosts
