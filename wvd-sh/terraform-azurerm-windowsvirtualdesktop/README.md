@@ -2,7 +2,7 @@
 
 ## Features
 
-Deploys a new hostpool or modifies an existing hostpool of Wzure Virtual Desktop Windows 10 machines
+Deploys a new hostpool or modifies an existing hostpool of Azure Virtual Desktop Windows 10 machines
 
 ## Inputs
 

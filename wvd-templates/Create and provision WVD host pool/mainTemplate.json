@@ -258,6 +258,13 @@
             "metadata": {
                 "description": "(Required for Azure Marketplace.) Leave as is, unless you would like to not use a location that is different from the location of the resouce group."
             }
+        },
+        "createAvailabilitySet": {
+            "type": "bool",
+            "metadata": {
+                "description": "Set this parameter to true if you would like to create Availability set. Defaults to true. Please note that if 'enablePersistentDesktop' is true, this parameter will be ignored and no availability set wil be created. Using an Availability set limits you to a maximum of 200 virtual machines For more info: https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits#virtual-machines-limits---azure-resource-manager."
+            },
+            "defaultValue": true
         }
     },
     "variables": {
@@ -351,7 +358,8 @@
             "gallery": "[variables('galleryimage')[parameters('rdshGalleryImageSKU')]]"
         },
         "rdshImageSourceLower": "[toLower(parameters('rdshImageSource'))]",
-        "rdshManagedDisks": "[if(equals(variables('rdshImageSourceLower'), 'customvhd'), parameters('rdshUseManagedDisks'), bool('true'))]"
+        "rdshManagedDisks": "[if(equals(variables('rdshImageSourceLower'), 'customvhd'), parameters('rdshUseManagedDisks'), bool('true'))]",
+        "createAvailabilitySet": "[and(not(parameters('enablePersistentDesktop')), parameters('createAvailabilitySet'))]"
     },
     "functions": [
         {
@@ -391,7 +399,7 @@
     "resources": [
         {
             "apiVersion": "2018-10-01",
-            "condition": "[not(parameters('enablePersistentDesktop'))]",
+            "condition": "[variables('createAvailabilitySet')]",
             "type": "Microsoft.Compute/availabilitySets",
             "name": "[concat(variables('rdshPrefix'), 'availabilitySet')]",
             "location": "[parameters('location')]",
@@ -470,7 +478,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('rdshVmSize')]"
                 },
-                "availabilitySet": "[if(not(parameters('enablePersistentDesktop')), main.getAvailabilitySet(variables('rdshPrefix')), json('null'))]",
+                "availabilitySet": "[if(variables('createAvailabilitySet'), main.getAvailabilitySet(variables('rdshPrefix')), json('null'))]",
                 "osProfile": {
                     "computerName": "[concat(variables('rdshPrefix'), copyindex())]",
                     "adminUsername": "[variables('existingDomainUsername')]",

@@ -99,7 +99,8 @@ if($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefini
     Write-Output "Service Principal creation completed successfully with $ServicePrincipalName)" -Verbose
 
     # Set windows virtual desktop permission to Client App Registration
-    $WVDApiPrincipal = Get-AzureADServicePrincipal -SearchString "Windows Virtual Desktop" | Where-Object {$_.DisplayName -eq "Windows Virtual Desktop"}
+    $WVDServPrincipalApi = Get-AzADServicePrincipal -ApplicationId "5a0aa725-4958-4b0c-80a9-34562e23f3b7"
+    $WVDApiPrincipal = Get-AzureADServicePrincipal -ObjectId $WVDServPrincipalApi.Id
     $AzureWVDApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
     $AzureWVDApiAccess.ResourceAppId = $WVDApiPrincipal.AppId
     foreach($permission in $WVDApiPrincipal.Oauth2Permissions)
@@ -107,7 +108,8 @@ if($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefini
         $AzureWVDApiAccess.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
     }
     # Set windows virtual desktop permission to Client App Registration
-    $AzureLogAnalyticsApiPrincipal = Get-AzureADServicePrincipal -SearchString "Log Analytics API"
+    $AzLogAnalyticsAPI = Get-AzADServicePrincipal -ApplicationId "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5"
+    $AzureLogAnalyticsApiPrincipal = Get-AzureADServicePrincipal -ObjectId $AzLogAnalyticsAPI.Id
     $AzureLogAnalyticsApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
     $AzureLogAnalyticsApiAccess.ResourceAppId = $AzureLogAnalyticsApiPrincipal.AppId
     foreach($permission in $AzureLogAnalyticsApiPrincipal.Oauth2Permissions)
@@ -116,7 +118,8 @@ if($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefini
     }
 
     # Set Microsoft Graph API permission to Client App Registration
-    $AzureGraphApiPrincipal = Get-AzureADServicePrincipal -SearchString "Microsoft Graph"
+    $MsftGraphApi = Get-AzADServicePrincipal -ApplicationId "00000003-0000-0000-c000-000000000000"
+    $AzureGraphApiPrincipal = Get-AzureADServicePrincipal -ObjectId $MsftGraphApi.Id
     $AzureGraphApiAccess = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
     $AzureGraphApiAccess.ResourceAppId = $AzureGraphApiPrincipal.AppId
     $permission = $AzureGraphApiPrincipal.Oauth2Permissions | Where-Object {$_.Value -eq "User.Read"}

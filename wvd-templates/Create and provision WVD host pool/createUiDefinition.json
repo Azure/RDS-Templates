@@ -92,6 +92,26 @@
 				"bladeSubtitle": "Select a usage profile and number of users to determine the recommended number of VMs",
 				"elements": [
 					{
+						"name": "createAvailabilitySet",
+						"type": "Microsoft.Common.OptionsGroup",
+						"label": "Create an Availability Set",
+						"toolTip": "Using an <a target='_blank' href='https://docs.microsoft.com/en-us/azure/virtual-machines/windows/tutorial-availability-sets#availability-set-overview'>Availability set</a> limits you to a maximum of <a target='_blank' href='https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits#virtual-machines-limits---azure-resource-manager'>200 virtual machines</a>.",
+						"defaultValue": "Yes",
+						"constraints": {
+							"allowedValues": [
+								{
+									"label": "Yes",
+									"value": true
+								},
+								{
+									"label": "No",
+									"value": false
+								}
+							]
+						},
+						"visible": "[not(basics('isPersonalDesktop').value)]"
+					},
+					{
 						"name": "usageProfile",
 						"type": "Microsoft.Common.OptionsGroup",
 						"label": "Usage Profile",
@@ -730,7 +750,8 @@
 			"tenantAdminPassword": "[steps('wvdTenantInfo').tenantAdminPassword]",
 			"isServicePrincipal": "[steps('wvdTenantInfo').tenantAdminIsServicePrincipal]",
 			"aadTenantId": "[coalesce(steps('wvdTenantInfo').tenantAdminServicePrincipalAadTenantId, '')]",
-			"location": "[location()]"
+			"location": "[location()]",
+			"createAvailabilitySet": "[steps('configureVirtualMachines').createAvailabilitySet]"
 		}
 	}
 }
