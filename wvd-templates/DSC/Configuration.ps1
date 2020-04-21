@@ -73,16 +73,24 @@ configuration CreateHostPoolAndRegisterSessionHost
             SetScript  = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
                 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     return (& "$using:ScriptPath\Script-CreateHostPool.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Description $using:Description -FriendlyName $using:FriendlyName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -EnablePersistentDesktop $using:EnablePersistentDesktop -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC SetScript CreateHostPool"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC CreateHostPool SetScript', $PSItem.Exception)
+                }
             }
             TestScript = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     return (& "$using:ScriptPath\Script-TestHostPoolExists.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC TestScript CreateHostPool"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC CreateHostPool TestScript', $PSItem.Exception)
+                }
             }
         }
 
@@ -93,17 +101,25 @@ configuration CreateHostPoolAndRegisterSessionHost
             SetScript  = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource
                     return (& "$using:ScriptPath\Script-AddDefaultUsers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -DefaultDesktopUsers $using:DefaultDesktopUsers -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC SetScript RegisterSessionHostAndAddDefaultUsers"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC RegisterSessionHostAndAddDefaultUsers SetScript', $PSItem.Exception)
+                }
             }
             TestScript = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     return (& "$using:ScriptPath\Script-TestRegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC TestScript RegisterSessionHostAndAddDefaultUsers"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC RegisterSessionHostAndAddDefaultUsers TestScript', $PSItem.Exception)
+                }
             }
         }
     }
@@ -171,16 +187,24 @@ configuration RegisterSessionHost
             SetScript  = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     return (& "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC SetScript RegisterSessionHost"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC RegisterSessionHost SetScript', $PSItem.Exception)
+                }
             }
             TestScript = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     return (& "$using:ScriptPath\Script-TestRegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC TestScript RegisterSessionHost"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC RegisterSessionHost TestScript', $PSItem.Exception)
+                }
             }
         }
     }
@@ -275,16 +299,24 @@ configuration RegisterSessionHostAndCleanup
             SetScript  = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     return (& "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC SetScript RegisterSessionHost"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC RegisterSessionHost SetScript', $PSItem.Exception)
+                }
             }
             TestScript = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     return (& "$using:ScriptPath\Script-TestRegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC TestScript RegisterSessionHost"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC RegisterSessionHost TestScript', $PSItem.Exception)
+                }
             }
         }
 
@@ -295,16 +327,24 @@ configuration RegisterSessionHostAndCleanup
             SetScript  = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     return (& "$using:ScriptPath\Script-CleanupOldRdshSessionHosts.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -AdAdminCredentials $using:AdAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -SubscriptionId $using:SubscriptionId -userLogoffDelayInMinutes $using:userLogoffDelayInMinutes -userNotificationMessege $using:userNotificationMessege -messageTitle $using:messageTitle -deleteordeallocateVMs $using:deleteordeallocateVMs -DomainName $using:DomainName -rdshNumberOfInstances $using:rdshNumberOfInstances -rdshPrefix $using:rdshPrefix -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC SetScript CreateHostPool"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC CleanupOldRdshSessionHosts SetScript', $PSItem.Exception)
+                }
             }
             TestScript = {
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
-                return . TryCatchHandleErrWithDetails -ScriptBlock {
+                try {
                     return (& "$using:ScriptPath\Script-TestCleanupOldRdshSessionHosts.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -DomainName $using:DomainName -rdshNumberOfInstances $using:rdshNumberOfInstances -rdshPrefix $using:rdshPrefix -RDPSModSource $using:RDPSModSource)
-                } -ErrMsg "Some error occurred in DSC TestScript CleanupOldRdshSessionHosts"
+                }
+                catch {
+                    Write-Log -Err ($PSItem | Format-List -Force | Out-String)
+                    throw [System.Exception]::new('Some error occurred in DSC CleanupOldRdshSessionHosts TestScript', $PSItem.Exception)
+                }
             }
         }
     }

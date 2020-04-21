@@ -402,20 +402,3 @@ function GetCurrSessionHostName {
     $Wmi = (Get-WmiObject win32_computersystem)
     return "$($Wmi.DNSHostName).$($Wmi.Domain)"
 }
-
-function TryCatchHandleErrWithDetails {
-    param(
-        [parameter(Mandatory = $true)]
-        [ScriptBlock]$ScriptBlock,
-
-        [string]$ErrMsg = "Some error occurred"
-    )
-
-    try {
-        return (. $ScriptBlock)
-    }
-    catch {
-        Write-Log -Err ($PSItem | Format-List -Force | Out-String)
-        throw [System.Exception]::new($ErrMsg, $PSItem.Exception)
-    }
-}
