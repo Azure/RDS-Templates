@@ -350,8 +350,8 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			}
 			$AllSessionHosts = Compare-Object $ListOfSessionHosts $SkipSessionhosts | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }
 
-            Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
-            $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)" }
+			Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
+			$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)" }
 			Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 
 			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
@@ -405,7 +405,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 								}
 							}
 							# Wait for the VM to start
-							$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+							$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
 							if ($SessionHostIsAvailable) {
 								Write-Output "'$SessionHost' session host status is 'Available'"
 								$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
@@ -469,7 +469,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 										Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 									}
 								}
-								$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+								$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
 								if ($SessionHostIsAvailable) {
 									Write-Output "'$SessionHost' session host status is 'Available'"
 									$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
@@ -499,8 +499,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			}
 		}
 	}
-	else
-	{
+	else {
 		Write-Output "It is Off-peak hours"
 		$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "It is Off-peak hours" }
 		Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
@@ -518,12 +517,12 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$SkipSessionhosts = 0
 		$SkipSessionhosts = @()
 
-        
-        # Check if minimum number of rdsh vm's are running
-        $CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
+
+		# Check if minimum number of rdsh vm's are running in off peak hours
+		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
-			$NumberOfRunningHost = 0
+
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHostName.Split(".")[0]
@@ -544,23 +543,27 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 							$IsVMStarted = $true
 						}
 					}
-		            # Wait for the VM to start
-					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+					# Check if session host is available
+					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
 					if ($SessionHostIsAvailable) {
-				    Write-Output "'$SessionHost' session host status is 'Available'"
-					$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
-				    Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
-				    }
-                    else {
-                    Write-Output "'$SessionHost' session host does not configured properly with deployagent or does not started properly"
-                    $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host does not configured properly with deployagent or does not started properly" }
-					Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+						Write-Output "'$SessionHostName' session host status is 'Available'"
+						$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
+						Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+					}
+					else {
+						Write-Output "'$SessionHost' session host does not configured properly with deployagent or does not started properly"
+						$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host does not configured properly with deployagent or does not started properly" }
+						Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+					}
+					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
+					if ($NumberOfRunningHost -ge $MinimumNumberOfRDSH) {
+						break;
 					}
 				}
 			}
 		}
-
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Sort-Object Sessions
+		$NumberOfRunningHost = 0
 		foreach ($SessionHost in $ListOfSessionHosts) {
 			$SessionHostName = $SessionHost.SessionHostName
 			$VMName = $SessionHostName.Split(".")[0]
@@ -573,10 +576,10 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 				$SkipSessionhosts += $SessionHost
 				continue
 			}
-			$AllSessionHosts = (Compare-Object -ReferenceObject $AllSessionHosts -DifferenceObject $SkipSessionhosts).InputObject | Select-Object -Property * -Unique
-
+			# Maintenance VMs skipped and stored into a variable
+			$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
-				# Check if the Azure VM is running or not
+				# Check if the Azure VM is running
 				if ($RoleInstance.PowerState -eq "VM running") {
 					Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
 					$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)" }
@@ -594,13 +597,13 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
-            [int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
-			if($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH){
-            Write-Output "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
-            $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now." }
-			Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
-            Exit
-            }
+			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
+			if ($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH) {
+				Write-Output "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
+				$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now." }
+				Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+				exit
+			}
 		}
 
 		# Breadth first session hosts shutdown in off peak hours
@@ -622,13 +625,19 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 
 							# Ensure the running Azure VM is set as drain mode
 							try {
-								$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+								$CheckMinimumDrianMode = (Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.AllowNewSession -eq "True" -and $AllSessionHosts -contains $_ }).Count
+								if ($CheckMinimumDrianMode -gt $MinimumNumberOfRDSH) {
+									$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+								}
 							}
 							catch {
 								Write-Output "Unable to set it to allow connections on session host: $SessionHostName with error: $($_.exception.message)"
 								$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Unable to set it to allow connections on session host: $($SessionHost.SessionHost) with error: $($_.exception.message)" }
 								Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 								exit
+							}
+							if ($LimitSecondsToForceLogOffUser -eq 0) {
+								continue
 							}
 							# Notify user to log off session
 							# Get the user sessions in the hostpool
@@ -648,51 +657,51 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 							$ExistingSession = 0
 							foreach ($session in $HostPoolUserSessions) {
 								if ($session.SessionHostName -eq $SessionHostName -and $session.SessionState -eq "Active") {
-									if ($LimitSecondsToForceLogOffUser -ne 0) {
-										# Send notification
-										try {
-											Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
-										}
-										catch {
-											Write-Output "Failed to send message to user with error: $($_.exception.message)"
-											$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Failed to send message to user with error: $($_.exception.message)" }
-											Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
-											exit
-										}
-										Write-Output "Script was sent a log off message to user: $($Session.UserPrincipalName | Out-String)"
-										$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Script was sent a log off message to user: $($Session.UserPrincipalName | Out-String)" }
-										Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+									#if ($LimitSecondsToForceLogOffUser -ne 0) {
+									# Send notification
+									try {
+										Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
 									}
+									catch {
+										Write-Output "Failed to send message to user with error: $($_.exception.message)"
+										$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Failed to send message to user with error: $($_.exception.message)" }
+										Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+										exit
+									}
+									Write-Output "Script was sent a log off message to user: $($Session.AdUsername | Out-String)"
+									$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Script was sent a log off message to user: $($Session.AdUsername | Out-String)" }
+									Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+									#}
 								}
 								$ExistingSession = $ExistingSession + 1
 							}
 							# Wait for n seconds to log off user
 							Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
 
-							if ($LimitSecondsToForceLogOffUser -ne 0) {
-								# Force users to log off
-								Write-Output "Force users to log off ..."
-								$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Force users to log off ..." }
-								Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
-								foreach ($Session in $HostPoolUserSessions) {
-									if ($Session.SessionHostName -eq $SessionHostName) {
-										#Log off user
-										try {
-											Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force -ErrorAction Stop
-											$ExistingSession = $ExistingSession - 1
-										}
-										catch {
-											Write-Output "Failed to log off user with error: $($_.exception.message)"
-											$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Failed to log off user with error: $($_.exception.message)" }
-											Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
-											exit
-										}
-										Write-Output "Forcibly logged off the user: $($Session.UserPrincipalName | Out-String)"
-										$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Forcibly logged off the user: $($Session.UserPrincipalName | Out-String)" }
-										Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+							#if ($LimitSecondsToForceLogOffUser -ne 0) {
+							# Force users to log off
+							Write-Output "Force users to log off ..."
+							$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Force users to log off ..." }
+							Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+							foreach ($Session in $HostPoolUserSessions) {
+								if ($Session.SessionHostName -eq $SessionHostName) {
+									#Log off user
+									try {
+										Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force -ErrorAction Stop
+										$ExistingSession = $ExistingSession - 1
 									}
+									catch {
+										Write-Output "Failed to log off user with error: $($_.exception.message)"
+										$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Failed to log off user with error: $($_.exception.message)" }
+										Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+										exit
+									}
+									Write-Output "Forcibly logged off the user: $($Session.AdUserName | Out-String)"
+									$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Forcibly logged off the user: $($Session.AdUserName | Out-String)" }
+									Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 								}
 							}
+							#}
 
 
 							# Check the session count before shutting down the VM
@@ -704,39 +713,42 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 								Stop-SessionHost -VMName $VMName -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -TimeDifference $TimeDifference
 							}
 						}
-						#wait for the VM to stop
-						$IsVMStopped = $false
-						while (!$IsVMStopped) {
-							$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
-							if ($RoleInstance.PowerState -eq "VM deallocated") {
-								$IsVMStopped = $true
-								Write-Output "Azure VM has been stopped: $($RoleInstance.Name) ..."
-								$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Azure VM has been stopped: $($RoleInstance.Name) ..." }
-								Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+
+						if ($LimitSecondsToForceLogOffUser -ne 0 -or $SessionHost.Sessions -eq 0) {
+							#wait for the VM to stop
+							$IsVMStopped = $false
+							while (!$IsVMStopped) {
+								$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+								if ($RoleInstance.PowerState -eq "VM deallocated") {
+									$IsVMStopped = $true
+									Write-Output "Azure VM has been stopped: $($RoleInstance.Name) ..."
+									$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Azure VM has been stopped: $($RoleInstance.Name) ..." }
+									Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+								}
 							}
-						}
-						# Check if the session host status is NoHeartbeat or Unavailable
-						$IsSessionHostNoHeartbeat = $false
-						while (!$IsSessionHostNoHeartbeat) {
-							$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-							if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHost.Status -eq "Unavailable" ) {
-								$IsSessionHostNoHeartbeat = $true
-								# Ensure the Azure VMs that are off have allow new connections mode set to True
-								if ($SessionHostInfo.AllowNewSession -eq $false) {
-									Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+							# Check if the session host status is NoHeartbeat or Unavailable
+							$IsSessionHostNoHeartbeat = $false
+							while (!$IsSessionHostNoHeartbeat) {
+								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
+								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHost.Status -eq "Unavailable") {
+									$IsSessionHostNoHeartbeat = $true
+									# Ensure the Azure VMs that are off have allow new connections mode set to True
+									if ($SessionHostInfo.AllowNewSession -eq $false) {
+										Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+									}
 								}
 							}
 						}
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 						#decrement number of running session host
-						[int]$NumberOfRunningHost = [int]$NumberOfRunningHost - 1
-						[int]$TotalRunningCores = [int]$TotalRunningCores - $RoleSize.NumberOfCores
+						if ($LimitSecondsToForceLogOffUser -ne 0 -or $SessionHost.Sessions -eq 0) {
+							[int]$NumberOfRunningHost = [int]$NumberOfRunningHost - 1
+							[int]$TotalRunningCores = [int]$TotalRunningCores - $RoleSize.NumberOfCores
+						}
 					}
 				}
 			}
 		}
-
-
 
 		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
@@ -749,7 +761,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
-                $NoConnectionsofhost = $NoConnectionsofhost-$DefinedMinimumNumberOfRDSH
+				$NoConnectionsofhost = $NoConnectionsofhost - $DefinedMinimumNumberOfRDSH
 				if ($NoConnectionsofhost -gt $DefinedMinimumNumberOfRDSH) {
 					[int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - $NoConnectionsofhost
 					Set-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -Encrypted $false -Value $MinimumNumberOfRDSH
@@ -766,8 +778,8 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			$ScaleFactor = [math]::Floor($SessionsScaleFactor)
 
 			if ($HostpoolSessionCount -ge $ScaleFactor) {
-				$AllSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" }
-				$AllSessionHosts = (Compare-Object -ReferenceObject $AllSessionHosts -DifferenceObject $SkipSessionhosts).InputObject | Select-Object -Property * -Unique
+				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" }
+				$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 				foreach ($SessionHost in $AllSessionHosts) {
 					# Check the session host status and if the session host is healthy before starting the host
 					if ($SessionHost.UpdateState -eq "Succeeded") {
@@ -796,7 +808,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 						}
 
 						# Wait for the sessionhost is available
-						$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost.SessionHostName
+						$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost.SessionHostName
 						if ($SessionHostIsAvailable) {
 							Write-Output "$($SessionHost.SessionHostName | Out-String) session host status is 'Available'"
 							$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "$($SessionHost.SessionHostName | Out-String) session host status is 'Available'" }
@@ -854,7 +866,8 @@ else {
 	if ($AZAuthentication -eq $null) {
 		Write-Output "Failed to authenticate Azure: $($_.exception.message)"
 		exit
-	} else {
+	}
+	else {
 		$AzObj = $AZAuthentication | Out-String
 		Write-Output "Authenticating as service principal for Azure. Result: `n$AzObj"
 	}
@@ -963,7 +976,7 @@ else {
 		}
 		return $IsHostAvailable
 	}
-	
+
 	#Converting date time from UTC to Local
 	$CurrentDateTime = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference
 
@@ -1090,7 +1103,7 @@ else {
 								}
 							}
 							# Wait for the VM to start
-							$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+							$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
 							if ($SessionHostIsAvailable) {
 								Write-Output "'$SessionHost' session host status is 'Available'"
 							}
@@ -1140,7 +1153,7 @@ else {
 										Write-Output "Azure VM has been Started: $($RoleInstance.Name) ..."
 									}
 								}
-								$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+								$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
 								if ($SessionHostIsAvailable) {
 									Write-Output "'$SessionHost' session host status is 'Available'"
 								}
@@ -1176,11 +1189,10 @@ else {
 		#Initialize variable for to skip the session host which is in maintenance.
 		$SkipSessionhosts = 0
 		$SkipSessionhosts = @()
-        # Check if minimum number rdsh vm's are running in off peak hours
-        $CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
+		# Check if minimum number of rdsh vm's are running in off peak hours
+		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
-			$NumberOfRunningHost = 0
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHostName.Split(".")[0]
@@ -1201,10 +1213,10 @@ else {
 							$IsVMStarted = $true
 						}
 					}
-					# Check if session host is availba
-					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+					# Check if session host is available
+					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
 					if ($SessionHostIsAvailable) {
-						Write-Output "'$SessionHost' session host status is 'Available'"
+						Write-Output "'$SessionHostName' session host status is 'Available'"
 					}
 					else {
 						Write-Output "'$SessionHost' session host does not configured properly with deployagent or does not started properly"
@@ -1220,6 +1232,7 @@ else {
 		}
 
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Sort-Object Sessions
+		$NumberOfRunningHost = 0
 		foreach ($SessionHost in $ListOfSessionHosts) {
 			$SessionHostName = $SessionHost.SessionHostName
 			$VMName = $SessionHostName.Split(".")[0]
@@ -1250,10 +1263,10 @@ else {
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
 			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
-            if($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH){
-            Write-Output "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
-            Exit
-            }
+			if ($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH) {
+				Write-Output "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
+				exit
+			}
 		}
 
 		# Breadth first session hosts shutdown in off peak hours
@@ -1272,11 +1285,17 @@ else {
 						else {
 							# Ensure the running Azure VM is set as drain mode
 							try {
-								$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+								$CheckMinimumDrianMode = (Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.AllowNewSession -eq "True" -and $AllSessionHosts -contains $_ }).Count
+								if ($CheckMinimumDrianMode -gt $MinimumNumberOfRDSH) {
+									$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+								}
 							}
 							catch {
 								Write-Output "Unable to set it to allow connections on session host: $SessionHostName with error: $($_.exception.message)"
 								exit
+							}
+							if ($LimitSecondsToForceLogOffUser -eq 0) {
+								continue
 							}
 							# Notify user to log off session
 							# Get the user sessions in the hostpool
@@ -1284,49 +1303,50 @@ else {
 								$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.SessionHostName -eq $SessionHostName }
 							}
 							catch {
-								Write-Output "Failed to retrieve user sessions in hostpool: $($Name) with error: $($_.exception.message)"
+								Write-Output "Failed to retrieve user sessions in hostpool: $($HostpoolName) with error: $($_.exception.message)"
 								exit
 							}
 							$HostUserSessionCount = ($HostPoolUserSessions | Where-Object -FilterScript { $_.SessionHostName -eq $SessionHostName }).Count
 							Write-Output "Counting the current sessions on the host $SessionHostName :$HostUserSessionCount"
+
 							$ExistingSession = 0
 							foreach ($session in $HostPoolUserSessions) {
 								if ($session.SessionHostName -eq $SessionHostName -and $session.SessionState -eq "Active") {
-									if ($LimitSecondsToForceLogOffUser -ne 0) {
-										# Send notification
-										try {
-											Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
-										}
-										catch {
-											Write-Output "Failed to send message to user with error: $($_.exception.message)"
-											exit
-										}
-										Write-Output "Script was sent a log off message to user: $($Session.UserPrincipalName | Out-String)"
+									#if ($LimitSecondsToForceLogOffUser -ne 0) {
+									# Send notification
+									try {
+										Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
 									}
+									catch {
+										Write-Output "Failed to send message to user with error: $($_.exception.message)"
+										exit
+									}
+									Write-Output "Script was sent a log off message to user: $($Session.AdUserName | Out-String)"
+									#}
 								}
 								$ExistingSession = $ExistingSession + 1
 							}
 							# Wait for n seconds to log off user
 							Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
 
-							if ($LimitSecondsToForceLogOffUser -ne 0) {
-								# Force users to log off
-								Write-Output "Force users to log off ..."
-								foreach ($Session in $HostPoolUserSessions) {
-									if ($Session.SessionHostName -eq $SessionHostName) {
-										#Log off user
-										try {
-											Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -ErrorAction Stop
-											$ExistingSession = $ExistingSession - 1
-										}
-										catch {
-											Write-Output "Failed to log off user with error: $($_.exception.message)"
-											exit
-										}
-										Write-Output "Forcibly logged off the user: $($Session.UserPrincipalName | Out-String)"
+							#if ($LimitSecondsToForceLogOffUser -ne 0) {
+							# Force users to log off
+							Write-Output "Force users to log off ..."
+							foreach ($Session in $HostPoolUserSessions) {
+								if ($Session.SessionHostName -eq $SessionHostName) {
+									#Log off user
+									try {
+										Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -ErrorAction Stop
+										$ExistingSession = $ExistingSession - 1
 									}
+									catch {
+										Write-Output "Failed to log off user with error: $($_.exception.message)"
+										exit
+									}
+									Write-Output "Forcibly logged off the user: $($Session.AdUserName | Out-String)"
 								}
 							}
+							#}
 							# Check the session count before shutting down the VM
 							if ($ExistingSession -eq 0) {
 								# Shutdown the Azure VM
@@ -1334,35 +1354,41 @@ else {
 								Stop-SessionHost -VMName $VMName
 							}
 						}
-						#wait for the VM to stop
-						$IsVMStopped = $false
-						while (!$IsVMStopped) {
-							$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
-							if ($RoleInstance.PowerState -eq "VM deallocated") {
-								$IsVMStopped = $true
-								Write-Output "Azure VM has been stopped: $($RoleInstance.Name) ..."
+
+						if ($LimitSecondsToForceLogOffUser -ne 0 -or $SessionHost.Sessions -eq 0) {
+							#wait for the VM to stop
+							$IsVMStopped = $false
+							while (!$IsVMStopped) {
+								$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+								if ($RoleInstance.PowerState -eq "VM deallocated") {
+									$IsVMStopped = $true
+									Write-Output "Azure VM has been stopped: $($RoleInstance.Name) ..."
+								}
 							}
-						}
-						# Check if the session host status is NoHeartbeat or Unavailable                          
-						$IsSessionHostNoHeartbeat = $false
-						while (!$IsSessionHostNoHeartbeat) {
-							$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-							if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHostInfo.Status -eq "Unavailable") {
-								$IsSessionHostNoHeartbeat = $true
-								# Ensure the Azure VMs that are off have allow new connections mode set to True
-								if ($SessionHostInfo.AllowNewSession -eq $false) {
-									Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+							# Check if the session host status is NoHeartbeat or Unavailable                          
+							$IsSessionHostNoHeartbeat = $false
+							while (!$IsSessionHostNoHeartbeat) {
+								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
+								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHostInfo.Status -eq "Unavailable") {
+									$IsSessionHostNoHeartbeat = $true
+									# Ensure the Azure VMs that are off have allow new connections mode set to True
+									if ($SessionHostInfo.AllowNewSession -eq $false) {
+										Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+									}
 								}
 							}
 						}
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 						#decrement number of running session host
-						[int]$NumberOfRunningHost = [int]$NumberOfRunningHost - 1
-						[int]$TotalRunningCores = [int]$TotalRunningCores - $RoleSize.NumberOfCores
+						if ($LimitSecondsToForceLogOffUser -ne 0 -or $SessionHost.Sessions -eq 0) {
+							[int]$NumberOfRunningHost = [int]$NumberOfRunningHost - 1
+							[int]$TotalRunningCores = [int]$TotalRunningCores - $RoleSize.NumberOfCores
+						}
 					}
 				}
 			}
 		}
+
 		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
@@ -1374,7 +1400,7 @@ else {
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
-                $NoConnectionsofhost = $NoConnectionsofhost-$DefinedMinimumNumberOfRDSH
+				$NoConnectionsofhost = $NoConnectionsofhost - $DefinedMinimumNumberOfRDSH
 				if ($NoConnectionsofhost -gt $DefinedMinimumNumberOfRDSH) {
 					[int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH - $NoConnectionsofhost
 					Set-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -Encrypted $false -Value $MinimumNumberOfRDSH
@@ -1392,7 +1418,6 @@ else {
 
 			if ($HostpoolSessionCount -ge $ScaleFactor) {
 				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" }
-				#$AllSessionHosts = Compare-Object $ListOfSessionHosts $SkipSessionhosts | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }
 				$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 				foreach ($SessionHost in $AllSessionHosts) {
 					# Check the session host status and if the session host is healthy before starting the host
@@ -1415,7 +1440,7 @@ else {
 							}
 						}
 						# Wait for the sessionhost is available
-						$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost.SessionHostName
+						$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost.SessionHostName
 						if ($SessionHostIsAvailable) {
 							Write-Output "'$($SessionHost.SessionHostName | Out-String)' session host status is 'Available'"
 						}
