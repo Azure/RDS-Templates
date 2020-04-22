@@ -8,6 +8,10 @@
 try {
 	# Setting ErrorActionPreference to stop script execution when error occurs
 	$ErrorActionPreference = "Stop"
+	# //todo maybe remove this ?
+	if ($SkipAuth) {
+		Set-StrictMode -Version Latest
+	}
 
 	# If runbook was called from Webhook, WebhookData will not be null.
 	if (!$WebHookData) {
@@ -46,7 +50,7 @@ try {
 	}
 
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-	#Function to convert from UTC to Local time
+	# Function to convert from UTC to Local time
 	function Convert-UTCtoLocalTime {
 		param(
 			$TimeDifferenceInHours
@@ -61,7 +65,7 @@ try {
 		else {
 			$TimeDifferenceHours = $TimeDifferenceInHours
 		}
-		#Azure is using UTC time, justify it to the local time
+		# Azure is using UTC time, justify it to the local time
 		$ConvertedTime = $UniversalTime.AddHours($TimeDifferenceHours).AddMinutes($TimeDifferenceMinutes)
 		return $ConvertedTime
 	}
@@ -80,7 +84,8 @@ try {
 			return
 		}
 
-		foreach ($Key in $LogMessage.Keys) {
+		$LogData = ''
+		foreach ($Key in $LogMessageObj.Keys) {
 			switch ($Key.substring($Key.Length - 2)) {
 				'_s' { $sep = '"'; $trim = $Key.Length - 2 }
 				'_t' { $sep = '"'; $trim = $Key.Length - 2 }
@@ -92,13 +97,13 @@ try {
 			$LogData = $LogData + '"' + $Key.substring(0, $trim) + '":' + $sep + $LogMessageObj.Item($Key) + $sep + ','
 		}
 		$TimeStamp = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifferenceInHours
-		$LogData = $LogData + '"TimeStamp":"' + $timestamp + '"'
+		$LogData = $LogData + '"TimeStamp":"' + $TimeStamp + '"'
 
-		#Write-Verbose "LogData: $($LogData)"
+		# Write-Verbose "LogData: $($LogData)"
 		$json = "{$($LogData)}"
 
 		$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType $LogType -TimeStampField "TimeStamp"
-		#Write-Verbose "PostResult: $($PostResult)"
+		# Write-Verbose "PostResult: $($PostResult)"
 		if ($PostResult -ne "Accepted") {
 			Write-Error "Error posting to OMS: Result: $PostResult"
 		}
@@ -128,10 +133,10 @@ try {
 	}
 
 	if (!$SkipAuth) {
-		#Collect the credentials from Azure Automation Account Assets
+		# Collect the credentials from Azure Automation Account Assets
 		$Connection = Get-AutomationConnection -Name $ConnectionAssetName
 
-		#Authenticating to Azure
+		# Authenticating to Azure
 		Clear-AzContext -Force
 		$AZAuthentication = $null
 		try {
@@ -145,7 +150,7 @@ try {
 		}
 		Write-Log "Successfully authenticated as service principal for Azure. Result: `n$($AZAuthentication | Out-String)"
 
-		#Set the Azure context with Subscription
+		# Set the Azure context with Subscription
 		$AzContext = $null
 		try {
 			$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
@@ -158,7 +163,7 @@ try {
 		}
 		Write-Log "Successfully set the Azure subscription. Result: `n$($AzContext | Out-String)"
 
-		#Authenticating to WVD
+		# Authenticating to WVD
 		$WVDAuthentication = $null
 		try {
 			$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AadTenantId
@@ -194,7 +199,7 @@ try {
 
 	}
 
-	#Function to Check if the session host is allowing new connections
+	# Function to Check if the session host is allowing new connections
 	function Check-ForAllowNewConnections {
 		param(
 			[string]$TenantName,
@@ -251,10 +256,10 @@ try {
 		return $IsHostAvailable
 	}
 	
-	#Converting date time from UTC to Local
+	# Converting date time from UTC to Local
 	$CurrentDateTime = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference
 
-	#Set context to the appropriate tenant group
+	# Set context to the appropriate tenant group
 	$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
 	if ($TenantGroupName -ne $CurrentTenantGroupName) {
 		Write-Log "Running switching to the $TenantGroupName context"
@@ -264,12 +269,12 @@ try {
 	$BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
 
-	#check the calculated end time is later than begin time in case of time zone
+	# check the calculated end time is later than begin time in case of time zone
 	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
 		$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
 	}
 
-	#Checking given host pool name exists in Tenant
+	# Checking given host pool name exists in Tenant
 	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
 	if ($null -eq $HostpoolInfo) {
 		Write-Log -Err "Hostpool '$HostpoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values."
@@ -393,7 +398,7 @@ try {
 			}
 		}
 		else {
-			#check if the available capacity meets the number of sessions or not
+			# check if the available capacity meets the number of sessions or not
 			Write-Log "Current total number of user sessions: $(($HostPoolUserSessions).Count)"
 			Write-Log "Current available session capacity is: $AvailableSessionCapacity"
 			if ($HostPoolUserSessions.Count -ge $AvailableSessionCapacity) {
@@ -540,7 +545,7 @@ try {
 		# Breadth first session hosts shutdown in off peak hours
 		if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 			foreach ($SessionHost in $AllSessionHosts) {
-				#Check the status of the session host
+				# Check the status of the session host
 				if ($SessionHost.Status -ne "NoHeartbeat" -or $SessionHost.Status -ne "Unavailable") {
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 						$SessionHostName = $SessionHost.SessionHostName
@@ -592,7 +597,7 @@ try {
 								Write-Log "Force users to log off ..."
 								foreach ($Session in $HostPoolUserSessions) {
 									if ($Session.SessionHostName -eq $SessionHostName) {
-										#Log off user
+										# Log off user
 										try {
 											# note: the following command was called with -force in log analytics workspace version of this code
 											Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -ErrorAction Stop
@@ -612,7 +617,7 @@ try {
 								Stop-SessionHost -VMName $VMName
 							}
 						}
-						#wait for the VM to stop
+						# wait for the VM to stop
 						$IsVMStopped = $false
 						while (!$IsVMStopped) {
 							$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
@@ -634,7 +639,7 @@ try {
 							}
 						}
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
-						#decrement number of running session host
+						# decrement number of running session host
 						[int]$NumberOfRunningHost = [int]$NumberOfRunningHost - 1
 						[int]$TotalRunningCores = [int]$TotalRunningCores - $RoleSize.NumberOfCores
 					}
@@ -682,7 +687,7 @@ try {
 						# Start the Az VM
 						Write-Log "Starting Azure VM: $VMName and waiting for it to complete ..."
 						Start-SessionHost -VMName $VMName
-						#Wait for the VM to start
+						# Wait for the VM to start
 						$IsVMStarted = $false
 						while (!$IsVMStarted) {
 							$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
