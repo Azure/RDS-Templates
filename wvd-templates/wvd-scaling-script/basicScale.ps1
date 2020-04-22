@@ -182,7 +182,7 @@ try {
 	Helper functions
 	#>
 	# Function to check and update the loadbalancer type to BreadthFirst
-	function UpdateLoadBalancerTypeInPeakandOffPeakwithBredthFirst {
+	function UpdateLoadBalancerTypeInPeakandOffPeakwithBreadthFirst {
 		param(
 			[string]$HostpoolLoadbalancerType,
 			[string]$TenantName,
@@ -284,7 +284,13 @@ try {
 	# Setting up appropriate load balacing type
 	$HostpoolLoadbalancerType = $HostpoolInfo.LoadBalancerType
 	[int]$MaxSessionLimitValue = $HostpoolInfo.MaxSessionLimit
-	UpdateLoadBalancerTypeInPeakandOffPeakwithBredthFirst -TenantName $TenantName -HostPoolName $HostpoolName -MaxSessionLimitValue $MaxSessionLimitValue -HostpoolLoadbalancerType $HostpoolLoadbalancerType
+	# note: both of the if else blocks are same. Breadth 1st is enforced on/off peak hours to simplify the things with scaling in the start/end of peak hours
+	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
+		UpdateLoadBalancerTypeInPeakandOffPeakwithBreadthFirst -TenantName $TenantName -HostPoolName $HostpoolName -MaxSessionLimitValue $MaxSessionLimitValue -HostpoolLoadbalancerType $HostpoolLoadbalancerType
+	}
+	else {
+		UpdateLoadBalancerTypeInPeakandOffPeakwithBreadthFirst -TenantName $TenantName -HostPoolName $HostpoolName -MaxSessionLimitValue $MaxSessionLimitValue -HostpoolLoadbalancerType $HostpoolLoadbalancerType
+	}
 
 	Write-Log "Starting WVD tenant hosts scale optimization: Current Date Time is: $CurrentDateTime"
 	# Get the host pool info after changing hostpool loadbalancer type
@@ -731,10 +737,10 @@ try {
 	Write-Log "End WVD host pool scale optimization."
 }
 catch {
-    $ErrContainer = $PSItem
-    # $ErrContainer = $_
+	$ErrContainer = $PSItem
+	# $ErrContainer = $_
 
-    Write-Error ($ErrContainer | Format-List -force | Out-String) -ErrorAction:Continue
+	Write-Error ($ErrContainer | Format-List -force | Out-String) -ErrorAction:Continue
 	throw
 	# throw [System.Exception]::new($ErrMsg, $ErrContainer.Exception)
 }
