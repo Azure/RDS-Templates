@@ -276,7 +276,7 @@ try {
 
 	# Checking given host pool name exists in Tenant
 	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
-	if ($null -eq $HostpoolInfo) {
+	if (!$HostpoolInfo) {
 		Write-Log -Err "Hostpool '$HostpoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values."
 		exit
 	}
@@ -292,7 +292,7 @@ try {
 
 	# Check if the hostpool has session hosts
 	$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -ErrorAction Stop | Sort-Object SessionHostName
-	if ($null -eq $ListOfSessionHosts) {
+	if (!$ListOfSessionHosts) {
 		Write-Log "Session hosts do not exist in the Hostpool '$HostpoolName'. Ensure that hostpool have hosts."
 		exit
 	}
@@ -465,7 +465,7 @@ try {
 		# Check if minimum number rdsh vm's are running in off peak hours
 		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
-		if ($null -eq $CheckMinimumNumberOfRDShIsRunning) {
+		if (!$CheckMinimumNumberOfRDShIsRunning) {
 			$NumberOfRunningHost = 0
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
@@ -709,7 +709,7 @@ try {
 						# Increment the number of minimumnumberofrdsh
 						[int]$MinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH + 1
 						$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
-						if ($null -eq $OffPeakUsageMinimumNoOfRDSH) {
+						if (!$OffPeakUsageMinimumNoOfRDSH) {
 							New-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -Encrypted $false -Value $MinimumNumberOfRDSH -Description "Dynamically generated minimumnumber of RDSH value"
 						}
 						else {
