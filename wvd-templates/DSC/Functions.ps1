@@ -48,12 +48,12 @@ class PsRdsSessionHost {
         $sessionHost = (Invoke-Expression $commandToExecute )
 
         $StartTime = Get-Date
-        while ($sessionHost -eq $null) {
+        while ($null -eq $sessionHost) {
             Start-Sleep -Seconds 30
             $sessionHost = (Invoke-Expression $commandToExecute)
     
             if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                if ($sessionHost -eq $null) {
+                if ($null -eq $sessionHost) {
                     return $null
                 }
             }
@@ -116,24 +116,25 @@ function Write-Log {
     [CmdletBinding()]
     param
     (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $true)]
         [string]$Message,
-        [Parameter(Mandatory = $false)]
-        [string]$Error
+
+        # note: can't use variable named '$Error': https://github.com/PowerShell/PSScriptAnalyzer/blob/master/RuleDocumentation/AvoidAssignmentToAutomaticVariable.md
+        [switch]$Err
     )
      
     try {
         $DateTime = Get-Date -Format "MM-dd-yy HH:mm:ss"
         $Invocation = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber)"
-        if ($Message) {
-            Add-Content -Value "$DateTime - $Invocation - $Message" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
+
+        if ($Err) {
+            $Message = "[ERROR] $Message"
         }
-        else {
-            Add-Content -Value "$DateTime - $Invocation - $Error" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
-        }
+        
+        Add-Content -Value "$DateTime - $Invocation - $Message" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
     }
     catch {
-        Write-Error $_.Exception.Message
+        throw [System.Exception]::new("Some error occurred while writing to log file with message: $Message", $PSItem.Exception)
     }
 }
 
@@ -169,8 +170,8 @@ function AddDefaultUsers {
                 Write-Log "Successfully assigned user $user to App Group: $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
             }
             catch {
-                Write-Log "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
-                Write-Log "Error details: $_"
+                Write-Log -Err "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
+                Write-Log -Err ($PSItem | Format-List -Force | Out-String)
             }
         }
     }
@@ -196,8 +197,8 @@ function ValidateServicePrincipal {
 
 function Is1809OrLater {
     $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-    if ($OSVersionInfo -ne $null) {
-        if ($OSVersionInfo.ReleaseId -ne $null) {
+    if ($null -ne $OSVersionInfo) {
+        if ($null -ne $OSVersionInfo.ReleaseId) {
             Write-Log -Message "Build: $($OSVersionInfo.ReleaseId)"
             $rdshIs1809OrLaterBool = @{$true = $true; $false = $false }[$OSVersionInfo.ReleaseId -ge 1809]
         }
@@ -262,7 +263,7 @@ function AuthenticateRdsAccount {
     )
 
     if ($ServicePrincipal) {
-        Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId "
+        Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId"
     }
     else {
         $PSBoundParameters.Remove('ServicePrincipal')
@@ -278,37 +279,9 @@ function AuthenticateRdsAccount {
         }
     }
     catch {
-        #This creates a new script scope so that these variables aren't included in this function scope since this function is being called using dot source notation.
-        & {
-            Set-StrictMode -Version Latest
-            
-            $innerExAsStr = ""
-            $numInnerExceptions = 0
-            if($_.Exception -is [System.AggregateException] -and $_.Exception.InnerExceptions)
-            {
-                $numInnerExceptions = $_.Exception.InnerExceptions.Count
-                foreach ($innerEx in $_.Exception.InnerExceptions)
-                {
-                    if($innerExAsStr.Length -gt 0)
-                    {
-                        $innerExAsStr += "`n"
-                    } 
-                    $innerExAsStr += $innerEx
-                }
-            }
-            
-            $errMsg = "Error authenticating Windows Virtual Desktop account, ServicePrincipal=" + $ServicePrincipal
-            $errMsg += " Error Details:`n$($_ | Out-String)"
-            if($innerExAsStr.Length -gt 0)
-            {
-                $errMsg += " Inner Errors (there are " + $numInnerExceptions +"): `n$($innerExAsStr | Out-String)"
-            } 
-
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
-        }
-
+        throw [System.Exception]::new("Error authenticating Windows Virtual Desktop account, ServicePrincipal = $ServicePrincipal", $PSItem.Exception)
     }
+    
     Write-Log -Message "Windows Virtual Desktop account authentication successful. Result:`n$($authentication | Out-String)"
 }
 
@@ -333,26 +306,20 @@ function SetTenantGroupContextAndValidate {
             Set-RdsContext -TenantGroupName $TenantGroupName
         }
         catch {
-            $errMsg ="Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group. Error Details: $($PSItem | Out-String)"
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
+            throw [System.Exception]::new("Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
         }
-
-        $tenants = $null
-        try {
-            $tenants = Get-RdsTenant -Name $TenantName
-        }
-        catch {
-            $errMsg = "Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant. Error Details: $($PSItem | Out-String)"
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
-        }
-
-        if (!$tenants) {
-            $errMsg = "No tenant with name ""$TenantName"" exists or the account doesn't have access to it." 
-            Write-Log -Error $errMsg
-            throw $errMsg
-        }
+    }
+    
+    $tenants = $null
+    try {
+        $tenants = (Get-RdsTenant -Name $TenantName)
+    }
+    catch {
+        throw [System.Exception]::new("Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
+    }
+    
+    if (!$tenants) {
+        throw "No tenant with name ""$TenantName"" exists or the account doesn't have access to it."
     }
 }
 
@@ -410,7 +377,7 @@ function ImportRDPSMod {
     }
     else {
         $Version = ($Source.Trim().ToLower() -split 'gallery@')[1]
-        if ($Version -eq $null -or $Version.Trim() -eq '') {
+        if ($null -eq $Version -or $Version.Trim() -eq '') {
             throw "invalid param: Source = $Source"
         }
 

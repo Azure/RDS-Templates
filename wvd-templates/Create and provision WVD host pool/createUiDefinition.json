@@ -403,8 +403,8 @@
 						"type": "Microsoft.Common.InfoBox",
 						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomImage')]",
 						"options": {
-						  "icon": "Warning",
-						  "text": "Ensure that the managed image is both in the specified Azure subscription and in the Azure location you selected."
+							"icon": "Warning",
+							"text": "Ensure that the managed image is both in the specified Azure subscription and in the Azure location you selected."
 						}
 					},
 					{
@@ -596,8 +596,8 @@
 						"type": "Microsoft.Common.InfoBox",
 						"visible": "[equals('new', steps('virtualMachineSettings').hostpoolVnet.newOrExisting)]",
 						"options": {
-						  "icon": "Error",
-						  "text": "You must select an existing virtual network that has access to the Active Directory. If you do not see it listed, you must re-start the deployment with the correct Azure location selected."
+							"icon": "Error",
+							"text": "You must select an existing virtual network that has access to the Active Directory. If you do not see it listed, you must re-start the deployment with the correct Azure location selected."
 						}
 					}
 				]
@@ -648,7 +648,7 @@
 								},
 								{
 									"label": "Service principal",
-									"value": true								
+									"value": true
 								}
 							]
 						},
@@ -711,9 +711,9 @@
 						"type": "Microsoft.Common.InfoBox",
 						"visible": "[not(steps('wvdTenantInfo').tenantAdminIsServicePrincipal)]",
 						"options": {
-						  "icon": "Warning",
-						  "text": "You cannot enter a user account that requires MFA. If you intend to use MFA, consider creating a service principal for this purpose.",
-						  "uri": "https://aka.ms/wvdsp"
+							"icon": "Warning",
+							"text": "You cannot enter a user account that requires MFA. If you intend to use MFA, consider creating a service principal for this purpose.",
+							"uri": "https://aka.ms/wvdsp"
 						}
 					}
 				]

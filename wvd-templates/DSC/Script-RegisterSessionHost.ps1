@@ -72,7 +72,6 @@ SetTenantGroupContextAndValidate -TenantGroupName $definedTenantGroupName -Tenan
 Write-Log -Message "Checking Hostpool exists inside the Tenant"
 $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
 if (!$HostPool) {
-    Write-Log -Error "$HostpoolName Hostpool does not exist in $TenantName Tenant"
     throw "$HostpoolName Hostpool does not exist in $TenantName Tenant"
 }
 
@@ -120,7 +119,7 @@ if ($null -ne $AvailableSh) {
     Write-Log -Message "Session host $($rdsh.SessionHostName) is now in Available state"
 }
 else {
-    Write-Log -Message "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
+    Write-Log -Err "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
 }
 
 # check if the session host was successfully registered to host pool, note that the error is thrown because the TestScript configuration of DSC will not be run after SetScript (this script)
