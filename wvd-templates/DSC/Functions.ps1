@@ -1,11 +1,7 @@
 <#
-
 .SYNOPSIS
-Functions/Common variables file to be used by both Script-FirstRdsh.ps1 and Script-AdditionalRdshServers.ps1
-
+Common functions to be used by DSC scripts
 #>
-
-# Variables
 
 # Setting to Tls12 due to Azure web app security requirements
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -45,34 +41,28 @@ class PsRdsSessionHost {
         $specificToSet = @{$true = "-AllowNewSession `$true"; $false = "" }[$operation -eq "set"]
         $commandToExecute = "$operation-RdsSessionHost -TenantName `"`$(`$this.TenantName)`" -HostPoolName `"`$(`$this.HostPoolName)`" -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
 
-        $sessionHost = (Invoke-Expression $commandToExecute )
-
+        write-log 'Begin polling for session host record'
         $StartTime = Get-Date
-        while ($null -eq $sessionHost) {
+        $sessionHost = (Invoke-Expression $commandToExecute)
+        while (!$sessionHost -and (get-date).Subtract($StartTime).TotalSeconds -lt $this.TimeoutInSec) {
             Start-Sleep -Seconds 30
+            write-log 'Try again'
             $sessionHost = (Invoke-Expression $commandToExecute)
-    
-            if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                if ($null -eq $sessionHost) {
-                    return $null
-                }
-            }
         }
 
-        if (($operation -eq "get") -and $this.CheckForAvailableState) {
-            $StartTime = Get-Date
+        Write-Log -Message "RDSH object content: `n$($sessionHost | Out-String)"
 
-            while ($sessionHost.Status -ine "Available") {
-                Start-Sleep -Seconds 60
-                $sessionHost = (Invoke-Expression $commandToExecute)
-        
-                if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                    if ($sessionHost.Status -ine "Available") {
-                        $this.CheckForAvailableState = $false
-                        return $null
-                    }
-                }
-            }
+        if (!$sessionHost -or $operation -ne 'get' -or !$this.CheckForAvailableState) {
+            $this.CheckForAvailableState = $false
+            return $sessionHost
+        }
+
+        write-log 'Begin polling for session host availability'
+        $StartTime = Get-Date
+        while ($sessionHost.Status -ine "Available" -and (get-date).Subtract($StartTime).TotalSeconds -lt $this.TimeoutInSec) {
+            Start-Sleep -Seconds 60
+            write-log 'Try again'
+            $sessionHost = (Invoke-Expression $commandToExecute)
         }
 
         $this.CheckForAvailableState = $false
@@ -155,7 +145,6 @@ function AddDefaultUsers {
 
     )
 
-    # Checking for null parameters
     Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
 
     # Sanitizing DefaultUsers string

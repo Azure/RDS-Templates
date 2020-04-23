@@ -77,7 +77,7 @@ if (!$HostPool) {
 
 Write-Log -Message "Hostpool exists inside tenant: $TenantName"
 
-# Getting fqdn of rdsh vm
+# Getting fqdn (session host name) of rdsh vm
 $SessionHostName = GetCurrSessionHostName
 Write-Log -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
 
@@ -93,7 +93,7 @@ else {
     Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $obj"
 }
 
-# Executing DeployAgent psl file in rdsh vm and add to hostpool
+# Executing DeployAgent ps1 file in rdsh vm and add to hostpool
 Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall"
 
 $DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
@@ -101,31 +101,32 @@ $DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgen
     -RegistrationToken $Registered.Token `
     -StartAgent $true
 
-Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent installed inside VM for existing hostpool: $HostPoolName`n$DAgentInstall"
+Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader, RDAgent were installed inside VM for existing hostpool: $HostPoolName`n$DAgentInstall"
 
 # Get Session Host Info
-Write-Log -Message "Getting rdsh host $SessionHostName information"
+Write-Log -Message "Getting RDSH session host info for '$SessionHostName'"
+[PsRdsSessionHost]$pssh = [PsRdsSessionHost]::new($TenantName, $HostPoolName, $SessionHostName)
 
-[PsRdsSessionHost]$pssh = [PsRdsSessionHost]::new("$TenantName", "$HostPoolName", $SessionHostName)
-[Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$rdsh = $pssh.GetSessionHost()
-Write-Log -Message "RDSH object content: `n$($rdsh | Out-String)"
-
-$rdshName = $rdsh.SessionHostName | Out-String -Stream
-$poolName = $rdsh.hostpoolname | Out-String -Stream
-
-Write-Log -Message "Waiting for session host return when in available status"
+Write-Log -Message "Waiting for session host to be in available state"
 $AvailableSh = $pssh.GetSessionHostWhenAvailable()
 if ($null -ne $AvailableSh) {
-    Write-Log -Message "Session host $($rdsh.SessionHostName) is now in Available state"
+    Write-Log -Message "Session host $($SessionHostName) is now in Available state"
 }
 else {
-    Write-Log -Err "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
+    Write-Log -Err "Session host $($SessionHostName) not in Available state, wait timed out (threshold is $($pssh.TimeoutInSec) seconds)"
 }
 
-# check if the session host was successfully registered to host pool, note that the error is thrown because the TestScript configuration of DSC will not be run after SetScript (this script)
-$IsSessionHostRegisterd = (& "$ScriptPath\Script-TestRegisterSessionHost.ps1" -RdBrokerURL $RDBrokerURL -DefinedTenantGroupName $definedTenantGroupName -TenantName $TenantName -HostPoolName $HostPoolName -TenantAdminCredentials $TenantAdminCredentials -isServicePrincipal $isServicePrincipal -aadTenantId $AadTenantId -RDPSModSource $RDPSModSource)
-if (!$IsSessionHostRegisterd) {
-    throw "RD Agent failed to register $rdshName VM to $poolName"
+# check if the session host was successfully registered to host pool, note that the error is thrown because the TestScript configuration of DSC may not be run after SetScript (this script)
+Write-Log -Message "Check RD Infra registry to see if RD Agent is registered"
+$RDInfraReg = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
+if (!$RDInfraReg) {
+    throw "RD Agent failed to register '$SessionHostName' VM to '$HostPoolName' (RD Infra registry missing)"
+}
+if ($RDInfraReg.RegistrationToken -ne '') {
+    throw "RD Agent failed to register '$SessionHostName' VM to '$HostPoolName' (RegistrationToken in RD Infra registry is not empty: '$($RDInfraReg.RegistrationToken)')"
+}
+if ($RDInfraReg.IsRegistered -ne 1) {
+    throw "RD Agent failed to register '$SessionHostName' VM to '$HostPoolName' (Value of 'IsRegistered' in RD Infra registry is not 1: $($RDInfraReg.IsRegistered))"
 }
 
-Write-Log -Message "Successfully added $rdshName VM to $poolName"
+Write-Log -Message "Successfully registered '$SessionHostName' VM to '$HostPoolName'"
