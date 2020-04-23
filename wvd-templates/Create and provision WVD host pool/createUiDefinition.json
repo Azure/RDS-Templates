@@ -731,7 +731,6 @@
 			"rdshVmSize": "[steps('configureVirtualMachines').virtualMachineSize]",
 			"enableAcceleratedNetworking": false,
 			"rdshUseManagedDisks": "[bool(true)]",
-			"storageAccountResourceGroupName": "''",
 			"domainToJoin": "[coalesce(steps('virtualMachineSettings').domainToJoin , last(parse(concat('[\"', replace(steps('virtualMachineSettings').domainUser, '@', '\",\"' ) , '\"]'))))]",
 			"existingDomainUPN": "[steps('virtualMachineSettings').domainUser]",
 			"existingDomainPassword": "[steps('virtualMachineSettings').password.password]",
