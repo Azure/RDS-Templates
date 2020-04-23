@@ -8,21 +8,18 @@
 try {
 	# Setting ErrorActionPreference to stop script execution when error occurs
 	$ErrorActionPreference = "Stop"
+
+	# If runbook was called from Webhook, WebhookData and its RequestBody will not be null.
+	if (!$WebHookData -or !$WebHookData.RequestBody -or !$WebHookData.RequestBody.Count) {
+		throw 'Runbook was not started from Webhook (WebHookData or its RequestBody is empty)'
+	}
 	# //todo maybe remove this ?
 	if ($SkipAuth) {
-		Set-StrictMode -Version Latest
+		# Set-StrictMode -Version Latest
 	}
 
-	# If runbook was called from Webhook, WebhookData will not be null.
-	if (!$WebHookData) {
-		Write-Error -Message 'Runbook was not started from Webhook (WebHookData is empty)' -ErrorAction stop
-		exit
-	}
-
-	# Collect properties of WebhookData
-	$WebhookBody = $WebHookData.RequestBody
-	# Collect individual headers. Input converted from JSON.
-	$Input = (ConvertFrom-Json -InputObject $WebhookBody)
+	# Collect Input converted from JSON request body of Webhook.
+	$Input = (ConvertFrom-Json -InputObject $WebHookData.RequestBody)
 
 	$AADTenantId = $Input.AADTenantId
 	$SubscriptionID = $Input.SubscriptionID
@@ -84,6 +81,7 @@ try {
 			return
 		}
 
+		# //todo use ConvertTo-JSON instead of manually converting using strings
 		$LogData = ''
 		foreach ($Key in $LogMessageObj.Keys) {
 			switch ($Key.substring($Key.Length - 2)) {
@@ -136,7 +134,7 @@ try {
 		# Collect the credentials from Azure Automation Account Assets
 		$Connection = Get-AutomationConnection -Name $ConnectionAssetName
 
-		# Authenticating to Azure
+		# Authenticate to Azure
 		Clear-AzContext -Force
 		$AZAuthentication = $null
 		try {
@@ -148,20 +146,7 @@ try {
 		catch {
 			throw [System.Exception]::new('Failed to authenticate Azure', $PSItem.Exception)
 		}
-		Write-Log "Successfully authenticated as service principal for Azure. Result: `n$($AZAuthentication | Out-String)"
-
-		# Set the Azure context with Subscription
-		$AzContext = $null
-		try {
-			$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
-			if (!$AzContext) {
-				throw $AzContext
-			}
-		}
-		catch {
-			throw [System.Exception]::new("Failed to set Azure context with provided Subscription ID: $SubscriptionID (Please provide a valid subscription)", $PSItem.Exception)
-		}
-		Write-Log "Successfully set the Azure subscription. Result: `n$($AzContext | Out-String)"
+		Write-Log "Successfully authenticated with Azure using service principal. Result: `n$($AZAuthentication | Out-String)"
 
 		# Authenticating to WVD
 		$WVDAuthentication = $null
@@ -174,7 +159,44 @@ try {
 		catch {
 			throw [System.Exception]::new('Failed to authenticate WVD', $PSItem.Exception)
 		}
-		Write-Log "Successfully authenticated as service principal for WVD. Result: `n$($WVDAuthentication | Out-String)"
+		Write-Log "Successfully authenticated with WVD using service principal. Result: `n$($WVDAuthentication | Out-String)"
+	}
+
+	# Set the Azure context with Subscription
+	$AzContext = $null
+	try {
+		$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
+		if (!$AzContext) {
+			throw $AzContext
+		}
+	}
+	catch {
+		throw [System.Exception]::new("Failed to set Azure context with provided Subscription ID: $SubscriptionID (Please provide a valid subscription)", $PSItem.Exception)
+	}
+	Write-Log "Successfully set the Azure context with the provided Subscription ID. Result: `n$($AzContext | Out-String)"
+
+	# Set WVD context to the appropriate tenant group
+	$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
+	if ($TenantGroupName -ne $CurrentTenantGroupName) {
+		try {
+			Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
+			# note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
+			Set-RdsContext -TenantGroupName $TenantGroupName
+		}
+		catch {
+			throw [System.Exception]::new("Error switch WVD context to tenant group '$TenantGroupName' from '$CurrentTenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
+		}
+	}
+	
+	try {
+		$tenant = $null
+		$tenant = Get-RdsTenant -Name $TenantName
+		if (!$tenant) {
+			throw "No tenant with name '$TenantName' exists or the account doesn't have access to it."
+		}
+	}
+	catch {
+		throw [System.Exception]::new("Error getting the tenant '$TenantName'. This may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
 	}
 
 	<#
@@ -190,16 +212,12 @@ try {
 			[int]$MaxSessionLimitValue
 		)
 		if ($HostpoolLoadbalancerType -ne "BreadthFirst") {
-			Write-Log "Changing hostpool load balancer type:'BreadthFirst' Current Date Time is: $CurrentDateTime"
-			$EditLoadBalancerType = Set-RdsHostPool -TenantName $TenantName -Name $HostpoolName -BreadthFirstLoadBalancer -MaxSessionLimit $MaxSessionLimitValue
-			if ($EditLoadBalancerType.LoadBalancerType -eq 'BreadthFirst') {
-				Write-Log "Hostpool load balancer type in peak hours is 'BreadthFirst Load Balancing'"
-			}
+			Write-Log "Update HostPool with LoadBalancerType: 'BreadthFirst' (current: '$HostpoolLoadbalancerType'), MaxSessionLimit: $MaxSessionLimitValue. Current Date Time is: $CurrentDateTime"
+			Set-RdsHostPool -TenantName $TenantName -Name $HostpoolName -BreadthFirstLoadBalancer -MaxSessionLimit $MaxSessionLimitValue
 		}
-
 	}
 
-	# Function to Check if the session host is allowing new connections
+	# Function to check if the session host is allowing new connections
 	function Check-ForAllowNewConnections {
 		param(
 			[string]$TenantName,
@@ -207,84 +225,96 @@ try {
 			[string]$SessionHostName
 		)
 
-		# Check if the session host is allowing new connections
 		$StateOftheSessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
 		if (!($StateOftheSessionHost.AllowNewSession)) {
+			Write-Log "Update session host '$SessionHostName' to allow new sessions"
 			Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $true
 		}
-
 	}
-	# Start the Session Host 
+
+	# Function to start the Session Host
 	function Start-SessionHost {
 		param(
 			[string]$VMName
 		)
 		try {
+			Write-Log "Start VM '$VMName' as a background job"
+			# //todo why can't we use the other one ?
 			Get-AzVM | Where-Object { $_.Name -eq $VMName } | Start-AzVM -AsJob | Out-Null
+			# Start-AzVM -Name $VMName -AsJob | Out-Null
 		}
 		catch {
 			throw [System.Exception]::new("Failed to start Azure VM: $($VMName)", $PSItem.Exception)
 		}
-
 	}
-	# Stop the Session Host
+
+	# Function to stop the Session Host
 	function Stop-SessionHost {
 		param(
 			[string]$VMName
 		)
 		try {
+			Write-Log "Stop VM '$VMName' as a background job"
+			# //todo why can't we use the other one ?
 			Get-AzVM | Where-Object { $_.Name -eq $VMName } | Stop-AzVM -Force -AsJob | Out-Null
+			# Stop-AzVM -Name $VMName -AsJob | Out-Null
 		}
 		catch {
 			throw [System.Exception]::new("Failed to stop Azure VM: $($VMName)", $PSItem.Exception)
 		}
 	}
-	# Check if the Session host is available
-	function Check-IfSessionHostIsAvailable {
+
+	# Function to wait for the Session host to be available
+	function WaitForSessionHostToBeAvailable {
 		param(
 			[string]$TenantName,
 			[string]$HostpoolName,
 			[string]$SessionHostName
 		)
-		$IsHostAvailable = $false
-		while (!$IsHostAvailable) {
-			$SessionHostStatus = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-			if ($SessionHostStatus.Status -eq "Available") {
-				$IsHostAvailable = $true
-			}
+		$SessionHost = $null
+		Write-Log "Wait for session host '$SessionHostName' to be available"
+		# //todo may be add a timeout
+		while (!$SessionHost -or $SessionHost.Status -ne 'Available') {
+			Write-Log 'Check if available'
+			$SessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
 		}
-		return $IsHostAvailable
+		Write-Log "Session host '$SessionHostName' is now in '$($SessionHost.Status)' state"
 	}
 	
-	# Converting date time from UTC to Local
+	# Convert date time from UTC to Local
 	$CurrentDateTime = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference
-
-	# Set context to the appropriate tenant group
-	$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
-	if ($TenantGroupName -ne $CurrentTenantGroupName) {
-		Write-Log "Running switching to the $TenantGroupName context"
-		Set-RdsContext -TenantGroupName $TenantGroupName
-	}
 
 	$BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
 
-	# check the calculated end time is later than begin time in case of time zone
+	# Check: the calculated end time is later than begin time in case of time zone
 	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
 		$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
 	}
 
-	# Checking given host pool name exists in Tenant
-	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
-	if (!$HostpoolInfo) {
-		Write-Log -Err "Hostpool '$HostpoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values."
+	# Check given HostPool name exists in Tenant
+	$HostpoolInfo = $null
+	try {
+		$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
+		if (!$HostpoolInfo) {
+			throw $HostpoolInfo
+		}
+	}
+	catch {
+		throw [System.Exception]::new("Hostpool '$HostpoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values.", $PSItem.Exception)
+	}
+
+	# Check if the hostpool has session hosts
+	$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -ErrorAction Stop | Sort-Object SessionHostName
+	if (!$ListOfSessionHosts) {
+		Write-Log "There are no session hosts in the Hostpool '$HostpoolName'. Ensure that hostpool have session hosts."
 		exit
 	}
 
-	# Setting up appropriate load balacing type
+	# Set up appropriate load balacing type
 	$HostpoolLoadbalancerType = $HostpoolInfo.LoadBalancerType
 	[int]$MaxSessionLimitValue = $HostpoolInfo.MaxSessionLimit
-	# note: both of the if else blocks are same. Breadth 1st is enforced on/off peak hours to simplify the things with scaling in the start/end of peak hours
+	# note: both of the if else blocks are same. Breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
 	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		UpdateLoadBalancerTypeInPeakandOffPeakwithBreadthFirst -TenantName $TenantName -HostPoolName $HostpoolName -MaxSessionLimitValue $MaxSessionLimitValue -HostpoolLoadbalancerType $HostpoolLoadbalancerType
 	}
@@ -292,18 +322,12 @@ try {
 		UpdateLoadBalancerTypeInPeakandOffPeakwithBreadthFirst -TenantName $TenantName -HostPoolName $HostpoolName -MaxSessionLimitValue $MaxSessionLimitValue -HostpoolLoadbalancerType $HostpoolLoadbalancerType
 	}
 
-	Write-Log "Starting WVD tenant hosts scale optimization: Current Date Time is: $CurrentDateTime"
-	# Get the host pool info after changing hostpool loadbalancer type
+	Write-Log "HostPool info:`n$($HostpoolInfo | Out-String)"
+	Write-Log "Number of session hosts in the HostPool: $($ListOfSessionHosts.Count)"
+
+	Write-Log "Start WVD tenant hosts scale optimization: Current Date Time is: $CurrentDateTime"
+	# Get the HostPool info after changing hostpool loadbalancer type
 	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName
-
-	# Check if the hostpool has session hosts
-	$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -ErrorAction Stop | Sort-Object SessionHostName
-	if (!$ListOfSessionHosts) {
-		Write-Log "Session hosts do not exist in the Hostpool '$HostpoolName'. Ensure that hostpool have hosts."
-		exit
-	}
-
-
 
 	# Check if it is during the peak or off-peak time
 	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
@@ -383,13 +407,7 @@ try {
 								}
 							}
 							# Wait for the VM to start
-							$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
-							if ($SessionHostIsAvailable) {
-								Write-Log "'$SessionHost' session host status is 'Available'"
-							}
-							else {
-								Write-Log "'$SessionHost' session host was not configured properly with deployagent or did not start properly"
-							}
+							WaitForSessionHostToBeAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
 							# Calculate available capacity of sessions
 							$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 							$AvailableSessionCapacity = $AvailableSessionCapacity + $RoleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -433,13 +451,7 @@ try {
 										Write-Log "Azure VM has been Started: $($RoleInstance.Name) ..."
 									}
 								}
-								$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
-								if ($SessionHostIsAvailable) {
-									Write-Log "'$SessionHost' session host status is 'Available'"
-								}
-								else {
-									Write-Log "'$SessionHost' session host was not configured properly with deployagent or did not start properly"
-								}
+								WaitForSessionHostToBeAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
 								# Calculate available capacity of sessions
 								$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 								$AvailableSessionCapacity = $AvailableSessionCapacity + $RoleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -494,13 +506,7 @@ try {
 						}
 					}
 					# Check if session host is availba
-					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
-					if ($SessionHostIsAvailable) {
-						Write-Log "'$SessionHost' session host status is 'Available'"
-					}
-					else {
-						Write-Log "'$SessionHost' session host was not configured properly with deployagent or did not start properly"
-					}
+					WaitForSessionHostToBeAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
 					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
 					if ($NumberOfRunningHost -ge $MinimumNumberOfRDSH) {
 						break;
@@ -543,8 +549,7 @@ try {
 		if ($OffPeakUsageMinimumNoOfRDSH) {
 			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
 			if ($MinimumNumberOfRDSH -lt $DefinedMinimumNumberOfRDSH) {
-				Write-Log -Err "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
-				Exit
+				throw "Don't enter the value of '$HostpoolName-OffPeakUsage-MinimumNoOfRDSH' manually, which is dynamically stored value by script. You have entered manually, so script will stop now."
 			}
 		}
 
@@ -564,7 +569,9 @@ try {
 						else {
 							# Ensure the running Azure VM is set as drain mode
 							try {
+								# //todo this may need to be prevented from logging as it may get logged at a lot
 								Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+								# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop | Out-Null
 							}
 							catch {
 								throw [System.Exception]::new("Unable to set it to disallow connections on session host: $SessionHostName", $PSItem.Exception)
@@ -703,13 +710,7 @@ try {
 							}
 						}
 						# Wait for the sessionhost to be available
-						$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost.SessionHostName
-						if ($SessionHostIsAvailable) {
-							Write-Log "'$($SessionHost.SessionHostName | Out-String)' session host status is 'Available'"
-						}
-						else {
-							Write-Log "'$($SessionHost.SessionHostName | Out-String)' session host was not configured properly with deployagent or did not start properly"
-						}
+						WaitForSessionHostToBeAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost.SessionHostName
 						# Increment the number of running session host
 						[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
 						# Increment the number of minimumnumberofrdsh
@@ -733,8 +734,9 @@ try {
 
 		}
 	}
-	Write-Log "HostpoolName: $HostpoolName, TotalRunningCores: $TotalRunningCores NumberOfRunningHosts: $NumberOfRunningHost"
-	Write-Log "End WVD host pool scale optimization."
+
+	Write-Log "HostPool: $HostpoolName, Total running cores: $TotalRunningCores, Number of running session hosts: $NumberOfRunningHost"
+	Write-Log "End WVD HostPool scale optimization."
 }
 catch {
 	$ErrContainer = $PSItem
