@@ -124,7 +124,7 @@ if ($SessionHost -and $SessionHost.Status -in $DesiredStates) {
     Write-Log -Message "Session host is now in '$($SessionHost.Status)' state"
 }
 else {
-    Write-Log -Err "Session host is not in any of the desired states: $($DesiredStates -join ', '), wait timed out (threshold is $TimeOutInSec seconds)"
+    Write-Log -Err "Session host is not in any of the desired states: $($DesiredStates -join ', '). Wait timed out (threshold is $TimeOutInSec seconds)"
 }
 
 # check if the session host was successfully registered to host pool, note that the error is thrown because the TestScript configuration of DSC may not be run after SetScript (this script)
