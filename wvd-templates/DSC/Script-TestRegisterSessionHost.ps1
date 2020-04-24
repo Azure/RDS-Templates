@@ -87,8 +87,9 @@ if (!$SessionHost) {
     Write-Log -Err "SessionHost '$SessionHostName' does not exist in Host Pool '$HostPoolName' in Tenant '$TenantName'"
     return $false
 }
-if ($SessionHost.Status -ne 'Available') {
-    Write-Log -Err "SessionHost '$SessionHostName' is not available. $($SessionHost | Out-String)"
+$DesiredStates = ('Available', 'NeedsAssistance')
+if ($SessionHost.Status -notin $DesiredStates) {
+    Write-Log -Err "SessionHost '$SessionHostName' is not in any of the desired states: $($DesiredStates -join ', ')"
     return $false
 }
 
