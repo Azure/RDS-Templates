@@ -138,10 +138,10 @@ if (!$RDInfraReg) {
     throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (RD Infra registry missing)"
 }
 if ($RDInfraReg.RegistrationToken -ne '') {
-    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (RegistrationToken in RD Infra registry is not empty: '$($RDInfraReg.RegistrationToken)')"
+    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (RegistrationToken in RD Infra registry is not empty)"
 }
 if ($RDInfraReg.IsRegistered -ne 1) {
-    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (Value of 'IsRegistered' in RD Infra registry is not 1: $($RDInfraReg.IsRegistered))"
+    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (Value of 'IsRegistered' in RD Infra registry is '$($RDInfraReg.IsRegistered)', but it should be 1)"
 }
 
 Write-Log -Message "Successfully registered VM '$SessionHostName' to HostPool '$HostPoolName'"
