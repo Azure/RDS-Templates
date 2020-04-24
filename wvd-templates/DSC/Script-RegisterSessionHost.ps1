@@ -120,7 +120,11 @@ while ((!$SessionHost -or $SessionHost.Status -notin $DesiredStates) -and (get-d
 }
 
 Write-Log -Message "RDSH object content: `n$($SessionHost | Out-String)"
-if ($SessionHost -and $SessionHost.Status -in $DesiredStates) {
+
+if (!$SessionHost) {
+    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName'"
+}
+if ($SessionHost.Status -in $DesiredStates) {
     Write-Log -Message "Session host is now in '$($SessionHost.Status)' state"
 }
 else {
