@@ -109,7 +109,7 @@ try {
 
 	function Write-Log {
 		[CmdletBinding()]
-		param (
+		param(
 			[Parameter(Mandatory = $true)]
 			[string]$Message,
 		
@@ -217,8 +217,8 @@ try {
 		}
 	}
 
-	# Function to check if the session host is allowing new connections
-	function Check-ForAllowNewConnections {
+	# Function to update session host to allow new sessions
+	function UpdateSessionHostToAllowNewSessions {
 		param(
 			[string]$TenantName,
 			[string]$HostpoolName,
@@ -235,20 +235,63 @@ try {
 	# Function to start the Session Host
 	function Start-SessionHost {
 		param(
-			[string]$VMName
+			[string]$TenantName,
+			[string]$HostpoolName,
+			[string]$SessionHostName
 		)
+		
+		# Update session host to allow new sessions
+		UpdateSessionHostToAllowNewSessions -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+
+		# Start the job to start VM
+		$VMName = $SessionHostName.Split(".")[0]
+		$VM = $null
+		$StartVMJob = $null
 		try {
+			$VM = Get-AzVM -Name $VMName -Status
+			if (!$VM) {
+				throw "Session host VM '$VMName' not found in Azure"
+			}
+			if ($VM.Count -gt 1) {
+				throw "More than 1 VM found in Azure with same Session host name '$VMName' (This is not supported):`n$($VM | Out-String)"
+			}
+
 			Write-Log "Start VM '$VMName' as a background job"
-			# //todo why can't we use the other one ?
-			Get-AzVM | Where-Object { $_.Name -eq $VMName } | Start-AzVM -AsJob | Out-Null
-			# Start-AzVM -Name $VMName -AsJob | Out-Null
+			$StartVMJob = $VM | Start-AzVM -AsJob
+			if (!$StartVMJob -or $StartVMJob.State -eq 'Failed') {
+				throw $StartVMJob.Error
+			}
 		}
 		catch {
-			throw [System.Exception]::new("Failed to start Azure VM: $($VMName)", $PSItem.Exception)
+			throw [System.Exception]::new("Failed to start Azure VM '$($VMName)'", $PSItem.Exception)
 		}
+
+		# Wait for the VM to start
+		Write-Log "Wait for VM '$VMName' to start"
+		# //todo may be add a timeout
+		while (!$VM -or $VM.PowerState -ne 'VM running') {
+			if ($StartVMJob.State -eq 'Failed') {
+				throw [System.Exception]::new("Failed to start Azure VM '$($VMName)'", $StartVMJob.Error)
+			}
+
+			Write-Log "VM power state: '$($VM.PowerState)', continue waiting"
+			$VM = Get-AzVM -Name $VMName -Status
+		}
+		Write-Log "VM '$($VM.Name)' is now in '$($VM.PowerState)' power state"
+
+		# Wait for the session host to be available
+		$SessionHost = $null
+		Write-Log "Wait for session host '$SessionHostName' to be available"
+		# //todo may be add a timeout
+		while (!$SessionHost -or $SessionHost.Status -ne 'Available') {
+			Write-Log "Session host status: '$($SessionHost.Status)', continue waiting"
+			Start-Sleep -Seconds 5
+			$SessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
+		}
+		Write-Log "Session host '$SessionHostName' is now in '$($SessionHost.Status)' state"
 	}
 
-	# Function to stop the Session Host
+	# Function to stop the Session Host as a background job
 	function Stop-SessionHost {
 		param(
 			[string]$VMName
@@ -262,23 +305,6 @@ try {
 		catch {
 			throw [System.Exception]::new("Failed to stop Azure VM: $($VMName)", $PSItem.Exception)
 		}
-	}
-
-	# Function to wait for the Session host to be available
-	function WaitForSessionHostToBeAvailable {
-		param(
-			[string]$TenantName,
-			[string]$HostpoolName,
-			[string]$SessionHostName
-		)
-		$SessionHost = $null
-		Write-Log "Wait for session host '$SessionHostName' to be available"
-		# //todo may be add a timeout
-		while (!$SessionHost -or $SessionHost.Status -ne 'Available') {
-			Write-Log 'Check if available'
-			$SessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-		}
-		Write-Log "Session host '$SessionHostName' is now in '$($SessionHost.Status)' state"
 	}
 	
 	# Convert date time from UTC to Local
@@ -391,23 +417,9 @@ try {
 						# Check if the Azure VM is running and if the session host is healthy
 						$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHost
 						if ($RoleInstance.PowerState -ne "VM running" -and $SessionHostInfo.UpdateState -eq "Succeeded") {
-							# Check if the session host is allowing new connections
-							Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
-							# Start the Az VM
-							Write-Log "Starting Azure VM: $VMName and waiting for it to complete ..."
-							Start-SessionHost -VMName $VMName
 
-							# Wait for the VM to Start
-							$IsVMStarted = $false
-							while (!$IsVMStarted) {
-								$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
-								if ($RoleInstance.PowerState -eq "VM running") {
-									$IsVMStarted = $true
-									Write-Log "Azure VM has been Started: $($RoleInstance.Name) ..."
-								}
-							}
-							# Wait for the VM to start
-							WaitForSessionHostToBeAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+							Start-SessionHost -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
+							
 							# Calculate available capacity of sessions
 							$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 							$AvailableSessionCapacity = $AvailableSessionCapacity + $RoleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -437,21 +449,9 @@ try {
 							# Check if the Azure VM is running and if the session host is healthy
 							$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHost
 							if ($RoleInstance.PowerState -ne "VM running" -and $SessionHostInfo.UpdateState -eq "Succeeded") {
-								# Validating session host is allowing new connections
-								Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
-								# Start the Az VM
-								Write-Log "Starting Azure VM: $VMName and waiting for it to complete ..."
-								Start-SessionHost -VMName $VMName
-								# Wait for the VM to Start
-								$IsVMStarted = $false
-								while (!$IsVMStarted) {
-									$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
-									if ($RoleInstance.PowerState -eq "VM running") {
-										$IsVMStarted = $true
-										Write-Log "Azure VM has been Started: $($RoleInstance.Name) ..."
-									}
-								}
-								WaitForSessionHostToBeAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+
+								Start-SessionHost -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
+
 								# Calculate available capacity of sessions
 								$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 								$AvailableSessionCapacity = $AvailableSessionCapacity + $RoleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -493,26 +493,13 @@ try {
 					if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 						continue
 					}
-					# Check if the session host is allowing new connections
-					Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
 
-					Start-SessionHost -VMName $VMName
-					# Wait for the VM to Start
-					$IsVMStarted = $false
-					while (!$IsVMStarted) {
-						$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
-						if ($RoleInstance.PowerState -eq "VM running") {
-							$IsVMStarted = $true
-						}
-					}
-					# Check if session host is availba
-					WaitForSessionHostToBeAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost
+					Start-SessionHost -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+
 					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
 					if ($NumberOfRunningHost -ge $MinimumNumberOfRDSH) {
 						break;
 					}
-
-
 				}
 			}
 		}
@@ -647,7 +634,7 @@ try {
 								$IsSessionHostNoHeartbeat = $true
 								# Ensure the Azure VMs that are off have allow new connections mode set to True
 								if ($SessionHostInfo.AllowNewSession -eq $false) {
-									Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+									UpdateSessionHostToAllowNewSessions -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
 								}
 							}
 						}
@@ -694,23 +681,9 @@ try {
 					if ($SessionHost.UpdateState -eq "Succeeded") {
 						Write-Log "Existing sessionhost sessions value reached near by hostpool maximumsession limit, need to start the session host"
 						$SessionHostName = $SessionHost.SessionHostName | Out-String
-						$VMName = $SessionHostName.Split(".")[0]
-						# Validating session host is allowing new connections
-						Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost.SessionHostName
-						# Start the Az VM
-						Write-Log "Starting Azure VM: $VMName and waiting for it to complete ..."
-						Start-SessionHost -VMName $VMName
-						# Wait for the VM to start
-						$IsVMStarted = $false
-						while (!$IsVMStarted) {
-							$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
-							if ($RoleInstance.PowerState -eq "VM running") {
-								$IsVMStarted = $true
-								Write-Log "Azure VM has been started: $($RoleInstance.Name) ..."
-							}
-						}
-						# Wait for the sessionhost to be available
-						WaitForSessionHostToBeAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHost $SessionHost.SessionHostName
+
+						Start-SessionHost -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost.SessionHostName
+
 						# Increment the number of running session host
 						[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
 						# Increment the number of minimumnumberofrdsh
