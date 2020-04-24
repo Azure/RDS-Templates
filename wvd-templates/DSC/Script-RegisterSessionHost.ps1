@@ -126,10 +126,10 @@ $poolName = $rdsh.hostpoolname | Out-String -Stream
 Write-Log -Message "Waiting for session host return when in available status"
 $AvailableSh = $pssh.GetSessionHostWhenAvailable()
 if ($null -ne $AvailableSh) {
-    Write-Log -Message "Session host $($rdsh.SessionHostName) is now in Available state"
+    Write-Log -Message "Session host $($AvailableSh.SessionHostName) is now in $($AvailableSh.Status) state"
 }
 else {
-    Write-Log -Message "Session host $($rdsh.SessionHostName) not in Available state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
+    Write-Log -Message "Session host $($rdsh.SessionHostName) not in Available or NeedsAssistance state, wait timed out (threshold is $($rdsh.TimeoutInSec) seconds)"
 }
 
 Write-Log -Message "Successfully added $rdshName VM to $poolName"
