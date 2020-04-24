@@ -275,7 +275,7 @@ try {
 			}
 
 			Write-Log "VM power state: '$($VM.PowerState)', continue waiting"
-			$VM = Get-AzVM -Name $VMName -Status
+			$VM = Get-AzVM -Name $VMName -Status # this takes at least about 15 sec
 		}
 		Write-Log "VM '$($VM.Name)' is now in '$($VM.PowerState)' power state"
 
@@ -283,6 +283,7 @@ try {
 		$SessionHost = $null
 		Write-Log "Wait for session host '$SessionHostName' to be available"
 		# //todo may be add a timeout
+		# //todo check for multi desired states including 'NeedsAssistance'
 		while (!$SessionHost -or $SessionHost.Status -ne 'Available') {
 			Write-Log "Session host status: '$($SessionHost.Status)', continue waiting"
 			Start-Sleep -Seconds 5
