@@ -243,7 +243,7 @@ try {
 		# Update session host to allow new sessions
 		UpdateSessionHostToAllowNewSessions -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
 
-		# Start the job to start VM
+		# Get the status of the VM
 		$VMName = $SessionHostName.Split(".")[0]
 		$VM = $null
 		$StartVMJob = $null
@@ -256,6 +256,8 @@ try {
 				throw "More than 1 VM found in Azure with same Session host name '$VMName' (This is not supported):`n$($VM | Out-String)"
 			}
 
+			# Start the VM as a background job
+			# //todo why as a background job ?
 			Write-Log "Start VM '$VMName' as a background job"
 			$StartVMJob = $VM | Start-AzVM -AsJob
 			if (!$StartVMJob -or $StartVMJob.State -eq 'Failed') {
