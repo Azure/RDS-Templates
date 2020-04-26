@@ -388,7 +388,6 @@ try {
 				$SkipSessionhosts += $SessionHost
 				continue
 			}
-			#$AllSessionHosts = Compare-Object $ListOfSessionHosts $SkipSessionhosts | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }
 			$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 
 			Write-Log "Checking session host: $($SessionHost.SessionHostName | Out-String) with sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
@@ -483,7 +482,7 @@ try {
 		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 		if (!$CheckMinimumNumberOfRDShIsRunning) {
-			$NumberOfRunningHost = 0
+			# changes from https://github.com/Azure/RDS-Templates/pull/439/
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHostName.Split(".")[0]
@@ -504,6 +503,8 @@ try {
 		}
 
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Sort-Object Sessions
+		# changes from https://github.com/Azure/RDS-Templates/pull/439/
+		$NumberOfRunningHost = 0
 		foreach ($SessionHost in $ListOfSessionHosts) {
 			$SessionHostName = $SessionHost.SessionHostName
 			$VMName = $SessionHostName.Split(".")[0]
@@ -555,12 +556,20 @@ try {
 						else {
 							# Ensure the running Azure VM is set as drain mode
 							try {
-								# //todo this may need to be prevented from logging as it may get logged at a lot
-								Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
-								# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop | Out-Null
+								# changes from https://github.com/Azure/RDS-Templates/pull/439/
+								$CheckMinimumDrianMode = (Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.AllowNewSession -eq "True" -and $AllSessionHosts -contains $_ }).Count
+								if ($CheckMinimumDrianMode -gt $MinimumNumberOfRDSH) {
+									# //todo this may need to be prevented from logging as it may get logged at a lot, also whats the point of -ErrorAction Stop ?
+									Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+									# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false | Out-Null
+								}
 							}
 							catch {
 								throw [System.Exception]::new("Unable to set it to disallow connections on session host: $SessionHostName", $PSItem.Exception)
+							}
+							# changes from https://github.com/Azure/RDS-Templates/pull/439/
+							if ($LimitSecondsToForceLogOffUser -eq 0) {
+								continue
 							}
 							# Notify user to log off session
 							# Get the user sessions in the hostpool
@@ -575,40 +584,44 @@ try {
 							$ExistingSession = 0
 							foreach ($session in $HostPoolUserSessions) {
 								if ($session.SessionHostName -eq $SessionHostName -and $session.SessionState -eq "Active") {
-									if ($LimitSecondsToForceLogOffUser -ne 0) {
-										# Send notification
-										try {
-											Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
-										}
-										catch {
-											throw [System.Exception]::new('Failed to send message to user', $PSItem.Exception)
-										}
-										Write-Log "Script sent a log off message to user: $($Session.UserPrincipalName | Out-String)"
+									# changes from https://github.com/Azure/RDS-Templates/pull/439/
+									# if ($LimitSecondsToForceLogOffUser -ne 0) {
+									# Send notification
+									try {
+										Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
 									}
+									catch {
+										throw [System.Exception]::new('Failed to send message to user', $PSItem.Exception)
+									}
+									# changes from https://github.com/Azure/RDS-Templates/pull/439/
+									Write-Log "Script sent a log off message to user: $($Session.AdUserName | Out-String)"
+									# }
 								}
 								$ExistingSession = $ExistingSession + 1
 							}
 							# Wait for n seconds to log off user
 							Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
 
-							if ($LimitSecondsToForceLogOffUser -ne 0) {
-								# Force users to log off
-								Write-Log "Force users to log off ..."
-								foreach ($Session in $HostPoolUserSessions) {
-									if ($Session.SessionHostName -eq $SessionHostName) {
-										# Log off user
-										try {
-											# note: the following command was called with -force in log analytics workspace version of this code
-											Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -ErrorAction Stop
-											$ExistingSession = $ExistingSession - 1
-										}
-										catch {
-											throw [System.Exception]::new('Failed to log off user', $PSItem.Exception)
-										}
-										Write-Log "Forcibly logged off the user: $($Session.UserPrincipalName | Out-String)"
+							# changes from https://github.com/Azure/RDS-Templates/pull/439/
+							# if ($LimitSecondsToForceLogOffUser -ne 0) {
+							# Force users to log off
+							Write-Log "Force users to log off ..."
+							foreach ($Session in $HostPoolUserSessions) {
+								if ($Session.SessionHostName -eq $SessionHostName) {
+									# Log off user
+									try {
+										# note: the following command was called with -force in log analytics workspace version of this code
+										Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -ErrorAction Stop
+										$ExistingSession = $ExistingSession - 1
 									}
+									catch {
+										throw [System.Exception]::new('Failed to log off user', $PSItem.Exception)
+									}
+									# changes from https://github.com/Azure/RDS-Templates/pull/439/
+									Write-Log "Forcibly logged off the user: $($Session.AdUserName | Out-String)"
 								}
 							}
+							# }
 							# Check the session count before shutting down the VM
 							if ($ExistingSession -eq 0) {
 								# Shutdown the Azure VM
@@ -616,31 +629,37 @@ try {
 								Stop-SessionHost -VMName $VMName
 							}
 						}
-						# wait for the VM to stop
-						$IsVMStopped = $false
-						while (!$IsVMStopped) {
-							$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
-							if ($RoleInstance.PowerState -eq "VM deallocated") {
-								$IsVMStopped = $true
-								Write-Log "Azure VM has been stopped: $($RoleInstance.Name) ..."
+						# changes from https://github.com/Azure/RDS-Templates/pull/439/
+						if ($LimitSecondsToForceLogOffUser -ne 0 -or $SessionHost.Sessions -eq 0) {
+							# wait for the VM to stop
+							$IsVMStopped = $false
+							while (!$IsVMStopped) {
+								$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+								if ($RoleInstance.PowerState -eq "VM deallocated") {
+									$IsVMStopped = $true
+									Write-Log "Azure VM has been stopped: $($RoleInstance.Name) ..."
+								}
 							}
-						}
-						# Check if the session host status is NoHeartbeat or Unavailable                          
-						$IsSessionHostNoHeartbeat = $false
-						while (!$IsSessionHostNoHeartbeat) {
-							$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-							if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHostInfo.Status -eq "Unavailable") {
-								$IsSessionHostNoHeartbeat = $true
-								# Ensure the Azure VMs that are off have allow new connections mode set to True
-								if ($SessionHostInfo.AllowNewSession -eq $false) {
-									UpdateSessionHostToAllowNewSessions -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+							# Check if the session host status is NoHeartbeat or Unavailable                          
+							$IsSessionHostNoHeartbeat = $false
+							while (!$IsSessionHostNoHeartbeat) {
+								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
+								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHostInfo.Status -eq "Unavailable") {
+									$IsSessionHostNoHeartbeat = $true
+									# Ensure the Azure VMs that are off have allow new connections mode set to True
+									if ($SessionHostInfo.AllowNewSession -eq $false) {
+										UpdateSessionHostToAllowNewSessions -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+									}
 								}
 							}
 						}
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
-						# decrement number of running session host
-						[int]$NumberOfRunningHost = [int]$NumberOfRunningHost - 1
-						[int]$TotalRunningCores = [int]$TotalRunningCores - $RoleSize.NumberOfCores
+						# changes from https://github.com/Azure/RDS-Templates/pull/439/
+						if ($LimitSecondsToForceLogOffUser -ne 0 -or $SessionHost.Sessions -eq 0) {
+							# decrement number of running session host
+							[int]$NumberOfRunningHost = [int]$NumberOfRunningHost - 1
+							[int]$TotalRunningCores = [int]$TotalRunningCores - $RoleSize.NumberOfCores
+						}
 					}
 				}
 			}
@@ -673,7 +692,6 @@ try {
 
 			if ($HostpoolSessionCount -ge $ScaleFactor) {
 				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" }
-				#$AllSessionHosts = Compare-Object $ListOfSessionHosts $SkipSessionhosts | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }
 				$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 				foreach ($SessionHost in $AllSessionHosts) {
 					# Check the session host status and if the session host is healthy before starting the host
