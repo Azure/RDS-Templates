@@ -99,7 +99,7 @@ try {
 		$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType $LogType -TimeStampField "TimeStamp"
 		# Write-Verbose "PostResult: $($PostResult)"
 		if ($PostResult -ne "Accepted") {
-			Write-Error "Error posting to OMS: Result: $PostResult"
+			throw "Error posting to OMS: Result: $PostResult"
 		}
 	}
 
@@ -714,7 +714,14 @@ catch {
 	$ErrContainer = $PSItem
 	# $ErrContainer = $_
 
-	Write-Error ($ErrContainer | Format-List -force | Out-String) -ErrorAction:Continue
+	$ErrMsg = $ErrContainer | Format-List -force | Out-String
+	if (Get-Command 'Write-Log' -ErrorAction:SilentlyContinue) {
+		Write-Log -Err $ErrMsg -ErrorAction:Continue
+	}
+	else {
+		Write-Error $ErrMsg -ErrorAction:Continue
+	}
+
 	throw
 	# throw [System.Exception]::new($ErrMsg, $ErrContainer.Exception)
 }
