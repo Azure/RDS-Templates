@@ -77,10 +77,6 @@ try {
 			$TimeDifferenceInHours
 		)
 
-		if (!$LogAnalyticsWorkspaceId) {
-			return
-		}
-
 		# //todo use ConvertTo-JSON instead of manually converting using strings
 		$LogData = ''
 		foreach ($Key in $LogMessageObj.Keys) {
@@ -303,7 +299,7 @@ try {
 			Write-Log "Stop VM '$VMName' as a background job"
 			# //todo why can't we use the other one ?
 			Get-AzVM | Where-Object { $_.Name -eq $VMName } | Stop-AzVM -Force -AsJob | Out-Null
-			# Stop-AzVM -Name $VMName -AsJob | Out-Null
+			# Get-AzVM -Name $VMName | Stop-AzVM -Force -AsJob | Out-Null
 		}
 		catch {
 			throw [System.Exception]::new("Failed to stop Azure VM: $($VMName)", $PSItem.Exception)
@@ -354,7 +350,7 @@ try {
 	Write-Log "HostPool info:`n$($HostpoolInfo | Out-String)"
 	Write-Log "Number of session hosts in the HostPool: $($ListOfSessionHosts.Count)"
 
-	Write-Log "Start WVD tenant hosts scale optimization: Current Date Time is: $CurrentDateTime"
+	Write-Log "Start WVD session hosts scale optimization: Current Date Time is: $CurrentDateTime"
 	# Get the HostPool info after changing hostpool loadbalancer type
 	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName
 
