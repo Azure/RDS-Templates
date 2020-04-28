@@ -614,16 +614,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 						$SessionHostName = $SessionHost.SessionHostName
 						$VMName = $SessionHostName.Split(".")[0]
-						if ($SessionHost.Sessions -eq 0) {
-							# Shutdown the Azure VM, which session host have 0 sessions
-							Write-Output "Stopping Azure VM: $VMName and waiting for it to complete ..."
-							$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Stopping Azure VM: $VMName and waiting for it to complete ..." }
-							Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
-							Stop-SessionHost -VMName $VMName -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -TimeDifference $TimeDifference
-						}
-						else {
-
-							# Ensure the running Azure VM is set as drain mode
+						# Ensure the running Azure VM is set as drain mode
 							try {
 								$CheckMinimumDrianMode = (Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.AllowNewSession -eq "True" -and $AllSessionHosts -contains $_ }).Count
 								if ($CheckMinimumDrianMode -gt $MinimumNumberOfRDSH) {
@@ -636,6 +627,14 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 								Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 								exit
 							}
+						if ($SessionHost.Sessions -eq 0) {
+							# Shutdown the Azure VM, which session host have 0 sessions
+							Write-Output "Stopping Azure VM: $VMName and waiting for it to complete ..."
+							$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Stopping Azure VM: $VMName and waiting for it to complete ..." }
+							Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
+							Stop-SessionHost -VMName $VMName -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -TimeDifference $TimeDifference
+						}
+						else {
 							if ($LimitSecondsToForceLogOffUser -eq 0) {
 								continue
 							}
