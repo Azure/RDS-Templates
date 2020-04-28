@@ -1276,13 +1276,7 @@ else {
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 						$SessionHostName = $SessionHost.SessionHostName
 						$VMName = $SessionHostName.Split(".")[0]
-						if ($SessionHost.Sessions -eq 0) {
-							# Shutdown the Azure VM, which session host have 0 sessions
-							Write-Output "Stopping Azure VM: $VMName and waiting for it to complete ..."
-							Stop-SessionHost -VMName $VMName
-						}
-						else {
-							# Ensure the running Azure VM is set as drain mode
+						# Ensure the running Azure VM is set as drain mode
 							try {
 								$CheckMinimumDrianMode = (Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.AllowNewSession -eq "True" -and $AllSessionHosts -contains $_ }).Count
 								if ($CheckMinimumDrianMode -gt $MinimumNumberOfRDSH) {
@@ -1293,6 +1287,13 @@ else {
 								Write-Output "Unable to set it to allow connections on session host: $SessionHostName with error: $($_.exception.message)"
 								exit
 							}
+						if ($SessionHost.Sessions -eq 0) {
+							# Shutdown the Azure VM, which session host have 0 sessions
+							Write-Output "Stopping Azure VM: $VMName and waiting for it to complete ..."
+							Stop-SessionHost -VMName $VMName
+						}
+						else {
+							
 							if ($LimitSecondsToForceLogOffUser -eq 0) {
 								continue
 							}
