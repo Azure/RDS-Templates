@@ -48,8 +48,9 @@ $ErrorActionPreference = "Stop"
 write-log -message 'Script being executed: Test if Session Host is registered to the Host Pool'
 
 Write-Log -Message "Check if RD Infra registry exists"
-if (!(IsRDAgentRegistryValidForRegistration)) {
-    Write-Log -Err 'Session Host is not registered to the Host Pool (see above error for reason)'
+$RegistryCheckObj = IsRDAgentRegistryValidForRegistration
+if (!$RegistryCheckObj.result) {
+    Write-Log -Err "Session Host is not registered to the Host Pool ($($RegistryCheckObj.msg))"
     return $false
 }
 

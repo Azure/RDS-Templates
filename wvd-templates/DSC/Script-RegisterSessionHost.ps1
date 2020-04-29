@@ -138,8 +138,9 @@ else {
 
 # check if the session host was successfully registered to host pool, note that the error is thrown because the TestScript configuration of DSC may not be run after SetScript (this script)
 Write-Log -Message "Check RD Infra registry to see if RD Agent is registered"
-if (!(IsRDAgentRegistryValidForRegistration)) {
-    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (see above error for reason)"
+$RegistryCheckObj = IsRDAgentRegistryValidForRegistration
+if (!$RegistryCheckObj.result) {
+    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' ($($RegistryCheckObj.msg))"
 }
 
 Write-Log -Message "Successfully registered VM '$SessionHostName' to HostPool '$HostPoolName'"

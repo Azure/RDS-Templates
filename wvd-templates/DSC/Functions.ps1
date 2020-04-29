@@ -303,19 +303,28 @@ function GetSessionHostDesiredStates {
 function IsRDAgentRegistryValidForRegistration {
     $RDInfraReg = Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent' -ErrorAction SilentlyContinue
     if (!$RDInfraReg) {
-        Write-Log -Err 'RD Infra registry missing'
-        return $false
+        return @{
+            result = $false;
+            msg    = 'RD Infra registry missing';
+        }
     }
     Write-Log -Message 'RD Infra registry exists'
 
     Write-Log -Message 'Check RD Infra registry values to see if RD Agent is registered'
     if ($RDInfraReg.RegistrationToken -ne '') {
-        Write-Log -Err 'RegistrationToken in RD Infra registry is not empty'
-        return $false
+        return @{
+            result = $false;
+            msg    = 'RegistrationToken in RD Infra registry is not empty'
+        }
     }
     if ($RDInfraReg.IsRegistered -ne 1) {
-        Write-Log -Err "Value of 'IsRegistered' in RD Infra registry is $($RDInfraReg.IsRegistered), but should be 1"
-        return $false
+        return @{
+            result = $false;
+            msg    = "Value of 'IsRegistered' in RD Infra registry is $($RDInfraReg.IsRegistered), but should be 1"
+        }
     }
-    return $true
+    
+    return @{
+        result = $true
+    }
 }
