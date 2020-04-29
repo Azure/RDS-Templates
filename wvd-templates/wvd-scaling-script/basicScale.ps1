@@ -725,18 +725,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 									Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 								}
 							}
-							# Check if the session host status is NoHeartbeat or Unavailable
-							$IsSessionHostNoHeartbeat = $false
-							while (!$IsSessionHostNoHeartbeat) {
-								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHost.Status -eq "Unavailable") {
-									$IsSessionHostNoHeartbeat = $true
-									# Ensure the Azure VMs that are off have allow new connections mode set to True
-									if ($SessionHostInfo.AllowNewSession -eq $false) {
-										Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
-									}
-								}
-							}
+							
 						}
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 						#decrement number of running session host
@@ -1365,18 +1354,7 @@ else {
 									Write-Output "Azure VM has been stopped: $($RoleInstance.Name) ..."
 								}
 							}
-							# Check if the session host status is NoHeartbeat or Unavailable                          
-							$IsSessionHostNoHeartbeat = $false
-							while (!$IsSessionHostNoHeartbeat) {
-								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHostInfo.Status -eq "Unavailable") {
-									$IsSessionHostNoHeartbeat = $true
-									# Ensure the Azure VMs that are off have allow new connections mode set to True
-									if ($SessionHostInfo.AllowNewSession -eq $false) {
-										Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
-									}
-								}
-							}
+							
 						}
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 						#decrement number of running session host
