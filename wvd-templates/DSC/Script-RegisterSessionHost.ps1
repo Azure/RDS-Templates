@@ -110,11 +110,16 @@ Write-Log -Message "Getting RDSH session host info for '$SessionHostName'"
 $StartTime = Get-Date
 $SessionHost = $null
 $TimeOutInSec = 900
-$DesiredStates = ('Available', 'NeedsAssistance')
+$DesiredStates = GetSessionHostDesiredStates
 
 Write-Log -Message "Wait for sessions host to be in any of the desired states: $($DesiredStates -join ', ')"
 while ((!$SessionHost -or $SessionHost.Status -notin $DesiredStates) -and (get-date).Subtract($StartTime).TotalSeconds -lt $TimeOutInSec) {
-    write-log "Session host is in '$($SessionHost.Status)' state, continue waiting"
+    if (!$SessionHost) {
+        write-log "Session host record doesn't exist yet, continue waiting"
+    }
+    else {
+        write-log "Session host is in '$($SessionHost.Status)' state, continue waiting"
+    }
     Start-Sleep -Seconds 30
     $SessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -ErrorAction SilentlyContinue
 }
@@ -133,15 +138,8 @@ else {
 
 # check if the session host was successfully registered to host pool, note that the error is thrown because the TestScript configuration of DSC may not be run after SetScript (this script)
 Write-Log -Message "Check RD Infra registry to see if RD Agent is registered"
-$RDInfraReg = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
-if (!$RDInfraReg) {
-    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (RD Infra registry missing)"
-}
-if ($RDInfraReg.RegistrationToken -ne '') {
-    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (RegistrationToken in RD Infra registry is not empty)"
-}
-if ($RDInfraReg.IsRegistered -ne 1) {
-    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (Value of 'IsRegistered' in RD Infra registry is '$($RDInfraReg.IsRegistered)', but it should be 1)"
+if (!(IsRDAgentRegistryValidForRegistration)) {
+    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName' (see above error for reason)"
 }
 
 Write-Log -Message "Successfully registered VM '$SessionHostName' to HostPool '$HostPoolName'"

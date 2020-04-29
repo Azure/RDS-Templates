@@ -295,3 +295,27 @@ function GetCurrSessionHostName {
     $Wmi = (Get-WmiObject win32_computersystem)
     return "$($Wmi.DNSHostName).$($Wmi.Domain)"
 }
+
+function GetSessionHostDesiredStates {
+    return ('Available', 'NeedsAssistance')
+}
+
+function IsRDAgentRegistryValidForRegistration {
+    $RDInfraReg = Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent' -ErrorAction SilentlyContinue
+    if (!$RDInfraReg) {
+        Write-Log -Err 'RD Infra registry missing'
+        return $false
+    }
+    Write-Log -Message 'RD Infra registry exists'
+
+    Write-Log -Message 'Check RD Infra registry values to see if RD Agent is registered'
+    if ($RDInfraReg.RegistrationToken -ne '') {
+        Write-Log -Err 'RegistrationToken in RD Infra registry is not empty'
+        return $false
+    }
+    if ($RDInfraReg.IsRegistered -ne 1) {
+        Write-Log -Err "Value of 'IsRegistered' in RD Infra registry is $($RDInfraReg.IsRegistered), but should be 1"
+        return $false
+    }
+    return $true
+}

@@ -48,20 +48,8 @@ $ErrorActionPreference = "Stop"
 write-log -message 'Script being executed: Test if Session Host is registered to the Host Pool'
 
 Write-Log -Message "Check if RD Infra registry exists"
-$RDInfraReg = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
-if (!$RDInfraReg) {
-    Write-Log -Err "Session Host is not registered to the Host Pool (RD Infra registry missing)"
-    return $false
-}
-Write-Log -Message "RD Infra registry exists"
-
-Write-Log -Message "Check RD Infra registry to see if RD Agent is registered"
-if ($RDInfraReg.RegistrationToken -ne '') {
-    Write-Log -Err "Session Host is not registered to the Host Pool (RegistrationToken in RD Infra registry is not empty: '$($RDInfraReg.RegistrationToken)')"
-    return $false
-}
-if ($RDInfraReg.IsRegistered -ne 1) {
-    Write-Log -Err "Session Host is not registered to the Host Pool (Value of 'IsRegistered' in RD Infra registry is not 1: $($RDInfraReg.IsRegistered))"
+if (!(IsRDAgentRegistryValidForRegistration)) {
+    Write-Log -Err 'Session Host is not registered to the Host Pool (see above error for reason)'
     return $false
 }
 
@@ -87,9 +75,9 @@ if (!$SessionHost) {
     Write-Log -Err "SessionHost '$SessionHostName' does not exist in Host Pool '$HostPoolName' in Tenant '$TenantName'"
     return $false
 }
-$DesiredStates = ('Available', 'NeedsAssistance')
+$DesiredStates = GetSessionHostDesiredStates
 if ($SessionHost.Status -notin $DesiredStates) {
-    Write-Log -Err "SessionHost '$SessionHostName' is not in any of the desired states: $($DesiredStates -join ', ')"
+    Write-Log -Err "SessionHost '$SessionHostName' is in '$($SessionHost.Status)' state but not in any of the desired states: $($DesiredStates -join ', ')"
     return $false
 }
 
