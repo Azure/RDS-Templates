@@ -530,7 +530,9 @@
                     "ouPath": "[parameters('ouPath')]",
                     "user": "[parameters('existingDomainUPN')]",
                     "restart": "true",
-                    "options": "3"
+                    "options": "3",
+                    "NumberOfRetries": 4,
+                    "RetryIntervalInMilliseconds": 30000
                 },
                 "protectedSettings": {
                     "password": "[parameters('existingDomainPassword')]"
