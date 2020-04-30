@@ -251,17 +251,13 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
                 # Remove DATA disks
                 $a.StorageProfile.DataDisks | ForEach-Object {
                     $disk = $_.Vhd.Uri | Split-Path -Leaf
-                    Get-AzureStorageContainer -Name vhds -Context $Sa.Context |
-                    Get-AzureStorageBlob -Blob $disk |
-                    Remove-AzureStorageBlob
+                    Get-AzureStorageContainer -Name vhds -Context $Sa.Context | Get-AzureStorageBlob -Blob $disk | Remove-AzureStorageBlob
                     Write-Log -Message "Removed DataDisk $disk successfully"
                 }
 
                 # Remove OSDisk disk
                 $disk = $a.StorageProfile.OSDisk.Vhd.Uri | Split-Path -Leaf
-                Get-AzureStorageContainer -Name vhds -Context $Sa.Context |
-                Get-AzureStorageBlob -Blob $disk |
-                Remove-AzureStorageBlob
+                Get-AzureStorageContainer -Name vhds -Context $Sa.Context | Get-AzureStorageBlob -Blob $disk | Remove-AzureStorageBlob
 
                 Write-Log -Message "Removed OSDisk $disk successfully"
 
@@ -281,9 +277,9 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
             }
 
             #$avSet=Get-AzureRmVM | Where-Object {$_.Name -eq $VMName} | Remove-AzureRmAvailabilitySet -Force
+            # //todo check if this VM belongs to avail set before deleting
             $avset = Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName
             if ($null -eq $avset.VirtualMachinesReferences.Id) {
-                # //todo handle err action [if avail set doesn't exist]
                 Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName -ErrorAction SilentlyContinue | Remove-AzureRmAvailabilitySet -Force
                 Write-Log -Message "Successfully removed availabilityset"
             }
@@ -301,7 +297,7 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
                 Get-ADComputer -Identity $VMName | Remove-ADObject -Recursive -Confirm:$false
                 Remove-DnsServerResourceRecord -ZoneName $ZoneName -RRType "A" -Name $VMName -Force -Confirm:$false
             } -ArgumentList ($ZoneName, $VMName) -ErrorAction SilentlyContinue
-            # //todo handle if !$result
+            # //todo check: $result might be $null even if the above cmd succeeds
             if ($result) {
                 Write-Log -Message "Successfully removed $VMName from domaincontroller"
                 Write-Log -Message "successfully removed dns record of $VMName"
@@ -319,7 +315,7 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
                 Write-Log -Message "VM has been stopped: $VMName"
             }
             else {
-                Write-Log -Message "Waiting for to stop $VMName VM... [current state: $($ProvisioningState.PowerState)]"
+                Write-Log -Message "Waiting for $VMName VM to stop... [current state: $($ProvisioningState.PowerState)]"
             }
         }
     }

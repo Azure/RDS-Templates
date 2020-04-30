@@ -1,116 +1,10 @@
 <#
-
 .SYNOPSIS
-Functions/Common variables file to be used by both Script-FirstRdsh.ps1 and Script-AdditionalRdshServers.ps1
-
+Common functions to be used by DSC scripts
 #>
-
-# Variables
 
 # Setting to Tls12 due to Azure web app security requirements
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-class PsRdsSessionHost {
-    [string]$TenantName = [string]::Empty
-    [string]$HostPoolName = [string]::Empty
-    [string]$SessionHostName = [string]::Empty
-    [int]$TimeoutInSec = 900
-    [bool]$CheckForAvailableState = $false
-
-    PsRdsSessionHost() { }
-
-    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName) {
-        $this.TenantName = $TenantName
-        $this.HostPoolName = $HostPoolName
-        $this.SessionHostName = $SessionHostName
-    }
-
-    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName, [int]$TimeoutInSec) {
-        
-        if ($TimeoutInSec -gt 1800) {
-            throw "TimeoutInSec is too high, maximum value is 1800"
-        }
-
-        $this.TenantName = $TenantName
-        $this.HostPoolName = $HostPoolName
-        $this.SessionHostName = $SessionHostName
-        $this.TimeoutInSec = $TimeoutInSec
-    }
-
-    hidden [object] _trySessionHost([string]$operation) {
-        if ($operation -ne "get" -and $operation -ne "set") {
-            throw "PsRdsSessionHost: Invalid operation: $operation. Valid Operations are get or set"
-        }
-
-        $specificToSet = @{$true = "-AllowNewSession `$true"; $false = "" }[$operation -eq "set"]
-        $commandToExecute = "$operation-RdsSessionHost -TenantName `"`$(`$this.TenantName)`" -HostPoolName `"`$(`$this.HostPoolName)`" -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
-
-        $sessionHost = (Invoke-Expression $commandToExecute )
-
-        $StartTime = Get-Date
-        while ($null -eq $sessionHost) {
-            Start-Sleep -Seconds 30
-            $sessionHost = (Invoke-Expression $commandToExecute)
-    
-            if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                if ($null -eq $sessionHost) {
-                    return $null
-                }
-            }
-        }
-
-        if (($operation -eq "get") -and $this.CheckForAvailableState) {
-            $StartTime = Get-Date
-
-            while ($sessionHost.Status -ine "Available") {
-                Start-Sleep -Seconds 60
-                $sessionHost = (Invoke-Expression $commandToExecute)
-        
-                if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                    if ($sessionHost.Status -ine "Available") {
-                        $this.CheckForAvailableState = $false
-                        return $null
-                    }
-                }
-            }
-        }
-
-        $this.CheckForAvailableState = $false
-        return $sessionHost
-    }
-
-    [object] SetSessionHost() {
-
-        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName)) {
-            return $null
-        }
-        else {
-            
-            return ($this._trySessionHost("set"))
-        }
-    }
-    
-    [object] GetSessionHost() {
-
-        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName)) {
-            return $null
-        }
-        else {
-            return ($this._trySessionHost("get"))
-        }
-    }
-
-    [object] GetSessionHostWhenAvailable() {
-
-        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName)) {
-            return $null
-        }
-        else {
-            $this.CheckForAvailableState = $true
-            return ($this._trySessionHost("get"))
-        }
-    }
-}
 
 function Write-Log {
     [CmdletBinding()]
@@ -155,7 +49,6 @@ function AddDefaultUsers {
 
     )
 
-    # Checking for null parameters
     Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
 
     # Sanitizing DefaultUsers string
@@ -401,4 +294,37 @@ function ImportRDPSMod {
 function GetCurrSessionHostName {
     $Wmi = (Get-WmiObject win32_computersystem)
     return "$($Wmi.DNSHostName).$($Wmi.Domain)"
+}
+
+function GetSessionHostDesiredStates {
+    return ('Available', 'NeedsAssistance')
+}
+
+function IsRDAgentRegistryValidForRegistration {
+    $RDInfraReg = Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent' -ErrorAction SilentlyContinue
+    if (!$RDInfraReg) {
+        return @{
+            result = $false;
+            msg    = 'RD Infra registry missing';
+        }
+    }
+    Write-Log -Message 'RD Infra registry exists'
+
+    Write-Log -Message 'Check RD Infra registry values to see if RD Agent is registered'
+    if ($RDInfraReg.RegistrationToken -ne '') {
+        return @{
+            result = $false;
+            msg    = 'RegistrationToken in RD Infra registry is not empty'
+        }
+    }
+    if ($RDInfraReg.IsRegistered -ne 1) {
+        return @{
+            result = $false;
+            msg    = "Value of 'IsRegistered' in RD Infra registry is $($RDInfraReg.IsRegistered), but should be 1"
+        }
+    }
+    
+    return @{
+        result = $true
+    }
 }
