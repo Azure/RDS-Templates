@@ -123,7 +123,7 @@ Import-Module Azurerm.Storage
 $authentication = $null
 try {
     if ($isServicePrincipal -eq "True") {
-        $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
+        $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -SubscriptionId $SubscriptionId -ServicePrincipal -TenantId $AadTenantId
     }
     else {
         $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -SubscriptionId $SubscriptionId
