@@ -109,18 +109,21 @@ Write-Log -Message "Getting RDSH session host info for '$SessionHostName'"
 # Wait for the session host to be available
 $StartTime = Get-Date
 $SessionHost = $null
-$TimeOutInSec = 900
+$TimeOutInSec = 15 * 60 # 15 min
+$WaitTimeInSec = 0
+$MaxWaitTimeInSec = 5 * 60 # 5 min
 $DesiredStates = GetSessionHostDesiredStates
 
+# note: best case scenario: it takes about a min for the session host to become available but it might take longer for larger deployments because of API calls throttling
 Write-Log -Message "Wait for sessions host to be in any of the desired states: $($DesiredStates -join ', ')"
 while ((!$SessionHost -or $SessionHost.Status -notin $DesiredStates) -and (get-date).Subtract($StartTime).TotalSeconds -lt $TimeOutInSec) {
-    if (!$SessionHost) {
-        write-log "Session host record doesn't exist yet, continue waiting"
+    $WaitTimeInSec += 60
+    if ($WaitTimeInSec -gt $MaxWaitTimeInSec) {
+        $WaitTimeInSec = $MaxWaitTimeInSec
     }
-    else {
-        write-log "Session host is in '$($SessionHost.Status)' state, continue waiting"
-    }
-    Start-Sleep -Seconds 30
+    write-log "$(if (!$SessionHost) { "Session host record doesn't exist yet" } else { "Session host is in '$($SessionHost.Status)' state" }), continue waiting ($WaitTimeInSec sec)"
+    Start-Sleep -Seconds $WaitTimeInSec
+    
     $SessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -ErrorAction SilentlyContinue
 }
 
