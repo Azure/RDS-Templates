@@ -3,6 +3,13 @@
 	"handler": "Microsoft.Azure.CreateUIDef",
 	"version": "0.1.2-preview",
 	"parameters": {
+		"config": {
+			"basics": {
+				"resourceGroup": {
+					"allowExisting": true
+				}
+			}
+		},
 		"basics": [
 			{
 				"name": "hostpoolName",
