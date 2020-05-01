@@ -2,7 +2,7 @@
 	[Parameter(mandatory = $false)]
 	[object]$WebHookData,
 
-	# note: if this is enabled, the script will assume that all the authentication is done in current context before calling this script
+	# note: if this is enabled, the script will assume that all the authentication is already done in current or parent scope before calling this script
 	[switch]$SkipAuth
 )
 try {
@@ -112,11 +112,12 @@ try {
 			[switch]$Err
 		)
 
+		$WriteMessage = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
 		if ($Err) {
-			Write-Error $Message
+			Write-Error $WriteMessage
 		}
 		else {
-			Write-Output $Message
+			Write-Output $WriteMessage
 		}
 			
 		if (!$LogAnalyticsWorkspaceId -or !$LogAnalyticsPrimaryKey) {
