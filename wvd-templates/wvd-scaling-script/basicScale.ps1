@@ -3,7 +3,10 @@
 	[object]$WebHookData,
 
 	# note: if this is enabled, the script will assume that all the authentication is already done in current or parent scope before calling this script
-	[switch]$SkipAuth
+	[switch]$SkipAuth,
+
+	# note: optional for simulating user sessions
+	[System.Nullable[int]]$OverrideUserSessions
 )
 try {
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -273,7 +276,7 @@ try {
 				throw [System.Exception]::new("Failed to start Azure VM '$($VMName)'", $StartVMJob.Error)
 			}
 
-			Write-Log "VM power state: '$($VM.PowerState)', continue waiting"
+			# Write-Log "VM power state: '$($VM.PowerState)', continue waiting"
 			$VM = Get-AzVM -Name $VMName -Status # this takes at least about 15 sec
 		}
 		Write-Log "VM '$($VM.Name)' is now in '$($VM.PowerState)' power state"
@@ -284,7 +287,7 @@ try {
 		# //todo may be add a timeout
 		# //todo check for multi desired states including 'NeedsAssistance'
 		while (!$SessionHost -or $SessionHost.Status -ne 'Available') {
-			Write-Log "Session host status: '$($SessionHost.Status)', continue waiting"
+			# Write-Log "Session host status: '$($SessionHost.Status)', continue waiting"
 			Start-Sleep -Seconds 5
 			$SessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
 		}
@@ -331,7 +334,7 @@ try {
 	}
 
 	# Check if the hostpool has session hosts
-	$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -ErrorAction Stop | Sort-Object SessionHostName
+	$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Sort-Object SessionHostName
 	if (!$ListOfSessionHosts) {
 		Write-Log "There are no session hosts in the Hostpool '$HostpoolName'. Ensure that hostpool have session hosts."
 		exit
@@ -361,7 +364,7 @@ try {
 		Write-Log "Starting session hosts as needed based on current workloads."
 
 		# Peak hours: check and remove the MinimumNoOfRDSH value dynamically stored in automation variable
-		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
+		$AutomationAccount = Get-AzAutomationAccount | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
 			Remove-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName
@@ -376,7 +379,13 @@ try {
 		$SkipSessionhosts = 0
 		$SkipSessionhosts = @()
 
-		$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName
+		$HostPoolUserSessions = $null
+		if ($null -eq $OverrideUserSessions) {
+			$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName
+		}
+		else {
+			$HostPoolUserSessions = @{ Count = $OverrideUserSessions }
+		}
 
 		foreach ($SessionHost in $ListOfSessionHosts) {
 
@@ -391,7 +400,7 @@ try {
 			}
 			$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 
-			Write-Log "Checking session host: $($SessionHost.SessionHostName | Out-String) with sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
+			Write-Log "Checking session host: $($SessionHost.SessionHostName) with sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
 			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
 				# Check if the Azure vm is running       
 				if ($RoleInstance.PowerState -eq "VM running") {
@@ -521,7 +530,7 @@ try {
 			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
 				# Check if the Azure VM is running
 				if ($RoleInstance.PowerState -eq "VM running") {
-					Write-Log "Checking session host: $($SessionHost.SessionHostName | Out-String) with sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
+					Write-Log "Checking session host: $($SessionHost.SessionHostName) with sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
 					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
 					# Calculate available capacity of sessions  
 					$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
@@ -532,7 +541,7 @@ try {
 		# Defined minimum no of rdsh value from webhook data
 		[int]$DefinedMinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH
 		# Check and collect dynamically stored MinimumNoOfRDSH value																 
-		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
+		$AutomationAccount = Get-AzAutomationAccount | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
 			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
@@ -545,7 +554,7 @@ try {
 		if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 			foreach ($SessionHost in $AllSessionHosts) {
 				# Check the status of the session host
-				if ($SessionHost.Status -ne "NoHeartbeat" -or $SessionHost.Status -ne "Unavailable") {
+				if ($SessionHost.Status -ne "NoHeartbeat" -and $SessionHost.Status -ne "Unavailable") {
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 						$SessionHostName = $SessionHost.SessionHostName
 						$VMName = $SessionHostName.Split(".")[0]
@@ -560,8 +569,8 @@ try {
 								# changes from https://github.com/Azure/RDS-Templates/pull/439/
 								$CheckMinimumDrianMode = (Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.AllowNewSession -eq "True" -and $AllSessionHosts -contains $_ }).Count
 								if ($CheckMinimumDrianMode -gt $MinimumNumberOfRDSH) {
-									# //todo this may need to be prevented from logging as it may get logged at a lot, also whats the point of -ErrorAction Stop ?
-									Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+									# //todo this may need to be prevented from logging as it may get logged at a lot
+									Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false
 									# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false | Out-Null
 								}
 							}
@@ -589,7 +598,7 @@ try {
 									# if ($LimitSecondsToForceLogOffUser -ne 0) {
 									# Send notification
 									try {
-										Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt -ErrorAction Stop
+										Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt
 									}
 									catch {
 										throw [System.Exception]::new('Failed to send message to user', $PSItem.Exception)
@@ -612,7 +621,7 @@ try {
 									# Log off user
 									try {
 										# note: the following command was called with -force in log analytics workspace version of this code
-										Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -ErrorAction Stop
+										Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt
 										$ExistingSession = $ExistingSession - 1
 									}
 									catch {
@@ -645,7 +654,7 @@ try {
 							$IsSessionHostNoHeartbeat = $false
 							while (!$IsSessionHostNoHeartbeat) {
 								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHostInfo.Status -eq "Unavailable") {
+								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and ($SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHostInfo.Status -eq "Unavailable")) {
 									$IsSessionHostNoHeartbeat = $true
 									# Ensure the Azure VMs that are off have allow new connections mode set to True
 									if ($SessionHostInfo.AllowNewSession -eq $false) {
@@ -665,7 +674,7 @@ try {
 				}
 			}
 		}
-		$AutomationAccount = Get-AzAutomationAccount -ErrorAction Stop | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
+		$AutomationAccount = Get-AzAutomationAccount | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
 			[int]$MinimumNumberOfRDSH = $OffPeakUsageMinimumNoOfRDSH.Value
@@ -684,7 +693,14 @@ try {
 			}
 		}
 		$HostpoolMaxSessionLimit = $HostpoolInfo.MaxSessionLimit
-		$HostpoolSessionCount = (Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName).Count
+		
+		$HostpoolSessionCount = $null
+		if ($null -eq $OverrideUserSessions) {
+			$HostpoolSessionCount = (Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName).Count
+		}
+		else {
+			$HostpoolSessionCount = $OverrideUserSessions
+		}
 		if ($HostpoolSessionCount -ne 0) {
 			# Calculate how many sessions will be allowed in minimum number of RDSH VMs in off peak hours and calculate TotalAllowSessions Scale Factor
 			$TotalAllowSessionsInOffPeak = [int]$MinimumNumberOfRDSH * $HostpoolMaxSessionLimit
