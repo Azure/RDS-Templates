@@ -301,9 +301,7 @@ try {
 		)
 		try {
 			Write-Log "Stop VM '$VMName' as a background job"
-			# //todo why can't we use the other one ?
-			Get-AzVM | Where-Object { $_.Name -eq $VMName } | Stop-AzVM -Force -AsJob | Out-Null
-			# Get-AzVM -Name $VMName | Stop-AzVM -Force -AsJob | Out-Null
+			Get-AzVM -Name $VMName | Stop-AzVM -Force -AsJob | Out-Null
 		}
 		catch {
 			throw [System.Exception]::new("Failed to stop Azure VM: $($VMName)", $PSItem.Exception)
@@ -363,6 +361,7 @@ try {
 		Write-Log "It is in peak hours now"
 		Write-Log "Starting session hosts as needed based on current workloads."
 
+		# //todo centralize managing az auto acc var
 		# Peak hours: check and remove the MinimumNoOfRDSH value dynamically stored in automation variable
 		$AutomationAccount = Get-AzAutomationAccount | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
@@ -392,19 +391,22 @@ try {
 			$SessionHostName = $SessionHost.SessionHostName | Out-String
 			$VMName = $SessionHostName.Split(".")[0]
 			# Check if VM is in maintenance
-			$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+			# //todo prepare the list of all VMs with RG before hand to save time
+			$RoleInstance = Get-AzVM -Status -Name $VMName
 			if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 				Write-Log "Session host is in maintenance: $VMName, so script will skip this VM"
 				$SkipSessionhosts += $SessionHost
 				continue
 			}
+			# //todo do this outside the loop to save time
 			$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 
 			Write-Log "Checking session host: $($SessionHost.SessionHostName) with sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
-			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
+			if ($SessionHostName.ToLower().StartsWith($RoleInstance.Name.ToLower())) {
 				# Check if the Azure vm is running       
 				if ($RoleInstance.PowerState -eq "VM running") {
 					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
+					# //todo prepare the list of all VM sizes before hand to save time
 					# Calculate available capacity of sessions						
 					$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 					$AvailableSessionCapacity = $AvailableSessionCapacity + $RoleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -420,14 +422,17 @@ try {
 				# Check whether the number of running VMs meets the minimum or not
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHost.Split(".")[0]
-					$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
-					if ($SessionHost.ToLower().Contains($RoleInstance.Name.ToLower())) {
+					# //todo prepare the list of all VMs with RG before hand to save time
+					$RoleInstance = Get-AzVM -Status -Name $VMName
+					if ($SessionHost.ToLower().StartsWith($RoleInstance.Name.ToLower())) {
 						# Check if the Azure VM is running and if the session host is healthy
 						$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHost
 						if ($RoleInstance.PowerState -ne "VM running" -and $SessionHostInfo.UpdateState -eq "Succeeded") {
 
+							# //todo do this in parallel
 							Start-SessionHost -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
 							
+							# //todo prepare the list of all VM sizes before hand to save time
 							# Calculate available capacity of sessions
 							$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 							$AvailableSessionCapacity = $AvailableSessionCapacity + $RoleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -451,15 +456,18 @@ try {
 				foreach ($SessionHost in $AllSessionHosts.SessionHostName) {
 					if ($HostPoolUserSessions.Count -ge $AvailableSessionCapacity) {
 						$VMName = $SessionHost.Split(".")[0]
-						$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+						# //todo prepare the list of all VMs with RG before hand to save time
+						$RoleInstance = Get-AzVM -Status -Name $VMName
 
-						if ($SessionHost.ToLower().Contains($RoleInstance.Name.ToLower())) {
+						if ($SessionHost.ToLower().StartsWith($RoleInstance.Name.ToLower())) {
 							# Check if the Azure VM is running and if the session host is healthy
 							$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHost
 							if ($RoleInstance.PowerState -ne "VM running" -and $SessionHostInfo.UpdateState -eq "Succeeded") {
 
+								# //todo do this in parallel
 								Start-SessionHost -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
 
+								# //todo prepare the list of all VM sizes before hand to save time
 								# Calculate available capacity of sessions
 								$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 								$AvailableSessionCapacity = $AvailableSessionCapacity + $RoleSize.NumberOfCores * $SessionThresholdPerCPU
@@ -496,12 +504,14 @@ try {
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHostName.Split(".")[0]
-					$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+					# //todo prepare the list of all VMs with RG before hand to save time
+					$RoleInstance = Get-AzVM -Status -Name $VMName
 					# Check if the session host is in maintenance
 					if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 						continue
 					}
 
+					# //todo do this in parallel
 					Start-SessionHost -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
 
 					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
@@ -518,7 +528,8 @@ try {
 		foreach ($SessionHost in $ListOfSessionHosts) {
 			$SessionHostName = $SessionHost.SessionHostName
 			$VMName = $SessionHostName.Split(".")[0]
-			$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+			# //todo prepare the list of all VMs with RG before hand to save time
+			$RoleInstance = Get-AzVM -Status -Name $VMName
 			# Check if the session host is in maintenance
 			if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 				Write-Log "Session host is in maintenance: $VMName, so script will skip this VM"
@@ -527,11 +538,12 @@ try {
 			}
 			# Maintenance VMs skipped and stored into a variable
 			$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
-			if ($SessionHostName.ToLower().Contains($RoleInstance.Name.ToLower())) {
+			if ($SessionHostName.ToLower().StartsWith($RoleInstance.Name.ToLower())) {
 				# Check if the Azure VM is running
 				if ($RoleInstance.PowerState -eq "VM running") {
 					Write-Log "Checking session host: $($SessionHost.SessionHostName) with sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
 					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
+					# //todo prepare the list of all VM sizes before hand to save time
 					# Calculate available capacity of sessions  
 					$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 					[int]$TotalRunningCores = [int]$TotalRunningCores + $RoleSize.NumberOfCores
@@ -540,7 +552,7 @@ try {
 		}
 		# Defined minimum no of rdsh value from webhook data
 		[int]$DefinedMinimumNumberOfRDSH = [int]$MinimumNumberOfRDSH
-		# Check and collect dynamically stored MinimumNoOfRDSH value																 
+		# Check and collect dynamically stored MinimumNoOfRDSH value
 		$AutomationAccount = Get-AzAutomationAccount | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
@@ -561,6 +573,7 @@ try {
 						if ($SessionHost.Sessions -eq 0) {
 							# Shutdown the Azure VM session host that has 0 sessions
 							Write-Log "Stopping Azure VM: $VMName and waiting for it to complete ..."
+							# //todo do this in parallel
 							Stop-SessionHost -VMName $VMName
 						}
 						else {
@@ -644,7 +657,8 @@ try {
 							# wait for the VM to stop
 							$IsVMStopped = $false
 							while (!$IsVMStopped) {
-								$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+								# //todo prepare the list of all VMs with RG before hand to save time
+								$RoleInstance = Get-AzVM -Status -Name $VMName
 								if ($RoleInstance.PowerState -eq "VM deallocated") {
 									$IsVMStopped = $true
 									Write-Log "Azure VM has been stopped: $($RoleInstance.Name) ..."
@@ -663,6 +677,7 @@ try {
 								}
 							}
 						}
+						# //todo prepare the list of all VM sizes before hand to save time
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 						# changes from https://github.com/Azure/RDS-Templates/pull/439/
 						if ($LimitSecondsToForceLogOffUser -ne 0 -or $SessionHost.Sessions -eq 0) {
@@ -716,6 +731,7 @@ try {
 						Write-Log "Existing sessionhost sessions value reached near by hostpool maximumsession limit, need to start the session host"
 						$SessionHostName = $SessionHost.SessionHostName | Out-String
 
+						# //todo do this in parallel
 						Start-SessionHost -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost.SessionHostName
 
 						# Increment the number of running session host
@@ -729,6 +745,7 @@ try {
 						else {
 							Set-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -Encrypted $false -Value $MinimumNumberOfRDSH
 						}
+						# //todo prepare the list of all VM sizes before hand to save time
 						# Calculate available capacity of sessions
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
 						$AvailableSessionCapacity = $TotalAllowSessions + $HostpoolInfo.MaxSessionLimit
