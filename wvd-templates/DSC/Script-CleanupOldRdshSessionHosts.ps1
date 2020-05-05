@@ -89,7 +89,6 @@ SetTenantGroupContextAndValidate -TenantGroupName $definedTenantGroupName -Tenan
 Write-Log -Message "Checking Hostpool exists inside the Tenant"
 $HostPool = Get-RdsHostPool -TenantName "$TenantName" -Name "$HostPoolName" -ErrorAction SilentlyContinue
 if (!$HostPool) {
-    Write-Log -Error "$HostpoolName Hostpool does not exist in $TenantName Tenant"
     throw "$HostpoolName Hostpool does not exist in $TenantName Tenant"
 }
 
@@ -97,10 +96,10 @@ Write-Log -Message "Hostpool exists inside tenant: $TenantName"
 
 $RequiredModules = @("AzureRM.Resources", "Azurerm.Profile", "Azurerm.Compute", "Azurerm.Network", "Azurerm.Storage")
 
-Write-Output "checking if nuget package exists"
+Write-Log "checking if nuget package exists"
 
 if (!(Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue -ListAvailable)) {
-    Write-Output "installing nuget package inside vm: $env:COMPUTERNAME"
+    Write-Log "installing nuget package inside vm: $env:COMPUTERNAME"
     Install-PackageProvider -Name nuget -Force
 }
 foreach ($ModuleName in $RequiredModules) {
@@ -108,7 +107,7 @@ foreach ($ModuleName in $RequiredModules) {
         #Check if Module exists
         $InstalledModule = Get-InstalledModule -Name $ModuleName -ErrorAction SilentlyContinue
         if (!$InstalledModule) {
-            Write-Output "Installing azureRMModule '$ModuleName' inside vm: $env:COMPUTERNAME"
+            Write-Log "Installing azureRMModule '$ModuleName' inside vm: $env:COMPUTERNAME"
             Install-Module $ModuleName -AllowClobber -Force
         }
     } until ($InstalledModule)
@@ -121,27 +120,25 @@ Import-Module Azurerm.Network
 Import-Module Azurerm.Storage
 
 #Authenticate AzureRM
-#//todo try catch
-if ($isServicePrincipal -eq "True") {
-    $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -ServicePrincipal -TenantId $AadTenantId
+$authentication = $null
+try {
+    if ($isServicePrincipal -eq "True") {
+        $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -SubscriptionId $SubscriptionId -ServicePrincipal -TenantId $AadTenantId
+    }
+    else {
+        $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -SubscriptionId $SubscriptionId
+    }
+    if (!$authentication) {
+        throw $authentication
+    }
 }
-else {
-    $authentication = Add-AzureRmAccount -Credential $TenantAdminCredentials -SubscriptionId $SubscriptionId
+catch {
+    throw [System.Exception]::new("Error authenticating AzureRM account, isServicePrincipal = $isServicePrincipal", $PSItem.Exception)
 }
+Write-Log -Message "AzureRM account authentication successful. Result:`n$($authentication | Out-String)"
 
-$obj = $authentication | Out-String
-
-if ($authentication) {
-    Write-Log -Message "AzureRM Login successfully Done. Result:`n$obj"
-}
-else {
-    Write-Log -Error "AzureRM Login Failed, Error:`n$obj"
-}
-if ($authentication.Context.Subscription.Id -eq $SubscriptionId) {
-    Write-Log -Message "Successfully logged into AzureRM"
-}
-else {
-    Write-Log -Error "Subscription Id $SubscriptionId not in context"
+if ($authentication.Context.Subscription.Id -ne $SubscriptionId) {
+    Write-Log -Err "AzureRM auth subscription ID '$($authentication.Context.Subscription.Id)' doesn't match the subscription ID of the deployment '$SubscriptionId'"
 }
 
 # collect new session hosts
@@ -254,17 +251,13 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
                 # Remove DATA disks
                 $a.StorageProfile.DataDisks | ForEach-Object {
                     $disk = $_.Vhd.Uri | Split-Path -Leaf
-                    Get-AzureStorageContainer -Name vhds -Context $Sa.Context |
-                    Get-AzureStorageBlob -Blob $disk |
-                    Remove-AzureStorageBlob
+                    Get-AzureStorageContainer -Name vhds -Context $Sa.Context | Get-AzureStorageBlob -Blob $disk | Remove-AzureStorageBlob
                     Write-Log -Message "Removed DataDisk $disk successfully"
                 }
 
                 # Remove OSDisk disk
                 $disk = $a.StorageProfile.OSDisk.Vhd.Uri | Split-Path -Leaf
-                Get-AzureStorageContainer -Name vhds -Context $Sa.Context |
-                Get-AzureStorageBlob -Blob $disk |
-                Remove-AzureStorageBlob
+                Get-AzureStorageContainer -Name vhds -Context $Sa.Context | Get-AzureStorageBlob -Blob $disk | Remove-AzureStorageBlob
 
                 Write-Log -Message "Removed OSDisk $disk successfully"
 
@@ -284,8 +277,9 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
             }
 
             #$avSet=Get-AzureRmVM | Where-Object {$_.Name -eq $VMName} | Remove-AzureRmAvailabilitySet -Force
+            # //todo check if this VM belongs to avail set before deleting
             $avset = Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName
-            if ($avset.VirtualMachinesReferences.Id -eq $null) {
+            if ($null -eq $avset.VirtualMachinesReferences.Id) {
                 Get-AzureRmAvailabilitySet -ResourceGroupName $a.ResourceGroupName -ErrorAction SilentlyContinue | Remove-AzureRmAvailabilitySet -Force
                 Write-Log -Message "Successfully removed availabilityset"
             }
@@ -303,6 +297,7 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
                 Get-ADComputer -Identity $VMName | Remove-ADObject -Recursive -Confirm:$false
                 Remove-DnsServerResourceRecord -ZoneName $ZoneName -RRType "A" -Name $VMName -Force -Confirm:$false
             } -ArgumentList ($ZoneName, $VMName) -ErrorAction SilentlyContinue
+            # //todo check: $result might be $null even if the above cmd succeeds
             if ($result) {
                 Write-Log -Message "Successfully removed $VMName from domaincontroller"
                 Write-Log -Message "successfully removed dns record of $VMName"
@@ -320,7 +315,7 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
                 Write-Log -Message "VM has been stopped: $VMName"
             }
             else {
-                Write-Log -Message "Waiting for to stop $VMName VM... [current state: $($ProvisioningState.PowerState)]"
+                Write-Log -Message "Waiting for $VMName VM to stop... [current state: $($ProvisioningState.PowerState)]"
             }
         }
     }
@@ -329,6 +324,5 @@ foreach ($SessionHostName in $UniqueSessionHostNames) {
 $AllSessionHosts = Get-RdsSessionHost -TenantName "$TenantName" -HostPoolName "$HostPoolName"
 $OldSessionHosts = $AllSessionHosts.SessionHostName | Where-Object { !$NewSessionHostNames.ContainsKey($_.ToLower()) }
 if ($OldSessionHosts) {
-    Write-Log -Error "Old Session Hosts were not removed from hostpool $HostPoolName"
     throw "Old Session Hosts were not removed from hostpool $HostPoolName"
 }

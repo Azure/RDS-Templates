@@ -41,7 +41,7 @@
                 "description": "(Required when rdshImageSource = Gallery) Gallery image SKU. Values without a numeric suffix, such as 1903, will use the latest release available in this template."
             },
             "allowedValues": [
-               "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
+                "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus",
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1909",
                 "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1903",
                 "Windows-10-Enterprise-multi-session",
@@ -71,7 +71,7 @@
         "rdshNamePrefix": {
             "type": "string",
             "metadata": {
-                "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
+                "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory. Warning: Please note that starting from June 1st 2020, the default value for this parameter will be removed, so the value will need to be specified"
             },
             "defaultValue": "[take(toLower(resourceGroup().name), 10)]"
         },
@@ -109,6 +109,7 @@
         },
         "rdshUseManagedDisks": {
             "type": "bool",
+            "allowedValues": [true],
             "defaultValue": true,
             "metadata": {
                 "description": "Warning: Parameter 'rdshUseManagedDisks' will not be allowed to be false, starting March 1st, 2020. True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks."
@@ -116,6 +117,7 @@
         },
         "storageAccountResourceGroupName": {
             "type": "string",
+            "allowedValues": [""],
             "metadata": {
                 "description": "Warning: Parameter 'rdshUseManagedDisks' will not be allowed to be false, starting March 1st, 2020. (Required when rdshUseManagedDisks = False) The resource group containing the storage account of the image vhd file."
             },
@@ -293,13 +295,13 @@
                 "sku": "19h2-evd-o365pp",
                 "version": "latest"
             },
-             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1909": {
+            "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1909": {
                 "publisher": "MicrosoftWindowsDesktop",
                 "offer": "office-365",
                 "sku": "19h2-evd-o365pp",
                 "version": "latest"
             },
-             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1903": {
+            "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1903": {
                 "publisher": "MicrosoftWindowsDesktop",
                 "offer": "office-365",
                 "sku": "1903-evd-o365pp",
@@ -357,7 +359,6 @@
         },
         "rdshImageSourceLower": "[toLower(parameters('rdshImageSource'))]",
         "rdshManagedDisks": "[if(equals(variables('rdshImageSourceLower'), 'customvhd'), parameters('rdshUseManagedDisks'), bool('true'))]",
-        "storageaccount": "[if(variables('rdshManagedDisks'), json('null'), concat(resourceId(parameters('storageAccountResourceGroupName'), 'Microsoft.Storage/storageAccounts', split(split(parameters('VmImageVhdUri'), '/')[2], '.' )[0])))]",
         "createAvailabilitySet": "[and(not(parameters('enablePersistentDesktop')), parameters('createAvailabilitySet'))]"
     },
     "functions": [
@@ -424,7 +425,7 @@
                     "osDisk": {
                         "osType": "Windows",
                         "osState": "Generalized",
-                        "blobUri": "[parameters('VmImageVhdUri')]",
+                        "blobUri": "[parameters('vmImageVhdUri')]",
                         "storageAccountType": "[parameters('rdshVMDiskType')]"
                     }
                 }
@@ -458,10 +459,9 @@
             }
         },
         {
-            "condition": "[variables('rdshManagedDisks')]",
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat(if(variables('rdshManagedDisks'), '', 'null'), variables('rdshPrefix'), copyindex())]",
+            "name": "[concat(variables('rdshPrefix'), copyindex())]",
             "location": "[parameters('location')]",
             "copy": {
                 "name": "rdsh-vm-loop",
@@ -509,58 +509,6 @@
             }
         },
         {
-            "condition": "[not(variables('rdshManagedDisks'))]",
-            "apiVersion": "2018-10-01",
-            "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat(if(variables('rdshManagedDisks'), 'null', ''), variables('rdshPrefix'), copyindex())]",
-            "location": "[parameters('location')]",
-            "copy": {
-                "name": "rdsh-vm-loop-unmanaged",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]"
-            ],
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[parameters('rdshVmSize')]"
-                },
-                "availabilitySet": "[if(variables('createAvailabilitySet'), main.getAvailabilitySet(variables('rdshPrefix')), json('null'))]",
-                "osProfile": {
-                    "computerName": "[concat(variables('rdshPrefix'), copyindex())]",
-                    "adminUsername": "[variables('existingDomainUsername')]",
-                    "adminPassword": "[parameters('existingDomainPassword')]"
-                },
-                "storageProfile": {
-                    "osDisk": {
-                        "name": "[concat(variables('rdshPrefix'), copyindex(), '-osDisk')]",
-                        "osType": "Windows",
-                        "caching": "ReadWrite",
-                        "createOption": "FromImage",
-                        "image": {
-                            "uri": "[parameters('VmImageVhdUri')]"
-                        },
-                        "vhd": {
-                            "uri": "[if(variables('rdshManagedDisks'), json('null'), concat(reference(variables('storageaccount'), '2018-11-01').primaryEndpoints.blob, 'vhds/', variables('rdshPrefix'), copyindex(), '-osdisk.vhd'))]"
-                        }
-                    }
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('rdshPrefix'), copyindex(), '-nic'))]"
-                        }
-                    ]
-                },
-                "diagnosticsProfile": {
-                    "bootDiagnostics": {
-                        "enabled": false
-                    }
-                },
-                "licenseType": "Windows_Client"
-            }
-        },
-        {
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('rdshPrefix'), copyindex(), '/joindomain')]",
@@ -582,7 +530,9 @@
                     "ouPath": "[parameters('ouPath')]",
                     "user": "[parameters('existingDomainUPN')]",
                     "restart": "true",
-                    "options": "3"
+                    "options": "3",
+                    "NumberOfRetries": 4,
+                    "RetryIntervalInMilliseconds": 30000
                 },
                 "protectedSettings": {
                     "password": "[parameters('existingDomainPassword')]"

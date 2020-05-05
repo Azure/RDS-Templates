@@ -1,139 +1,34 @@
 <#
-
 .SYNOPSIS
-Functions/Common variables file to be used by both Script-FirstRdsh.ps1 and Script-AdditionalRdshServers.ps1
-
+Common functions to be used by DSC scripts
 #>
-
-# Variables
 
 # Setting to Tls12 due to Azure web app security requirements
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-class PsRdsSessionHost {
-    [string]$TenantName = [string]::Empty
-    [string]$HostPoolName = [string]::Empty
-    [string]$SessionHostName = [string]::Empty
-    [int]$TimeoutInSec = 900
-    [bool]$CheckForAvailableState = $false
-
-    PsRdsSessionHost() { }
-
-    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName) {
-        $this.TenantName = $TenantName
-        $this.HostPoolName = $HostPoolName
-        $this.SessionHostName = $SessionHostName
-    }
-
-    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName, [int]$TimeoutInSec) {
-        
-        if ($TimeoutInSec -gt 1800) {
-            throw "TimeoutInSec is too high, maximum value is 1800"
-        }
-
-        $this.TenantName = $TenantName
-        $this.HostPoolName = $HostPoolName
-        $this.SessionHostName = $SessionHostName
-        $this.TimeoutInSec = $TimeoutInSec
-    }
-
-    hidden [object] _trySessionHost([string]$operation) {
-        if ($operation -ne "get" -and $operation -ne "set") {
-            throw "PsRdsSessionHost: Invalid operation: $operation. Valid Operations are get or set"
-        }
-
-        $specificToSet = @{$true = "-AllowNewSession `$true"; $false = "" }[$operation -eq "set"]
-        $commandToExecute = "$operation-RdsSessionHost -TenantName `"`$(`$this.TenantName)`" -HostPoolName `"`$(`$this.HostPoolName)`" -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
-
-        $sessionHost = (Invoke-Expression $commandToExecute )
-
-        $StartTime = Get-Date
-        while ($sessionHost -eq $null) {
-            Start-Sleep -Seconds 30
-            $sessionHost = (Invoke-Expression $commandToExecute)
-    
-            if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                if ($sessionHost -eq $null) {
-                    return $null
-                }
-            }
-        }
-
-        if (($operation -eq "get") -and $this.CheckForAvailableState) {
-            $StartTime = Get-Date
-
-            while ($sessionHost.Status -ine "Available") {
-                Start-Sleep -Seconds 60
-                $sessionHost = (Invoke-Expression $commandToExecute)
-        
-                if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                    if ($sessionHost.Status -ine "Available") {
-                        $this.CheckForAvailableState = $false
-                        return $null
-                    }
-                }
-            }
-        }
-
-        $this.CheckForAvailableState = $false
-        return $sessionHost
-    }
-
-    [object] SetSessionHost() {
-
-        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName)) {
-            return $null
-        }
-        else {
-            
-            return ($this._trySessionHost("set"))
-        }
-    }
-    
-    [object] GetSessionHost() {
-
-        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName)) {
-            return $null
-        }
-        else {
-            return ($this._trySessionHost("get"))
-        }
-    }
-
-    [object] GetSessionHostWhenAvailable() {
-
-        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName)) {
-            return $null
-        }
-        else {
-            $this.CheckForAvailableState = $true
-            return ($this._trySessionHost("get"))
-        }
-    }
-}
 
 function Write-Log {
     [CmdletBinding()]
     param
     (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $true)]
         [string]$Message,
-        [Parameter(Mandatory = $false)]
-        [string]$Error
+
+        # note: can't use variable named '$Error': https://github.com/PowerShell/PSScriptAnalyzer/blob/master/RuleDocumentation/AvoidAssignmentToAutomaticVariable.md
+        [switch]$Err
     )
      
     try {
         $DateTime = Get-Date -Format "MM-dd-yy HH:mm:ss"
         $Invocation = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber)"
-        if ($Message) {
-            Add-Content -Value "$DateTime - $Invocation - $Message" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
+
+        if ($Err) {
+            $Message = "[ERROR] $Message"
         }
-        else {
-            Add-Content -Value "$DateTime - $Invocation - $Error" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
-        }
+        
+        Add-Content -Value "$DateTime - $Invocation - $Message" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
     }
     catch {
-        Write-Error $_.Exception.Message
+        throw [System.Exception]::new("Some error occurred while writing to log file with message: $Message", $PSItem.Exception)
     }
 }
 
@@ -154,7 +49,6 @@ function AddDefaultUsers {
 
     )
 
-    # Checking for null parameters
     Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
 
     # Sanitizing DefaultUsers string
@@ -169,8 +63,8 @@ function AddDefaultUsers {
                 Write-Log "Successfully assigned user $user to App Group: $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
             }
             catch {
-                Write-Log "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
-                Write-Log "Error details: $_"
+                Write-Log -Err "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
+                Write-Log -Err ($PSItem | Format-List -Force | Out-String)
             }
         }
     }
@@ -196,8 +90,8 @@ function ValidateServicePrincipal {
 
 function Is1809OrLater {
     $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-    if ($OSVersionInfo -ne $null) {
-        if ($OSVersionInfo.ReleaseId -ne $null) {
+    if ($null -ne $OSVersionInfo) {
+        if ($null -ne $OSVersionInfo.ReleaseId) {
             Write-Log -Message "Build: $($OSVersionInfo.ReleaseId)"
             $rdshIs1809OrLaterBool = @{$true = $true; $false = $false }[$OSVersionInfo.ReleaseId -ge 1809]
         }
@@ -262,7 +156,7 @@ function AuthenticateRdsAccount {
     )
 
     if ($ServicePrincipal) {
-        Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId "
+        Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId"
     }
     else {
         $PSBoundParameters.Remove('ServicePrincipal')
@@ -278,37 +172,9 @@ function AuthenticateRdsAccount {
         }
     }
     catch {
-        #This creates a new script scope so that these variables aren't included in this function scope since this function is being called using dot source notation.
-        & {
-            Set-StrictMode -Version Latest
-            
-            $innerExAsStr = ""
-            $numInnerExceptions = 0
-            if($_.Exception -is [System.AggregateException] -and $_.Exception.InnerExceptions)
-            {
-                $numInnerExceptions = $_.Exception.InnerExceptions.Count
-                foreach ($innerEx in $_.Exception.InnerExceptions)
-                {
-                    if($innerExAsStr.Length -gt 0)
-                    {
-                        $innerExAsStr += "`n"
-                    } 
-                    $innerExAsStr += $innerEx
-                }
-            }
-            
-            $errMsg = "Error authenticating Windows Virtual Desktop account, ServicePrincipal=" + $ServicePrincipal
-            $errMsg += " Error Details:`n$($_ | Out-String)"
-            if($innerExAsStr.Length -gt 0)
-            {
-                $errMsg += " Inner Errors (there are " + $numInnerExceptions +"): `n$($innerExAsStr | Out-String)"
-            } 
-
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
-        }
-
+        throw [System.Exception]::new("Error authenticating Windows Virtual Desktop account, ServicePrincipal = $ServicePrincipal", $PSItem.Exception)
     }
+    
     Write-Log -Message "Windows Virtual Desktop account authentication successful. Result:`n$($authentication | Out-String)"
 }
 
@@ -333,26 +199,20 @@ function SetTenantGroupContextAndValidate {
             Set-RdsContext -TenantGroupName $TenantGroupName
         }
         catch {
-            $errMsg ="Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group. Error Details: $($PSItem | Out-String)"
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
+            throw [System.Exception]::new("Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
         }
-
-        $tenants = $null
-        try {
-            $tenants = Get-RdsTenant -Name $TenantName
-        }
-        catch {
-            $errMsg = "Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant. Error Details: $($PSItem | Out-String)"
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
-        }
-
-        if (!$tenants) {
-            $errMsg = "No tenant with name ""$TenantName"" exists or the account doesn't have access to it." 
-            Write-Log -Error $errMsg
-            throw $errMsg
-        }
+    }
+    
+    $tenants = $null
+    try {
+        $tenants = (Get-RdsTenant -Name $TenantName)
+    }
+    catch {
+        throw [System.Exception]::new("Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
+    }
+    
+    if (!$tenants) {
+        throw "No tenant with name ""$TenantName"" exists or the account doesn't have access to it."
     }
 }
 
@@ -410,7 +270,7 @@ function ImportRDPSMod {
     }
     else {
         $Version = ($Source.Trim().ToLower() -split 'gallery@')[1]
-        if ($Version -eq $null -or $Version.Trim() -eq '') {
+        if ($null -eq $Version -or $Version.Trim() -eq '') {
             throw "invalid param: Source = $Source"
         }
 
@@ -429,4 +289,42 @@ function ImportRDPSMod {
     Write-Log -Message "Importing RD PowerShell module DLL '$DLLPath"
     Import-Module $DLLPath -Force
     Write-Log -Message "Successfully imported RD PowerShell module DLL '$DLLPath"
+}
+
+function GetCurrSessionHostName {
+    $Wmi = (Get-WmiObject win32_computersystem)
+    return "$($Wmi.DNSHostName).$($Wmi.Domain)"
+}
+
+function GetSessionHostDesiredStates {
+    return ('Available', 'NeedsAssistance')
+}
+
+function IsRDAgentRegistryValidForRegistration {
+    $RDInfraReg = Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent' -ErrorAction SilentlyContinue
+    if (!$RDInfraReg) {
+        return @{
+            result = $false;
+            msg    = 'RD Infra registry missing';
+        }
+    }
+    Write-Log -Message 'RD Infra registry exists'
+
+    Write-Log -Message 'Check RD Infra registry values to see if RD Agent is registered'
+    if ($RDInfraReg.RegistrationToken -ne '') {
+        return @{
+            result = $false;
+            msg    = 'RegistrationToken in RD Infra registry is not empty'
+        }
+    }
+    if ($RDInfraReg.IsRegistered -ne 1) {
+        return @{
+            result = $false;
+            msg    = "Value of 'IsRegistered' in RD Infra registry is $($RDInfraReg.IsRegistered), but should be 1"
+        }
+    }
+    
+    return @{
+        result = $true
+    }
 }
