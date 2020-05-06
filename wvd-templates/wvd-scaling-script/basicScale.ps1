@@ -340,7 +340,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			$VMName = $SessionHostName.Split(".")[0]
 
 			# Check if VM is in maintenance
-			$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+			$RoleInstance = Get-AzVM -Status -Name $VMName
 			if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 				Write-Output "Session host is in maintenance: $VMName, so script will skip this VM"
 				$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Session host is in maintenance: $VMName, so script will skip this VM" }
@@ -380,7 +380,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 				# Check whether the number of running VMs meets the minimum or not
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHost.Split(".")[0]
-					$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+					$RoleInstance = Get-AzVM -Status -Name $VMName
 					if ($SessionHost.ToLower().Contains($RoleInstance.Name.ToLower())) {
 						# Check if the Azure VM is running and if the session host is healthy
 						$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHost
@@ -396,7 +396,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 							# Wait for the VM to Start
 							$IsVMStarted = $false
 							while (!$IsVMStarted) {
-								$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+								$RoleInstance = Get-AzVM -Status -Name $VMName
 								if ($RoleInstance.PowerState -eq "VM running") {
 									$IsVMStarted = $true
 									Write-Output "Azure VM has been started: $($RoleInstance.Name) ..."
@@ -445,7 +445,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 				foreach ($SessionHost in $AllSessionHosts.SessionHostName) {
 					if ($HostPoolUserSessions.Count -ge $AvailableSessionCapacity) {
 						$VMName = $SessionHost.Split(".")[0]
-						$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+						$RoleInstance = Get-AzVM -Status -Name $VMName
 
 						if ($SessionHost.ToLower().Contains($RoleInstance.Name.ToLower())) {
 							# Check if the Azure VM is running and if the session host is healthy
@@ -461,7 +461,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 								# Wait for the VM to Start
 								$IsVMStarted = $false
 								while (!$IsVMStarted) {
-									$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+									$RoleInstance = Get-AzVM -Status -Name $VMName
 									if ($RoleInstance.PowerState -eq "VM running") {
 										$IsVMStarted = $true
 										Write-Output "Azure VM has been Started: $($RoleInstance.Name) ..."
@@ -526,7 +526,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHostName.Split(".")[0]
-					$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+					$RoleInstance = Get-AzVM -Status -Name $VMName
 					# Check the session host is in maintenance
 					if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 						continue
@@ -538,7 +538,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 					# Wait for the VM to Start
 					$IsVMStarted = $false
 					while (!$IsVMStarted) {
-						$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+						$RoleInstance = Get-AzVM -Status -Name $VMName
 						if ($RoleInstance.PowerState -eq "VM running") {
 							$IsVMStarted = $true
 						}
@@ -567,7 +567,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		foreach ($SessionHost in $ListOfSessionHosts) {
 			$SessionHostName = $SessionHost.SessionHostName
 			$VMName = $SessionHostName.Split(".")[0]
-			$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+			$RoleInstance = Get-AzVM -Status -Name $VMName
 			# Check the session host is in maintenance
 			if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 				Write-Output "Session host is in maintenance: $VMName, so script will skip this VM"
@@ -610,7 +610,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 			foreach ($SessionHost in $AllSessionHosts) {
 				#Check the status of the session host
-				if ($SessionHost.Status -ne "NoHeartbeat" -or $SessionHost.Status -ne "Unavailable") {
+				if ($SessionHost.Status -ne "NoHeartbeat" -and $SessionHost.Status -ne "Unavailable" -and $SessionHost.Status -ne "NeedsAssistance") {
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 						$SessionHostName = $SessionHost.SessionHostName
 						$VMName = $SessionHostName.Split(".")[0]
@@ -622,13 +622,14 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 							Stop-SessionHost -VMName $VMName -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -TimeDifference $TimeDifference
 						}
 						else {
-
+                            # Check if limitsecondsforcelogoffuser equals to zero
+                            if ($LimitSecondsToForceLogOffUser -eq 0) {
+								continue
+							}
 							# Ensure the running Azure VM is set as drain mode
 							try {
-								$CheckMinimumDrianMode = (Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.AllowNewSession -eq "True" -and $AllSessionHosts -contains $_ }).Count
-								if ($CheckMinimumDrianMode -gt $MinimumNumberOfRDSH) {
-									$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
-								}
+							$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
+								
 							}
 							catch {
 								Write-Output "Unable to set it to allow connections on session host: $SessionHostName with error: $($_.exception.message)"
@@ -636,9 +637,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 								Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 								exit
 							}
-							if ($LimitSecondsToForceLogOffUser -eq 0) {
-								continue
-							}
+							
 							# Notify user to log off session
 							# Get the user sessions in the hostpool
 							try {
@@ -718,7 +717,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 							#wait for the VM to stop
 							$IsVMStopped = $false
 							while (!$IsVMStopped) {
-								$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+								$RoleInstance = Get-AzVM -Status -Name $VMName
 								if ($RoleInstance.PowerState -eq "VM deallocated") {
 									$IsVMStopped = $true
 									Write-Output "Azure VM has been stopped: $($RoleInstance.Name) ..."
@@ -730,7 +729,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 							$IsSessionHostNoHeartbeat = $false
 							while (!$IsSessionHostNoHeartbeat) {
 								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHost.Status -eq "Unavailable") {
+								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -and $SessionHostInfo.Status -eq "Unavailable" -and $SessionHostInfo.Status -eq "NeedsAssistance") {
 									$IsSessionHostNoHeartbeat = $true
 									# Ensure the Azure VMs that are off have allow new connections mode set to True
 									if ($SessionHostInfo.AllowNewSession -eq $false) {
@@ -778,7 +777,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			$ScaleFactor = [math]::Floor($SessionsScaleFactor)
 
 			if ($HostpoolSessionCount -ge $ScaleFactor) {
-				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" }
+				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" -or $_.Status -eq "NeedsAssistance"}
 				$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 				foreach ($SessionHost in $AllSessionHosts) {
 					# Check the session host status and if the session host is healthy before starting the host
@@ -798,7 +797,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 						#Wait for the VM to start
 						$IsVMStarted = $false
 						while (!$IsVMStarted) {
-							$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+							$RoleInstance = Get-AzVM -Status -Name $VMName
 							if ($RoleInstance.PowerState -eq "VM running") {
 								$IsVMStarted = $true
 								Write-Output "Azure VM has been Started: $($RoleInstance.Name) ..."
@@ -1053,7 +1052,7 @@ else {
 			$SessionHostName = $SessionHost.SessionHostName | Out-String
 			$VMName = $SessionHostName.Split(".")[0]
 			# Check if VM is in maintenance
-			$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+			$RoleInstance = Get-AzVM -Status -Name $VMName
 			if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 				Write-Output "Session host is in maintenance: $VMName, so script will skip this VM"
 				$SkipSessionhosts += $SessionHost
@@ -1082,7 +1081,7 @@ else {
 				# Check whether the number of running VMs meets the minimum or not
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHost.Split(".")[0]
-					$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+					$RoleInstance = Get-AzVM -Status -Name $VMName
 					if ($SessionHost.ToLower().Contains($RoleInstance.Name.ToLower())) {
 						# Check if the Azure VM is running and if the session host is healthy
 						$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHost
@@ -1096,7 +1095,7 @@ else {
 							# Wait for the VM to Start
 							$IsVMStarted = $false
 							while (!$IsVMStarted) {
-								$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+								$RoleInstance = Get-AzVM -Status -Name $VMName
 								if ($RoleInstance.PowerState -eq "VM running") {
 									$IsVMStarted = $true
 									Write-Output "Azure VM has been Started: $($RoleInstance.Name) ..."
@@ -1133,7 +1132,7 @@ else {
 				foreach ($SessionHost in $AllSessionHosts.SessionHostName) {
 					if ($HostPoolUserSessions.Count -ge $AvailableSessionCapacity) {
 						$VMName = $SessionHost.Split(".")[0]
-						$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+						$RoleInstance = Get-AzVM -Status -Name $VMName
 
 						if ($SessionHost.ToLower().Contains($RoleInstance.Name.ToLower())) {
 							# Check if the Azure VM is running and if the session host is healthy
@@ -1147,7 +1146,7 @@ else {
 								# Wait for the VM to Start
 								$IsVMStarted = $false
 								while (!$IsVMStarted) {
-									$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+									$RoleInstance = Get-AzVM -Status -Name $VMName
 									if ($RoleInstance.PowerState -eq "VM running") {
 										$IsVMStarted = $true
 										Write-Output "Azure VM has been Started: $($RoleInstance.Name) ..."
@@ -1196,7 +1195,7 @@ else {
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHostName.Split(".")[0]
-					$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+					$RoleInstance = Get-AzVM -Status -Name $VMName
 					# Check the session host is in maintenance
 					if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 						continue
@@ -1208,7 +1207,7 @@ else {
 					# Wait for the VM to Start
 					$IsVMStarted = $false
 					while (!$IsVMStarted) {
-						$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+						$RoleInstance = Get-AzVM -Status -Name $VMName
 						if ($RoleInstance.PowerState -eq "VM running") {
 							$IsVMStarted = $true
 						}
@@ -1236,7 +1235,7 @@ else {
 		foreach ($SessionHost in $ListOfSessionHosts) {
 			$SessionHostName = $SessionHost.SessionHostName
 			$VMName = $SessionHostName.Split(".")[0]
-			$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name.Contains($VMName) }
+			$RoleInstance = Get-AzVM -Status -Name $VMName
 			# Check the session host is in maintenance
 			if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
 				Write-Output "Session host is in maintenance: $VMName, so script will skip this VM"
@@ -1273,7 +1272,7 @@ else {
 		if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 			foreach ($SessionHost in $AllSessionHosts) {
 				#Check the status of the session host
-				if ($SessionHost.Status -ne "NoHeartbeat" -or $SessionHost.Status -ne "Unavailable") {
+				if ($SessionHost.Status -ne "NoHeartbeat" -and $SessionHost.Status -ne "Unavailable" -and $SessionHost.Status -ne "NeedsAssistance") {
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 						$SessionHostName = $SessionHost.SessionHostName
 						$VMName = $SessionHostName.Split(".")[0]
@@ -1283,20 +1282,20 @@ else {
 							Stop-SessionHost -VMName $VMName
 						}
 						else {
-							# Ensure the running Azure VM is set as drain mode
+							# Check if LimitSecondsToForceLogOffUser equals to zero
+                            if ($LimitSecondsToForceLogOffUser -eq 0) {
+								continue
+							}
+                            
+                            # Ensure the running Azure VM is set as drain mode
 							try {
-								$CheckMinimumDrianMode = (Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.AllowNewSession -eq "True" -and $AllSessionHosts -contains $_ }).Count
-								if ($CheckMinimumDrianMode -gt $MinimumNumberOfRDSH) {
-									$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
-								}
+								$KeepDrianMode = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false -ErrorAction Stop
 							}
 							catch {
 								Write-Output "Unable to set it to allow connections on session host: $SessionHostName with error: $($_.exception.message)"
 								exit
 							}
-							if ($LimitSecondsToForceLogOffUser -eq 0) {
-								continue
-							}
+							
 							# Notify user to log off session
 							# Get the user sessions in the hostpool
 							try {
@@ -1359,7 +1358,7 @@ else {
 							#wait for the VM to stop
 							$IsVMStopped = $false
 							while (!$IsVMStopped) {
-								$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+								$RoleInstance = Get-AzVM -Status -Name $VMName
 								if ($RoleInstance.PowerState -eq "VM deallocated") {
 									$IsVMStopped = $true
 									Write-Output "Azure VM has been stopped: $($RoleInstance.Name) ..."
@@ -1369,7 +1368,7 @@ else {
 							$IsSessionHostNoHeartbeat = $false
 							while (!$IsSessionHostNoHeartbeat) {
 								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHostInfo.Status -eq "Unavailable") {
+								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -and $SessionHostInfo.Status -eq "Unavailable" -and $SessionHostInfo.Status -eq "NeedsAssistance") {
 									$IsSessionHostNoHeartbeat = $true
 									# Ensure the Azure VMs that are off have allow new connections mode set to True
 									if ($SessionHostInfo.AllowNewSession -eq $false) {
@@ -1417,7 +1416,7 @@ else {
 			$ScaleFactor = [math]::Floor($SessionsScaleFactor)
 
 			if ($HostpoolSessionCount -ge $ScaleFactor) {
-				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" }
+				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" -or $_.Status -eq "NeedsAssistance" }
 				$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 				foreach ($SessionHost in $AllSessionHosts) {
 					# Check the session host status and if the session host is healthy before starting the host
@@ -1433,7 +1432,7 @@ else {
 						#Wait for the VM to start
 						$IsVMStarted = $false
 						while (!$IsVMStarted) {
-							$RoleInstance = Get-AzVM -Status | Where-Object { $_.Name -eq $VMName }
+							$RoleInstance = Get-AzVM -Status -Name $VMName
 							if ($RoleInstance.PowerState -eq "VM running") {
 								$IsVMStarted = $true
 								Write-Output "Azure VM has been started: $($RoleInstance.Name) ..."
