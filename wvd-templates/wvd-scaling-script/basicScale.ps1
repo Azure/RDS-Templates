@@ -610,7 +610,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 			foreach ($SessionHost in $AllSessionHosts) {
 				#Check the status of the session host
-				if ($SessionHost.Status -ne "NoHeartbeat" -and $SessionHost.Status -ne "Unavailable" -and $SessionHost.Status -ne "NeedsAssistance") {
+				if ($SessionHost.Status -ne "NoHeartbeat" -and $SessionHost.Status -ne "Unavailable") {
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 						$SessionHostName = $SessionHost.SessionHostName
 						$VMName = $SessionHostName.Split(".")[0]
@@ -777,7 +777,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			$ScaleFactor = [math]::Floor($SessionsScaleFactor)
 
 			if ($HostpoolSessionCount -ge $ScaleFactor) {
-				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" -or $_.Status -eq "NeedsAssistance"}
+				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable"}
 				$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 				foreach ($SessionHost in $AllSessionHosts) {
 					# Check the session host status and if the session host is healthy before starting the host
@@ -1272,7 +1272,7 @@ else {
 		if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 			foreach ($SessionHost in $AllSessionHosts) {
 				#Check the status of the session host
-				if ($SessionHost.Status -ne "NoHeartbeat" -and $SessionHost.Status -ne "Unavailable" -and $SessionHost.Status -ne "NeedsAssistance") {
+				if ($SessionHost.Status -ne "NoHeartbeat" -and $SessionHost.Status -ne "Unavailable") {
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 						$SessionHostName = $SessionHost.SessionHostName
 						$VMName = $SessionHostName.Split(".")[0]
@@ -1416,7 +1416,7 @@ else {
 			$ScaleFactor = [math]::Floor($SessionsScaleFactor)
 
 			if ($HostpoolSessionCount -ge $ScaleFactor) {
-				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" -or $_.Status -eq "NeedsAssistance" }
+				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable"}
 				$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 				foreach ($SessionHost in $AllSessionHosts) {
 					# Check the session host status and if the session host is healthy before starting the host
