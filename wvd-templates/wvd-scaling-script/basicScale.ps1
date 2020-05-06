@@ -729,7 +729,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 							$IsSessionHostNoHeartbeat = $false
 							while (!$IsSessionHostNoHeartbeat) {
 								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -and $SessionHostInfo.Status -eq "Unavailable" -and $SessionHostInfo.Status -eq "NeedsAssistance") {
+								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "Unavailable") {
 									$IsSessionHostNoHeartbeat = $true
 									# Ensure the Azure VMs that are off have allow new connections mode set to True
 									if ($SessionHostInfo.AllowNewSession -eq $false) {
@@ -1368,7 +1368,7 @@ else {
 							$IsSessionHostNoHeartbeat = $false
 							while (!$IsSessionHostNoHeartbeat) {
 								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "NoHeartbeat" -and $SessionHostInfo.Status -eq "Unavailable" -and $SessionHostInfo.Status -eq "NeedsAssistance") {
+								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -eq "Unavailable") {
 									$IsSessionHostNoHeartbeat = $true
 									# Ensure the Azure VMs that are off have allow new connections mode set to True
 									if ($SessionHostInfo.AllowNewSession -eq $false) {
