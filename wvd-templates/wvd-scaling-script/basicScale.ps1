@@ -115,7 +115,8 @@ try {
 			[switch]$Err
 		)
 
-		$WriteMessage = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
+		# $WriteMessage = "$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
+		$WriteMessage = "$((Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference).ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
 		if ($Err) {
 			Write-Error $WriteMessage
 		}
@@ -307,17 +308,6 @@ try {
 			throw [System.Exception]::new("Failed to stop Azure VM: $($VMName)", $PSItem.Exception)
 		}
 	}
-	
-	# Convert date time from UTC to Local
-	$CurrentDateTime = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference
-
-	$BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
-	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
-
-	# Check: the calculated end time is later than begin time in case of time zone
-	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
-		$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
-	}
 
 	# Check given HostPool name exists in Tenant
 	$HostpoolInfo = $null
@@ -337,10 +327,29 @@ try {
 		Write-Log "There are no session hosts in the Hostpool '$HostpoolName'. Ensure that hostpool have session hosts."
 		exit
 	}
+	
+	# Convert date time from UTC to Local
+	$CurrentDateTime = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference
+
+	$BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
+	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
+
+	# Check: the calculated end time is later than begin time in case of time zone
+	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
+		if ($CurrentDateTime -lt $EndPeakDateTime) {
+			$BeginPeakDateTime = $BeginPeakDateTime.AddDays(-1)
+		}
+		else {
+			$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
+		}
+	}
+
+	Write-Log "Using current time: $($CurrentDateTime.ToString('yyyy-MM-dd HH:mm:ss')), begin peak time: $($BeginPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss')), end peak time: $($EndPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss'))"
 
 	# Set up appropriate load balacing type
 	$HostpoolLoadbalancerType = $HostpoolInfo.LoadBalancerType
 	[int]$MaxSessionLimitValue = $HostpoolInfo.MaxSessionLimit
+	# //todo maybe do this inline
 	# note: both of the if else blocks are same. Breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
 	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		UpdateLoadBalancerTypeInPeakandOffPeakwithBreadthFirst -TenantName $TenantName -HostPoolName $HostpoolName -MaxSessionLimitValue $MaxSessionLimitValue -HostpoolLoadbalancerType $HostpoolLoadbalancerType
@@ -349,12 +358,13 @@ try {
 		UpdateLoadBalancerTypeInPeakandOffPeakwithBreadthFirst -TenantName $TenantName -HostPoolName $HostpoolName -MaxSessionLimitValue $MaxSessionLimitValue -HostpoolLoadbalancerType $HostpoolLoadbalancerType
 	}
 
-	Write-Log "HostPool info:`n$($HostpoolInfo | Out-String)"
-	Write-Log "Number of session hosts in the HostPool: $($ListOfSessionHosts.Count)"
-
-	Write-Log "Start WVD session hosts scale optimization: Current Date Time is: $CurrentDateTime"
+	# //todo avoid unnecesary API cals if can to prevent the API from throttling
 	# Get the HostPool info after changing hostpool loadbalancer type
 	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName
+
+	Write-Log "HostPool info:`n$($HostpoolInfo | Out-String)"
+	Write-Log "Number of session hosts in the HostPool: $($ListOfSessionHosts.Count)"
+	Write-Log 'Start WVD session hosts scale optimization'
 
 	# Check if it is during the peak or off-peak time
 	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
