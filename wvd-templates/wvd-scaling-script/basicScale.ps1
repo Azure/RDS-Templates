@@ -283,7 +283,7 @@ try {
 		Write-Log "Wait for session host '$SessionHostName' to be available"
 		# //todo may be add a timeout
 		# //todo check for multi desired states including 'NeedsAssistance'
-		while (!$SessionHost -or $SessionHost.Status -ne 'Available') {
+		while (!$SessionHost -or ($SessionHost.Status -ne 'Available' -and $SessionHost.Status -ne 'NeedsAssistance')) {
 			# Write-Log "Session host status: '$($SessionHost.Status)', continue waiting"
 			Start-Sleep -Seconds 5
 			$SessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
@@ -503,7 +503,7 @@ try {
 		$SkipSessionhosts = 0
 		$SkipSessionhosts = @()
 		# Check if minimum number rdsh vm's are running in off peak hours
-		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
+		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq 'Available' -or $_.Status -eq 'NeedsAssistance' }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 		if (!$CheckMinimumNumberOfRDShIsRunning) {
 			# changes from https://github.com/Azure/RDS-Templates/pull/439/
@@ -583,22 +583,19 @@ try {
 							Stop-SessionHost -VMName $VMName
 						}
 						else {
+							# changes from https://github.com/Azure/RDS-Templates/pull/439/, https://github.com/Azure/RDS-Templates/pull/467/
+							if ($LimitSecondsToForceLogOffUser -eq 0) {
+								continue
+							}
 							# Ensure the running Azure VM is set as drain mode
 							try {
-								# changes from https://github.com/Azure/RDS-Templates/pull/439/
-								$CheckMinimumDrianMode = (Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.AllowNewSession -eq "True" -and $AllSessionHosts -contains $_ }).Count
-								if ($CheckMinimumDrianMode -gt $MinimumNumberOfRDSH) {
-									# //todo this may need to be prevented from logging as it may get logged at a lot
-									Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false
-									# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false | Out-Null
-								}
+								# changes from https://github.com/Azure/RDS-Templates/pull/439/, https://github.com/Azure/RDS-Templates/pull/467/
+								# //todo this may need to be prevented from logging as it may get logged at a lot
+								Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false
+								# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false | Out-Null
 							}
 							catch {
 								throw [System.Exception]::new("Unable to set it to disallow connections on session host: $SessionHostName", $PSItem.Exception)
-							}
-							# changes from https://github.com/Azure/RDS-Templates/pull/439/
-							if ($LimitSecondsToForceLogOffUser -eq 0) {
-								continue
 							}
 							# Notify user to log off session
 							# Get the user sessions in the hostpool
@@ -702,7 +699,7 @@ try {
 			$NoConnectionsofhost = 0
 			if ($NumberOfRunningHost -le $MinimumNumberOfRDSH) {
 				foreach ($SessionHost in $AllSessionHosts) {
-					if ($SessionHost.Status -eq "Available" -and $SessionHost.Sessions -eq 0) {
+					if (($SessionHost.Status -eq 'Available' -or $SessionHost.Status -eq 'NeedsAssistance') -and $SessionHost.Sessions -eq 0) {
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
