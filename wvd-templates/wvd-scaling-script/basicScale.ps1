@@ -13,12 +13,8 @@ try {
 	$ErrorActionPreference = "Stop"
 
 	# If runbook was called from Webhook, WebhookData and its RequestBody will not be null.
-	if (!$WebHookData -or !$WebHookData.RequestBody -or !$WebHookData.RequestBody.Count) {
+	if (!$WebHookData -or [string]::IsNullOrWhiteSpace($WebHookData.RequestBody)) {
 		throw 'Runbook was not started from Webhook (WebHookData or its RequestBody is empty)'
-	}
-	# //todo maybe remove this ?
-	if ($SkipAuth) {
-		# Set-StrictMode -Version Latest
 	}
 
 	# Collect Input converted from JSON request body of Webhook.
@@ -116,7 +112,7 @@ try {
 		)
 
 		# $WriteMessage = "$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
-		$WriteMessage = "$((Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference).ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
+		$WriteMessage = "$((Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference).ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.ScriptLineNumber)] $Message"
 		if ($Err) {
 			Write-Error $WriteMessage
 		}
