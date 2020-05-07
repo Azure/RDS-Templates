@@ -40,6 +40,8 @@ try {
 	$AutomationAccountName = $Input.AutomationAccountName
 	$ConnectionAssetName = $Input.ConnectionAssetName
 
+	$DesiredRunningStates = ('Available', 'NeedsAssistance')
+
 	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
 	if (!$SkipAuth) {
 		Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
@@ -283,7 +285,7 @@ try {
 		Write-Log "Wait for session host '$SessionHostName' to be available"
 		# //todo may be add a timeout
 		# //todo check for multi desired states including 'NeedsAssistance'
-		while (!$SessionHost -or ($SessionHost.Status -ne 'Available' -and $SessionHost.Status -ne 'NeedsAssistance')) {
+		while (!$SessionHost -or $SessionHost.Status -notin $DesiredRunningStates) {
 			# Write-Log "Session host status: '$($SessionHost.Status)', continue waiting"
 			Start-Sleep -Seconds 5
 			$SessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
@@ -503,7 +505,7 @@ try {
 		$SkipSessionhosts = 0
 		$SkipSessionhosts = @()
 		# Check if minimum number rdsh vm's are running in off peak hours
-		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq 'Available' -or $_.Status -eq 'NeedsAssistance' }
+		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -in $DesiredRunningStates }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 		if (!$CheckMinimumNumberOfRDShIsRunning) {
 			# changes from https://github.com/Azure/RDS-Templates/pull/439/
@@ -572,7 +574,7 @@ try {
 		if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 			foreach ($SessionHost in $AllSessionHosts) {
 				# Check the status of the session host
-				if ($SessionHost.Status -ne "NoHeartbeat" -and $SessionHost.Status -ne "Unavailable") {
+				if ($SessionHost.Status -in $DesiredRunningStates) {
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
 						$SessionHostName = $SessionHost.SessionHostName
 						$VMName = $SessionHostName.Split(".")[0]
@@ -671,7 +673,7 @@ try {
 							$IsSessionHostNoHeartbeat = $false
 							while (!$IsSessionHostNoHeartbeat) {
 								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and ($SessionHostInfo.Status -eq "NoHeartbeat" -or $SessionHostInfo.Status -eq "Unavailable")) {
+								if ($SessionHostInfo.UpdateState -eq "Succeeded" -and $SessionHostInfo.Status -notin $DesiredRunningStates) {
 									$IsSessionHostNoHeartbeat = $true
 									# Ensure the Azure VMs that are off have allow new connections mode set to True
 									if ($SessionHostInfo.AllowNewSession -eq $false) {
@@ -699,7 +701,7 @@ try {
 			$NoConnectionsofhost = 0
 			if ($NumberOfRunningHost -le $MinimumNumberOfRDSH) {
 				foreach ($SessionHost in $AllSessionHosts) {
-					if (($SessionHost.Status -eq 'Available' -or $SessionHost.Status -eq 'NeedsAssistance') -and $SessionHost.Sessions -eq 0) {
+					if ($SessionHost.Status -in $DesiredRunningStates -and $SessionHost.Sessions -eq 0) {
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
@@ -726,7 +728,7 @@ try {
 			$ScaleFactor = [math]::Floor($SessionsScaleFactor)
 
 			if ($HostpoolSessionCount -ge $ScaleFactor) {
-				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "NoHeartbeat" -or $_.Status -eq "Unavailable" }
+				$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -notin $DesiredRunningStates }
 				$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 				foreach ($SessionHost in $AllSessionHosts) {
 					# Check the session host status and if the session host is healthy before starting the host
