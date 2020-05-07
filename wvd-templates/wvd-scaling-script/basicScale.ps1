@@ -29,7 +29,7 @@ try {
 	$EndPeakTime = $Input.EndPeakTime
 	$TimeDifference = $Input.TimeDifference
 	$SessionThresholdPerCPU = $Input.SessionThresholdPerCPU
-	$MinimumNumberOfRDSH = $Input.MinimumNumberOfRDSH
+	[int]$MinimumNumberOfRDSH = $Input.MinimumNumberOfRDSH
 	$LimitSecondsToForceLogOffUser = $Input.LimitSecondsToForceLogOffUser
 	$LogOffMessageTitle = $Input.LogOffMessageTitle
 	$LogOffMessageBody = $Input.LogOffMessageBody
@@ -51,7 +51,7 @@ try {
 	# Function to convert from UTC to Local time
 	function Convert-UTCtoLocalTime {
 		param(
-			$TimeDifferenceInHours
+			[string]$TimeDifferenceInHours
 		)
 
 		$UniversalTime = (Get-Date).ToUniversalTime()
@@ -75,7 +75,7 @@ try {
 			[string]$LogAnalyticsWorkspaceId,
 			[string]$LogAnalyticsPrimaryKey,
 			[string]$LogType,
-			$TimeDifferenceInHours
+			[string]$TimeDifferenceInHours
 		)
 
 		# //todo use ConvertTo-JSON instead of manually converting using strings
@@ -175,7 +175,7 @@ try {
 	Write-Log "Successfully set the Azure context with the provided Subscription ID. Result: `n$($AzContext | Out-String)"
 
 	# Set WVD context to the appropriate tenant group
-	$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
+	[string]$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
 	if ($TenantGroupName -ne $CurrentTenantGroupName) {
 		try {
 			Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
@@ -345,7 +345,7 @@ try {
 	Write-Log "Using current time: $($CurrentDateTime.ToString('yyyy-MM-dd HH:mm:ss')), begin peak time: $($BeginPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss')), end peak time: $($EndPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss'))"
 
 	# Set up appropriate load balacing type
-	$HostpoolLoadbalancerType = $HostpoolInfo.LoadBalancerType
+	[string]$HostpoolLoadbalancerType = $HostpoolInfo.LoadBalancerType
 	[int]$MaxSessionLimitValue = $HostpoolInfo.MaxSessionLimit
 	# //todo maybe do this inline
 	# note: both of the if else blocks are same. Breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
@@ -364,28 +364,68 @@ try {
 	Write-Log "Number of session hosts in the HostPool: $($ListOfSessionHosts.Count)"
 	Write-Log 'Start WVD session hosts scale optimization'
 
+	# Number of running session hosts
+	[int]$NumberOfRunningHost = 0
+	# Total number of running cores
+	[int]$TotalRunningCores = 0
+	# Initialize variable to skip the session host which is in maintenance.
+	$SkipSessionhosts = @()
+
 	# Check if it is during the peak or off-peak time
 	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
-		Write-Log "It is in peak hours now"
-		Write-Log "Starting session hosts as needed based on current workloads."
+		Write-Log 'It is in peak hours now, starting session hosts as needed based on current workloads'
 
-		# //todo centralize managing az auto acc var
+		# //todo centralize managing az auto acc var & log
 		# Peak hours: check and remove the MinimumNoOfRDSH value dynamically stored in automation variable
 		$AutomationAccount = Get-AzAutomationAccount | Where-Object { $_.AutomationAccountName -eq $AutomationAccountName }
 		$OffPeakUsageMinimumNoOfRDSH = Get-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName -ErrorAction SilentlyContinue
 		if ($OffPeakUsageMinimumNoOfRDSH) {
 			Remove-AzAutomationVariable -Name "$HostpoolName-OffPeakUsage-MinimumNoOfRDSH" -ResourceGroupName $AutomationAccount.ResourceGroupName -AutomationAccountName $AutomationAccount.AutomationAccountName
 		}
-		# Number of running session hosts
-		[int]$NumberOfRunningHost = 0
-		# Total number of running cores
-		[int]$TotalRunningCores = 0
-		# Total capacity of sessions on running VMs
-		$AvailableSessionCapacity = 0
-		# Initialize variable to skip the session host which is in maintenance.
-		$SkipSessionhosts = 0
-		$SkipSessionhosts = @()
 
+		$VMs = @{}
+		$ListOfSessionHosts | ForEach-Object {
+			$VMs.Add($_.SessionHostName.Split('.')[0].ToLower(), @{ 'SessionHost' = $_; 'Instance' = $null })
+		}
+		$VMCores = @{}
+		
+		Get-AzVM -Status | ForEach-Object {
+			$VMInstance = $_
+			if (!$VMs.ContainsKey($VMInstance.Name.ToLower())) {
+				return
+			}
+			[string]$VMName = $VMInstance.Name.ToLower()
+			# Check if VM is in maintenance
+			if ($VMInstance.Tags.Keys -contains $MaintenanceTagName) {
+				Write-Log "VM '$VMName' is in maintenance and will be ignored"
+				$VMs.Remove($VMName)
+				return
+			}
+
+			$VM = $VMs[$VMName]
+			if ($VM.Instance) {
+				throw "More than 1 VM found in Azure with same session host name '$($VM.SessionHost.SessionHostName)' (This is not supported):`n$($VMInstance | Out-String)`n$($VM.Instance | Out-String)"
+			}
+
+			$VM.Instance = $VMInstance
+			$SessionHost = $VM.SessionHost
+
+			Write-Log "Session host '$($SessionHost.SessionHostName)' with power state: $($VMInstance.PowerState), status: $($SessionHost.Status), update state: $($SessionHost.UpdateState), sessions: $($SessionHost.Sessions)"
+			# Check if the Azure vm is running
+			if ($VMInstance.PowerState -eq 'VM running') {
+				++$NumberOfRunningHost
+
+				if ($SessionHost.Status -notin $DesiredRunningStates) {
+					Write-Log "[WARN] VM is in running state but session host is not (this could be because the VM was just started and has not connected to broker yet)"
+				}
+
+				if (!$VMCores.ContainsKey($VMInstance.HardwareProfile.VmSize)) {
+					Get-AzVMSize -Location $VMInstance.Location | ForEach-Object { $VMCores.Add($_.Name, $_.NumberOfCores) }
+				}
+				$TotalRunningCores += $VMCores[$VMInstance.HardwareProfile.VmSize]
+			}
+		}
+		$AllSessionHosts = $VMs.Values.SessionHost
 		$HostPoolUserSessions = $null
 		if ($null -eq $OverrideUserSessions) {
 			$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName
@@ -393,36 +433,10 @@ try {
 		else {
 			$HostPoolUserSessions = @{ Count = $OverrideUserSessions }
 		}
+		# Calculate available capacity of sessions on running VMs
+		$AvailableSessionCapacity = $TotalRunningCores * $SessionThresholdPerCPU
 
-		foreach ($SessionHost in $ListOfSessionHosts) {
-
-			$SessionHostName = $SessionHost.SessionHostName | Out-String
-			$VMName = $SessionHostName.Split(".")[0]
-			# Check if VM is in maintenance
-			# //todo prepare the list of all VMs with RG before hand to save time
-			$RoleInstance = Get-AzVM -Status -Name $VMName
-			if ($RoleInstance.Tags.Keys -contains $MaintenanceTagName) {
-				Write-Log "Session host is in maintenance: $VMName, so script will skip this VM"
-				$SkipSessionhosts += $SessionHost
-				continue
-			}
-			# //todo do this outside the loop to save time
-			$AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
-
-			Write-Log "Checking session host: $($SessionHost.SessionHostName) with sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
-			if ($SessionHostName.ToLower().StartsWith($RoleInstance.Name.ToLower())) {
-				# Check if the Azure vm is running       
-				if ($RoleInstance.PowerState -eq "VM running") {
-					[int]$NumberOfRunningHost = [int]$NumberOfRunningHost + 1
-					# //todo prepare the list of all VM sizes before hand to save time
-					# Calculate available capacity of sessions						
-					$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
-					$AvailableSessionCapacity = $AvailableSessionCapacity + $RoleSize.NumberOfCores * $SessionThresholdPerCPU
-					[int]$TotalRunningCores = [int]$TotalRunningCores + $RoleSize.NumberOfCores
-				}
-			}
-		}
-		Write-Log "Current number of running hosts: $NumberOfRunningHost"
+		Write-Log "Current number of running hosts: $NumberOfRunningHost of total $($AllSessionHosts.Count), user sessions: $($HostPoolUserSessions.Count) of total capacity: $AvailableSessionCapacity"
 		if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 			Write-Log "Current number of running session hosts is less than minimum requirements, start session host ..."
 			# Start VM to meet the minimum requirement            
@@ -497,13 +511,7 @@ try {
 		Write-Log "It is Off-peak hours"
 		Write-Log "Starting to scale down WVD session hosts ..."
 		Write-Log "Processing hostpool $($HostpoolName)"
-		# Number of running session hosts
-		[int]$NumberOfRunningHost = 0
-		# Total number of running cores
-		[int]$TotalRunningCores = 0
-		# Initialize variable to skip the session host which is in maintenance.
-		$SkipSessionhosts = 0
-		$SkipSessionhosts = @()
+		
 		# Check if minimum number rdsh vm's are running in off peak hours
 		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -in $DesiredRunningStates }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
@@ -753,6 +761,7 @@ try {
 						# //todo prepare the list of all VM sizes before hand to save time
 						# Calculate available capacity of sessions
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
+						# //todo def $TotalAllowSessions
 						$AvailableSessionCapacity = $TotalAllowSessions + $HostpoolInfo.MaxSessionLimit
 						[int]$TotalRunningCores = [int]$TotalRunningCores + $RoleSize.NumberOfCores
 						Write-Log "New available session capacity is: $AvailableSessionCapacity"
