@@ -244,7 +244,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		$IsHostAvailable = $false
 		while (!$IsHostAvailable) {
 			$SessionHostStatus = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-			if ($SessionHostStatus.Status -eq "Available") {
+			if ($SessionHostStatus.Status -eq "Available" -or $SessionHostStatus.Status -eq 'NeedsAssistance') {
 				$IsHostAvailable = $true
 			}
 		}
@@ -519,7 +519,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 
 
 		# Check if minimum number of rdsh vm's are running in off peak hours
-		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
+		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" -or $_.Status -eq 'NeedsAssistance' }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
 
@@ -756,7 +756,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			$NoConnectionsofhost = 0
 			if ($NumberOfRunningHost -le $MinimumNumberOfRDSH) {
 				foreach ($SessionHost in $AllSessionHosts) {
-					if ($SessionHost.Status -eq "Available" -and $SessionHost.Sessions -eq 0) {
+					if (($SessionHost.Status -eq "Available" -or $SessionHost.Status -eq 'NeedsAssistance') -and $SessionHost.Sessions -eq 0) {
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
@@ -969,7 +969,7 @@ else {
 		$IsHostAvailable = $false
 		while (!$IsHostAvailable) {
 			$SessionHostStatus = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
-			if ($SessionHostStatus.Status -eq "Available") {
+			if ($SessionHostStatus.Status -eq "Available" -or $SessionHostStatus.Status -eq 'NeedsAssistance') {
 				$IsHostAvailable = $true
 			}
 		}
@@ -1189,7 +1189,7 @@ else {
 		$SkipSessionhosts = 0
 		$SkipSessionhosts = @()
 		# Check if minimum number of rdsh vm's are running in off peak hours
-		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" }
+		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" -or $_.Status -eq 'NeedsAssistance' }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
@@ -1395,7 +1395,7 @@ else {
 			$NoConnectionsofhost = 0
 			if ($NumberOfRunningHost -le $MinimumNumberOfRDSH) {
 				foreach ($SessionHost in $AllSessionHosts) {
-					if ($SessionHost.Status -eq "Available" -and $SessionHost.Sessions -eq 0) {
+					if (($SessionHost.Status -eq "Available" -or $SessionHost.Status -eq 'NeedsAssistance') -and $SessionHost.Sessions -eq 0) {
 						$NoConnectionsofhost = $NoConnectionsofhost + 1
 					}
 				}
