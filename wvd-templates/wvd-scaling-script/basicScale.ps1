@@ -429,7 +429,7 @@ try {
 
 		# Check if there were enough number of session hosts to start
 		if ($nVMsToStart -or $nCoresToStart) {
-			Write-Log "[WARN] not enough session hosts to start. Still need to start $nVMsToStart VMs or $nCoresToStart cores"
+			Write-Log "[WARN] not enough session hosts to start. Still need to start maximum of either $nVMsToStart VMs or $nCoresToStart cores"
 		}
 
 		# Wait for those jobs to start the session hosts
@@ -483,6 +483,7 @@ try {
 		$SessionHostName = $VM.SessionHost.SessionHostName
 
 		$StopSessionHostNames.Add($SessionHostName, $null)
+		# //todo should we disallow new users session to the session host before stopping it ?
 		Write-Log "Stop session host '$SessionHostName' as a background job"
 		# //todo add timeouts to jobs
 		$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
@@ -512,6 +513,7 @@ try {
 		Start-Sleep 10
 	}
 	# Check the session hosts if they are allowing new user sessions & update them to allow if not
+	# //todo why do this though, even after shutting them down
 	$SessionHostsToCheck | ForEach-Object {
 		if (!$SessionHost.AllowNewSession) {
 			Write-Log "Update session host '$($SessionHost.SessionHostName)' to allow new sessions"
@@ -530,22 +532,11 @@ try {
 				# Check the status of the session host
 				if ($SessionHost.Status -in $DesiredRunningStates) {
 					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
-						$SessionHostName = $SessionHost.SessionHostName
-						$VMName = $SessionHostName.Split(".")[0]
 						if ($SessionHost.Sessions -eq 0) {
-							# Shutdown the Azure VM session host that has 0 sessions
-							Write-Log "Stopping Azure VM: $VMName and waiting for it to complete ..."
-							# //todo do this in parallel
-							Stop-SessionHost -VMName $VMName
 						}
 						else {
-							# changes from https://github.com/Azure/RDS-Templates/pull/439/, https://github.com/Azure/RDS-Templates/pull/467/
-							if ($LimitSecondsToForceLogOffUser -eq 0) {
-								continue
-							}
 							# Ensure the running Azure VM is set as drain mode
 							try {
-								# changes from https://github.com/Azure/RDS-Templates/pull/439/, https://github.com/Azure/RDS-Templates/pull/467/
 								# //todo this may need to be prevented from logging as it may get logged at a lot
 								Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false
 								# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false | Out-Null
@@ -561,13 +552,10 @@ try {
 							catch {
 								throw [System.Exception]::new("Failed to retrieve user sessions in hostpool: $($HostpoolName)", $PSItem.Exception)
 							}
-							$HostUserSessionCount = ($HostPoolUserSessions | Where-Object -FilterScript { $_.SessionHostName -eq $SessionHostName }).Count
+							$HostUserSessionCount = $HostPoolUserSessions.Count
 							Write-Log "Counting the current sessions on the host $SessionHostName :$HostUserSessionCount"
-							$ExistingSession = 0
 							foreach ($session in $HostPoolUserSessions) {
-								if ($session.SessionHostName -eq $SessionHostName -and $session.SessionState -eq "Active") {
-									# changes from https://github.com/Azure/RDS-Templates/pull/439/
-									# if ($LimitSecondsToForceLogOffUser -ne 0) {
+								if ($session.SessionState -eq "Active") {
 									# Send notification
 									try {
 										Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt
@@ -575,40 +563,23 @@ try {
 									catch {
 										throw [System.Exception]::new('Failed to send message to user', $PSItem.Exception)
 									}
-									# changes from https://github.com/Azure/RDS-Templates/pull/439/
 									Write-Log "Script sent a log off message to user: $($Session.AdUserName | Out-String)"
-									# }
 								}
-								$ExistingSession = $ExistingSession + 1
 							}
 							# Wait for n seconds to log off user
 							Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
-
-							# changes from https://github.com/Azure/RDS-Templates/pull/439/
-							# if ($LimitSecondsToForceLogOffUser -ne 0) {
 							# Force users to log off
 							Write-Log "Force users to log off ..."
 							foreach ($Session in $HostPoolUserSessions) {
-								if ($Session.SessionHostName -eq $SessionHostName) {
-									# Log off user
-									try {
-										# note: the following command was called with -force in log analytics workspace version of this code
-										Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt
-										$ExistingSession = $ExistingSession - 1
-									}
-									catch {
-										throw [System.Exception]::new('Failed to log off user', $PSItem.Exception)
-									}
-									# changes from https://github.com/Azure/RDS-Templates/pull/439/
-									Write-Log "Forcibly logged off the user: $($Session.AdUserName | Out-String)"
+								# Log off user
+								try {
+									# note: the following command was called with -force in log analytics workspace version of this code
+									Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt
 								}
-							}
-							# }
-							# Check the session count before shutting down the VM
-							if ($ExistingSession -eq 0) {
-								# Shutdown the Azure VM
-								Write-Log "Stopping Azure VM: $VMName and waiting for it to complete ..."
-								Stop-SessionHost -VMName $VMName
+								catch {
+									throw [System.Exception]::new('Failed to log off user', $PSItem.Exception)
+								}
+								Write-Log "Forcibly logged off the user: $($Session.AdUserName | Out-String)"
 							}
 						}
 					}
