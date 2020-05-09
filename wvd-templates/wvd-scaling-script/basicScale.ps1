@@ -235,7 +235,6 @@ try {
 		throw [System.Exception]::new("Hostpool '$HostpoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values.", $PSItem.Exception)
 	}
 
-	# Get session hosts & check if it has session hosts
 	Write-Log 'Get all session hosts'
 	$SessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
 	if (!$SessionHosts) {
@@ -302,7 +301,6 @@ try {
 			return
 		}
 		$VMName = $VMInstance.Name.ToLower()
-		# Check if VM is in maintenance
 		if ($VMInstance.Tags.Keys -contains $MaintenanceTagName) {
 			Write-Log "VM '$VMName' is in maintenance and will be ignored"
 			$VMs.Remove($VMName)
@@ -323,7 +321,7 @@ try {
 			Write-Log "Get all VM sizes in location: $($VMInstance.Location)"
 			Get-AzVMSize -Location $VMInstance.Location | ForEach-Object { $VMSizeCores.Add($_.Name, $_.NumberOfCores) }
 		}
-		# Check if the Azure vm is running
+
 		if ($VMInstance.PowerState -eq 'VM running') {
 			if ($SessionHost.Status -notin $DesiredRunningStates) {
 				Write-Log "[WARN] VM is in running state but session host is not (this could be because the VM was just started and has not connected to broker yet)"
@@ -333,31 +331,36 @@ try {
 			$nRunningCores += $VMSizeCores[$VMInstance.HardwareProfile.VmSize]
 		}
 	}
-		
-	$HostPoolUserSessions = $null
+
+	# Check if we need to override the number of user sessions for simulation / testing purpose
+	$nUserSessions = $null
 	if ($null -eq $OverrideUserSessions) {
-		Write-Log 'Get user sessions in Hostpool'
-		$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName
+		Write-Log 'Get number of user sessions in Hostpool'
+		$nUserSessions = (Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName).Count
 	}
 	else {
-		$HostPoolUserSessions = @{ Count = $OverrideUserSessions }
+		$nUserSessions = $OverrideUserSessions
 	}
 
 	# Calculate available capacity of sessions on running VMs
 	$AvailableSessionCapacity = $nRunningCores * $SessionThresholdPerCPU
 
 	Write-Log "Number of running session hosts: $nRunningVMs of total $($VMs.Count)"
-	Write-Log "Number of user sessions: $($HostPoolUserSessions.Count) of total threshold capacity: $AvailableSessionCapacity"
+	Write-Log "Number of user sessions: $nUserSessions of total threshold capacity: $AvailableSessionCapacity"
+
+	# Now that we have all the info about the session hosts & their usage, figure how many session hosts to start/stop depending on in/off peak hours and the demand
 	
 	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
-		if ($HostPoolUserSessions.Count -ge $AvailableSessionCapacity) {
-			$nCoresToStart = [math]::Ceiling(($HostPoolUserSessions.Count - $AvailableSessionCapacity) / $SessionThresholdPerCPU)
+		# In peak hours: check if current capacity is meeting the user demands
+		if ($nUserSessions -ge $AvailableSessionCapacity) {
+			$nCoresToStart = [math]::Ceiling(($nUserSessions - $AvailableSessionCapacity) / $SessionThresholdPerCPU)
 			Write-Log "[In peak hours] Number of user sessions is more than the threshold capacity. Need to start $nCoresToStart cores"
 		}
 	}
 	else {
+		# Off peak hours: check if need to adjust minimum number of session hosts running if the number of user sessions is close to the max allowed
 		[int]$OffPeakSessionsThreshold = [math]::Floor($MinimumNumberOfRDSH * $HostPool.MaxSessionLimit * 0.9)
-		if ($HostPoolUserSessions.Count -ge $OffPeakSessionsThreshold) {
+		if ($nUserSessions -ge $OffPeakSessionsThreshold) {
 			# //todo may want to set it appropriately and not just increment by 1
 			++$MinimumNumberOfRDSH
 			Write-Log "[Off peak hours] Number of user sessions is near the max number of sessions allowed with minimum number of session hosts ($OffPeakSessionsThreshold). Adjusting minimum number of session hosts required to $MinimumNumberOfRDSH"
@@ -365,6 +368,7 @@ try {
 	}
 
 	Write-Log "Minimum number of session hosts required: $MinimumNumberOfRDSH"
+	# Check if minimum number of session hosts running is higher than max allowed
 	if ($VMs.Count -le $MinimumNumberOfRDSH) {
 		Write-Log '[WARN] Minimum number of RDSH is set higher than total number of session hosts'
 		if ($nRunningVMs -eq $VMs.Count) {
@@ -373,19 +377,23 @@ try {
 		}
 	}
 
+	# Check if minimum number of session hosts are running
 	if ($nRunningVMs -lt $MinimumNumberOfRDSH) {
 		$nVMsToStart = $MinimumNumberOfRDSH - $nRunningVMs
 		Write-Log "Number of running session host is less than minimum required. Need to start $nVMsToStart VMs"
 	}
 
-	# //todo create funcs for repeated stuff
+	# Check if we have any session hosts to start
 	if ($nVMsToStart -or $nCoresToStart) {
+		# Object that contains names of session hosts that will be started
 		$StartSessionHostNames = @{}
+		# Array that contains jobs of starting the session hosts
 		[array]$StartVMjobs = @()
 
 		Write-Log 'Find session hosts that are stopped and healthy'
 		foreach ($VM in $VMs.Values) {
 			if (!$nVMsToStart -and !$nCoresToStart) {
+				# Done with starting session hosts that needed to be
 				break
 			}
 			if ($VM.Instance.PowerState -eq 'VM running') {
@@ -398,6 +406,7 @@ try {
 
 			$SessionHostName = $VM.SessionHost.SessionHostName
 
+			# Check to see if session host is allowing new user sessions
 			if (!$VM.SessionHost.AllowNewSession) {
 				Write-Log "Update session host '$SessionHostName' to allow new sessions"
 				Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $true
@@ -418,10 +427,12 @@ try {
 			}
 		}
 
+		# Check if there were enough number of session hosts to start
 		if ($nVMsToStart -or $nCoresToStart) {
 			Write-Log "[WARN] not enough session hosts to start. Still need to start $nVMsToStart VMs or $nCoresToStart cores"
 		}
 
+		# Wait for those jobs to start the session hosts
 		WaitForJobs $StartVMjobs
 
 		Write-Log 'Wait for session hosts to be available'
@@ -436,23 +447,29 @@ try {
 		return
 	}
 
+	# If in peak hours, exit because no session hosts will need to be stopped
 	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		return
 	}
 
+	# Off peak hours, already running minimum number of session hosts, exit
 	if ($nRunningVMs -le $MinimumNumberOfRDSH) {
 		return
 	}
 	
+	# Calculate the number of session hosts to stop
 	[int]$nVMsToStop = $nRunningVMs - $MinimumNumberOfRDSH
 	Write-Log "[Off peak hours] Number of running session host is greater than minimum required. Need to stop $nVMsToStop VMs"
 
+	# Object that contains names of session hosts that will be stopped
 	$StopSessionHostNames = @{}
+	# Array that contains jobs of stopping the session hosts
 	[array]$StopVMjobs = @()
 
 	Write-Log 'Find session hosts that are running, sort them by number of user sessions'
 	foreach ($VM in ($VMs.Values | Where-Object { $_.Instance.PowerState -eq 'VM running' } | Sort-Object { $_.SessionHost.Sessions })) {
 		if (!$nVMsToStop) {
+			# Done with stopping session hosts that needed to be
 			break
 		}
 		if ($VM.SessionHost.Sessions -ne 0) {
@@ -476,12 +493,13 @@ try {
 		}
 	}
 
-	Write-Log "after: nVMsToStop: $nVMsToStop"
+	# Check if there were enough number of session hosts to stop
 	if ($nVMsToStop) {
 		Write-Log "[WARN] Not enough session hosts to stop. Still need to stop $nVMsToStop VMs"
 	}
 
-	WaitForJobs $StartVMjobs
+	# Wait for those jobs to stop the session hosts
+	WaitForJobs $StopVMjobs
 
 	Write-Log 'Wait for session hosts to be unavailable'
 	$SessionHostsToCheck = $null
@@ -493,6 +511,7 @@ try {
 		}
 		Start-Sleep 10
 	}
+	# Check the session hosts if they are allowing new user sessions & update them to allow if not
 	$SessionHostsToCheck | ForEach-Object {
 		if (!$SessionHost.AllowNewSession) {
 			Write-Log "Update session host '$($SessionHost.SessionHostName)' to allow new sessions"
