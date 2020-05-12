@@ -4,7 +4,7 @@ This template deploys the following nested templates:
 
 * RDS farm deployment using existing active directory
 * RDS Gateway High Availability deployment
-* Update SSL certifiocates
+* Update SSL certificates
 * RDS Broker High Availability deployment
 
 ### Prerequisites
