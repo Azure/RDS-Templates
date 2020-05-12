@@ -522,70 +522,50 @@ try {
 	}
 	return
 
-	# Check if it is during the peak or off-peak time
-	if ($CurrentDateTime -ge $BeginPeakDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
+	# Ensure the running Azure VM is set as drain mode
+	try {
+		# //todo this may need to be prevented from logging as it may get logged at a lot
+		Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false
+		# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false | Out-Null
 	}
-	else {
-		# Breadth first session hosts shutdown in off peak hours
-		if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
-			foreach ($SessionHost in $AllSessionHosts) {
-				# Check the status of the session host
-				if ($SessionHost.Status -in $DesiredRunningStates) {
-					if ($NumberOfRunningHost -gt $MinimumNumberOfRDSH) {
-						if ($SessionHost.Sessions -eq 0) {
-						}
-						else {
-							# Ensure the running Azure VM is set as drain mode
-							try {
-								# //todo this may need to be prevented from logging as it may get logged at a lot
-								Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false
-								# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false | Out-Null
-							}
-							catch {
-								throw [System.Exception]::new("Unable to set it to disallow connections on session host: $SessionHostName", $PSItem.Exception)
-							}
-							# Notify user to log off session
-							# Get the user sessions in the hostpool
-							try {
-								$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.SessionHostName -eq $SessionHostName }
-							}
-							catch {
-								throw [System.Exception]::new("Failed to retrieve user sessions in hostpool: $($HostpoolName)", $PSItem.Exception)
-							}
-							$HostUserSessionCount = $HostPoolUserSessions.Count
-							Write-Log "Counting the current sessions on the host $SessionHostName :$HostUserSessionCount"
-							foreach ($session in $HostPoolUserSessions) {
-								if ($session.SessionState -eq "Active") {
-									# Send notification
-									try {
-										Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt
-									}
-									catch {
-										throw [System.Exception]::new('Failed to send message to user', $PSItem.Exception)
-									}
-									Write-Log "Script sent a log off message to user: $($Session.AdUserName | Out-String)"
-								}
-							}
-							# Wait for n seconds to log off user
-							Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
-							# Force users to log off
-							Write-Log "Force users to log off ..."
-							foreach ($Session in $HostPoolUserSessions) {
-								# Log off user
-								try {
-									# note: the following command was called with -force in log analytics workspace version of this code
-									Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt
-								}
-								catch {
-									throw [System.Exception]::new('Failed to log off user', $PSItem.Exception)
-								}
-								Write-Log "Forcibly logged off the user: $($Session.AdUserName | Out-String)"
-							}
-						}
-					}
-				}
+	catch {
+		throw [System.Exception]::new("Unable to set it to disallow connections on session host: $SessionHostName", $PSItem.Exception)
+	}
+	# Notify user to log off session
+	# Get the user sessions in the hostpool
+	try {
+		$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.SessionHostName -eq $SessionHostName }
+	}
+	catch {
+		throw [System.Exception]::new("Failed to retrieve user sessions in hostpool: $($HostpoolName)", $PSItem.Exception)
+	}
+	Write-Log "Counting the current sessions on the host $SessionHostName : $($HostPoolUserSessions.Count)"
+	foreach ($session in $HostPoolUserSessions) {
+		if ($session.SessionState -eq "Active") {
+			# Send notification
+			try {
+				Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt
 			}
+			catch {
+				throw [System.Exception]::new('Failed to send message to user', $PSItem.Exception)
+			}
+			Write-Log "Script sent a log off message to user: $($Session.AdUserName | Out-String)"
 		}
+	}
+	# Wait for n seconds to log off user
+	Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
+	# Force users to log off
+	Write-Log "Force users to log off ..."
+	foreach ($Session in $HostPoolUserSessions) {
+		# Log off user
+		try {
+			# note: the following command was called with -force in log analytics workspace version of this code
+			Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt
+		}
+		catch {
+			throw [System.Exception]::new('Failed to log off user', $PSItem.Exception)
+		}
+		Write-Log "Forcibly logged off the user: $($Session.AdUserName | Out-String)"
 	}
 }
 catch {
