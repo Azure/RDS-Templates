@@ -216,6 +216,94 @@ configuration RegisterSessionHost
     }
 }
 
+configuration RegisterSessionHostBasedOnToken
+{
+    param
+    (
+        [Parameter(mandatory = $false)]
+        [string]$RDBrokerURL,
+    
+        [Parameter(mandatory = $false)]
+        [string]$DefinedTenantGroupName,
+    
+        [Parameter(mandatory = $false)]
+        [string]$TenantName,
+    
+        [Parameter(mandatory = $true)]
+        [string]$HostPoolName,
+
+        [Parameter(mandatory = $true)]
+        [string]$Token,
+    
+        [Parameter(mandatory = $false)]
+        [PSCredential]$TenantAdminCredentials,
+		
+        [Parameter(mandatory = $false)]
+        [string]$isServicePrincipal = "False",
+    
+        [Parameter(mandatory = $false)]
+        [AllowEmptyString()]
+        [string]$AadTenantId = "",
+
+        [Parameter(mandatory = $false)]
+        [string]$RDPSModSource = 'attached'
+    )
+
+    $ErrorActionPreference = 'Stop'
+
+    $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
+    . (Join-Path $ScriptPath "Functions.ps1")
+
+    $rdshIsServer = isRdshServer
+
+    Node localhost
+    {
+        LocalConfigurationManager {
+            RebootNodeIfNeeded = $true
+            ConfigurationMode  = "ApplyOnly"
+        }
+
+        if ($rdshIsServer) {
+            "$(get-date) - rdshIsServer = true: $rdshIsServer" | out-file c:\windows\temp\rdshIsServerResult.txt -Append
+            WindowsFeature RDS-RD-Server {
+                Ensure = "Present"
+                Name   = "RDS-RD-Server"
+            }
+        }
+
+        Script RegisterSessionHost {
+            GetScript  = {
+                return @{'Result' = '' }
+            }
+            SetScript  = {
+                . (Join-Path $using:ScriptPath "Functions.ps1")
+
+                try {
+                    return (& "$using:ScriptPath\Script-RegisterSessionHostTokenOnly.ps1" -Token $using:Token  -RDPSModSource $using:RDPSModSource)
+                }
+                catch {
+                    $ErrMsg = $PSItem | Format-List -Force | Out-String
+                    Write-Log -Err $ErrMsg
+                    throw [System.Exception]::new("Some error occurred in DSC RegisterSessionHost SetScript: $ErrMsg", $PSItem.Exception)
+                }
+            }
+            TestScript = {
+                . (Join-Path $using:ScriptPath "Functions.ps1")
+
+                try {
+                    # Maybe add an check statement to see if values are provided
+                    return (& "$using:ScriptPath\Script-TestRegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
+                }
+                catch {
+                    $ErrMsg = $PSItem | Format-List -Force | Out-String
+                    Write-Log -Err $ErrMsg
+                    throw [System.Exception]::new("Some error occurred in DSC RegisterSessionHost TestScript: $ErrMsg", $PSItem.Exception)
+                }
+            }
+        }
+    }
+}
+
 configuration RegisterSessionHostAndCleanup
 {
     param
