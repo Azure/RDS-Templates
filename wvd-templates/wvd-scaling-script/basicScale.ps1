@@ -6,7 +6,7 @@
 	[switch]$SkipAuth,
 
 	# note: optional for simulating user sessions
-	[System.Nullable[int]]$OverrideUserSessions
+	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -40,7 +40,7 @@ try {
 	# $AutomationAccountName = $Input.AutomationAccountName
 	$ConnectionAssetName = $Input.ConnectionAssetName
 
-	$DesiredRunningStates = ('Available', 'NeedsAssistance')
+	$DesiredRunningStates = @('Available', 'NeedsAssistance')
 
 	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
 	if (!$SkipAuth) {
@@ -149,6 +149,21 @@ try {
 		if ($IncompleteJobs) {
 			throw "Some jobs did not complete successfully: $($IncompleteJobs | Format-List -Force)"
 		}
+	}
+
+	function Update-SessionHostToAllowNewSession {
+		param (
+			[Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+			[Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$SessionHost
+		)
+		Begin { }
+		Process {
+			if (!$SessionHost.AllowNewSession) {
+				Write-Log "Update session host '$($SessionHost.SessionHostName)' to allow new sessions"
+				Set-RdsSessionHost -TenantName $SessionHost.TenantName -HostPoolName $SessionHost.HostpoolName -Name $SessionHost.SessionHostName -AllowNewSession $true
+			}
+		}
+		End { }
 	}
 
 	if (!$SkipAuth) {
@@ -280,9 +295,9 @@ try {
 	# Number of cores that are running
 	[int]$nRunningCores = 0
 	# Object that contains all session host objects, VM instance objects except the ones that are under maintenance
-	$VMs = @{}
+	$VMs = @{ }
 	# Object that contains the number of cores for each VM size SKU
-	$VMSizeCores = @{}
+	$VMSizeCores = @{ }
 	# Number of cores to start
 	[int]$nCoresToStart = 0
 	# Number of VMs to start
@@ -334,12 +349,12 @@ try {
 
 	# Check if we need to override the number of user sessions for simulation / testing purpose
 	$nUserSessions = $null
-	if ($null -eq $OverrideUserSessions) {
+	if ($null -eq $OverrideNUserSessions) {
 		Write-Log 'Get number of user sessions in Hostpool'
 		$nUserSessions = (Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName).Count
 	}
 	else {
-		$nUserSessions = $OverrideUserSessions
+		$nUserSessions = $OverrideNUserSessions
 	}
 
 	# Calculate available capacity of sessions on running VMs
@@ -386,7 +401,7 @@ try {
 	# Check if we have any session hosts to start
 	if ($nVMsToStart -or $nCoresToStart) {
 		# Object that contains names of session hosts that will be started
-		$StartSessionHostNames = @{}
+		$StartSessionHostNames = @{ }
 		# Array that contains jobs of starting the session hosts
 		[array]$StartVMjobs = @()
 
@@ -406,11 +421,8 @@ try {
 
 			$SessionHostName = $VM.SessionHost.SessionHostName
 
-			# Check to see if session host is allowing new user sessions
-			if (!$VM.SessionHost.AllowNewSession) {
-				Write-Log "Update session host '$SessionHostName' to allow new sessions"
-				Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $true
-			}
+			# Make sure session host is allowing new user sessions
+			Update-SessionHostToAllowNewSession $VM.SessionHost
 
 			$StartSessionHostNames.Add($SessionHostName, $null)
 			Write-Log "Start session host '$SessionHostName' as a background job"
@@ -462,9 +474,10 @@ try {
 	Write-Log "[Off peak hours] Number of running session host is greater than minimum required. Need to stop $nVMsToStop VMs"
 
 	# Object that contains names of session hosts that will be stopped
-	$StopSessionHostNames = @{}
+	$StopSessionHostNames = @{ }
 	# Array that contains jobs of stopping the session hosts
 	[array]$StopVMjobs = @()
+	[array]$VMsToStopAfterLogOffTimeOut = @()
 
 	Write-Log 'Find session hosts that are running, sort them by number of user sessions'
 	foreach ($VM in ($VMs.Values | Where-Object { $_.Instance.PowerState -eq 'VM running' } | Sort-Object { $_.SessionHost.Sessions })) {
@@ -472,25 +485,86 @@ try {
 			# Done with stopping session hosts that needed to be
 			break
 		}
-		if ($VM.SessionHost.Sessions -ne 0) {
-			if ($LimitSecondsToForceLogOffUser -eq 0) {
-				Write-Log "[WARN] Session host '$($VM.SessionHost.SessionHostName)' has sessions but limit seconds to force log off user is set to 0, so this session host will be ignored (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
-				continue
-			}
-			# //todo ?
+		$SessionHost = $VM.SessionHost
+		$SessionHostName = $SessionHost.SessionHostName
+		
+		if ($SessionHost.Sessions -and !$LimitSecondsToForceLogOffUser) {
+			Write-Log "[WARN] Session host '$SessionHostName' has $($SessionHost.Sessions) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
+			# //todo explain why break and not continue
+			break
 		}
 
-		$SessionHostName = $VM.SessionHost.SessionHostName
+		Write-Log "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions. Set it to disallow new sessions"
+		try {
+			$VM.SessionHost = $SessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false
+		}
+		catch {
+			throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: $SessionHostName", $PSItem.Exception)
+		}
 
-		$StopSessionHostNames.Add($SessionHostName, $null)
-		# //todo should we disallow new users session to the session host before stopping it ?
-		Write-Log "Stop session host '$SessionHostName' as a background job"
-		# //todo add timeouts to jobs
-		$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
+		if ($SessionHost.Sessions) {
+			$SessionHostUserSessions = $null
+			Write-Log "Get all user sessions from session host '$SessionHostName'"
+			try {
+				$VM.UserSessions = $SessionHostUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.SessionHostName -eq $SessionHostName }
+			}
+			catch {
+				throw [System.Exception]::new("Failed to retrieve user sessions of session host: $SessionHostName", $PSItem.Exception)
+			}
+
+			Write-Log "Send active user sessions log off message on session host: $SessionHostName"
+			foreach ($Session in $SessionHostUserSessions) {
+				if ($Session.SessionState -ne "Active") {
+					continue
+				}
+				try {
+					Write-Log "Send a log off message to user: $($Session.AdUserName)"
+					Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds" -NoUserPrompt
+				}
+				catch {
+					throw [System.Exception]::new("Failed to send a log off message to user: $($Session.AdUserName)", $PSItem.Exception)
+				}
+			}
+			$VMsToStopAfterLogOffTimeOut += $VM
+		}
+		else {
+			$StopSessionHostNames.Add($SessionHostName, $null)
+			# //todo should we disallow new users session to the session host before stopping it ?
+			Write-Log "Stop session host '$SessionHostName' as a background job"
+			# //todo add timeouts to jobs
+			$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
+		}
 
 		--$nVMsToStop
 		if ($nVMsToStop -lt 0) {
 			$nVMsToStop = 0
+		}
+	}
+
+	if ($VMsToStopAfterLogOffTimeOut) {
+		Write-Log "Wait $LimitSecondsToForceLogOffUser second(s) for user(s) to log off"
+		Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
+
+		Write-Log "Force log off users and stop remaining $VMsToStopAfterLogOffTimeOut session host(s)"
+		foreach ($VM in $VMsToStopAfterLogOffTimeOut) {
+			$SessionHostName = $VM.SessionHost.SessionHostName
+			$SessionHostUserSessions = $VM.UserSessions
+
+			Write-Log "Force log off $SessionHostUserSessions user(s) on session host: $SessionHostName"
+			foreach ($Session in $SessionHostUserSessions) {
+				try {
+					Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force
+				}
+				catch {
+					throw [System.Exception]::new("Failed to force log off user: $($Session.AdUserName)", $PSItem.Exception)
+				}
+			}
+			
+			$StopSessionHostNames.Add($SessionHostName, $null)
+			# //todo should we disallow new users session to the session host before stopping it ?
+			Write-Log "Stop session host '$SessionHostName' as a background job"
+			# //todo add timeouts to jobs
+			$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
 		}
 	}
 
@@ -512,61 +586,8 @@ try {
 		}
 		Start-Sleep 10
 	}
-	# Check the session hosts if they are allowing new user sessions & update them to allow if not
-	# //todo why do this though, even after shutting them down
-	$SessionHostsToCheck | ForEach-Object {
-		if (!$SessionHost.AllowNewSession) {
-			Write-Log "Update session host '$($SessionHost.SessionHostName)' to allow new sessions"
-			Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHost.SessionHostName -AllowNewSession $true
-		}
-	}
-	return
-
-	# Ensure the running Azure VM is set as drain mode
-	try {
-		# //todo this may need to be prevented from logging as it may get logged at a lot
-		Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false
-		# Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false | Out-Null
-	}
-	catch {
-		throw [System.Exception]::new("Unable to set it to disallow connections on session host: $SessionHostName", $PSItem.Exception)
-	}
-	# Notify user to log off session
-	# Get the user sessions in the hostpool
-	try {
-		$HostPoolUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.SessionHostName -eq $SessionHostName }
-	}
-	catch {
-		throw [System.Exception]::new("Failed to retrieve user sessions in hostpool: $($HostpoolName)", $PSItem.Exception)
-	}
-	Write-Log "Counting the current sessions on the host $SessionHostName : $($HostPoolUserSessions.Count)"
-	foreach ($session in $HostPoolUserSessions) {
-		if ($session.SessionState -eq "Active") {
-			# Send notification
-			try {
-				Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$($LogOffMessageBody) You will be logged off in $($LimitSecondsToForceLogOffUser) seconds." -NoUserPrompt
-			}
-			catch {
-				throw [System.Exception]::new('Failed to send message to user', $PSItem.Exception)
-			}
-			Write-Log "Script sent a log off message to user: $($Session.AdUserName | Out-String)"
-		}
-	}
-	# Wait for n seconds to log off user
-	Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
-	# Force users to log off
-	Write-Log "Force users to log off ..."
-	foreach ($Session in $HostPoolUserSessions) {
-		# Log off user
-		try {
-			# note: the following command was called with -force in log analytics workspace version of this code
-			Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt
-		}
-		catch {
-			throw [System.Exception]::new('Failed to log off user', $PSItem.Exception)
-		}
-		Write-Log "Forcibly logged off the user: $($Session.AdUserName | Out-String)"
-	}
+	# Make sure session hosts are allowing new user sessions & update them to allow if not
+	$SessionHostsToCheck | Update-SessionHostToAllowNewSession
 }
 catch {
 	$ErrContainer = $PSItem
