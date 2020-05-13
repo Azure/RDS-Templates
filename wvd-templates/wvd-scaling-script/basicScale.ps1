@@ -529,7 +529,6 @@ try {
 		}
 		else {
 			$StopSessionHostNames.Add($SessionHostName, $null)
-			# //todo should we disallow new users session to the session host before stopping it ?
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			# //todo add timeouts to jobs
 			$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
@@ -550,7 +549,7 @@ try {
 			$SessionHostName = $VM.SessionHost.SessionHostName
 			$SessionHostUserSessions = $VM.UserSessions
 
-			Write-Log "Force log off $SessionHostUserSessions user(s) on session host: $SessionHostName"
+			Write-Log "Force log off $($SessionHostUserSessions.Count) user(s) on session host: $SessionHostName"
 			foreach ($Session in $SessionHostUserSessions) {
 				try {
 					Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force
@@ -561,7 +560,6 @@ try {
 			}
 			
 			$StopSessionHostNames.Add($SessionHostName, $null)
-			# //todo should we disallow new users session to the session host before stopping it ?
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			# //todo add timeouts to jobs
 			$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
