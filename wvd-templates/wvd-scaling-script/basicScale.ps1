@@ -1,16 +1,18 @@
 ﻿param(
 	[Parameter(mandatory = $false)]
-	[object]$WebHookData,
+	[PSCustomObject]$WebHookData,
 
-	# note: if this is enabled, the script will assume that all the authentication is already done in current or parent scope before calling this script
+	# Note: if this is enabled, the script will assume that all the authentication is already done in current or parent scope before calling this script
 	[switch]$SkipAuth,
 
-	# note: optional for simulating user sessions
+	# Note: optional for simulating user sessions
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
+	#region set err action preference, extract input params, set exec policies, set TLS 1.2 security protocol
+
 	# Setting ErrorActionPreference to stop script execution when error occurs
-	$ErrorActionPreference = "Stop"
+	$ErrorActionPreference = 'Stop'
 
 	# If runbook was called from Webhook, WebhookData and its RequestBody will not be null.
 	if (!$WebHookData -or [string]::IsNullOrWhiteSpace($WebHookData.RequestBody)) {
@@ -30,54 +32,64 @@ try {
 	$TimeDifference = $Input.TimeDifference
 	$SessionThresholdPerCPU = $Input.SessionThresholdPerCPU
 	[int]$MinimumNumberOfRDSH = $Input.MinimumNumberOfRDSH
-	$LimitSecondsToForceLogOffUser = $Input.LimitSecondsToForceLogOffUser
+	[int]$LimitSecondsToForceLogOffUser = $Input.LimitSecondsToForceLogOffUser
 	$LogOffMessageTitle = $Input.LogOffMessageTitle
 	$LogOffMessageBody = $Input.LogOffMessageBody
 	$MaintenanceTagName = $Input.MaintenanceTagName
 	$LogAnalyticsWorkspaceId = $Input.LogAnalyticsWorkspaceId
 	$LogAnalyticsPrimaryKey = $Input.LogAnalyticsPrimaryKey
 	$RDBrokerURL = $Input.RDBrokerURL
-	# $AutomationAccountName = $Input.AutomationAccountName
 	$ConnectionAssetName = $Input.ConnectionAssetName
 
-	$DesiredRunningStates = @('Available', 'NeedsAssistance')
+	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
+	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
+	[array]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
 
 	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
 	if (!$SkipAuth) {
+		# Note: this requires admin priviledges
 		Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 	}
 
+	# Note: https://stackoverflow.com/questions/41674518/powershell-setting-security-protocol-to-tls-1-2
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-	# Function to return local time converted from UTC
-	function Convert-UTCtoLocalTime {
-		param(
-			[string]$TimeDifferenceInHours
-		)
+	#endregion
 
-		$UniversalTime = (Get-Date).ToUniversalTime()
-		$TimeDifferenceMinutes = 0
-		if ($TimeDifferenceInHours -match ":") {
-			$TimeDifferenceHours = $TimeDifferenceInHours.Split(":")[0]
-			$TimeDifferenceMinutes = $TimeDifferenceInHours.Split(":")[1]
-		}
-		else {
-			$TimeDifferenceHours = $TimeDifferenceInHours
-		}
-		# Azure is using UTC time, justify it to the local time
-		$ConvertedTime = $UniversalTime.AddHours($TimeDifferenceHours).AddMinutes($TimeDifferenceMinutes)
-		return $ConvertedTime
+
+	#region helper/common functions
+
+	# Function to return local time converted from UTC
+	function Get-LocalDateTime {
+		return (Get-Date).ToUniversalTime().AddHours($TimeDiffHrsMin[0]).AddMinutes($TimeDiffHrsMin[1])
 	}
 
-	# Function to add logs to log analytics workspace
-	function Add-LogEntry {
+	function Write-Log {
+		[CmdletBinding()]
 		param(
-			[Object]$LogMessageObj,
-			[string]$LogAnalyticsWorkspaceId,
-			[string]$LogAnalyticsPrimaryKey,
-			[string]$LogType,
-			[string]$TimeDifferenceInHours
+			[Parameter(Mandatory = $true)]
+			[string]$Message,
+		
+			[switch]$Err
 		)
+
+		$LocalDateTime = Get-LocalDateTime
+		# $WriteMessage = "$($LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
+		$WriteMessage = "$($LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.ScriptLineNumber)] $Message"
+		if ($Err) {
+			Write-Error $WriteMessage
+		}
+		else {
+			Write-Output $WriteMessage
+		}
+			
+		if (!$LogAnalyticsWorkspaceId -or !$LogAnalyticsPrimaryKey) {
+			return
+		}
+		$LogMessageObj = @{
+			'hostpoolName_s' = $HostpoolName
+			'logmessage_s'   = $Message
+		}
 
 		# //todo use ConvertTo-JSON instead of manually converting using strings
 		$LogData = ''
@@ -92,51 +104,23 @@ try {
 			}
 			$LogData = $LogData + '"' + $Key.substring(0, $trim) + '":' + $sep + $LogMessageObj.Item($Key) + $sep + ','
 		}
-		$TimeStamp = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifferenceInHours
-		$LogData = $LogData + '"TimeStamp":"' + $TimeStamp + '"'
+		$LogData = $LogData + '"TimeStamp":"' + $LocalDateTime + '"'
 
-		# Write-Verbose "LogData: $($LogData)"
+		# Write-Verbose "LogData: $LogData"
 		$json = "{$($LogData)}"
 
-		$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType $LogType -TimeStampField "TimeStamp"
-		# Write-Verbose "PostResult: $($PostResult)"
-		if ($PostResult -ne "Accepted") {
-			throw "Error posting to OMS: Result: $PostResult"
+		$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp'
+		# Write-Verbose "PostResult: $PostResult"
+		if ($PostResult -ne 'Accepted') {
+			throw "Error posting to OMS: $PostResult"
 		}
-	}
-
-	function Write-Log {
-		[CmdletBinding()]
-		param(
-			[Parameter(Mandatory = $true)]
-			[string]$Message,
-		
-			[switch]$Err
-		)
-
-		# $WriteMessage = "$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
-		$WriteMessage = "$((Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference).ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.ScriptLineNumber)] $Message"
-		if ($Err) {
-			Write-Error $WriteMessage
-		}
-		else {
-			Write-Output $WriteMessage
-		}
-			
-		if (!$LogAnalyticsWorkspaceId -or !$LogAnalyticsPrimaryKey) {
-			return
-		}
-		$LogMessageObj = @{ hostpoolName_s = $HostpoolName; logmessage_s = $Message }
-		Add-LogEntry -LogMessageObj $LogMessageObj -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType 'WVDTenantScale_CL' -TimeDifferenceInHours $TimeDifference
 	}
 
 	# Function to wait for background jobs
-	function WaitForJobs {
-		param (
-			[array]$Jobs = @()
-		)
+	function Wait-ForJobs {
+		param ([array]$Jobs = @())
 
-		Write-Log "Wait for $($Jobs.Count) jobs to complete"
+		Write-Log "Wait for $($Jobs.Count) jobs"
 		# //todo add timeouts
 		while ($true) {
 			Write-Log "[Check jobs status] Total: $($Jobs.Count), $(($Jobs | Group-Object State | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
@@ -145,6 +129,7 @@ try {
 			}
 			Start-Sleep 10
 		}
+
 		$IncompleteJobs = $Jobs | Where-Object { $_.State -ne 'Completed' }
 		if ($IncompleteJobs) {
 			throw "Some jobs did not complete successfully: $($IncompleteJobs | Format-List -Force)"
@@ -166,12 +151,14 @@ try {
 		End { }
 	}
 
+	#endregion
+
+
 	if (!$SkipAuth) {
 		# Collect the credentials from Azure Automation Account Assets
 		$Connection = Get-AutomationConnection -Name $ConnectionAssetName
 
 		# Authenticate to Azure
-		Clear-AzContext -Force
 		$AZAuthentication = $null
 		try {
 			$AZAuthentication = Connect-AzAccount -ApplicationId $Connection.ApplicationId -TenantId $AADTenantId -CertificateThumbprint $Connection.CertificateThumbprint -ServicePrincipal
@@ -198,6 +185,9 @@ try {
 		Write-Log "Successfully authenticated with WVD using service principal. Result: `n$($WVDAuthentication | Out-String)"
 	}
 
+
+	#region set az context, WVD tenant context, validate tenant & host pool, ensure there are at least 1 session host
+
 	# Set the Azure context with Subscription
 	$AzContext = $null
 	try {
@@ -217,7 +207,7 @@ try {
 	if ($TenantGroupName -ne $CurrentTenantGroupName) {
 		try {
 			Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
-			# note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
+			# Note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
 			Set-RdsContext -TenantGroupName $TenantGroupName
 		}
 		catch {
@@ -256,9 +246,14 @@ try {
 		Write-Log "There are no session hosts in the Hostpool '$HostpoolName'. Ensure that hostpool have session hosts."
 		return
 	}
+
+	#endregion
 	
-	# Convert local time, begin peak time * end peak time from UTC to local time
-	$CurrentDateTime = Convert-UTCtoLocalTime -TimeDifferenceInHours $TimeDifference
+
+	#region determine if on/off peak hours
+
+	# Convert local time, begin peak time & end peak time from UTC to local time
+	$CurrentDateTime = Get-LocalDateTime
 	$BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
 
@@ -280,8 +275,13 @@ try {
 		Write-Log "Off peak hours"
 	}
 
-	# Set up appropriate load balacing type
-	# note: both of the if else blocks are same. Breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
+	#endregion
+
+
+	#region set up load balancing type, get all session hosts, VMs & user sessions info and compute workload
+
+	# Set up breadth 1st load balacing type
+	# Note: breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
 	if ($HostPool.LoadBalancerType -ne 'BreadthFirst') {
 		Write-Log "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')"
 		$HostPool = Set-RdsHostPool -TenantName $TenantName -Name $HostpoolName -BreadthFirstLoadBalancer
@@ -295,9 +295,9 @@ try {
 	# Number of cores that are running
 	[int]$nRunningCores = 0
 	# Object that contains all session host objects, VM instance objects except the ones that are under maintenance
-	$VMs = @{ }
+	[PSCustomObject]$VMs = @{ }
 	# Object that contains the number of cores for each VM size SKU
-	$VMSizeCores = @{ }
+	[PSCustomObject]$VMSizeCores = @{ }
 	# Number of cores to start
 	[int]$nCoresToStart = 0
 	# Number of VMs to start
@@ -312,7 +312,7 @@ try {
 	Get-AzVM -Status | ForEach-Object {
 		$VMInstance = $_
 		if (!$VMs.ContainsKey($VMInstance.Name.ToLower())) {
-			# this VM is not a WVD session host
+			# This VM is not a WVD session host
 			return
 		}
 		$VMName = $VMInstance.Name.ToLower()
@@ -363,6 +363,11 @@ try {
 	Write-Log "Number of running session hosts: $nRunningVMs of total $($VMs.Count)"
 	Write-Log "Number of user sessions: $nUserSessions of total threshold capacity: $AvailableSessionCapacity"
 
+	#endregion
+
+
+	#region determine number of session hosts to start if any
+
 	# Now that we have all the info about the session hosts & their usage, figure how many session hosts to start/stop depending on in/off peak hours and the demand
 	
 	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
@@ -376,8 +381,7 @@ try {
 		# Off peak hours: check if need to adjust minimum number of session hosts running if the number of user sessions is close to the max allowed
 		[int]$OffPeakSessionsThreshold = [math]::Floor($MinimumNumberOfRDSH * $HostPool.MaxSessionLimit * 0.9)
 		if ($nUserSessions -ge $OffPeakSessionsThreshold) {
-			# //todo may want to set it appropriately and not just increment by 1
-			++$MinimumNumberOfRDSH
+			$MinimumNumberOfRDSH = [math]::Ceiling($nUserSessions / ($HostPool.MaxSessionLimit * 0.9))
 			Write-Log "[Off peak hours] Number of user sessions is near the max number of sessions allowed with minimum number of session hosts ($OffPeakSessionsThreshold). Adjusting minimum number of session hosts required to $MinimumNumberOfRDSH"
 		}
 	}
@@ -397,6 +401,11 @@ try {
 		$nVMsToStart = $MinimumNumberOfRDSH - $nRunningVMs
 		Write-Log "Number of running session host is less than minimum required. Need to start $nVMsToStart VMs"
 	}
+
+	#endregion
+
+
+	#region start any session hosts if need to
 
 	# Check if we have any session hosts to start
 	if ($nVMsToStart -or $nCoresToStart) {
@@ -445,7 +454,7 @@ try {
 		}
 
 		# Wait for those jobs to start the session hosts
-		WaitForJobs $StartVMjobs
+		Wait-ForJobs $StartVMjobs
 
 		Write-Log 'Wait for session hosts to be available'
 		while ($true) {
@@ -458,6 +467,11 @@ try {
 		}
 		return
 	}
+
+	#endregion
+
+
+	#region determine number of session hosts to stop if any
 
 	# If in peak hours, exit because no session hosts will need to be stopped
 	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
@@ -472,6 +486,11 @@ try {
 	# Calculate the number of session hosts to stop
 	[int]$nVMsToStop = $nRunningVMs - $MinimumNumberOfRDSH
 	Write-Log "[Off peak hours] Number of running session host is greater than minimum required. Need to stop $nVMsToStop VMs"
+
+	#endregion
+
+
+	#region stop any session hosts if need to
 
 	# Object that contains names of session hosts that will be stopped
 	$StopSessionHostNames = @{ }
@@ -572,7 +591,7 @@ try {
 	}
 
 	# Wait for those jobs to stop the session hosts
-	WaitForJobs $StopVMjobs
+	Wait-ForJobs $StopVMjobs
 
 	Write-Log 'Wait for session hosts to be unavailable'
 	$SessionHostsToCheck = $null
@@ -586,6 +605,8 @@ try {
 	}
 	# Make sure session hosts are allowing new user sessions & update them to allow if not
 	$SessionHostsToCheck | Update-SessionHostToAllowNewSession
+
+	#endregion
 }
 catch {
 	$ErrContainer = $PSItem
