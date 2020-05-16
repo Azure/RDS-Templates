@@ -49,8 +49,13 @@ param(
 	[string]$Location = "West US2",
 
 	[Parameter(mandatory = $false)]
-	[string]$WorkspaceName
+	[string]$WorkspaceName,
+	
+	[Parameter(Mandatory = $true)]
+	[String] $ApplicationDisplayName,
 
+	[Parameter(mandatory = $false)]
+	[int] $SelfSignedCertNoOfMonthsUntilExpired = 12
 )
 
 # Initializing variables
@@ -225,68 +230,63 @@ foreach ($Module in $RequiredModules) {
 	}
 }
 
-if (!$WorkspaceName) {
-	Write-Output "Automation Account Name:$AutomationAccountName"
-	Write-Output "Webhook URI: $($WebhookURI.value)"
-}
-
-# Check if the log analytic workspace is exist
-$LAWorkspace = Get-AzOperationalInsightsWorkspace | Where-Object { $_.Name -eq $WorkspaceName }
-if (!$LAWorkspace) {
-	Write-Output "Provided log analytic workspace doesn't exist in your Subscription."
-	return
-}
-
-$WorkSpace = Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $WorkspaceName -WarningAction Ignore
-$LogAnalyticsPrimaryKey = $Workspace.PrimarySharedKey
-$LogAnalyticsWorkspaceId = (Get-AzOperationalInsightsWorkspace -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $workspaceName).CustomerId.GUID
-
-# Create the function to create the authorization signature
-function Build-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource) {
-	$xHeaders = "x-ms-date:" + $date
-	$stringToHash = $method + "`n" + $contentLength + "`n" + $contentType + "`n" + $xHeaders + "`n" + $resource
-
-	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
-	$keyBytes = [Convert]::FromBase64String($sharedKey)
-
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
-	$sha256.Key = $keyBytes
-	$calculatedHash = $sha256.ComputeHash($bytesToHash)
-	$encodedHash = [Convert]::ToBase64String($calculatedHash)
-	$authorization = 'SharedKey {0}:{1}' -f $customerId, $encodedHash
-	return $authorization
-}
-
-# Create the function to create and post the request
-function Post-LogAnalyticsData ($customerId, $sharedKey, $body, $logType) {
-	$method = "POST"
-	$contentType = "application/json"
-	$resource = "/api/logs"
-	$rfc1123date = [datetime]::UtcNow.ToString("r")
-	$contentLength = $body.Length
-	$signature = Build-Signature -customerId $customerId -sharedKey $sharedKey -Date $rfc1123date -contentLength $contentLength -FileName $fileName -Method $method -ContentType $contentType -resource $resource
-	$uri = "https://" + $customerId + ".ods.opinsights.azure.com" + $resource + "?api-version=2016-04-01"
-
-	$headers = @{
-		"Authorization"        = $signature;
-		"Log-Type"             = $logType;
-		"x-ms-date"            = $rfc1123date;
-		"time-generated-field" = $TimeStampField;
+if ($WorkspaceName) {
+	# Check if the log analytic workspace is exist
+	$LAWorkspace = Get-AzOperationalInsightsWorkspace | Where-Object { $_.Name -eq $WorkspaceName }
+	if (!$LAWorkspace) {
+		throw "Provided log analytic workspace doesn't exist in your Subscription."
 	}
 
-	$response = Invoke-WebRequest -Uri $uri -Method $method -ContentType $contentType -Headers $headers -Body $body -UseBasicParsing
-	return $response.StatusCode
+	$WorkSpace = Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $WorkspaceName -WarningAction Ignore
+	$LogAnalyticsPrimaryKey = $Workspace.PrimarySharedKey
+	$LogAnalyticsWorkspaceId = (Get-AzOperationalInsightsWorkspace -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $workspaceName).CustomerId.GUID
 
-}
+	# Create the function to create the authorization signature
+	function New-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource) {
+		$xHeaders = "x-ms-date:" + $date
+		$stringToHash = $method + "`n" + $contentLength + "`n" + $contentType + "`n" + $xHeaders + "`n" + $resource
 
-# Specify the name of the record type that you'll be creating
-[string]$TenantScaleLogType = "WVDTenantScale_CL"
+		$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
+		$keyBytes = [Convert]::FromBase64String($sharedKey)
 
-# Specify a field with the created time for the records
-$TimeStampField = (Get-Date).GetDateTimeFormats(115)
+		$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+		$sha256.Key = $keyBytes
+		$calculatedHash = $sha256.ComputeHash($bytesToHash)
+		$encodedHash = [Convert]::ToBase64String($calculatedHash)
+		$authorization = 'SharedKey {0}:{1}' -f $customerId, $encodedHash
+		return $authorization
+	}
 
-# Custom WVDTenantScale Table
-$CustomLogWVDTenantScale = @"
+	# Create the function to create and post the request
+	function Send-LogAnalyticsData ($customerId, $sharedKey, $body, $logType) {
+		$method = "POST"
+		$contentType = "application/json"
+		$resource = "/api/logs"
+		$rfc1123date = [datetime]::UtcNow.ToString("r")
+		$contentLength = $body.Length
+		$signature = New-Signature -customerId $customerId -sharedKey $sharedKey -Date $rfc1123date -contentLength $contentLength -FileName $fileName -Method $method -ContentType $contentType -resource $resource
+		$uri = "https://" + $customerId + ".ods.opinsights.azure.com" + $resource + "?api-version=2016-04-01"
+
+		$headers = @{
+			"Authorization"        = $signature;
+			"Log-Type"             = $logType;
+			"x-ms-date"            = $rfc1123date;
+			"time-generated-field" = $TimeStampField;
+		}
+
+		$response = Invoke-WebRequest -Uri $uri -Method $method -ContentType $contentType -Headers $headers -Body $body -UseBasicParsing
+		return $response.StatusCode
+
+	}
+
+	# Specify the name of the record type that you'll be creating
+	[string]$TenantScaleLogType = "WVDTenantScale_CL"
+
+	# Specify a field with the created time for the records
+	$TimeStampField = (Get-Date).GetDateTimeFormats(115)
+
+	# Custom WVDTenantScale Table
+	$CustomLogWVDTenantScale = @"
 [
 	{
 	"hostpoolName":" ",
@@ -295,10 +295,111 @@ $CustomLogWVDTenantScale = @"
 ]
 "@
 
-# Submit the data to the API endpoint
-Post-LogAnalyticsData -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body ([System.Text.Encoding]::UTF8.GetBytes($CustomLogWVDTenantScale)) -logType $TenantScaleLogType
+	# Submit the data to the API endpoint
+	Send-LogAnalyticsData -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body ([System.Text.Encoding]::UTF8.GetBytes($CustomLogWVDTenantScale)) -logType $TenantScaleLogType
 
-Write-Output "Log Analytics workspace id: $LogAnalyticsWorkspaceId"
-Write-Output "Log Analytics workspace primarykey: $LogAnalyticsPrimaryKey"
+	Write-Output "Log Analytics workspace id: $LogAnalyticsWorkspaceId"
+	Write-Output "Log Analytics workspace primarykey: $LogAnalyticsPrimaryKey"
+}
+
 Write-Output "Automation Account Name: $AutomationAccountName"
 Write-Output "Webhook URI: $($WebhookURI.value)"
+
+# https://docs.microsoft.com/en-us/azure/automation/manage-runas-account#powershell-script-to-create-a-run-as-account
+function New-CustomSelfSignedCertificate([string] $certificateName, [SecureString] $selfSignedCertPassword,
+	[string] $certPath, [string] $certPathCer, [string] $selfSignedCertNoOfMonthsUntilExpired ) {
+	$Cert = New-SelfSignedCertificate -DnsName $certificateName -CertStoreLocation cert:\LocalMachine\My -KeyExportPolicy Exportable -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" -NotAfter (Get-Date).AddMonths($selfSignedCertNoOfMonthsUntilExpired) -HashAlgorithm SHA256
+
+	Export-PfxCertificate -Cert ("Cert:\localmachine\my\" + $Cert.Thumbprint) -FilePath $certPath -Password $selfSignedCertPassword -Force | Write-Verbose
+	Export-Certificate -Cert ("Cert:\localmachine\my\" + $Cert.Thumbprint) -FilePath $certPathCer -Type CERT | Write-Verbose
+}
+
+function New-ServicePrincipal([System.Security.Cryptography.X509Certificates.X509Certificate2] $PfxCert, [string] $applicationDisplayName) {
+	$keyValue = [System.Convert]::ToBase64String($PfxCert.GetRawCertData())
+	$keyId = (New-Guid).Guid
+
+	# Create an Azure AD application, AD App Credential, AD ServicePrincipal
+
+	# Requires Application Developer Role, but works with Application administrator or GLOBAL ADMIN
+	$Application = New-AzADApplication -DisplayName $ApplicationDisplayName -HomePage ("http://" + $applicationDisplayName) -IdentifierUris ("http://" + $keyId)
+	# Requires Application administrator or GLOBAL ADMIN
+	New-AzADAppCredential -ApplicationId $Application.ApplicationId -CertValue $keyValue -StartDate $PfxCert.NotBefore -EndDate $PfxCert.NotAfter
+	# Requires Application administrator or GLOBAL ADMIN
+	$ServicePrincipal = New-AzADServicePrincipal -ApplicationId $Application.ApplicationId
+	Get-AzADServicePrincipal -ObjectId $ServicePrincipal.Id
+
+	# Sleep here for a few seconds to allow the service principal application to become active (ordinarily takes a few seconds)
+	Start-Sleep -Seconds 15
+	# Requires User Access Administrator or Owner.
+	$NewRole = New-AzRoleAssignment -RoleDefinitionName Contributor -ServicePrincipalName $Application.ApplicationId -ErrorAction SilentlyContinue
+	$Retries = 0;
+	While (!$NewRole -and $Retries -le 6) {
+		Start-Sleep -Seconds 10
+		New-AzRoleAssignment -RoleDefinitionName Contributor -ServicePrincipalName $Application.ApplicationId | Write-Verbose -ErrorAction SilentlyContinue
+		$NewRole = Get-AzRoleAssignment -ServicePrincipalName $Application.ApplicationId -ErrorAction SilentlyContinue
+		$Retries++;
+	}
+	return $Application.ApplicationId.ToString();
+}
+
+function New-AutomationCertificateAsset ([string] $ResourceGroupName, [string] $automationAccountName, [string] $certifcateAssetName, [string] $certPath, [SecureString] $certPassword, [Boolean] $Exportable) {
+	Remove-AzAutomationCertificate -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName -Name $certifcateAssetName -ErrorAction SilentlyContinue
+	New-AzAutomationCertificate -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName -Path $certPath -Name $certifcateAssetName -Password $CertPassword -Exportable:$Exportable | write-verbose
+}
+
+function New-AutomationConnectionAsset ([string] $ResourceGroupName, [string] $automationAccountName, [string] $connectionAssetName, [string] $connectionTypeName, [System.Collections.Hashtable] $connectionFieldValues ) {
+	Remove-AzAutomationConnection -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName -Name $connectionAssetName -Force -ErrorAction SilentlyContinue
+	New-AzAutomationConnection -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName -Name $connectionAssetName -ConnectionTypeName $connectionTypeName -ConnectionFieldValues $connectionFieldValues
+}
+
+function Get-PasswordCredential {
+	[CmdletBinding()]
+	[OutputType([PSCustomObject])]
+	param()
+
+	$Guid = New-Guid
+	$PasswordCredential = New-Object -TypeName Microsoft.Azure.Commands.ActiveDirectory.PSADPasswordCredential
+	# this is the same end-date which gets created when you manually create a key with "never expires" in the Azure portal
+	$PasswordCredential.StartDate = Get-Date
+	$PasswordCredential.EndDate = [datetime]'2299-12-31'
+	$PasswordCredential.KeyId = $Guid
+	$PasswordCredential.Password = ([System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(($Guid)))) + "="
+
+	return $PasswordCredential
+}
+
+Enable-AzureRmAlias
+
+# Create a Run As account by using a service principal
+$CertifcateAssetName = "AzureRunAsCertificate"
+$ConnectionAssetName = "AzureRunAsConnection"
+$ConnectionTypeName = "AzureServicePrincipal"
+
+$CertificateName = $AutomationAccountName + $CertifcateAssetName
+$PfxCertPathForRunAsAccount = Join-Path $env:TEMP ($CertificateName + ".pfx")
+$SelfSignedCertPlainPassword = (Get-PasswordCredential).Password
+$PfxCertPlainPasswordForRunAsAccount = $SelfSignedCertPlainPassword
+$CerCertPathForRunAsAccount = Join-Path $env:TEMP ($CertificateName + ".cer")
+$PfxCertPasswordForRunAsAccount = ConvertTo-SecureString $PfxCertPlainPasswordForRunAsAccount -AsPlainText -Force
+New-CustomSelfSignedCertificate $CertificateName $PfxCertPasswordForRunAsAccount $PfxCertPathForRunAsAccount $CerCertPathForRunAsAccount $SelfSignedCertNoOfMonthsUntilExpired
+
+# Create a service principal
+$PfxCert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList @($PfxCertPathForRunAsAccount, $PfxCertPlainPasswordForRunAsAccount)
+$ApplicationId = New-ServicePrincipal $PfxCert $ApplicationDisplayName
+
+# Create the Automation certificate asset
+New-AutomationCertificateAsset $ResourceGroupName $AutomationAccountName $CertifcateAssetName $PfxCertPathForRunAsAccount $PfxCertPasswordForRunAsAccount $true
+
+# Populate the ConnectionFieldValues
+$SubscriptionInfo = Get-AzSubscription -SubscriptionId $SubscriptionId
+$TenantID = $SubscriptionInfo | Select-Object TenantId -First 1
+$Thumbprint = $PfxCert.Thumbprint
+$ConnectionFieldValues = @{
+	'ApplicationId'         = $ApplicationId
+	'TenantId'              = $TenantID.TenantId
+	'CertificateThumbprint' = $Thumbprint
+	'SubscriptionId'        = $SubscriptionId
+}
+
+# Create an Automation connection asset named AzureRunAsConnection in the Automation account. This connection uses the service principal.
+New-AutomationConnectionAsset $ResourceGroupName $AutomationAccountName $ConnectionAssetName $ConnectionTypeName $ConnectionFieldValues
