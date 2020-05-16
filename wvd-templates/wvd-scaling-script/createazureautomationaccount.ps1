@@ -81,7 +81,7 @@ $Subscription = Select-AzSubscription -SubscriptionId $SubscriptionId
 Set-AzContext -SubscriptionObject $Subscription.ExtendedProperties
 
 # Get the Role Assignment of the authenticated user
-$RoleAssignment = Get-AzRoleAssignment -SignInName $Context.Account
+$RoleAssignment = Get-AzRoleAssignment -SignInName $Context.Account -ExpandPrincipalGroups
 
 if ($RoleAssignment.RoleDefinitionName -notin @('Owner', 'Contributor')) {
 	throw 'Authenticated user should have the Owner/Contributor permissions to the subscription'
@@ -109,6 +109,8 @@ if (!$AutomationAccount) {
 	[PSCustomObject]@{ ModuleName = 'Az.Resources'; ModuleVersion = '1.8.0' }
 	[PSCustomObject]@{ ModuleName = 'Az.Automation'; ModuleVersion = '1.3.4' }
 )
+
+$SkipHttpErrorCheckParam = (Get-Command Invoke-WebRequest).Parameters.SkipHttpErrorCheck
 
 # Function to add required modules to Azure Automation account
 function Add-ModulesToAutoAccount {
@@ -158,9 +160,16 @@ function Add-ModulesToAutoAccount {
 	}
 
 	# Find the actual blob storage location of the module
+	$Res = $null
 	do {
 		$ActualUrl = $ModuleContentUrl
-		$ModuleContentUrl = (Invoke-WebRequest -Uri $ModuleContentUrl -MaximumRedirection 0 -UseBasicParsing -ErrorAction Ignore).Headers.Location
+		if ($SkipHttpErrorCheckParam) {
+			$Res = Invoke-WebRequest -Uri $ModuleContentUrl -MaximumRedirection 0 -UseBasicParsing -SkipHttpErrorCheck -ErrorAction Ignore
+		}
+		else {
+			$Res = Invoke-WebRequest -Uri $ModuleContentUrl -MaximumRedirection 0 -UseBasicParsing -ErrorAction Ignore
+		}
+		$ModuleContentUrl = $Res.Headers.Location
 	} while ($ModuleContentUrl)
 
 	New-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ContentLink $ActualUrl
@@ -186,6 +195,7 @@ function Wait-ForModuleToBeImported {
 			break
 		}
 		Write-Output "Waiting for module '$ModuleName' to get imported into Automation Account Modules ..."
+		Start-Sleep -Seconds 30
 	}
 }
 
@@ -223,7 +233,8 @@ if (!$WorkspaceName) {
 # Check if the log analytic workspace is exist
 $LAWorkspace = Get-AzOperationalInsightsWorkspace | Where-Object { $_.Name -eq $WorkspaceName }
 if (!$LAWorkspace) {
-	throw "Provided log analytic workspace doesn't exist in your Subscription."
+	Write-Output "Provided log analytic workspace doesn't exist in your Subscription."
+	return
 }
 
 $WorkSpace = Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $WorkspaceName -WarningAction Ignore
