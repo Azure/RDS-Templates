@@ -22,24 +22,24 @@ try {
 	# Collect Input converted from JSON request body of Webhook.
 	$Input = (ConvertFrom-Json -InputObject $WebHookData.RequestBody)
 
+	$LogAnalyticsWorkspaceId = $Input.LogAnalyticsWorkspaceId
+	$LogAnalyticsPrimaryKey = $Input.LogAnalyticsPrimaryKey
+	$ConnectionAssetName = $Input.ConnectionAssetName
 	$AADTenantId = $Input.AADTenantId
-	$SubscriptionID = $Input.SubscriptionID
+	$SubscriptionId = $Input.SubscriptionId
+	$RDBrokerURL = $Input.RDBrokerURL
 	$TenantGroupName = $Input.TenantGroupName
 	$TenantName = $Input.TenantName
-	$HostpoolName = $Input.hostpoolname
+	$HostPoolName = $Input.HostPoolName
+	$MaintenanceTagName = $Input.MaintenanceTagName
+	$TimeDifference = $Input.TimeDifference
 	$BeginPeakTime = $Input.BeginPeakTime
 	$EndPeakTime = $Input.EndPeakTime
-	$TimeDifference = $Input.TimeDifference
 	$SessionThresholdPerCPU = $Input.SessionThresholdPerCPU
 	[int]$MinimumNumberOfRDSH = $Input.MinimumNumberOfRDSH
 	[int]$LimitSecondsToForceLogOffUser = $Input.LimitSecondsToForceLogOffUser
 	$LogOffMessageTitle = $Input.LogOffMessageTitle
 	$LogOffMessageBody = $Input.LogOffMessageBody
-	$MaintenanceTagName = $Input.MaintenanceTagName
-	$LogAnalyticsWorkspaceId = $Input.LogAnalyticsWorkspaceId
-	$LogAnalyticsPrimaryKey = $Input.LogAnalyticsPrimaryKey
-	$RDBrokerURL = $Input.RDBrokerURL
-	$ConnectionAssetName = $Input.ConnectionAssetName
 
 	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
@@ -87,7 +87,7 @@ try {
 			return
 		}
 		$LogMessageObj = @{
-			'hostpoolName_s' = $HostpoolName
+			'hostpoolName_s' = $HostPoolName
 			'logmessage_s'   = $Message
 		}
 
@@ -145,7 +145,7 @@ try {
 		Process {
 			if (!$SessionHost.AllowNewSession) {
 				Write-Log "Update session host '$($SessionHost.SessionHostName)' to allow new sessions"
-				Set-RdsSessionHost -TenantName $SessionHost.TenantName -HostPoolName $SessionHost.HostpoolName -Name $SessionHost.SessionHostName -AllowNewSession $true
+				Set-RdsSessionHost -TenantName $SessionHost.TenantName -HostPoolName $SessionHost.HostPoolName -Name $SessionHost.SessionHostName -AllowNewSession $true
 			}
 		}
 		End { }
@@ -174,7 +174,7 @@ try {
 		# Authenticating to WVD
 		$WVDAuthentication = $null
 		try {
-			$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AadTenantId
+			$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AADTenantId
 			if (!$WVDAuthentication) {
 				throw $WVDAuthentication
 			}
@@ -192,13 +192,13 @@ try {
 	$AzContext = $null
 	try {
 		Write-Log 'Set Azure context with the subscription'
-		$AzContext = Set-AzContext -SubscriptionId $SubscriptionID
+		$AzContext = Set-AzContext -SubscriptionId $SubscriptionId
 		if (!$AzContext) {
 			throw $AzContext
 		}
 	}
 	catch {
-		throw [System.Exception]::new("Failed to set Azure context with provided Subscription ID: $SubscriptionID (Please provide a valid subscription)", $PSItem.Exception)
+		throw [System.Exception]::new("Failed to set Azure context with provided Subscription ID: $SubscriptionId (Please provide a valid subscription)", $PSItem.Exception)
 	}
 	Write-Log "Successfully set the Azure context with the provided Subscription ID. Result: `n$($AzContext | Out-String)"
 
@@ -230,20 +230,20 @@ try {
 	# Validate and get HostPool info
 	$HostPool = $null
 	try {
-		Write-Log "Get Hostpool info: $HostpoolName in Tenant: $TenantName"
-		$HostPool = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
+		Write-Log "Get Hostpool info: $HostPoolName in Tenant: $TenantName"
+		$HostPool = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName
 		if (!$HostPool) {
 			throw $HostPool
 		}
 	}
 	catch {
-		throw [System.Exception]::new("Hostpool '$HostpoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values.", $PSItem.Exception)
+		throw [System.Exception]::new("Hostpool '$HostPoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values.", $PSItem.Exception)
 	}
 
 	Write-Log 'Get all session hosts'
-	$SessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
+	$SessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName
 	if (!$SessionHosts) {
-		Write-Log "There are no session hosts in the Hostpool '$HostpoolName'. Ensure that hostpool have session hosts."
+		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool have session hosts."
 		return
 	}
 
@@ -284,7 +284,7 @@ try {
 	# Note: breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
 	if ($HostPool.LoadBalancerType -ne 'BreadthFirst') {
 		Write-Log "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')"
-		$HostPool = Set-RdsHostPool -TenantName $TenantName -Name $HostpoolName -BreadthFirstLoadBalancer
+		$HostPool = Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -BreadthFirstLoadBalancer
 	}
 
 	Write-Log "HostPool info:`n$($HostPool | Out-String)"
@@ -351,7 +351,7 @@ try {
 	$nUserSessions = $null
 	if ($null -eq $OverrideNUserSessions) {
 		Write-Log 'Get number of user sessions in Hostpool'
-		$nUserSessions = (Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName).Count
+		$nUserSessions = (Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName).Count
 	}
 	else {
 		$nUserSessions = $OverrideNUserSessions
@@ -458,7 +458,7 @@ try {
 
 		Write-Log 'Wait for session hosts to be available'
 		while ($true) {
-			$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $StartSessionHostNames.ContainsKey($_.SessionHostName) }
+			$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StartSessionHostNames.ContainsKey($_.SessionHostName) }
 			Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 			if (!($SessionHostsToCheck | Where-Object { $_.Status -notin $DesiredRunningStates })) {
 				break
@@ -515,7 +515,7 @@ try {
 
 		Write-Log "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions. Set it to disallow new sessions"
 		try {
-			$VM.SessionHost = $SessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName -AllowNewSession $false
+			$VM.SessionHost = $SessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $false
 		}
 		catch {
 			throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: $SessionHostName", $PSItem.Exception)
@@ -525,7 +525,7 @@ try {
 			$SessionHostUserSessions = $null
 			Write-Log "Get all user sessions from session host '$SessionHostName'"
 			try {
-				$VM.UserSessions = $SessionHostUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.SessionHostName -eq $SessionHostName }
+				$VM.UserSessions = $SessionHostUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $_.SessionHostName -eq $SessionHostName }
 			}
 			catch {
 				throw [System.Exception]::new("Failed to retrieve user sessions of session host: $SessionHostName", $PSItem.Exception)
@@ -538,7 +538,7 @@ try {
 				}
 				try {
 					Write-Log "Send a log off message to user: $($Session.AdUserName)"
-					Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds" -NoUserPrompt
+					Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds" -NoUserPrompt
 				}
 				catch {
 					throw [System.Exception]::new("Failed to send a log off message to user: $($Session.AdUserName)", $PSItem.Exception)
@@ -571,7 +571,7 @@ try {
 			Write-Log "Force log off $($SessionHostUserSessions.Count) user(s) on session host: $SessionHostName"
 			foreach ($Session in $SessionHostUserSessions) {
 				try {
-					Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force
+					Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force
 				}
 				catch {
 					throw [System.Exception]::new("Failed to force log off user: $($Session.AdUserName)", $PSItem.Exception)
@@ -596,7 +596,7 @@ try {
 	Write-Log 'Wait for session hosts to be unavailable'
 	$SessionHostsToCheck = $null
 	while ($true) {
-		$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $StopSessionHostNames.ContainsKey($_.SessionHostName) }
+		$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StopSessionHostNames.ContainsKey($_.SessionHostName) }
 		Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 		if (!($SessionHostsToCheck | Where-Object { $_.Status -in $DesiredRunningStates })) {
 			break

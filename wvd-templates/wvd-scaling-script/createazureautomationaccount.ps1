@@ -13,7 +13,7 @@
  Required
  Provide Subscription Id of the Azure.
 
-.PARAMETER ResourcegroupName
+.PARAMETER ResourceGroupName
  Optional
  Name of the resource group to use
  If the resource group does not exist it will be created
@@ -33,7 +33,7 @@
 .NOTES
  If you are providing existing automation account, you need to provide existing automation account ResourceGroupName for ResourceGroupName parameter.
  
- Example: .\createazureautomationaccount.ps1 -SubscriptionID "Your Azure SubscriptionID" -ResourceGroupName "Name of the resource group" -AutomationAccountName "Name of the automation account name" -Location "The datacenter location of the resources" -WorkspaceName "Provide existing log analytics workspace name" 
+ Example: .\createazureautomationaccount.ps1 -SubscriptionId "Your Azure SubscriptionId" -ResourceGroupName "Name of the resource group" -AutomationAccountName "Name of the automation account name" -Location "The datacenter location of the resources" -WorkspaceName "Provide existing log analytics workspace name" 
 #>
 param(
 	[Parameter(mandatory = $true)]
@@ -52,28 +52,74 @@ param(
 	[string]$WorkspaceName,
 	
 	[Parameter(Mandatory = $true)]
-	[String] $ApplicationDisplayName,
+	[String]$ApplicationDisplayName,
 
 	[Parameter(mandatory = $false)]
-	[int] $SelfSignedCertNoOfMonthsUntilExpired = 12
+	[int]$SelfSignedCertNoOfMonthsUntilExpired = 12,
+
+	[Parameter(mandatory = $false)]
+	[string]$TenantGroupName = 'Default Tenant Group',
+
+	[Parameter(mandatory = $true)]
+	[string]$TenantName,
+
+	[Parameter(mandatory = $true)]
+	[array]$HostPoolNames,
+
+	[Parameter(mandatory = $true)]
+	[int]$RecurrenceInterval,
+
+	[Parameter(mandatory = $true)]
+	[string]$BeginPeakTime,
+
+	[Parameter(mandatory = $true)]
+	[string]$EndPeakTime,
+
+	[Parameter(mandatory = $true)]
+	[string]$TimeDifference,
+
+	[Parameter(mandatory = $true)]
+	$SessionThresholdPerCPU,
+
+	[Parameter(mandatory = $true)]
+	[int]$MinimumNumberOfRDSH,
+
+	[Parameter(mandatory = $true)]
+	[string]$MaintenanceTagName,
+
+	[Parameter(mandatory = $true)]
+	[int]$LimitSecondsToForceLogOffUser,
+
+	[Parameter(mandatory = $true)]
+	[string]$LogOffMessageTitle,
+
+	[Parameter(mandatory = $true)]
+	[string]$LogOffMessageBody
 )
-
-# Initializing variables
-[string]$ScriptRepoLocation = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script/"
-[string]$RunbookName = "WVDAutoScaleRunbook"
-[string]$WebhookName = "WVDAutoScaleWebhook"
-
-# Set the ExecutionPolicy
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
+
+if (!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+	throw 'Not running as Administrator. Please run the script as Administrator'
+}
+
+# Initializing variables
+# //todo traling '/' or not ?
+[string]$ScriptRepoLocation = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script/"
+[string]$RunbookName = "WVDAutoScaleRunbook"
+[string]$WebhookName = "WVDAutoScaleWebhook"
+[string]$RDBrokerURL = 'https://rdbroker.wvd.microsoft.com'
+
+# Set the ExecutionPolicy
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
 
 # Import Az and AzureAD modules
 Import-Module Az.Resources
 Import-Module Az.Accounts
 Import-Module Az.OperationalInsights
 Import-Module Az.Automation
+Import-Module Az.LogicApp
 
 # Get the azure context
 $Context = Get-AzContext
@@ -90,6 +136,25 @@ $RoleAssignment = Get-AzRoleAssignment -SignInName $Context.Account -ExpandPrinc
 
 if ($RoleAssignment.RoleDefinitionName -notin @('Owner', 'Contributor')) {
 	throw 'Authenticated user should have the Owner/Contributor permissions to the subscription'
+}
+
+# Get the WVD context
+$WVDContext = Get-RdsContext -DeploymentUrl $RDBrokerURL
+if (!$WVDContext) {
+	throw "No WVD context found. Please authenticate to WVD using Add-RdsAccount -DeploymentURL '$RDBrokerURL' cmdlet and then run this script"
+}
+
+# Set WVD context to the appropriate tenant group
+[string]$CurrentTenantGroupName = $WVDContext.TenantGroupName
+if ($TenantGroupName -ne $CurrentTenantGroupName) {
+	try {
+		Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
+		# Note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
+		Set-RdsContext -TenantGroupName $TenantGroupName
+	}
+	catch {
+		throw [System.Exception]::new("Error switch WVD context to tenant group '$TenantGroupName' from '$CurrentTenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
+	}
 }
 
 # Check if the resourcegroup exist
@@ -133,7 +198,6 @@ function Add-ModulesToAutoAccount {
 		[Parameter(mandatory = $false)]
 		[string]$ModuleVersion
 	)
-
 
 	[string]$Url = "https://www.powershellgallery.com/api/v2/Search()?`$filter=IsLatestVersion&searchTerm=%27$ModuleName $ModuleVersion%27&targetFramework=%27%27&includePrerelease=false&`$skip=0&`$top=40"
 
@@ -193,6 +257,7 @@ function Wait-ForModuleToBeImported {
 		[string]$ModuleName
 	)
 
+	# //todo add time out ?
 	while ($true) {
 		$AutoModule = Get-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ErrorAction SilentlyContinue
 		if ($AutoModule.ProvisioningState -eq 'Succeeded') {
@@ -207,17 +272,19 @@ function Wait-ForModuleToBeImported {
 # Creating a runbook and published the basic Scale script file
 $DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/runbookCreationTemplate.json" -existingAutomationAccountName $AutomationAccountName -RunbookName $RunbookName -Force -Verbose
 
-if ($DeploymentStatus.ProvisioningState -eq "Succeeded") {
-	# Check if the Webhook URI exists in automation variable
+if ($DeploymentStatus.ProvisioningState -ne 'Succeeded') {
+	throw "Some error occurred while deploying a runbook. Deployment Provisioning Status: $($DeploymentStatus.ProvisioningState)"
+}
+
+# Check if the Webhook URI exists in automation variable
+$WebhookURI = Get-AzAutomationVariable -Name "WebhookURI" -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
+if (!$WebhookURI) {
+	$Webhook = New-AzAutomationWebhook -Name $WebhookName -RunbookName $runbookName -IsEnabled $true -ExpiryTime (Get-Date).AddYears(5) -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Force
+	Write-Output "Automation Account Webhook is created with name '$WebhookName'"
+	$URIofWebhook = $Webhook.WebhookURI | Out-String
+	New-AzAutomationVariable -Name "WebhookURI" -Encrypted $false -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Value $URIofWebhook
+	Write-Output "Webhook URI stored in Azure Automation Acccount variables"
 	$WebhookURI = Get-AzAutomationVariable -Name "WebhookURI" -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
-	if (!$WebhookURI) {
-		$Webhook = New-AzAutomationWebhook -Name $WebhookName -RunbookName $runbookName -IsEnabled $true -ExpiryTime (Get-Date).AddYears(5) -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Force
-		Write-Output "Automation Account Webhook is created with name '$WebhookName'"
-		$URIofWebhook = $Webhook.WebhookURI | Out-String
-		New-AzAutomationVariable -Name "WebhookURI" -Encrypted $false -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Value $URIofWebhook
-		Write-Output "Webhook URI stored in Azure Automation Acccount variables"
-		$WebhookURI = Get-AzAutomationVariable -Name "WebhookURI" -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
-	}
 }
 
 # Required modules imported from Automation Account Modules gallery for Scale Script execution
@@ -239,7 +306,7 @@ if ($WorkspaceName) {
 
 	$WorkSpace = Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $WorkspaceName -WarningAction Ignore
 	$LogAnalyticsPrimaryKey = $Workspace.PrimarySharedKey
-	$LogAnalyticsWorkspaceId = (Get-AzOperationalInsightsWorkspace -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $workspaceName).CustomerId.GUID
+	$LogAnalyticsWorkspaceId = (Get-AzOperationalInsightsWorkspace -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $WorkspaceName).CustomerId.GUID
 
 	# Create the function to create the authorization signature
 	function New-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource) {
@@ -307,21 +374,21 @@ Write-Output "Webhook URI: $($WebhookURI.value)"
 
 # https://docs.microsoft.com/en-us/azure/automation/manage-runas-account#powershell-script-to-create-a-run-as-account
 function New-CustomSelfSignedCertificate([string] $certificateName, [SecureString] $selfSignedCertPassword,
-	[string] $certPath, [string] $certPathCer, [string] $selfSignedCertNoOfMonthsUntilExpired ) {
-	$Cert = New-SelfSignedCertificate -DnsName $certificateName -CertStoreLocation cert:\LocalMachine\My -KeyExportPolicy Exportable -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" -NotAfter (Get-Date).AddMonths($selfSignedCertNoOfMonthsUntilExpired) -HashAlgorithm SHA256
+	[string] $certPath, [string] $certPathCer, [string] $SelfSignedCertNoOfMonthsUntilExpired ) {
+	$Cert = New-SelfSignedCertificate -DnsName $certificateName -CertStoreLocation cert:\LocalMachine\My -KeyExportPolicy Exportable -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" -NotAfter (Get-Date).AddMonths($SelfSignedCertNoOfMonthsUntilExpired) -HashAlgorithm SHA256
 
 	Export-PfxCertificate -Cert ("Cert:\localmachine\my\" + $Cert.Thumbprint) -FilePath $certPath -Password $selfSignedCertPassword -Force | Write-Verbose
 	Export-Certificate -Cert ("Cert:\localmachine\my\" + $Cert.Thumbprint) -FilePath $certPathCer -Type CERT | Write-Verbose
 }
 
-function New-ServicePrincipal([System.Security.Cryptography.X509Certificates.X509Certificate2] $PfxCert, [string] $applicationDisplayName) {
+function New-ServicePrincipal([System.Security.Cryptography.X509Certificates.X509Certificate2] $PfxCert, [string] $ApplicationDisplayName) {
 	$keyValue = [System.Convert]::ToBase64String($PfxCert.GetRawCertData())
 	$keyId = (New-Guid).Guid
 
 	# Create an Azure AD application, AD App Credential, AD ServicePrincipal
 
 	# Requires Application Developer Role, but works with Application administrator or GLOBAL ADMIN
-	$Application = New-AzADApplication -DisplayName $ApplicationDisplayName -HomePage ("http://" + $applicationDisplayName) -IdentifierUris ("http://" + $keyId)
+	$Application = New-AzADApplication -DisplayName $ApplicationDisplayName -HomePage ("http://" + $ApplicationDisplayName) -IdentifierUris ("http://" + $keyId)
 	# Requires Application administrator or GLOBAL ADMIN
 	New-AzADAppCredential -ApplicationId $Application.ApplicationId -CertValue $keyValue -StartDate $PfxCert.NotBefore -EndDate $PfxCert.NotAfter
 	# Requires Application administrator or GLOBAL ADMIN
@@ -342,14 +409,14 @@ function New-ServicePrincipal([System.Security.Cryptography.X509Certificates.X50
 	return $Application.ApplicationId.ToString();
 }
 
-function New-AutomationCertificateAsset ([string] $ResourceGroupName, [string] $automationAccountName, [string] $certifcateAssetName, [string] $certPath, [SecureString] $certPassword, [Boolean] $Exportable) {
-	Remove-AzAutomationCertificate -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName -Name $certifcateAssetName -ErrorAction SilentlyContinue
-	New-AzAutomationCertificate -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName -Path $certPath -Name $certifcateAssetName -Password $CertPassword -Exportable:$Exportable | write-verbose
+function New-AutomationCertificateAsset ([string] $ResourceGroupName, [string] $AutomationAccountName, [string] $certifcateAssetName, [string] $certPath, [SecureString] $certPassword, [Boolean] $Exportable) {
+	Remove-AzAutomationCertificate -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $certifcateAssetName -ErrorAction SilentlyContinue
+	New-AzAutomationCertificate -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Path $certPath -Name $certifcateAssetName -Password $CertPassword -Exportable:$Exportable | write-verbose
 }
 
-function New-AutomationConnectionAsset ([string] $ResourceGroupName, [string] $automationAccountName, [string] $connectionAssetName, [string] $connectionTypeName, [System.Collections.Hashtable] $connectionFieldValues ) {
-	Remove-AzAutomationConnection -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName -Name $connectionAssetName -Force -ErrorAction SilentlyContinue
-	New-AzAutomationConnection -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName -Name $connectionAssetName -ConnectionTypeName $connectionTypeName -ConnectionFieldValues $connectionFieldValues
+function New-AutomationConnectionAsset ([string] $ResourceGroupName, [string] $AutomationAccountName, [string] $ConnectionAssetName, [string] $connectionTypeName, [System.Collections.Hashtable] $connectionFieldValues ) {
+	Remove-AzAutomationConnection -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ConnectionAssetName -Force -ErrorAction SilentlyContinue
+	New-AzAutomationConnection -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ConnectionAssetName -ConnectionTypeName $connectionTypeName -ConnectionFieldValues $connectionFieldValues
 }
 
 function Get-PasswordCredential {
@@ -403,3 +470,68 @@ $ConnectionFieldValues = @{
 
 # Create an Automation connection asset named AzureRunAsConnection in the Automation account. This connection uses the service principal.
 New-AutomationConnectionAsset $ResourceGroupName $AutomationAccountName $ConnectionAssetName $ConnectionTypeName $ConnectionFieldValues
+
+New-RdsRoleAssignment -RoleDefinitionName 'RDS Contributor' -ApplicationId $ApplicationId -TenantName $TenantName
+
+# Creating Azure logic app to schedule job
+# //todo define $HostPoolNames and other params
+foreach ($HostPoolName in $HostPoolNames) {
+
+	# Check if the hostpool load balancer type is persistent.
+	$HostPoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName
+
+	# //todo confirm with roop
+	if ($HostPoolInfo.LoadBalancerType -eq "Persistent") {
+		throw "$HostPoolName hostpool configured with Persistent Load balancer. So scale script doesn't apply for this load balancertype. Scale script will execute only with these load balancer types: BreadthFirst, DepthFirst. Please remove this from 'HostpoolName' input and try again"
+	}
+
+	$SessionHostsList = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName
+
+	#Check if the hostpool have session hosts and compare count with minimum number of rdsh value
+	if (!$SessionHostsList) {
+		Write-Output "Hostpool '$HostPoolName' doesn't have session hosts. Deployment Script will skip the basic scale script configuration for this hostpool."
+	}
+	elseif ($SessionHostsList.Count -le $MinimumNumberOfRDSH) {
+		Write-Output "Hostpool '$HostPoolName' has less than the minimum number of session host required."
+		$Confirmation = Read-Host "Do you wish to continue configuring the scale script for these available session hosts? [y/n]"
+		if ($Confirmation -eq 'n') {
+			Write-Output "Configuring the scale script is skipped for this hostpool '$HostPoolName'."
+		}
+		else {
+			Write-Output "Configuring the scale script for the hostpool : '$HostPoolName' and will keep the minimum required session hosts in running mode."
+		}
+	}
+
+	[PSCustomObject]$RequestBody = @{
+		"LogAnalyticsWorkspaceId"       = $LogAnalyticsWorkspaceId
+		"LogAnalyticsPrimaryKey"        = $LogAnalyticsPrimaryKey
+		"ConnectionAssetName"           = $ConnectionAssetName
+		"AADTenantId"                   = $SubscriptionInfo.TenantId
+		"SubscriptionId"                = $SubscriptionId
+		"RDBrokerURL"                   = $RDBrokerURL
+		"TenantGroupName"               = $TenantGroupName
+		"TenantName"                    = $TenantName
+		"HostPoolName"                  = $HostPoolName
+		"MaintenanceTagName"            = $MaintenanceTagName
+		"TimeDifference"                = $TimeDifference
+		"BeginPeakTime"                 = $BeginPeakTime
+		"EndPeakTime"                   = $EndPeakTime
+		"SessionThresholdPerCPU"        = $SessionThresholdPerCPU
+		"MinimumNumberOfRDSH"           = $MinimumNumberOfRDSH
+		"LimitSecondsToForceLogOffUser" = $LimitSecondsToForceLogOffUser
+		"LogOffMessageTitle"            = $LogOffMessageTitle
+		"LogOffMessageBody"             = $LogOffMessageBody 
+		"AutomationAccountName"         = $AutomationAccountName
+	}
+	$RequestBodyJson = $RequestBody | ConvertTo-Json
+	$LogicAppName = ($HostPoolName + "_" + "Autoscale" + "_" + "Scheduler").Replace(" ", "")
+	
+	$SchedulerDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/azureLogicAppCreation.json" -LogicAppName $LogicAppName -WebhookURI $WebhookURI.Replace("`n", "").Replace("`r", "") -ActionSettingsBody $RequestBodyJson -RecurrenceInterval $RecurrenceInterval -Verbose
+
+	if ($SchedulerDeployment.ProvisioningState -eq "Succeeded") {
+		Write-Output "$HostPoolName hostpool successfully configured with logic app scheduler"
+	}
+	else {
+		throw "Failed to create logic app scheduler. Deployment Provisioning Status: $($SchedulerDeployment.ProvisioningState)"
+	}
+}
