@@ -176,15 +176,40 @@ if (!$AutomationAccount) {
 }
 
 [array]$RequiredModules = @(
-	[PSCustomObject]@{ ModuleName = 'Az.Accounts'; ModuleVersion = '1.6.4' }
-	[PSCustomObject]@{ ModuleName = 'Microsoft.RDInfra.RDPowershell'; ModuleVersion = '1.0.1288.1' }
-	[PSCustomObject]@{ ModuleName = 'OMSIngestionAPI'; ModuleVersion = '1.6.0' }
-	[PSCustomObject]@{ ModuleName = 'Az.Compute'; ModuleVersion = '3.1.0' }
-	[PSCustomObject]@{ ModuleName = 'Az.Resources'; ModuleVersion = '1.8.0' }
-	[PSCustomObject]@{ ModuleName = 'Az.Automation'; ModuleVersion = '1.3.4' }
+	'Az.Accounts'
+	'Microsoft.RDInfra.RDPowershell'
+	'OMSIngestionAPI'
+	'Az.Compute'
+	'Az.Resources'
+	'Az.Automation'
 )
 
 $SkipHttpErrorCheckParam = (Get-Command Invoke-WebRequest).Parameters.SkipHttpErrorCheck
+
+# Function to check if the module is imported
+function Wait-ForModuleToBeImported {
+	param(
+		[Parameter(mandatory = $true)]
+		[string]$ResourceGroupName,
+
+		[Parameter(mandatory = $true)]
+		[string]$AutomationAccountName,
+
+		[Parameter(mandatory = $true)]
+		[string]$ModuleName
+	)
+
+	# //todo add time out ?
+	while ($true) {
+		$AutoModule = Get-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ErrorAction SilentlyContinue
+		if ($AutoModule.ProvisioningState -eq 'Succeeded') {
+			Write-Output "Successfully imported module '$ModuleName' into Automation Account Modules"
+			break
+		}
+		Write-Output "Waiting for module '$ModuleName' to get imported into Automation Account Modules ..."
+		Start-Sleep -Seconds 30
+	}
+}
 
 # Function to add required modules to Azure Automation account
 function Add-ModulesToAutoAccount {
@@ -222,6 +247,12 @@ function Add-ModulesToAutoAccount {
 		$ModuleVersion = $PackageDetails.entry.properties.version
 	}
 
+	# Check if the required modules are imported
+	$ImportedModule = Get-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ErrorAction SilentlyContinue
+	if ($ImportedModule -and $ImportedModule.Version -ge $ModuleVersion) {
+		return
+	}
+
 	[string]$ModuleContentUrl = "https://www.powershellgallery.com/api/v2/package/$ModuleName/$ModuleVersion"
 
 	# Test if the module/version combination exists
@@ -246,31 +277,7 @@ function Add-ModulesToAutoAccount {
 	} while ($ModuleContentUrl)
 
 	New-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ContentLink $ActualUrl
-}
-
-# Function to check if the module is imported
-function Wait-ForModuleToBeImported {
-	param(
-		[Parameter(mandatory = $true)]
-		[string]$ResourceGroupName,
-
-		[Parameter(mandatory = $true)]
-		[string]$AutomationAccountName,
-
-		[Parameter(mandatory = $true)]
-		[string]$ModuleName
-	)
-
-	# //todo add time out ?
-	while ($true) {
-		$AutoModule = Get-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ErrorAction SilentlyContinue
-		if ($AutoModule.ProvisioningState -eq 'Succeeded') {
-			Write-Output "Successfully imported module '$ModuleName' into Automation Account Modules"
-			break
-		}
-		Write-Output "Waiting for module '$ModuleName' to get imported into Automation Account Modules ..."
-		Start-Sleep -Seconds 30
-	}
+	Wait-ForModuleToBeImported -ModuleName $ModuleName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName
 }
 
 # Creating a runbook and published the basic Scale script file
@@ -292,14 +299,8 @@ if (!$WebhookURI) {
 }
 
 # Required modules imported from Automation Account Modules gallery for Scale Script execution
-foreach ($Module in $RequiredModules) {
-	# //todo confirm with roop
-	# Check if the required modules are imported 
-	$ImportedModule = Get-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $Module.ModuleName -ErrorAction SilentlyContinue
-	if (!$ImportedModule -or $ImportedModule.version -ne $Module.ModuleVersion) {
-		Add-ModulesToAutoAccount -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ModuleName $Module.ModuleName
-		Wait-ForModuleToBeImported -ModuleName $Module.ModuleName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName
-	}
+foreach ($ModuleName in $RequiredModules) {
+	Add-ModulesToAutoAccount -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ModuleName $ModuleName
 }
 
 if ($WorkspaceName) {
