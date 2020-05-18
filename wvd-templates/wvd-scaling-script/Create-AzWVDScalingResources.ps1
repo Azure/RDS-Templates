@@ -41,7 +41,10 @@
 param(
 	[Parameter(mandatory = $true)]
 	[string]$SubscriptionId,
+	
+	[switch]$UseRDSAPI,
 
+	# Note: only for rds api
 	[Parameter(mandatory = $false)]
 	[string]$RDBrokerURL = 'https://rdbroker.wvd.microsoft.com',
 
@@ -63,10 +66,12 @@ param(
 	[Parameter(mandatory = $false)]
 	[int]$SelfSignedCertNoOfMonthsUntilExpired = 12,
 
+	# Note: only for rds api
 	[Parameter(mandatory = $false)]
 	[string]$TenantGroupName = 'Default Tenant Group',
 
-	[Parameter(mandatory = $true)]
+	# Note: only for rds api
+	[Parameter(mandatory = $false)]
 	[string]$TenantName,
 
 	[Parameter(mandatory = $true)]
@@ -109,13 +114,16 @@ param(
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
 
+if ($UseRDSAPI -and [string]::IsNullOrWhiteSpace($TenantName)) {
+	throw "TenantName cannot be null or empty space: $TenantName"
+}
+
 if (!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
 	throw 'Not running as Administrator. Please run the script as Administrator'
 }
 
 # Initializing variables
-# //todo traling '/' or not ?
-[string]$ScriptRepoLocation = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script/"
+[string]$ScriptRepoLocation = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
 [string]$RunbookName = "WVDAutoScaleRunbook"
 [string]$WebhookName = "WVDAutoScaleWebhook"
 
@@ -128,6 +136,18 @@ Import-Module Az.Accounts
 Import-Module Az.OperationalInsights
 Import-Module Az.Automation
 Import-Module Az.LogicApp
+
+if ((Get-Command Import-Module).Parameters.SkipEditionCheck) {
+	Import-Module PKI -SkipEditionCheck
+}
+else {
+	Import-Module PKI
+}
+
+if (!$UseRDSAPI) {
+	# Note: only for az wvd api
+	Import-Module Az.DesktopVirtualization
+}
 
 # Get the azure context
 $AzContext = Get-AzContext
@@ -144,22 +164,24 @@ if ($RoleAssignment.RoleDefinitionName -notin @('Owner', 'Contributor')) {
 	throw 'Authenticated user should have the Owner/Contributor permissions to the subscription'
 }
 
-# Get the WVD context
-$WVDContext = Get-RdsContext -DeploymentUrl $RDBrokerURL
-if (!$WVDContext) {
-	throw "No WVD context found. Please authenticate to WVD using `"Add-RdsAccount -DeploymentURL '$RDBrokerURL'`" cmdlet and then run this script"
-}
-
-# Set WVD context to the appropriate tenant group
-[string]$CurrentTenantGroupName = $WVDContext.TenantGroupName
-if ($TenantGroupName -ne $CurrentTenantGroupName) {
-	try {
-		Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
-		# Note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
-		Set-RdsContext -TenantGroupName $TenantGroupName
+if ($UseRDSAPI) {
+	# Get the WVD context
+	$WVDContext = Get-RdsContext -DeploymentUrl $RDBrokerURL
+	if (!$WVDContext) {
+		throw "No WVD context found. Please authenticate to WVD using `"Add-RdsAccount -DeploymentURL '$RDBrokerURL'`" cmdlet and then run this script"
 	}
-	catch {
-		throw [System.Exception]::new("Error switch WVD context to tenant group '$TenantGroupName' from '$CurrentTenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
+
+	# Set WVD context to the appropriate tenant group
+	[string]$CurrentTenantGroupName = $WVDContext.TenantGroupName
+	if ($TenantGroupName -ne $CurrentTenantGroupName) {
+		try {
+			Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
+			# Note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
+			Set-RdsContext -TenantGroupName $TenantGroupName
+		}
+		catch {
+			throw [System.Exception]::new("Error switch WVD context to tenant group '$TenantGroupName' from '$CurrentTenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
+		}
 	}
 }
 
