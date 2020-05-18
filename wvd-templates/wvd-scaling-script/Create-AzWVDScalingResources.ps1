@@ -1,6 +1,9 @@
-﻿<#
+﻿
+# //todo refactor
+<#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to execute scaling script in Microsoft Azure Automation Account.
+
 .DESCRIPTION
 	This sample script will create the scale script execution required resources in Microsoft Azure. Resources are resource group, automation account, automation account runbook,
     automation account webhook, log analytic workspace and customtables.
@@ -98,6 +101,7 @@ param(
 )
 
 # //todo improve error logging, externalize, centralize vars
+# //todo modularize using rds API vs az wvd
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
