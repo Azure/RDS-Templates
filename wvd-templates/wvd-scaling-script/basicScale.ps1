@@ -35,7 +35,7 @@ try {
 	$TimeDifference = $Input.TimeDifference
 	$BeginPeakTime = $Input.BeginPeakTime
 	$EndPeakTime = $Input.EndPeakTime
-	$SessionThresholdPerCPU = $Input.SessionThresholdPerCPU
+	[double]$SessionThresholdPerCPU = $Input.SessionThresholdPerCPU
 	[int]$MinimumNumberOfRDSH = $Input.MinimumNumberOfRDSH
 	[int]$LimitSecondsToForceLogOffUser = $Input.LimitSecondsToForceLogOffUser
 	$LogOffMessageTitle = $Input.LogOffMessageTitle

@@ -79,7 +79,7 @@ param(
 	[string]$TimeDifference,
 
 	[Parameter(mandatory = $true)]
-	$SessionThresholdPerCPU,
+	[double]$SessionThresholdPerCPU,
 
 	[Parameter(mandatory = $true)]
 	[int]$MinimumNumberOfRDSH,
@@ -96,6 +96,8 @@ param(
 	[Parameter(mandatory = $true)]
 	[string]$LogOffMessageBody
 )
+
+# //todo improve error logging, externalize, centralize vars
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
@@ -141,7 +143,7 @@ if ($RoleAssignment.RoleDefinitionName -notin @('Owner', 'Contributor')) {
 # Get the WVD context
 $WVDContext = Get-RdsContext -DeploymentUrl $RDBrokerURL
 if (!$WVDContext) {
-	throw "No WVD context found. Please authenticate to WVD using Add-RdsAccount -DeploymentURL '$RDBrokerURL' cmdlet and then run this script"
+	throw "No WVD context found. Please authenticate to WVD using `"Add-RdsAccount -DeploymentURL '$RDBrokerURL'`" cmdlet and then run this script"
 }
 
 # Set WVD context to the appropriate tenant group
@@ -488,6 +490,7 @@ foreach ($HostPoolName in $HostPoolNames) {
 	$SessionHostsList = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName
 
 	#Check if the hostpool have session hosts and compare count with minimum number of rdsh value
+	# //todo confirm with roop: do we skip the following host pools ?
 	if (!$SessionHostsList) {
 		Write-Output "Hostpool '$HostPoolName' doesn't have session hosts. Deployment Script will skip the basic scale script configuration for this hostpool."
 	}
