@@ -124,18 +124,16 @@ Import-Module Az.Automation
 Import-Module Az.LogicApp
 
 # Get the azure context
-$Context = Get-AzContext
-if (!$Context) {
+$AzContext = Get-AzContext
+if (!$AzContext) {
 	throw 'No Azure context found. Please authenticate to Azure using Login-AzAccount cmdlet and then run this script'
 }
 
 # Select the subscription
-$Subscription = Select-AzSubscription -SubscriptionId $SubscriptionId
-Set-AzContext -SubscriptionObject $Subscription.ExtendedProperties
+$AzContext = Set-AzContext -SubscriptionId $SubscriptionId -TenantId $AzContext.Tenant
 
 # Get the Role Assignment of the authenticated user
-$RoleAssignment = Get-AzRoleAssignment -SignInName $Context.Account -ExpandPrincipalGroups
-
+$RoleAssignment = Get-AzRoleAssignment -SignInName $AzContext.Account -ExpandPrincipalGroups
 if ($RoleAssignment.RoleDefinitionName -notin @('Owner', 'Contributor')) {
 	throw 'Authenticated user should have the Owner/Contributor permissions to the subscription'
 }
@@ -291,6 +289,7 @@ if (!$WebhookURI) {
 
 # Required modules imported from Automation Account Modules gallery for Scale Script execution
 foreach ($Module in $RequiredModules) {
+	# //todo confirm with roop
 	# Check if the required modules are imported 
 	$ImportedModule = Get-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $Module.ModuleName -ErrorAction SilentlyContinue
 	if (!$ImportedModule -or $ImportedModule.version -ne $Module.ModuleVersion) {
@@ -379,12 +378,21 @@ function New-CustomSelfSignedCertificate([string] $certificateName, [SecureStrin
 	[string] $certPath, [string] $certPathCer, [string] $SelfSignedCertNoOfMonthsUntilExpired ) {
 	$Cert = New-SelfSignedCertificate -DnsName $certificateName -CertStoreLocation cert:\LocalMachine\My -KeyExportPolicy Exportable -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" -NotAfter (Get-Date).AddMonths($SelfSignedCertNoOfMonthsUntilExpired) -HashAlgorithm SHA256
 
-	Export-PfxCertificate -Cert ("Cert:\localmachine\my\" + $Cert.Thumbprint) -FilePath $certPath -Password $selfSignedCertPassword -Force | Write-Verbose
-	Export-Certificate -Cert ("Cert:\localmachine\my\" + $Cert.Thumbprint) -FilePath $certPathCer -Type CERT | Write-Verbose
+	Export-PfxCertificate -Cert ("Cert:\localmachine\my\" + $Cert.Thumbprint) -FilePath $certPath -Password $selfSignedCertPassword -Force
+	Export-Certificate -Cert ("Cert:\localmachine\my\" + $Cert.Thumbprint) -FilePath $certPathCer -Type CERT
 }
 
 function New-ServicePrincipal([System.Security.Cryptography.X509Certificates.X509Certificate2] $PfxCert, [string] $ApplicationDisplayName) {
+
+	$ServicePrincipal = Get-AzADServicePrincipal -DisplayName $ApplicationDisplayName
 	$keyValue = [System.Convert]::ToBase64String($PfxCert.GetRawCertData())
+
+	if ($ServicePrincipal.Count -eq 1) {
+		Remove-AzADAppCredential -ApplicationId $ServicePrincipal.ApplicationId -Force | Write-Verbose
+		New-AzADAppCredential -ApplicationId $ServicePrincipal.ApplicationId -CertValue $keyValue -StartDate $PfxCert.NotBefore -EndDate $PfxCert.NotAfter | Write-Verbose
+		return $ServicePrincipal.ApplicationId.ToString()
+	}
+
 	$keyId = (New-Guid).Guid
 
 	# Create an Azure AD application, AD App Credential, AD ServicePrincipal
@@ -392,19 +400,20 @@ function New-ServicePrincipal([System.Security.Cryptography.X509Certificates.X50
 	# Requires Application Developer Role, but works with Application administrator or GLOBAL ADMIN
 	$Application = New-AzADApplication -DisplayName $ApplicationDisplayName -HomePage ("http://" + $ApplicationDisplayName) -IdentifierUris ("http://" + $keyId)
 	# Requires Application administrator or GLOBAL ADMIN
-	New-AzADAppCredential -ApplicationId $Application.ApplicationId -CertValue $keyValue -StartDate $PfxCert.NotBefore -EndDate $PfxCert.NotAfter
+	New-AzADAppCredential -ApplicationId $Application.ApplicationId -CertValue $keyValue -StartDate $PfxCert.NotBefore -EndDate $PfxCert.NotAfter | Write-Verbose
 	# Requires Application administrator or GLOBAL ADMIN
 	$ServicePrincipal = New-AzADServicePrincipal -ApplicationId $Application.ApplicationId
-	Get-AzADServicePrincipal -ObjectId $ServicePrincipal.Id
+	Get-AzADServicePrincipal -ObjectId $ServicePrincipal.Id | Write-Verbose
 
 	# Sleep here for a few seconds to allow the service principal application to become active (ordinarily takes a few seconds)
 	Start-Sleep -Seconds 15
+	
 	# Requires User Access Administrator or Owner.
-	$NewRole = New-AzRoleAssignment -RoleDefinitionName Contributor -ServicePrincipalName $Application.ApplicationId -ErrorAction SilentlyContinue
+	$NewRole = Get-AzRoleAssignment -ServicePrincipalName $Application.ApplicationId -ErrorAction SilentlyContinue
 	$Retries = 0;
 	While (!$NewRole -and $Retries -le 6) {
 		Start-Sleep -Seconds 10
-		New-AzRoleAssignment -RoleDefinitionName Contributor -ServicePrincipalName $Application.ApplicationId | Write-Verbose -ErrorAction SilentlyContinue
+		New-AzRoleAssignment -RoleDefinitionName Contributor -ServicePrincipalName $Application.ApplicationId | Write-Verbose
 		$NewRole = Get-AzRoleAssignment -ServicePrincipalName $Application.ApplicationId -ErrorAction SilentlyContinue
 		$Retries++;
 	}
@@ -413,7 +422,7 @@ function New-ServicePrincipal([System.Security.Cryptography.X509Certificates.X50
 
 function New-AutomationCertificateAsset ([string] $ResourceGroupName, [string] $AutomationAccountName, [string] $certifcateAssetName, [string] $certPath, [SecureString] $certPassword, [Boolean] $Exportable) {
 	Remove-AzAutomationCertificate -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $certifcateAssetName -ErrorAction SilentlyContinue
-	New-AzAutomationCertificate -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Path $certPath -Name $certifcateAssetName -Password $CertPassword -Exportable:$Exportable | write-verbose
+	New-AzAutomationCertificate -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Path $certPath -Name $certifcateAssetName -Password $CertPassword -Exportable:$Exportable
 }
 
 function New-AutomationConnectionAsset ([string] $ResourceGroupName, [string] $AutomationAccountName, [string] $ConnectionAssetName, [string] $connectionTypeName, [System.Collections.Hashtable] $connectionFieldValues ) {
@@ -476,7 +485,6 @@ New-AutomationConnectionAsset $ResourceGroupName $AutomationAccountName $Connect
 New-RdsRoleAssignment -RoleDefinitionName 'RDS Contributor' -ApplicationId $ApplicationId -TenantName $TenantName
 
 # Creating Azure logic app to schedule job
-# //todo define $HostPoolNames and other params
 foreach ($HostPoolName in $HostPoolNames) {
 
 	# Check if the hostpool load balancer type is persistent.
@@ -529,7 +537,7 @@ foreach ($HostPoolName in $HostPoolNames) {
 	$RequestBodyJson = $RequestBody | ConvertTo-Json
 	$LogicAppName = ($HostPoolName + "_" + "Autoscale" + "_" + "Scheduler").Replace(" ", "")
 	
-	$SchedulerDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/azureLogicAppCreation.json" -LogicAppName $LogicAppName -WebhookURI $WebhookURI.Replace("`n", "").Replace("`r", "") -ActionSettingsBody $RequestBodyJson -RecurrenceInterval $RecurrenceInterval -Verbose
+	$SchedulerDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/azureLogicAppCreation.json" -LogicAppName $LogicAppName -WebhookURI $WebhookURI.value.Replace("`n", "").Replace("`r", "") -ActionSettingsBody $RequestBodyJson -RecurrenceInterval $RecurrenceInterval -Verbose
 
 	if ($SchedulerDeployment.ProvisioningState -eq "Succeeded") {
 		Write-Output "$HostPoolName hostpool successfully configured with logic app scheduler"
