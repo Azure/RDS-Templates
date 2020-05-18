@@ -43,6 +43,9 @@ param(
 	[string]$SubscriptionId,
 
 	[Parameter(mandatory = $false)]
+	[string]$RDBrokerURL = 'https://rdbroker.wvd.microsoft.com',
+
+	[Parameter(mandatory = $false)]
 	[string]$ResourceGroupName = "WVDAutoScaleResourceGroup",
 
 	[Parameter(mandatory = $false)]
@@ -55,7 +58,7 @@ param(
 	[string]$WorkspaceName,
 	
 	[Parameter(Mandatory = $true)]
-	[String]$ApplicationDisplayName,
+	[string]$ApplicationDisplayName,
 
 	[Parameter(mandatory = $false)]
 	[int]$SelfSignedCertNoOfMonthsUntilExpired = 12,
@@ -115,7 +118,6 @@ if (!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]
 [string]$ScriptRepoLocation = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script/"
 [string]$RunbookName = "WVDAutoScaleRunbook"
 [string]$WebhookName = "WVDAutoScaleWebhook"
-[string]$RDBrokerURL = 'https://rdbroker.wvd.microsoft.com'
 
 # Set the ExecutionPolicy
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
