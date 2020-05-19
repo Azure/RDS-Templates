@@ -113,6 +113,10 @@ param(
 	[Parameter(mandatory = $true)]
 	[string]$HostPoolName,
 
+	# Note: only for az wvd api
+	[Parameter(mandatory = $false)]
+	[string]$HostPoolResourceGroupName,
+
 	[Parameter(mandatory = $false)]
 	[string]$LogAnalyticsWorkspaceId,
 
@@ -157,13 +161,15 @@ param(
 )
 
 # //todo improve error logging, externalize, centralize vars
-# //todo modularize using rds API vs az wvd
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
 
 if ($UseRDSAPI -and [string]::IsNullOrWhiteSpace($TenantName)) {
 	throw "TenantName cannot be null or empty space: $TenantName"
+}
+if (!$HostPoolResourceGroupName) {
+	$HostPoolResourceGroupName = $ResourceGroupName
 }
 
 # Initializing variables
@@ -239,7 +245,7 @@ if ($UseRDSAPI) {
 	$HostPoolInfo = Get-RdsHostPool -Name $HostPoolName -TenantName $TenantName
 }
 else {
-	$HostPoolInfo = Get-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName
+	$HostPoolInfo = Get-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $HostPoolResourceGroupName
 }
 
 if ($HostPoolInfo.LoadBalancerType -eq "Persistent") {
@@ -251,7 +257,7 @@ if ($UseRDSAPI) {
 	$SessionHostsList = Get-RdsSessionHost -HostPoolName $HostPoolName -TenantName $TenantName
 }
 else {
-	$SessionHostsList = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName
+	$SessionHostsList = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $HostPoolResourceGroupName
 }
 
 #Check if the hostpool have session hosts and compare count with minimum number of rdsh value
@@ -269,7 +275,7 @@ elseif ($SessionHostsList.Count -le $MinimumNumberOfRDSH) {
 	"AADTenantId"                   = $AADTenantId
 	"SubscriptionId"                = $SubscriptionId
 	"UseRDSAPI"                     = $UseRDSAPI
-	"ResourceGroupName"             = $ResourceGroupName
+	"ResourceGroupName"             = $HostPoolResourceGroupName
 	"HostPoolName"                  = $HostPoolName
 	"MaintenanceTagName"            = $MaintenanceTagName
 	"TimeDifference"                = $TimeDifference

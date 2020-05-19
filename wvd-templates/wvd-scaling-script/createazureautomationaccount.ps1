@@ -61,7 +61,6 @@ param(
 )
 
 # //todo improve error logging, externalize, centralize vars
-# //todo modularize using rds API vs az wvd
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
