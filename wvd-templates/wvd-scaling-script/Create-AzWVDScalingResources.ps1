@@ -144,11 +144,6 @@ else {
 	Import-Module PKI
 }
 
-if (!$UseRDSAPI) {
-	# Note: only for az wvd api
-	Import-Module Az.DesktopVirtualization
-}
-
 # Get the azure context
 $AzContext = Get-AzContext
 if (!$AzContext) {
@@ -201,12 +196,17 @@ if (!$AutomationAccount) {
 
 [array]$RequiredModules = @(
 	'Az.Accounts'
-	'Microsoft.RDInfra.RDPowershell'
-	'OMSIngestionAPI'
 	'Az.Compute'
 	'Az.Resources'
 	'Az.Automation'
+	'OMSIngestionAPI'
 )
+if ($UseRDSAPI) {
+	$RequiredModules += 'Microsoft.RDInfra.RDPowershell'
+}
+else {
+	$RequiredModules += 'Az.DesktopVirtualization'
+}
 
 $SkipHttpErrorCheckParam = (Get-Command Invoke-WebRequest).Parameters.SkipHttpErrorCheck
 
@@ -511,20 +511,34 @@ $ConnectionFieldValues = @{
 # Create an Automation connection asset named AzureRunAsConnection in the Automation account. This connection uses the service principal.
 New-AutomationConnectionAsset $ResourceGroupName $AutomationAccountName $ConnectionAssetName $ConnectionTypeName $ConnectionFieldValues
 
-New-RdsRoleAssignment -RoleDefinitionName 'RDS Contributor' -ApplicationId $ApplicationId -TenantName $TenantName
+if ($UseRDSAPI) {
+	New-RdsRoleAssignment -RoleDefinitionName 'RDS Contributor' -ApplicationId $ApplicationId -TenantName $TenantName
+}
 
 # Creating Azure logic app to schedule job
 foreach ($HostPoolName in $HostPoolNames) {
 
 	# Check if the hostpool load balancer type is persistent.
-	$HostPoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName
+	$HostPoolInfo = $null
+	if ($UseRDSAPI) {
+		$HostPoolInfo = Get-RdsHostPool -Name $HostPoolName -TenantName $TenantName
+	}
+	else {
+		$HostPoolInfo = Get-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName
+	}
 
 	# //todo confirm with roop
 	if ($HostPoolInfo.LoadBalancerType -eq "Persistent") {
 		throw "$HostPoolName hostpool configured with Persistent Load balancer. So scale script doesn't apply for this load balancertype. Scale script will execute only with these load balancer types: BreadthFirst, DepthFirst. Please remove this from 'HostpoolName' input and try again"
 	}
 
-	$SessionHostsList = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName
+	$SessionHostsList = $null
+	if ($UseRDSAPI) {
+		$SessionHostsList = Get-RdsSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName
+	}
+	else {
+		$SessionHostsList = Get-AzWvdSessionHost -HostPoolName $HostPoolName -TenantName $TenantName
+	}
 
 	#Check if the hostpool have session hosts and compare count with minimum number of rdsh value
 	# //todo confirm with roop: do we skip the following host pools ?
@@ -548,9 +562,7 @@ foreach ($HostPoolName in $HostPoolNames) {
 		"ConnectionAssetName"           = $ConnectionAssetName
 		"AADTenantId"                   = $SubscriptionInfo.TenantId
 		"SubscriptionId"                = $SubscriptionId
-		"RDBrokerURL"                   = $RDBrokerURL
-		"TenantGroupName"               = $TenantGroupName
-		"TenantName"                    = $TenantName
+		"ResourceGroupName"             = $ResourceGroupName
 		"HostPoolName"                  = $HostPoolName
 		"MaintenanceTagName"            = $MaintenanceTagName
 		"TimeDifference"                = $TimeDifference
@@ -562,6 +574,11 @@ foreach ($HostPoolName in $HostPoolNames) {
 		"LogOffMessageTitle"            = $LogOffMessageTitle
 		"LogOffMessageBody"             = $LogOffMessageBody 
 		"AutomationAccountName"         = $AutomationAccountName
+	}
+	if ($UseRDSAPI) {
+		$RequestBody.'RDBrokerURL' = $RDBrokerURL
+		$RequestBody.'TenantGroupName' = $TenantGroupName
+		$RequestBody.'TenantName' = $TenantName
 	}
 	$RequestBodyJson = $RequestBody | ConvertTo-Json
 	$LogicAppName = ($HostPoolName + "_" + "Autoscale" + "_" + "Scheduler").Replace(" ", "")
