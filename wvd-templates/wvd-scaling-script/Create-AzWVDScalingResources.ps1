@@ -562,6 +562,7 @@ foreach ($HostPoolName in $HostPoolNames) {
 		"ConnectionAssetName"           = $ConnectionAssetName
 		"AADTenantId"                   = $SubscriptionInfo.TenantId
 		"SubscriptionId"                = $SubscriptionId
+		"UseRDSAPI"                     = $UseRDSAPI
 		"ResourceGroupName"             = $ResourceGroupName
 		"HostPoolName"                  = $HostPoolName
 		"MaintenanceTagName"            = $MaintenanceTagName

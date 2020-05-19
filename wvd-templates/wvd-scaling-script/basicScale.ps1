@@ -27,9 +27,13 @@ try {
 	$ConnectionAssetName = $Input.ConnectionAssetName
 	$AADTenantId = $Input.AADTenantId
 	$SubscriptionId = $Input.SubscriptionId
-	$RDBrokerURL = $Input.RDBrokerURL
-	$TenantGroupName = $Input.TenantGroupName
-	$TenantName = $Input.TenantName
+	$UseRDSAPI = $Input.UseRDSAPI
+	$ResourceGroupName = $Input.ResourceGroupName
+	if ($UseRDSAPI) {
+		$RDBrokerURL = $Input.RDBrokerURL
+		$TenantGroupName = $Input.TenantGroupName
+		$TenantName = $Input.TenantName
+	}
 	$HostPoolName = $Input.HostPoolName
 	$MaintenanceTagName = $Input.MaintenanceTagName
 	$TimeDifference = $Input.TimeDifference
