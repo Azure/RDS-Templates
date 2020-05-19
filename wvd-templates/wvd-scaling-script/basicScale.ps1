@@ -251,6 +251,8 @@ try {
 		return
 	}
 
+	# //todo ensure HostPool load balancer type is not Persistent
+
 	#endregion
 	
 
