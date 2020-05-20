@@ -147,6 +147,7 @@ try {
 		}
 	}
 
+	# //todo support az wvd api
 	function Update-SessionHostToAllowNewSession {
 		param (
 			[Parameter(Mandatory = $true, ValueFromPipeline = $true)]
@@ -323,7 +324,7 @@ try {
 		}
 	}
 
-	Write-Log "HostPool info:`n$($HostPool | Out-String)"
+	Write-Log "HostPool info:`n$($HostPool | Format-List -Force | Out-String)"
 	Write-Log "Number of session hosts in the HostPool: $($SessionHosts.Count)"
 
 	# Number of session hosts that are running
@@ -415,9 +416,10 @@ try {
 	}
 	else {
 		# Off peak hours: check if need to adjust minimum number of session hosts running if the number of user sessions is close to the max allowed
-		[int]$OffPeakSessionsThreshold = [math]::Floor($MinimumNumberOfRDSH * $HostPool.MaxSessionLimit * 0.9)
+		[double]$MaxSessionsThreshold = 0.9
+		[int]$OffPeakSessionsThreshold = [math]::Floor($MinimumNumberOfRDSH * $HostPool.MaxSessionLimit * $MaxSessionsThreshold)
 		if ($nUserSessions -ge $OffPeakSessionsThreshold) {
-			$MinimumNumberOfRDSH = [math]::Ceiling($nUserSessions / ($HostPool.MaxSessionLimit * 0.9))
+			$MinimumNumberOfRDSH = [math]::Ceiling($nUserSessions / ($HostPool.MaxSessionLimit * $MaxSessionsThreshold))
 			Write-Log "[Off peak hours] Number of user sessions is near the max number of sessions allowed with minimum number of session hosts ($OffPeakSessionsThreshold). Adjusting minimum number of session hosts required to $MinimumNumberOfRDSH"
 		}
 	}
