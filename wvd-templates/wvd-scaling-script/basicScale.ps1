@@ -9,6 +9,7 @@
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
+	# //todo support new az wvd api
 	#region set err action preference, extract input params, set exec policies, set TLS 1.2 security protocol
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -249,14 +250,17 @@ try {
 		throw [System.Exception]::new("Hostpool '$HostPoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values.", $PSItem.Exception)
 	}
 
+	# Ensure HostPool load balancer type is not persistent
+	if ($HostPool.LoadBalancerType -eq 'Persistent') {
+		throw "HostPool '$HostPoolName' is configured with 'Persistent' load balancer type. Scaling tool only supports these load balancer types: BreadthFirst, DepthFirst"
+	}
+
 	Write-Log 'Get all session hosts'
 	$SessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName
 	if (!$SessionHosts) {
 		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool have session hosts."
 		return
 	}
-
-	# //todo ensure HostPool load balancer type is not Persistent
 
 	#endregion
 	
