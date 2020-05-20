@@ -9,6 +9,7 @@
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
+	# //todo fix errs with strict mode
 	# //todo support new az wvd api
 	#region set err action preference, extract input params, set exec policies, set TLS 1.2 security protocol
 
@@ -181,22 +182,24 @@ try {
 		}
 		Write-Log "Successfully authenticated with Azure using service principal. Result: `n$($AZAuthentication | Out-String)"
 
-		# Authenticating to WVD
-		$WVDAuthentication = $null
-		try {
-			$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AADTenantId
-			if (!$WVDAuthentication) {
-				throw $WVDAuthentication
+		if ($UseRDSAPI) {
+			# Authenticating to WVD
+			$WVDAuthentication = $null
+			try {
+				$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AADTenantId
+				if (!$WVDAuthentication) {
+					throw $WVDAuthentication
+				}
 			}
+			catch {
+				throw [System.Exception]::new('Failed to authenticate WVD', $PSItem.Exception)
+			}
+			Write-Log "Successfully authenticated with WVD using service principal. Result: `n$($WVDAuthentication | Out-String)"
 		}
-		catch {
-			throw [System.Exception]::new('Failed to authenticate WVD', $PSItem.Exception)
-		}
-		Write-Log "Successfully authenticated with WVD using service principal. Result: `n$($WVDAuthentication | Out-String)"
 	}
 
 
-	#region set az context, WVD tenant context, validate tenant & host pool, ensure there are at least 1 session host
+	#region set az context, WVD tenant context, validate tenant & host pool, validate HostPool load balancer type, ensure there is at least 1 session host
 
 	# Set the Azure context with Subscription
 	$AzContext = $null
@@ -212,36 +215,43 @@ try {
 	}
 	Write-Log "Successfully set the Azure context with the provided Subscription ID. Result: `n$($AzContext | Out-String)"
 
-	# Set WVD context to the appropriate tenant group
-	[string]$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
-	if ($TenantGroupName -ne $CurrentTenantGroupName) {
+	if ($UseRDSAPI) {
+		# Set WVD context to the appropriate tenant group
+		[string]$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
+		if ($TenantGroupName -ne $CurrentTenantGroupName) {
+			try {
+				Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
+				# Note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
+				Set-RdsContext -TenantGroupName $TenantGroupName
+			}
+			catch {
+				throw [System.Exception]::new("Error switch WVD context to tenant group '$TenantGroupName' from '$CurrentTenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
+			}
+		}
+		
+		# Validate Tenant
 		try {
-			Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
-			# Note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
-			Set-RdsContext -TenantGroupName $TenantGroupName
+			$Tenant = $null
+			$Tenant = Get-RdsTenant -Name $TenantName
+			if (!$Tenant) {
+				throw "No tenant with name '$TenantName' exists or the account doesn't have access to it."
+			}
 		}
 		catch {
-			throw [System.Exception]::new("Error switch WVD context to tenant group '$TenantGroupName' from '$CurrentTenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
+			throw [System.Exception]::new("Error getting the tenant '$TenantName'. This may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
 		}
-	}
-	
-	# Validate Tenant
-	try {
-		$Tenant = $null
-		$Tenant = Get-RdsTenant -Name $TenantName
-		if (!$Tenant) {
-			throw "No tenant with name '$TenantName' exists or the account doesn't have access to it."
-		}
-	}
-	catch {
-		throw [System.Exception]::new("Error getting the tenant '$TenantName'. This may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
 	}
 
 	# Validate and get HostPool info
 	$HostPool = $null
 	try {
 		Write-Log "Get Hostpool info: $HostPoolName in Tenant: $TenantName"
-		$HostPool = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName
+		if ($UseRDSAPI) {
+			$HostPool = Get-RdsHostPool -Name $HostPoolName -TenantName $TenantName
+		}
+		else {
+			$HostPool = Get-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName
+		}
 		if (!$HostPool) {
 			throw $HostPool
 		}
@@ -256,7 +266,13 @@ try {
 	}
 
 	Write-Log 'Get all session hosts'
-	$SessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName
+	$SessionHosts = $null
+	if ($UseRDSAPI) {
+		$SessionHosts = Get-RdsSessionHost -HostPoolName $HostPoolName -TenantName $TenantName
+	}
+	else {
+		$SessionHosts = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName
+	}
 	if (!$SessionHosts) {
 		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool have session hosts."
 		return
@@ -299,7 +315,12 @@ try {
 	# Note: breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
 	if ($HostPool.LoadBalancerType -ne 'BreadthFirst') {
 		Write-Log "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')"
-		$HostPool = Set-RdsHostPool -TenantName $TenantName -Name $HostPoolName -BreadthFirstLoadBalancer
+		if ($UseRDSAPI) {
+			$HostPool = Set-RdsHostPool -Name $HostPoolName -TenantName $TenantName -BreadthFirstLoadBalancer
+		}
+		else {
+			$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'BreadthFirst'
+		}
 	}
 
 	Write-Log "HostPool info:`n$($HostPool | Out-String)"
