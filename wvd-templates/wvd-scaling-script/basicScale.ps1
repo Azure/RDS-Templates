@@ -73,8 +73,10 @@ try {
 		param(
 			[Parameter(Mandatory = $true)]
 			[string]$Message,
-		
-			[switch]$Err
+
+			[switch]$Err,
+
+			[switch]$Warn
 		)
 
 		$LocalDateTime = Get-LocalDateTime
@@ -82,6 +84,9 @@ try {
 		$WriteMessage = "$($LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.ScriptLineNumber)] $Message"
 		if ($Err) {
 			Write-Error $WriteMessage
+		}
+		elseif ($Warn) {
+			Write-Warning $WriteMessage
 		}
 		else {
 			Write-Output $WriteMessage
@@ -345,7 +350,7 @@ try {
 
 		if ($VMInstance.PowerState -eq 'VM running') {
 			if ($SessionHost.Status -notin $DesiredRunningStates) {
-				Write-Log "[WARN] VM is in running state but session host is not (this could be because the VM was just started and has not connected to broker yet)"
+				Write-Log -Warn "VM is in running state but session host is not (this could be because the VM was just started and has not connected to broker yet)"
 			}
 
 			++$nRunningVMs
@@ -395,7 +400,7 @@ try {
 	Write-Log "Minimum number of session hosts required: $MinimumNumberOfRDSH"
 	# Check if minimum number of session hosts running is higher than max allowed
 	if ($VMs.Count -le $MinimumNumberOfRDSH) {
-		Write-Log '[WARN] Minimum number of RDSH is set higher than total number of session hosts'
+		Write-Log -Warn 'Minimum number of RDSH is set higher than total number of session hosts'
 		if ($nRunningVMs -eq $VMs.Count) {
 			Write-Log 'All session hosts are running'
 			return
@@ -430,7 +435,7 @@ try {
 				continue
 			}
 			if ($VM.SessionHost.UpdateState -ne 'Succeeded') {
-				Write-Log "[WARN] Session host '$($VM.SessionHost.SessionHostName)' is not healthy to start"
+				Write-Log -Warn "Session host '$($VM.SessionHost.SessionHostName)' is not healthy to start"
 				continue
 			}
 
@@ -456,7 +461,7 @@ try {
 
 		# Check if there were enough number of session hosts to start
 		if ($nVMsToStart -or $nCoresToStart) {
-			Write-Log "[WARN] not enough session hosts to start. Still need to start maximum of either $nVMsToStart VMs or $nCoresToStart cores"
+			Write-Log -Warn "Not enough session hosts to start. Still need to start maximum of either $nVMsToStart VMs or $nCoresToStart cores"
 		}
 
 		# Wait for those jobs to start the session hosts
@@ -514,7 +519,7 @@ try {
 		$SessionHostName = $SessionHost.SessionHostName
 		
 		if ($SessionHost.Sessions -and !$LimitSecondsToForceLogOffUser) {
-			Write-Log "[WARN] Session host '$SessionHostName' has $($SessionHost.Sessions) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
+			Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
 			# //todo explain why break and not continue
 			break
 		}
@@ -593,7 +598,7 @@ try {
 
 	# Check if there were enough number of session hosts to stop
 	if ($nVMsToStop) {
-		Write-Log "[WARN] Not enough session hosts to stop. Still need to stop $nVMsToStop VMs"
+		Write-Log -Warn "Not enough session hosts to stop. Still need to stop $nVMsToStop VMs"
 	}
 
 	# Wait for those jobs to stop the session hosts
