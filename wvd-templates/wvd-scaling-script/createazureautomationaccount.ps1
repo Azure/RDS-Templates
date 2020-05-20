@@ -131,7 +131,7 @@ else {
 	$RequiredModules += 'Az.DesktopVirtualization'
 }
 
-$SkipHttpErrorCheckParam = (Get-Command Invoke-WebRequest).Parameters.SkipHttpErrorCheck
+$SkipHttpErrorCheckParam = (Get-Command Invoke-WebRequest).Parameters['SkipHttpErrorCheck']
 
 # Function to check if the module is imported
 function Wait-ForModuleToBeImported {
@@ -220,7 +220,7 @@ function Add-ModuleToAutoAccount {
 		else {
 			$Res = Invoke-WebRequest -Uri $ModuleContentUrl -MaximumRedirection 0 -UseBasicParsing -ErrorAction Ignore
 		}
-		$ModuleContentUrl = $Res.Headers.Location
+		$ModuleContentUrl = $Res.Headers['Location']
 	} while ($ModuleContentUrl)
 
 	New-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ContentLink $ActualUrl -Verbose
