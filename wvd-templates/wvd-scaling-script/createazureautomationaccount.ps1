@@ -228,7 +228,7 @@ function Add-ModuleToAutoAccount {
 }
 
 # Creating a runbook and published the basic Scale script file
-$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/runbookCreationTemplate.json" -existingAutomationAccountName $AutomationAccountName -RunbookName $RunbookName -Force -Verbose
+$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -Force -Verbose
 
 if ($DeploymentStatus.ProvisioningState -ne 'Succeeded') {
 	throw "Some error occurred while deploying a runbook. Deployment Provisioning Status: $($DeploymentStatus.ProvisioningState)"

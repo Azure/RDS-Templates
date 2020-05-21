@@ -1,68 +1,57 @@
 {
-    "$schema": "http://schemas.microsoft.org/azure/deploymentTemplate?api-version=2015-01-01-preview#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0",
     "parameters": {
-        "existingAutomationAccountName": {
+        "automationAccountName": {
             "type": "String",
             "metadata": {
-                "description": "The name of the the existing automation accountname"
-            }
+                "description": "The name of the automation account"
+            },
+            "defaultValue": "WVDAutoScaleAutomationAccount"
         },
         "runbookName": {
             "type": "String",
             "metadata": {
-                "description": "The name of the the Runbook"
-            }
+                "description": "The name of the Runbook"
+            },
+            "defaultValue": "WVDAutoScaleRunbook"
         },
-        "_artifactsLocation": {
+        "scriptUri": {
             "type": "string",
             "metadata": {
-                "description": "The base URI where artifacts required by this template are located."
+                "description": "The URI of the scaling script for the Runbook"
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script/"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script/basicScale.ps1"
         },
-        "_artifactsLocationSasToken": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The sasToken required to access _artifactsLocation when they're located in a storage account with private access."
-            },
-            "defaultValue": ""
-        }
-    },
-    "variables": {
-        "scriptUri": "[concat(parameters('_artifactsLocation'),'basicScale.ps1')]",
-        "sku": "Free"
     },
     "resources": [
         {
             "type": "Microsoft.Automation/automationAccounts",
-            "name": "[parameters('existingAutomationAccountName')]",
+            "name": "[parameters('automationAccountName')]",
             "apiVersion": "2015-01-01-preview",
             "location": "[resourceGroup().location]",
-            "tags": {},
             "properties": {
                 "sku": {
-                    "name": "[variables('sku')]"
+                    "name": "Free"
                 }
             },
             "resources": [
                 {
                     "type": "runbooks",
-                    "name": "[Parameters('runbookName')]",
+                    "name": "[parameters('runbookName')]",
                     "apiVersion": "2015-01-01-preview",
                     "location": "[resourceGroup().location]",
-                    "tags": {},
                     "properties": {
                         "runbookType": "PowerShell",
                         "logProgress": "false",
                         "logVerbose": "false",
                         "publishContentLink": {
-                            "uri": "[variables('scriptUri')]",
+                            "uri": "[parameters('scriptUri')]",
                             "version": "1.0.0.0"
                         }
                     },
                     "dependsOn": [
-                        "[concat('Microsoft.Automation/automationAccounts/', parameters('existingAutomationAccountName'))]"
+                        "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'))]"
                     ]
                 }
             ]
@@ -71,7 +60,7 @@
     "outputs": {
         "scripturivalidate": {
             "type": "String",
-            "value": "[variables('scriptUri')]"
+            "value": "[parameters('scriptUri')]"
         }
     }
 }
