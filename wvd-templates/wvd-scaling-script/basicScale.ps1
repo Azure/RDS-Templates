@@ -868,4 +868,3 @@ function Convert-UTCtoLocalTime
 	Write-Output "End WVD tenant scale optimization."
 	$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "End WVD tenant scale optimization." }
 	Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
-}
