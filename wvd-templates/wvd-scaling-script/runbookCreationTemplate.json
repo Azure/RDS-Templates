@@ -17,19 +17,26 @@
             "defaultValue": "WVDAutoScaleRunbook"
         },
         "scriptUri": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "The URI of the scaling script for the Runbook"
             },
             "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script/basicScale.ps1"
         },
+        "location": {
+            "type": "String",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources"
+            }
+        }
     },
     "resources": [
         {
             "type": "Microsoft.Automation/automationAccounts",
             "name": "[parameters('automationAccountName')]",
             "apiVersion": "2015-01-01-preview",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "properties": {
                 "sku": {
                     "name": "Free"
@@ -40,7 +47,7 @@
                     "type": "runbooks",
                     "name": "[parameters('runbookName')]",
                     "apiVersion": "2015-01-01-preview",
-                    "location": "[resourceGroup().location]",
+                    "location": "[parameters('location')]",
                     "properties": {
                         "runbookType": "PowerShell",
                         "logProgress": "false",

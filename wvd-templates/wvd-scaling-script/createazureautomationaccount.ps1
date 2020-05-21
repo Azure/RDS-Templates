@@ -110,13 +110,6 @@ if (!$ResourceGroup) {
 	Write-Output "Resource Group was created with name: $ResourceGroupName"
 }
 
-# Check if the Automation Account exist
-$AutomationAccount = Get-AzAutomationAccount -ResourceGroupName $ResourceGroupName -Name $AutomationAccountName -ErrorAction SilentlyContinue
-if (!$AutomationAccount) {
-	New-AzAutomationAccount -ResourceGroupName $ResourceGroupName -Name $AutomationAccountName -Location $Location -Plan Free -Verbose
-	Write-Output "Automation Account was created with name: $AutomationAccountName"
-}
-
 [array]$RequiredModules = @(
 	'Az.Accounts'
 	'Az.Compute'
@@ -227,8 +220,9 @@ function Add-ModuleToAutoAccount {
 	Wait-ForModuleToBeImported -ModuleName $ModuleName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName
 }
 
-# Creating a runbook and published the basic Scale script file
-$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -Force -Verbose
+# //todo confirm with roop if ok to create auto account as part of ARM
+# Creating an automation account & runbook and publish the scaling script file
+$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -location $Location -Force -Verbose
 
 if ($DeploymentStatus.ProvisioningState -ne 'Succeeded') {
 	throw "Some error occurred while deploying a runbook. Deployment Provisioning Status: $($DeploymentStatus.ProvisioningState)"
