@@ -250,7 +250,7 @@ if (!$WorkspaceName) {
 	return
 }
 
-# Check if the log analytic workspace is exist
+# Check if the log analytic workspace exists
 $LAWorkspace = Get-AzOperationalInsightsWorkspace | Where-Object { $_.Name -eq $WorkspaceName }
 if (!$LAWorkspace) {
 	throw "Provided log analytic workspace doesn't exist in your Subscription."
