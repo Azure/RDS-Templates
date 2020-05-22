@@ -14,7 +14,7 @@
             "metadata": {
                 "description": "Leave this parameter as is. It is used internally only"
             },
-            "defaultValue": false
+            "defaultValue": true
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -404,20 +404,6 @@
         }
     ],
     "resources": [
-        {
-            "condition": "[parameters('_createPidResource')]",
-            "apiVersion": "2018-05-01",
-            "name": "pid-836bce42-d18b-4b20-9725-d967d519426f",
-            "type": "Microsoft.Resources/deployments",
-            "properties": {
-                "mode": "Incremental",
-                "template": {
-                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-                    "contentVersion": "1.0.0.0",
-                    "resources": []
-                }
-            }
-        },
         {
             "apiVersion": "2018-10-01",
             "condition": "[variables('createAvailabilitySet')]",
