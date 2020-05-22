@@ -1209,7 +1209,7 @@ else {
 		# Check if minimum number of rdsh vm's are running in off peak hours
 		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" -or $_.Status -eq 'NeedsAssistance' }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
-		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
+		if ($CheckMinimumNumberOfRDShIsRunning -eq $null -or ($CheckMinimumNumberOfRDShIsRunning).count -lt $MinimumNumberOfRDSH) {
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHostName.Split(".")[0]
