@@ -265,6 +265,13 @@
                 "description": "Set this parameter to true if you would like to create Availability set. Defaults to true. Please note that if 'enablePersistentDesktop' is true, this parameter will be ignored and no availability set wil be created. Using an Availability set limits you to a maximum of 200 virtual machines For more info: https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits#virtual-machines-limits---azure-resource-manager."
             },
             "defaultValue": true
+        },
+        "_deployPidResource": {
+            "type": "bool",
+            "metadata": {
+                "description": "Leave this parameter as is. It is used internally only"
+            },
+            "defaultValue": false
         }
     },
     "variables": {
@@ -397,6 +404,20 @@
         }
     ],
     "resources": [
+        {
+            "condition": "[parameters('_deployPidResource')]",
+            "apiVersion": "2018-05-01",
+            "name": "pid-836bce42-d18b-4b20-9725-d967d519426f",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": []
+                }
+            }
+        },
         {
             "apiVersion": "2018-10-01",
             "condition": "[variables('createAvailabilitySet')]",
