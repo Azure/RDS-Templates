@@ -1009,7 +1009,7 @@ else {
 
 	#check the calculated end time is later than begin time in case of time zone
 	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
-		$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
+		if ($CurrentDateTime -lt $EndPeakDateTime) { $BeginPeakDateTime = $BeginPeakDateTime.AddDays(-1) } else { $EndPeakDateTime = $EndPeakDateTime.AddDays(1) }
 	}
 
 	#Checking givne host pool name exists in Tenant
