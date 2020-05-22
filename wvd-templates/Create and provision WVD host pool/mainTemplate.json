@@ -9,6 +9,13 @@
             },
             "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/"
         },
+        "_deployPidResource": {
+            "type": "bool",
+            "metadata": {
+                "description": "Leave this parameter as is. It is used internally only"
+            },
+            "defaultValue": false
+        },
         "_artifactsLocationSasToken": {
             "type": "securestring",
             "metadata": {
@@ -265,13 +272,6 @@
                 "description": "Set this parameter to true if you would like to create Availability set. Defaults to true. Please note that if 'enablePersistentDesktop' is true, this parameter will be ignored and no availability set wil be created. Using an Availability set limits you to a maximum of 200 virtual machines For more info: https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits#virtual-machines-limits---azure-resource-manager."
             },
             "defaultValue": true
-        },
-        "_deployPidResource": {
-            "type": "bool",
-            "metadata": {
-                "description": "Leave this parameter as is. It is used internally only"
-            },
-            "defaultValue": false
         }
     },
     "variables": {
