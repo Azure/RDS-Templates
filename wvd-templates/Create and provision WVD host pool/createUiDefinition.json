@@ -15,6 +15,7 @@
 				"name": "hostpoolName",
 				"type": "Microsoft.Common.TextBox",
 				"label": "Host pool name",
+				"toolTip": "Windows Virtual Desktop Host pools are a collection of one or more identical virtual machines within Windows Virtual Desktop tenant environments.",
 				"constraints": {
 					"required": true,
 					"regex": "^[\\w-'][\\w-'\\s]*[\\w-']+$",
@@ -75,6 +76,7 @@
 				"name": "serviceMetadataLocation",
 				"type": "Microsoft.Common.DropDown",
 				"label": "Service metadata location",
+				"toolTip": "Windows Virtual Desktop is currently available for all geographical locations. Initially, service metadata can only be stored in the United States (US) geography.",
 				"defaultValue": "United States",
 				"constraints": {
 					"allowedValues": [
@@ -123,7 +125,7 @@
 						"type": "Microsoft.Common.OptionsGroup",
 						"label": "Usage Profile",
 						"defaultValue": "Medium",
-						"toolTip": "Select a usage profile to determine the number of users per vCPU--Light (6), Medium (4), or Heavy (2)--to use to calculate the number of virtual machines to create based on the selected VM size. If you would like to create a specific number of VMs, select 'Custom'.",
+						"toolTip": "Select a usage profile to determine the number of users per vCPU--Light (6), Medium (4), Heavy (2), or Power (1)--to use to calculate the number of virtual machines to create based on the selected VM size. If you would like to create a specific number of VMs, select 'Custom'.",
 						"constraints": {
 							"allowedValues": [
 								{
@@ -179,6 +181,7 @@
 						"name": "totalUsers",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Total users",
+						"toolTip": "Enter number of users. This will be used to calculate number of virtual machines to deploy.",
 						"defaultValue": "100",
 						"constraints": {
 							"required": true,
@@ -191,6 +194,7 @@
 						"name": "virtualMachineCount",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Number of virtual machines",
+						"toolTip": "Number of virtual machines to deploy.",
 						"defaultValue": "100",
 						"constraints": {
 							"required": true,
@@ -203,6 +207,7 @@
 						"name": "virtualMachineSize",
 						"type": "Microsoft.Compute.SizeSelector",
 						"label": "Virtual machine size",
+						"toolTip": "Size of the virtual machines to deploy.",
 						"osPlatform": "Windows",
 						"constraints": {
 							"allowedSizes": [
@@ -437,6 +442,7 @@
 						"type": "Microsoft.Common.DropDown",
 						"label": "Image OS version",
 						"defaultValue": "Windows 10 Enterprise multi-session with Office 365 ProPlus",
+						"toolTip": "Selet the OS Image for the virtual machine.",
 						"constraints": {
 							"allowedValues": [
 								{
@@ -464,6 +470,7 @@
 						"type": "Microsoft.Common.DropDown",
 						"label": "Disk Type",
 						"defaultValue": "Premium SSD",
+						"toolTip": "These are the disk types available with the selected VM SKU.",
 						"constraints": {
 							"allowedValues": [
 								{
