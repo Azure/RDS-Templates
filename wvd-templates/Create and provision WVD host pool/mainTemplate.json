@@ -9,7 +9,7 @@
             },
             "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/"
         },
-        "_deployPidResource": {
+        "_createPidResource": {
             "type": "bool",
             "metadata": {
                 "description": "Leave this parameter as is. It is used internally only"
@@ -405,7 +405,7 @@
     ],
     "resources": [
         {
-            "condition": "[parameters('_deployPidResource')]",
+            "condition": "[parameters('_createPidResource')]",
             "apiVersion": "2018-05-01",
             "name": "pid-836bce42-d18b-4b20-9725-d967d519426f",
             "type": "Microsoft.Resources/deployments",
