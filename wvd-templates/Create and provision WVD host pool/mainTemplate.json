@@ -304,6 +304,9 @@
             ]
         },
         "RDPSModSource": "attached",
+        "rdshImageSourceLower": "[toLower(parameters('rdshImageSource'))]",
+        "rdshManagedDisks": "[if(equals(variables('rdshImageSourceLower'), 'customvhd'), parameters('rdshUseManagedDisks'), bool('true'))]",
+        "createAvailabilitySet": "[and(not(parameters('enablePersistentDesktop')), parameters('createAvailabilitySet'))]",
         "galleryImage": {
             "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus": {
                 "publisher": "MicrosoftWindowsDesktop",
@@ -390,10 +393,7 @@
                 "id": "[resourceId(parameters('rdshCustomImageSourceResourceGroup'), 'Microsoft.Compute/images', parameters('rdshCustomImageSourceName'))]"
             },
             "gallery": "[variables('galleryimage')[parameters('rdshGalleryImageSKU')]]"
-        },
-        "rdshImageSourceLower": "[toLower(parameters('rdshImageSource'))]",
-        "rdshManagedDisks": "[if(equals(variables('rdshImageSourceLower'), 'customvhd'), parameters('rdshUseManagedDisks'), bool('true'))]",
-        "createAvailabilitySet": "[and(not(parameters('enablePersistentDesktop')), parameters('createAvailabilitySet'))]"
+        }
     },
     "functions": [
         {
