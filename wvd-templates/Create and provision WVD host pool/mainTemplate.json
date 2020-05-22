@@ -393,7 +393,11 @@
                 "id": "[resourceId(parameters('rdshCustomImageSourceResourceGroup'), 'Microsoft.Compute/images', parameters('rdshCustomImageSourceName'))]"
             },
             "gallery": "[variables('galleryimage')[parameters('rdshGalleryImageSKU')]]"
-        }
+        },
+        "vhds": "[concat('vhds', '/', variables('rdshPrefix'))]",
+        "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'), ' ', '')), 'vm')]",
+        "vmTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/', variables('vmTemplateName'), '.json', parameters('_artifactsLocationSasToken')))]",
+        "vmCreation-linkedTemplate_name": "[concat(variables('rdshPrefix'), 'vmCreation-linkedTemplate')]"
     },
     "functions": [
         {
@@ -446,100 +450,68 @@
             }
         },
         {
-            "condition": "[and(variables('rdshManagedDisks'), equals(variables('rdshImageSourceLower'), 'customvhd'))]",
-            "type": "Microsoft.Compute/images",
-            "apiVersion": "2018-10-01",
-            "name": "[variables('imageName')]",
-            "location": "[parameters('location')]",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('vmCreation-linkedTemplate_name')]",
+            "type": "Microsoft.Resources/deployments",
             "dependsOn": [
                 "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
             ],
             "properties": {
-                "storageProfile": {
-                    "osDisk": {
-                        "osType": "Windows",
-                        "osState": "Generalized",
-                        "blobUri": "[parameters('vmImageVhdUri')]",
-                        "storageAccountType": "[parameters('rdshVMDiskType')]"
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vmTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vmImageVhdUri": {
+                        "value": "[parameters('vmImageVhdUri')]"
+                    },
+                    "storageAccountResourceGroupName": {
+                        "value": "[parameters('storageAccountResourceGroupName')]"
+                    },
+                    "rdshGalleryImageSKU": {
+                        "value": "[parameters('rdshGalleryImageSKU')]"
+                    },
+                    "rdshPrefix": {
+                        "value": "[variables('rdshPrefix')]"
+                    },
+                    "rdshNumberOfInstances": {
+                        "value": "[parameters('rdshNumberOfInstances')]"
+                    },
+                    "rdshVMDiskType": {
+                        "value": "[parameters('rdshVMDiskType')]"
+                    },
+                    "rdshVmSize": {
+                        "value": "[parameters('rdshVmSize')]"
+                    },
+                    "enableAcceleratedNetworking": {
+                        "value": "[parameters('enableAcceleratedNetworking')]"
+                    },
+                    "existingDomainusername": {
+                        "value": "[variables('existingDomainUsername')]"
+                    },
+                    "existingDomainPassword": {
+                        "value": "[parameters('existingDomainPassword')]"
+                    },
+                    "subnet-id": {
+                        "value": "[variables('subnet-id')]"
+                    },
+                    "vhds": {
+                        "value": "[variables('vhds')]"
+                    },
+                    "rdshImageSourceResourceGroup": {
+                        "value": "[parameters('rdshCustomImageSourceResourceGroup')]"
+                    },
+                    "rdshImageSourceName": {
+                        "value": "[parameters('rdshCustomImageSourceName')]"
+                    },
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
+                    "createAvailabilitySet": {
+                        "value": "[variables('createAvailabilitySet')]"
                     }
                 }
-            }
-        },
-        {
-            "apiVersion": "2018-11-01",
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat(variables('rdshPrefix'), copyindex(), '-nic')]",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/', variables('rdshPrefix'), 'availabilitySet')]"
-            ],
-            "copy": {
-                "name": "rdsh-nic-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
-            "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "subnet": {
-                                "id": "[variables('subnet-id')]"
-                            }
-                        }
-                    }
-                ],
-                "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]"
-            }
-        },
-        {
-            "apiVersion": "2018-10-01",
-            "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat(variables('rdshPrefix'), copyindex())]",
-            "location": "[parameters('location')]",
-            "copy": {
-                "name": "rdsh-vm-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
-            "metadata": {
-                "comments": "If the following conditional dependencies are not deployed, ARM will auto remove them from this dependsOn list"
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Compute/images/', variables('imageName'))]",
-                "[concat('Microsoft.Network/networkInterfaces/', variables('rdshPrefix'), copyindex(), '-nic')]"
-            ],
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[parameters('rdshVmSize')]"
-                },
-                "availabilitySet": "[if(variables('createAvailabilitySet'), main.getAvailabilitySet(variables('rdshPrefix')), json('null'))]",
-                "osProfile": {
-                    "computerName": "[concat(variables('rdshPrefix'), copyindex())]",
-                    "adminUsername": "[variables('existingDomainUsername')]",
-                    "adminPassword": "[parameters('existingDomainPassword')]"
-                },
-                "storageProfile": {
-                    "imageReference": "[if(equals(variables('rdshImageSourceLower'), 'customvhd'), main.getVMImageReferenceCustomVHD(variables('imageName')), variables('VMImageReference')[variables('rdshImageSourceLower')])]",
-                    "osDisk": {
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "[parameters('rdshVMDiskType')]"
-                        }
-                    }
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('rdshPrefix'), copyindex(), '-nic'))]"
-                        }
-                    ]
-                },
-                "diagnosticsProfile": {
-                    "bootDiagnostics": {
-                        "enabled": false
-                    }
-                },
-                "licenseType": "Windows_Client"
             }
         },
         {
@@ -548,7 +520,7 @@
             "name": "[concat(variables('rdshPrefix'), copyindex(), '/joindomain')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', variables('rdshPrefix'), copyindex())]"
+                "[variables('vmCreation-linkedTemplate_name')]"
             ],
             "copy": {
                 "name": "rdsh-domain-join-loop",
