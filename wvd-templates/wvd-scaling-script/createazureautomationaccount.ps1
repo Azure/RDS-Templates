@@ -57,7 +57,10 @@ param(
 	[string]$Location = "West US2",
 
 	[Parameter(mandatory = $false)]
-	[string]$WorkspaceName
+	[string]$WorkspaceName,
+
+	[Parameter(mandatory = $false)]
+	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
 )
 
 # //todo improve error logging, externalize, centralize vars
@@ -66,7 +69,6 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Initializing variables
-[string]$ScriptRepoLocation = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
 [string]$RunbookName = "WVDAutoScaleRunbook"
 [string]$WebhookName = "WVDAutoScaleWebhook"
 
@@ -222,7 +224,7 @@ function Add-ModuleToAutoAccount {
 
 # //todo confirm with roop if ok to create auto account as part of ARM
 # Creating an automation account & runbook and publish the scaling script file
-$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -location $Location -Force -Verbose
+$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -location $Location -scriptUri "$ArtifactsURI/basicScale.ps1" -Force -Verbose
 
 if ($DeploymentStatus.ProvisioningState -ne 'Succeeded') {
 	throw "Some error occurred while deploying a runbook. Deployment Provisioning Status: $($DeploymentStatus.ProvisioningState)"

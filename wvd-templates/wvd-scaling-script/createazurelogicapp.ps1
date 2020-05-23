@@ -157,7 +157,10 @@ param(
 	[string]$LogOffMessageBody = 'Your session will be logged off. Please save and close everything.',
 
 	[Parameter(mandatory = $true)]
-	[string]$WebhookURI
+	[string]$WebhookURI,
+
+	[Parameter(mandatory = $false)]
+	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
 )
 
 # //todo improve error logging, externalize, centralize vars
@@ -171,9 +174,6 @@ if ($UseRDSAPI -and [string]::IsNullOrWhiteSpace($TenantName)) {
 if (!$HostPoolResourceGroupName) {
 	$HostPoolResourceGroupName = $ResourceGroupName
 }
-
-# Initializing variables
-[string]$ScriptRepoLocation = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
 
 # Set the ExecutionPolicy
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
@@ -295,7 +295,7 @@ if ($UseRDSAPI) {
 [string]$RequestBodyJson = $RequestBody | ConvertTo-Json
 [string]$LogicAppName = ($HostPoolName + "_" + "Autoscale" + "_" + "Scheduler").Replace(" ", "")
 
-$SchedulerDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ScriptRepoLocation/azureLogicAppCreation.json" -LogicAppName $LogicAppName -WebhookURI $WebhookURI.Replace("`n", "").Replace("`r", "") -ActionSettingsBody $RequestBodyJson -RecurrenceInterval $RecurrenceInterval -Verbose
+$SchedulerDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/logicAppCreationTemplate.json" -LogicAppName $LogicAppName -WebhookURI $WebhookURI.Replace("`n", "").Replace("`r", "") -ActionSettingsBody $RequestBodyJson -RecurrenceInterval $RecurrenceInterval -Verbose
 
 if ($SchedulerDeployment.ProvisioningState -ne 'Succeeded') {
 	throw "Failed to create logic app scheduler for HostPool '$HostPoolName'. Deployment Provisioning Status: $($SchedulerDeployment.ProvisioningState)"
