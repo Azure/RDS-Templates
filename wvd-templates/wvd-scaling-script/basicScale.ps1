@@ -1,4 +1,6 @@
-﻿param(
+﻿
+[CmdletBinding(SupportsShouldProcess)]
+param(
 	[Parameter(mandatory = $false)]
 	[PSCustomObject]$WebHookData,
 
@@ -47,14 +49,17 @@ try {
 	$LogOffMessageTitle = $Input.LogOffMessageTitle
 	$LogOffMessageBody = $Input.LogOffMessageBody
 
+	[int]$StatusCheckTimeOut = 1
 	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
 	[array]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
 
-	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
-	if (!$SkipAuth) {
-		# Note: this requires admin priviledges
-		Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+	if ($PSCmdlet.ShouldProcess('PS execution policies', 'Set')) {
+		Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
+		if (!$SkipAuth) {
+			# Note: this requires admin priviledges
+			Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+		}
 	}
 
 	# Note: https://stackoverflow.com/questions/41674518/powershell-setting-security-protocol-to-tls-1-2
@@ -132,8 +137,11 @@ try {
 		param ([array]$Jobs = @())
 
 		Write-Log "Wait for $($Jobs.Count) jobs"
-		# //todo add timeouts
+		$StartTime = Get-Date
 		while ($true) {
+			if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
+				throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
+			}
 			Write-Log "[Check jobs status] Total: $($Jobs.Count), $(($Jobs | Group-Object State | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 			if (!($Jobs | Where-Object { $_.State -eq 'Running' })) {
 				break
@@ -143,7 +151,7 @@ try {
 
 		$IncompleteJobs = $Jobs | Where-Object { $_.State -ne 'Completed' }
 		if ($IncompleteJobs) {
-			throw "Some jobs did not complete successfully: $($IncompleteJobs | Format-List -Force)"
+			throw "$($IncompleteJobs.Count) jobs did not complete successfully: $($IncompleteJobs | Format-List -Force)"
 		}
 	}
 
@@ -207,7 +215,7 @@ try {
 	# Set the Azure context with Subscription
 	$AzContext = $null
 	try {
-		Write-Log 'Set Azure context with the subscription'
+		Write-Log "Set Azure context with the subscription with ID '$SubscriptionId'"
 		$AzContext = Set-AzContext -SubscriptionId $SubscriptionId
 		if (!$AzContext) {
 			throw $AzContext
@@ -318,11 +326,13 @@ try {
 	# Note: breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
 	if ($HostPool.LoadBalancerType -ne 'BreadthFirst') {
 		Write-Log "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')"
-		if ($UseRDSAPI) {
-			$HostPool = Set-RdsHostPool -Name $HostPoolName -TenantName $TenantName -BreadthFirstLoadBalancer
-		}
-		else {
-			$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'BreadthFirst'
+		if ($PSCmdlet.ShouldProcess($HostPoolName, "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')")) {
+			if ($UseRDSAPI) {
+				$HostPool = Set-RdsHostPool -Name $HostPoolName -TenantName $TenantName -BreadthFirstLoadBalancer
+			}
+			else {
+				$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'BreadthFirst'
+			}
 		}
 	}
 
@@ -476,14 +486,18 @@ try {
 			# //todo support az wvd api
 			$SessionHostName = $VM.SessionHost.SessionHostName
 
-			# Make sure session host is allowing new user sessions
-			# //todo support az wvd api
-			Update-SessionHostToAllowNewSession $VM.SessionHost
+			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Update session host to allow new sessions')) {
+				# Make sure session host is allowing new user sessions
+				# //todo support az wvd api
+				Update-SessionHostToAllowNewSession $VM.SessionHost
+			}
 
-			$StartSessionHostNames.Add($SessionHostName, $null)
 			Write-Log "Start session host '$SessionHostName' as a background job"
-			# //todo add timeouts to jobs
-			$StartVMjobs += ($VM.Instance | Start-AzVM -AsJob)
+			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Start session host as a background job')) {
+				$StartSessionHostNames.Add($SessionHostName, $null)
+				# //todo add timeouts to jobs
+				$StartVMjobs += ($VM.Instance | Start-AzVM -AsJob)
+			}
 
 			--$nVMsToStart
 			if ($nVMsToStart -lt 0) {
@@ -503,8 +517,12 @@ try {
 		# Wait for those jobs to start the session hosts
 		Wait-ForJobs $StartVMjobs
 
-		Write-Log 'Wait for session hosts to be available'
+		Write-Log "Wait for $($StartSessionHostNames.Count) session hosts to be available"
+		$StartTime = Get-Date
 		while ($true) {
+			if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
+				throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
+			}
 			# //todo support az wvd api
 			$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StartSessionHostNames.ContainsKey($_.SessionHostName) }
 			Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
@@ -567,12 +585,14 @@ try {
 
 		# //todo support az wvd api
 		Write-Log "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions. Set it to disallow new sessions"
-		try {
-			# //todo support az wvd api
-			$VM.SessionHost = $SessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $false
-		}
-		catch {
-			throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: $SessionHostName", $PSItem.Exception)
+		if ($PSCmdlet.ShouldProcess($SessionHostName, 'Set session host to disallow new sessions')) {
+			try {
+				# //todo support az wvd api
+				$VM.SessionHost = $SessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $false
+			}
+			catch {
+				throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: $SessionHostName", $PSItem.Exception)
+			}
 		}
 
 		# //todo support az wvd api
@@ -595,8 +615,10 @@ try {
 				try {
 					# //todo support az wvd api
 					Write-Log "Send a log off message to user: $($Session.AdUserName)"
-					# //todo support az wvd api
-					Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds" -NoUserPrompt
+					if ($PSCmdlet.ShouldProcess($Session.AdUserName, 'Send a log off message to user')) {
+						# //todo support az wvd api
+						Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds" -NoUserPrompt
+					}
 				}
 				catch {
 					# //todo support az wvd api
@@ -606,10 +628,12 @@ try {
 			$VMsToStopAfterLogOffTimeOut += $VM
 		}
 		else {
-			$StopSessionHostNames.Add($SessionHostName, $null)
 			Write-Log "Stop session host '$SessionHostName' as a background job"
-			# //todo add timeouts to jobs
-			$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
+			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
+				$StopSessionHostNames.Add($SessionHostName, $null)
+				# //todo add timeouts to jobs
+				$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
+			}
 		}
 
 		--$nVMsToStop
@@ -619,20 +643,25 @@ try {
 	}
 
 	if ($VMsToStopAfterLogOffTimeOut) {
-		Write-Log "Wait $LimitSecondsToForceLogOffUser second(s) for user(s) to log off"
-		Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
+		Write-Log "Wait $LimitSecondsToForceLogOffUser seconds for users to log off"
+		if ($PSCmdlet.ShouldProcess("for $LimitSecondsToForceLogOffUser seconds", 'Wait for users to log off')) {
+			Start-Sleep -Seconds $LimitSecondsToForceLogOffUser
+		}
 
-		Write-Log "Force log off users and stop remaining $VMsToStopAfterLogOffTimeOut session host(s)"
+		Write-Log "Force log off users and stop remaining $($VMsToStopAfterLogOffTimeOut.Count) session hosts"
 		foreach ($VM in $VMsToStopAfterLogOffTimeOut) {
 			# //todo support az wvd api
 			$SessionHostName = $VM.SessionHost.SessionHostName
 			$SessionHostUserSessions = $VM.UserSessions
 
-			Write-Log "Force log off $($SessionHostUserSessions.Count) user(s) on session host: $SessionHostName"
+			Write-Log "Force log off $($SessionHostUserSessions.Count) users on session host: $SessionHostName"
 			foreach ($Session in $SessionHostUserSessions) {
 				try {
-					# //todo support az wvd api
-					Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force
+					Write-Log "Force log off user with session ID $($Session.SessionId)"
+					if ($PSCmdlet.ShouldProcess($Session.SessionId, 'Force log off user with session ID')) {
+						# //todo support az wvd api
+						Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force
+					}
 				}
 				catch {
 					# //todo support az wvd api
@@ -640,10 +669,12 @@ try {
 				}
 			}
 			
-			$StopSessionHostNames.Add($SessionHostName, $null)
 			Write-Log "Stop session host '$SessionHostName' as a background job"
-			# //todo add timeouts to jobs
-			$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
+			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
+				$StopSessionHostNames.Add($SessionHostName, $null)
+				# //todo add timeouts to jobs
+				$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
+			}
 		}
 	}
 
@@ -655,9 +686,13 @@ try {
 	# Wait for those jobs to stop the session hosts
 	Wait-ForJobs $StopVMjobs
 
-	Write-Log 'Wait for session hosts to be unavailable'
+	Write-Log "Wait for $($StopSessionHostNames.Count) session hosts to be unavailable"
 	$SessionHostsToCheck = $null
+	$StartTime = Get-Date
 	while ($true) {
+		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
+			throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
+		}
 		# //todo support az wvd api
 		$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StopSessionHostNames.ContainsKey($_.SessionHostName) }
 		Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
@@ -666,6 +701,7 @@ try {
 		}
 		Start-Sleep 10
 	}
+
 	# Make sure session hosts are allowing new user sessions & update them to allow if not
 	# //todo support az wvd api
 	$SessionHostsToCheck | Update-SessionHostToAllowNewSession
