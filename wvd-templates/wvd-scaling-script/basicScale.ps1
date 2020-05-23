@@ -239,7 +239,10 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		param(
 			[string]$TenantName,
 			[string]$HostpoolName,
-			[string]$SessionHostName
+			[string]$SessionHostName,
+            [string]$LogAnalyticsWorkspaceId,
+			[string]$LogAnalyticsPrimaryKey,
+			$TimeDifference
 		)
         Write-Output "Waiting for session host '$SessionHostName' to be available"
         $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Waiting for session host '$SessionHostName' to be available" }
@@ -411,7 +414,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 								}
 							}
 							# Wait for the VM to start
-							$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
+							$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost -LogAnalyticsWorkspaceId -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -TimeDifference $TimeDifference
 							if ($SessionHostIsAvailable) {
 								Write-Output "'$SessionHost' session host status is 'Available'"
 								$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
@@ -475,7 +478,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 										Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 									}
 								}
-								$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost
+								$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost -LogAnalyticsWorkspaceId -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -TimeDifference $TimeDifference
 								if ($SessionHostIsAvailable) {
 									Write-Output "'$SessionHost' session host status is 'Available'"
 									$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
@@ -555,7 +558,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 						}
 					}
 					# Check if session host is available
-					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
+					$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName -LogAnalyticsWorkspaceId -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -TimeDifference $TimeDifference
 					if ($SessionHostIsAvailable) {
 						Write-Output "'$SessionHostName' session host status is 'Available'"
 						$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "'$SessionHost' session host status is 'Available'" }
@@ -824,7 +827,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 						}
 
 						# Wait for the sessionhost is available
-						$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost.SessionHostName
+						$SessionHostIsAvailable = Check-IfSessionHostIsAvailable -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHost.SessionHostName -LogAnalyticsWorkspaceId -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -TimeDifference $TimeDifference
 						if ($SessionHostIsAvailable) {
 							Write-Output "$($SessionHost.SessionHostName | Out-String) session host status is 'Available'"
 							$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "$($SessionHost.SessionHostName | Out-String) session host status is 'Available'" }
