@@ -10,7 +10,7 @@ variable "host_pool_name" {
 
 variable "vm_prefix" {
   description = "Prefix of the name of the WVD machine(s)"
-  default = "tfvm"
+  default = "tf-vm"
 }
 
 variable "tenant_name" {
