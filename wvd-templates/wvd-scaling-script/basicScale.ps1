@@ -49,7 +49,7 @@ try {
 	$LogOffMessageTitle = $Input.LogOffMessageTitle
 	$LogOffMessageBody = $Input.LogOffMessageBody
 
-	[int]$StatusCheckTimeOut = 1
+	[int]$StatusCheckTimeOut = 60*5 # 5 min
 	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
 	[array]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
@@ -212,19 +212,21 @@ try {
 
 	#region set az context, WVD tenant context, validate tenant & host pool, validate HostPool load balancer type, ensure there is at least 1 session host
 
-	# Set the Azure context with Subscription
-	$AzContext = $null
-	try {
-		Write-Log "Set Azure context with the subscription with ID '$SubscriptionId'"
-		$AzContext = Set-AzContext -SubscriptionId $SubscriptionId
-		if (!$AzContext) {
-			throw $AzContext
+	if ($PSCmdlet.ShouldProcess($SubscriptionId, 'Set Azure context with the subscription ID')) {
+		# Set the Azure context with Subscription
+		$AzContext = $null
+		try {
+			Write-Log "Set Azure context with the subscription ID '$SubscriptionId'"
+			$AzContext = Set-AzContext -SubscriptionId $SubscriptionId
+			if (!$AzContext) {
+				throw $AzContext
+			}
 		}
+		catch {
+			throw [System.Exception]::new("Failed to set Azure context with provided Subscription ID: $SubscriptionId (Please provide a valid subscription)", $PSItem.Exception)
+		}
+		Write-Log "Successfully set the Azure context with the provided Subscription ID. Result: `n$($AzContext | Out-String)"
 	}
-	catch {
-		throw [System.Exception]::new("Failed to set Azure context with provided Subscription ID: $SubscriptionId (Please provide a valid subscription)", $PSItem.Exception)
-	}
-	Write-Log "Successfully set the Azure context with the provided Subscription ID. Result: `n$($AzContext | Out-String)"
 
 	if ($UseRDSAPI) {
 		# Set WVD context to the appropriate tenant group
