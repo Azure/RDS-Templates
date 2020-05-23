@@ -45,7 +45,7 @@ variable "domain_user_upn" {
 
 variable "domain_password" {
   description = "**OPTIONAL**: Password of the user to authenticate with the domain"
-  default     = "windchime2017!"
+  default     = ""
 }
 
 variable "tenantLocation" {
