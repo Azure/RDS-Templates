@@ -1,19 +1,21 @@
 variable "rdsh_count" {
   description = "**OPTIONAL**: Number of WVD machines to deploy"
-  default     = 1
+  default     = 2
 }
 
 variable "host_pool_name" {
   description = "Name of the RDS host pool"
-  default     = ""
+  default     = "Fin-APP01-HP02"
 }
 
 variable "vm_prefix" {
   description = "Prefix of the name of the WVD machine(s)"
+  default = "tfvm"
 }
 
 variable "tenant_name" {
   description = "Name of the RDS tenant associated with the machines"
+  default = "MTCWVD"
 }
 
 variable "local_admin_username" {
@@ -33,30 +35,32 @@ variable "domain_joined" {
 
 variable "domain_name" {
   description = "**OPTIONAL**: Name of the domain to join"
-  default     = ""
+  default     = "M365x503951.onmicrosoft.com"
 }
 
 variable "domain_user_upn" {
   description = "**OPTIONAL**: UPN of the user to authenticate with the domain"
-  default     = ""
+  default     = "demodomainjoin"
 }
 
 variable "domain_password" {
   description = "**OPTIONAL**: Password of the user to authenticate with the domain"
-  default     = ""
+  default     = "windchime2017!"
 }
 
 variable "tenantLocation" {
   description = "**OPTIONAL**: Region in which the RDS tenant exists"
-  default     = "eastus"
+  default     = "westus"
 }
 
 variable "region" {
   description = "Region in which to deploy these resources"
+  default     = "westus"
 }
 
 variable "resource_group_name" {
   description = "Name of the Resource Group in which to deploy these resources"
+  default     = "WVD-Fin-APP01-HP02-TF"
 }
 
 variable "base_url" {
@@ -79,13 +83,9 @@ variable "vm_size" {
   default     = "Standard_F2s"
 }
 
-variable "nsg_id" {
-  description = "**OPTIONAL**: ID of the NSG to associate the network interface"
-  default     = ""
-}
-
 variable "subnet_id" {
   description = "ID of the Subnet in which the machines will exist"
+  default = "/subscriptions/9d191167-e723-4876-a390-f671aabeba73/resourceGroups/AADDS/providers/Microsoft.Network/virtualNetworks/aadds-vnet/subnets/aadds-subnet"
 }
 
 variable "RDBrokerURL" {
@@ -95,10 +95,12 @@ variable "RDBrokerURL" {
 
 variable "tenant_app_id" {
   description = "ID of the tenant app"
+  default     = "23dcffd9-2ae4-4b8f-8689-2149b3c7f345"
 }
 
 variable "tenant_app_password" {
   description = "Password of the tenant app"
+  default     = "3eIbC6bFnazFG5LyvAiAXxIXx779HU25H856ybkIEDU="
 }
 
 variable "is_service_principal" {
@@ -108,15 +110,12 @@ variable "is_service_principal" {
 
 variable "aad_tenant_id" {
   description = "ID of the AD tenant"
-}
-
-variable "ou_path" {
-  description = "OU path to us during domain join"
+  default     = "03382dc7-f7cd-4365-8bc8-fa14d253edf9"
 }
 
 variable "vm_image_id" {
   description = "**OPTIONAL**: ID of the custom image to use"
-  default     = ""
+  default     = "/subscriptions/9d191167-e723-4876-a390-f671aabeba73/resourceGroups/Packer-Build/providers/Microsoft.Compute/images/Win10-1903-Build-2020-04-25-2206-Build91"
 }
 
 variable "vm_publisher" {
@@ -141,6 +140,7 @@ variable "vm_version" {
 
 variable "vm_timezone" {
   description = "The vm_timezone of the vms"
+  default     = "pacific standard time"
 }
 
 variable "as_platform_update_domain_count" {
@@ -155,10 +155,12 @@ variable "as_platform_fault_domain_count" {
 
 variable "log_analytics_workspace_id" {
   description = "Workspace ID of the Log Analytics Workspace to associate the VMs with"
+  default     = "e70d1c19-b459-4b6e-a74e-488861a5ef6f"
 }
 
 variable "log_analytics_workspace_primary_shared_key" {
   description = "Primary Shared Key of the Log Analytics Workspace to associate the VMs with"
+  default     = "4AR6J3wnrvATbOX6G8GSG7pDQKGuTI21TZbSyG87BVDXxq894ivDs3YYMEoVZbFgBYe4HovPxOaS44VWbv5O5w=="
 }
 
 variable "extension_bginfo" {
