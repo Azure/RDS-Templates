@@ -180,7 +180,7 @@ function Add-ModuleToAutoAccount {
 	if (!$SearchResult) {
 		throw "Could not find module '$ModuleName' on PowerShell Gallery."
 	}
-	if ($SearchResult.Count -and $SearchResult.Length -gt 1) {
+	if ($SearchResult.Length -gt 1) {
 		throw "Module name '$ModuleName' returned multiple results. Please specify an exact module name."
 	}
 	$PackageDetails = Invoke-RestMethod -Method Get -Uri $SearchResult.Id
