@@ -167,7 +167,7 @@ try {
 				# //todo support az wvd api
 				Write-Log "Update session host '$($SessionHost.SessionHostName)' to allow new sessions"
 				# //todo support az wvd api
-				Set-RdsSessionHost -TenantName $SessionHost.TenantName -HostPoolName $SessionHost.HostPoolName -Name $SessionHost.SessionHostName -AllowNewSession $true
+				Set-RdsSessionHost -TenantName $SessionHost.TenantName -HostPoolName $SessionHost.HostPoolName -Name $SessionHost.SessionHostName -AllowNewSession $true | Write-Verbose
 			}
 		}
 		End { }
@@ -375,13 +375,17 @@ try {
 		}
 
 		$VM = $VMs[$VMName]
+		$SessionHost = $VM.SessionHost
+		if ($VMInstance.VmId -ne $SessionHost.AzureVmId) {
+			# This VM is not a WVD session host
+			return
+		}
 		if ($VM.Instance) {
 			# //todo support az wvd api
 			throw "More than 1 VM found in Azure with same session host name '$($VM.SessionHost.SessionHostName)' (This is not supported):`n$($VMInstance | Out-String)`n$($VM.Instance | Out-String)"
 		}
 
 		$VM.Instance = $VMInstance
-		$SessionHost = $VM.SessionHost
 
 		# //todo support az wvd api
 		Write-Log "Session host '$($SessionHost.SessionHostName)' with power state: $($VMInstance.PowerState), status: $($SessionHost.Status), update state: $($SessionHost.UpdateState), sessions: $($SessionHost.Sessions)"
@@ -400,6 +404,7 @@ try {
 			$nRunningCores += $VMSizeCores[$VMInstance.HardwareProfile.VmSize]
 		}
 	}
+	# //todo make sure a VM instance was found for each session host
 
 	# Check if we need to override the number of user sessions for simulation / testing purpose
 	$nUserSessions = $null
