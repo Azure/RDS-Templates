@@ -100,8 +100,8 @@ if ($AADTenantId -ne $AzContext.Tenant.Id -or $SubscriptionId -ne $AzContext.Sub
 }
 
 # Get the Role Assignment of the authenticated user
-$RoleAssignment = Get-AzRoleAssignment -SignInName $AzContext.Account -ExpandPrincipalGroups
-if ($RoleAssignment.RoleDefinitionName -notin @('Owner', 'Contributor')) {
+$RoleAssignments = Get-AzRoleAssignment -SignInName $AzContext.Account -ExpandPrincipalGroups
+if (!($RoleAssignments | Where-Object { $_.RoleDefinitionName -in @('Owner', 'Contributor') })) {
 	throw 'Authenticated user should have the Owner/Contributor permissions to the subscription'
 }
 
@@ -222,9 +222,12 @@ function Add-ModuleToAutoAccount {
 	Wait-ForModuleToBeImported -ModuleName $ModuleName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName
 }
 
+# Note: the URL for the scaling script will be suffixed with current timestamp in order to force the ARM template to update the existing runbook script in the auto account if any
+$URLSuffix = "?time=$(get-date -f "yyyy-MM-dd_HH-mm-ss")"
+
 # //todo confirm with roop if ok to create auto account as part of ARM
 # Creating an automation account & runbook and publish the scaling script file
-$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -location $Location -scriptUri "$ArtifactsURI/basicScale.ps1" -Force -Verbose
+$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -location $Location -scriptUri "$ArtifactsURI/basicScale.ps1$URLSuffix" -Force -Verbose
 
 if ($DeploymentStatus.ProvisioningState -ne 'Succeeded') {
 	throw "Some error occurred while deploying a runbook. Deployment Provisioning Status: $($DeploymentStatus.ProvisioningState)"
