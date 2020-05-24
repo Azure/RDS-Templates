@@ -19,7 +19,7 @@ try {
 	$ErrorActionPreference = 'Stop'
 
 	# If runbook was called from Webhook, WebhookData and its RequestBody will not be null.
-	if (!$WebHookData -or [string]::IsNullOrWhiteSpace($WebHookData.RequestBody)) {
+	if (!$WebHookData -or [string]::IsNullOrWhiteSpace($WebHookData['RequestBody'])) {
 		throw 'Runbook was not started from Webhook (WebHookData or its RequestBody is empty)'
 	}
 
@@ -32,7 +32,7 @@ try {
 	$AADTenantId = $Input.AADTenantId
 	$SubscriptionId = $Input.SubscriptionId
 	$UseRDSAPI = $Input.UseRDSAPI
-	$ResourceGroupName = $Input.ResourceGroupName
+	# $ResourceGroupName = $Input.ResourceGroupName
 	if ($UseRDSAPI) {
 		$RDBrokerURL = $Input.RDBrokerURL
 		$TenantGroupName = $Input.TenantGroupName
@@ -416,7 +416,7 @@ try {
 	if ($null -eq $OverrideNUserSessions) {
 		Write-Log 'Get number of user sessions in Hostpool'
 		# //todo support az wvd api
-		$nUserSessions = (Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName).Count
+		$nUserSessions = @(Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName).Count
 	}
 	else {
 		$nUserSessions = $OverrideNUserSessions
@@ -537,7 +537,7 @@ try {
 			}
 			# //todo support az wvd api
 			$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StartSessionHostNames.ContainsKey($_.SessionHostName) }
-			Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+			Write-Log "[Check session hosts status] Total: $(@($SessionHostsToCheck).Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 			if (!($SessionHostsToCheck | Where-Object { $_.Status -notin $DesiredRunningStates })) {
 				break
 			}
@@ -707,7 +707,7 @@ try {
 		}
 		# //todo support az wvd api
 		$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StopSessionHostNames.ContainsKey($_.SessionHostName) }
-		Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+		Write-Log "[Check session hosts status] Total: $(@($SessionHostsToCheck).Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 		if (!($SessionHostsToCheck | Where-Object { $_.Status -in $DesiredRunningStates })) {
 			break
 		}
