@@ -295,7 +295,7 @@ if ($UseRDSAPI) {
 [string]$RequestBodyJson = $RequestBody | ConvertTo-Json
 [string]$LogicAppName = ($HostPoolName + "_" + "Autoscale" + "_" + "Scheduler").Replace(" ", "")
 
-$SchedulerDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/logicAppCreationTemplate.json" -LogicAppName $LogicAppName -WebhookURI $WebhookURI.Replace("`n", "").Replace("`r", "") -ActionSettingsBody $RequestBodyJson -RecurrenceInterval $RecurrenceInterval -Verbose
+$SchedulerDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/logicAppCreationTemplate.json" -logicAppName $LogicAppName -WebhookURI $WebhookURI.Replace("`n", "").Replace("`r", "") -actionSettingsBody $RequestBodyJson -recurrenceInterval $RecurrenceInterval -Verbose
 
 if ($SchedulerDeployment.ProvisioningState -ne 'Succeeded') {
 	throw "Failed to create logic app scheduler for HostPool '$HostPoolName'. Deployment Provisioning Status: $($SchedulerDeployment.ProvisioningState)"
