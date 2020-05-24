@@ -404,7 +404,12 @@ try {
 			$nRunningCores += $VMSizeCores[$VMInstance.HardwareProfile.VmSize]
 		}
 	}
-	# //todo make sure a VM instance was found for each session host
+
+	# Make sure VM instance was found in Azure for every session host
+	$VMsWithoutInstance = $VMs.Values | Where-Object { !$_.Instance }
+	if ($VMsWithoutInstance) {
+		throw "There are $($VMsWithoutInstance.Count) session hosts whose VM instance was not found in Azure"
+	}
 
 	# Check if we need to override the number of user sessions for simulation / testing purpose
 	$nUserSessions = $null
