@@ -199,6 +199,10 @@ if (!$SubscriptionId) {
 if ($AADTenantId -ne $AzContext.Tenant.Id -or $SubscriptionId -ne $AzContext.Subscription.Id) {
 	# Select the subscription
 	$AzContext = Set-AzContext -SubscriptionId $SubscriptionId -TenantId $AADTenantId
+
+	if ($AADTenantId -ne $AzContext.Tenant.Id -or $SubscriptionId -ne $AzContext.Subscription.Id) {
+		throw "Failed to set Azure context with subscription ID '$SubscriptionId' and tenant ID '$AADTenantId'. Current context: $($AzContext | Format-List -Force | Out-String)"
+	}
 }
 
 # Get the Role Assignment of the authenticated user
