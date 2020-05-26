@@ -11,7 +11,6 @@ param(
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	# //todo fix errs with strict mode
 	# //todo support new az wvd api
 	#region set err action preference, extract input params, set exec policies, set TLS 1.2 security protocol
 

@@ -45,7 +45,7 @@ param(
 	[Parameter(mandatory = $false)]
 	[string]$SubscriptionId,
 	
-	[switch]$UseRDSAPI,
+	[switch]$UseARMAPI,
 
 	[Parameter(mandatory = $false)]
 	[string]$ResourceGroupName = "WVDAutoScaleResourceGroup",
@@ -62,6 +62,8 @@ param(
 	[Parameter(mandatory = $false)]
 	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
 )
+
+$UseRDSAPI = !$UseARMAPI
 
 # //todo improve error logging, externalize, centralize vars
 
@@ -227,11 +229,15 @@ function Add-ModuleToAutoAccount {
 }
 
 # Note: the URL for the scaling script will be suffixed with current timestamp in order to force the ARM template to update the existing runbook script in the auto account if any
-$URLSuffix = "?time=$(get-date -f "yyyy-MM-dd_HH-mm-ss")"
+$URISuffix = "?time=$(get-date -f "yyyy-MM-dd_HH-mm-ss")"
+$ScriptURI = "$ArtifactsURI/basicScale.ps1"
+if (!$UseRDSAPI) {
+	$ScriptURI = "$ArtifactsURI/ARM/basicScale.ps1"
+}
 
 # //todo confirm with roop if ok to create auto account as part of ARM
 # Creating an automation account & runbook and publish the scaling script file
-$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -location $Location -scriptUri "$ArtifactsURI/basicScale.ps1$URLSuffix" -Force -Verbose
+$DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -location $Location -scriptUri "$ScriptURI$($URISuffix)" -Force -Verbose
 
 if ($DeploymentStatus.ProvisioningState -ne 'Succeeded') {
 	throw "Some error occurred while deploying a runbook. Deployment Provisioning Status: $($DeploymentStatus.ProvisioningState)"

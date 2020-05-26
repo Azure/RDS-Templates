@@ -87,7 +87,7 @@ param(
 	[Parameter(mandatory = $false)]
 	[string]$SubscriptionId,
 	
-	[switch]$UseRDSAPI,
+	[switch]$UseARMAPI,
 
 	[Parameter(mandatory = $false)]
 	[string]$ResourceGroupName = "WVDAutoScaleResourceGroup",
@@ -162,6 +162,8 @@ param(
 	[Parameter(mandatory = $false)]
 	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
 )
+
+$UseRDSAPI = !$UseARMAPI
 
 # //todo improve error logging, externalize, centralize vars
 
@@ -278,7 +280,7 @@ elseif ($SessionHostsList.Count -le $MinimumNumberOfRDSH) {
 	"ConnectionAssetName"           = $ConnectionAssetName
 	"AADTenantId"                   = $AADTenantId
 	"SubscriptionId"                = $SubscriptionId
-	"UseRDSAPI"                     = $UseRDSAPI
+	"UseARMAPI"                     = $UseARMAPI
 	"ResourceGroupName"             = $HostPoolResourceGroupName
 	"HostPoolName"                  = $HostPoolName
 	"MaintenanceTagName"            = $MaintenanceTagName
