@@ -241,6 +241,9 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 			[string]$HostpoolName,
 			[string]$SessionHostName
 		)
+        Write-Output "Waiting for session host '$SessionHostName' to be available"
+        $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Waiting for session host '$SessionHostName' to be available" }
+		Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 		$IsHostAvailable = $false
 		while (!$IsHostAvailable) {
 			$SessionHostStatus = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
@@ -267,10 +270,13 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
 
 	# check the calculated end time is later than begin time in case of time zone
-	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
+	<#
+    if ($EndPeakDateTime -lt $BeginPeakDateTime) {
 		$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
-	}
-
+	} #>
+    if ($EndPeakDateTime -lt $BeginPeakDateTime) {
+    if ($CurrentDateTime -lt $EndPeakDateTime) { $BeginPeakDateTime = $BeginPeakDateTime.AddDays(-1) } else { $EndPeakDateTime = $EndPeakDateTime.AddDays(1) }
+    }
 	# Checking givne host pool name exists in Tenant
 	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
 	if ($HostpoolInfo -eq $null) {
@@ -348,8 +354,8 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 				$SkipSessionhosts += $SessionHost
 				continue
 			}
-			$AllSessionHosts = Compare-Object $ListOfSessionHosts $SkipSessionhosts | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }
-
+			#$AllSessionHosts = Compare-Object $ListOfSessionHosts $SkipSessionhosts | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }
+            $AllSessionHosts = $ListOfSessionHosts | Where-Object { $SkipSessionhosts -notcontains $_ }
 			Write-Output "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions: $($SessionHost.Sessions) and status: $($SessionHost.Status)"
 			$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Checking session host: $($SessionHost.SessionHostName | Out-String)  of sessions:$($SessionHost.Sessions) and status:$($SessionHost.Status)" }
 			Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
@@ -521,7 +527,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 		# Check if minimum number of rdsh vm's are running in off peak hours
 		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" -or $_.Status -eq 'NeedsAssistance' }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
-		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
+		if ($CheckMinimumNumberOfRDShIsRunning -eq $null -or ($CheckMinimumNumberOfRDShIsRunning).count -lt $MinimumNumberOfRDSH) {
 
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
@@ -533,7 +539,9 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 					}
 					# Check if the session host is allowing new connections
 					Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
-
+                    Write-Output "Starting Azure VM: $VMName and waiting for it to complete ..."
+                    $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Starting Azure VM: $VMName and waiting for it to complete ..." }
+		            Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference
 					Start-SessionHost -VMName $VMName
 					# Wait for the VM to Start
 					$IsVMStarted = $false
@@ -541,6 +549,9 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 						$RoleInstance = Get-AzVM -Status -Name $VMName
 						if ($RoleInstance.PowerState -eq "VM running") {
 							$IsVMStarted = $true
+							Write-Output "Azure VM has been Started: $($RoleInstance.Name) ..."
+                            $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Azure VM has been Started: $($RoleInstance.Name) ..." }
+						    Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference			   
 						}
 					}
 					# Check if session host is available
@@ -715,6 +726,9 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 
 						if ($LimitSecondsToForceLogOffUser -ne 0 -or $SessionHost.Sessions -eq 0) {
 							#wait for the VM to stop
+							Write-Output "Waiting for VM: $VMName to stop ..."
+                            $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Waiting for VM: $VMName to stop ..." }
+							Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference  
 							$IsVMStopped = $false
 							while (!$IsVMStopped) {
 								$RoleInstance = Get-AzVM -Status -Name $VMName
@@ -726,6 +740,9 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 								}
 							}
 							# Check if the session host status is NoHeartbeat or Unavailable
+							Write-Output "Waiting for session host: $SessionHostName to be unavailable ..."
+                            $LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Waiting for session host: $SessionHostName to be unavailable ..." }
+							Add-LogEntry -LogMessageObj $LogMessage -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -LogAnalyticsPrimaryKey $LogAnalyticsPrimaryKey -logType "WVDTenantScale_CL" -TimeDifferenceInHours $TimeDifference			  
 							$IsSessionHostNoHeartbeat = $false
 							while (!$IsSessionHostNoHeartbeat) {
 								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
@@ -832,7 +849,7 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
 						}
 						# Calculate available capacity of sessions
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
-						$AvailableSessionCapacity = $TotalAllowSessions + $HostpoolInfo.MaxSessionLimit
+						$AvailableSessionCapacity = $TotalAllowSessionsInOffPeak + $HostpoolInfo.MaxSessionLimit
 						[int]$TotalRunningCores = [int]$TotalRunningCores + $RoleSize.NumberOfCores
 						Write-Output "New available session capacity is: $AvailableSessionCapacity"
 						$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "New available session capacity is: $AvailableSessionCapacity" }
@@ -966,6 +983,7 @@ else {
 			[string]$HostpoolName,
 			[string]$SessionHostName
 		)
+        Write-Output "Waiting for session host '$SessionHostName' to be available"
 		$IsHostAvailable = $false
 		while (!$IsHostAvailable) {
 			$SessionHostStatus = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
@@ -991,7 +1009,7 @@ else {
 
 	#check the calculated end time is later than begin time in case of time zone
 	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
-		$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
+		if ($CurrentDateTime -lt $EndPeakDateTime) { $BeginPeakDateTime = $BeginPeakDateTime.AddDays(-1) } else { $EndPeakDateTime = $EndPeakDateTime.AddDays(1) }
 	}
 
 	#Checking givne host pool name exists in Tenant
@@ -1191,7 +1209,7 @@ else {
 		# Check if minimum number of rdsh vm's are running in off peak hours
 		$CheckMinimumNumberOfRDShIsRunning = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName | Where-Object { $_.Status -eq "Available" -or $_.Status -eq 'NeedsAssistance' }
 		$ListOfSessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName
-		if ($CheckMinimumNumberOfRDShIsRunning -eq $null) {
+		if ($CheckMinimumNumberOfRDShIsRunning -eq $null -or ($CheckMinimumNumberOfRDShIsRunning).count -lt $MinimumNumberOfRDSH) {
 			foreach ($SessionHostName in $ListOfSessionHosts.SessionHostName) {
 				if ($NumberOfRunningHost -lt $MinimumNumberOfRDSH) {
 					$VMName = $SessionHostName.Split(".")[0]
@@ -1202,7 +1220,7 @@ else {
 					}
 					# Check if the session host is allowing new connections
 					Check-ForAllowNewConnections -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $SessionHostName
-
+                    Write-Output "Starting Azure VM: $VMName and waiting for it to complete ..."
 					Start-SessionHost -VMName $VMName
 					# Wait for the VM to Start
 					$IsVMStarted = $false
@@ -1210,6 +1228,7 @@ else {
 						$RoleInstance = Get-AzVM -Status -Name $VMName
 						if ($RoleInstance.PowerState -eq "VM running") {
 							$IsVMStarted = $true
+                            Write-Output "Azure VM has been Started: $($RoleInstance.Name) ..."
 						}
 					}
 					# Check if session host is available
@@ -1335,7 +1354,7 @@ else {
 								if ($Session.SessionHostName -eq $SessionHostName) {
 									#Log off user
 									try {
-										Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -ErrorAction Stop
+										Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostpoolName -SessionHostName $Session.SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force -ErrorAction Stop
 										$ExistingSession = $ExistingSession - 1
 									}
 									catch {
@@ -1356,6 +1375,7 @@ else {
 
 						if ($LimitSecondsToForceLogOffUser -ne 0 -or $SessionHost.Sessions -eq 0) {
 							#wait for the VM to stop
+                            Write-Output "Waiting for VM: $VMName to stop ..."
 							$IsVMStopped = $false
 							while (!$IsVMStopped) {
 								$RoleInstance = Get-AzVM -Status -Name $VMName
@@ -1364,7 +1384,8 @@ else {
 									Write-Output "Azure VM has been stopped: $($RoleInstance.Name) ..."
 								}
 							}
-							# Check if the session host status is NoHeartbeat or Unavailable                          
+							# Check if the session host status is NoHeartbeat or Unavailable
+                            Write-Output "Waiting for session host: $SessionHostName to be unavailable ..."                     
 							$IsSessionHostNoHeartbeat = $false
 							while (!$IsSessionHostNoHeartbeat) {
 								$SessionHostInfo = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostpoolName -Name $SessionHostName
@@ -1459,7 +1480,7 @@ else {
 						}
 						# Calculate available capacity of sessions
 						$RoleSize = Get-AzVMSize -Location $RoleInstance.Location | Where-Object { $_.Name -eq $RoleInstance.HardwareProfile.VmSize }
-						$AvailableSessionCapacity = $TotalAllowSessions + $HostpoolInfo.MaxSessionLimit
+						$AvailableSessionCapacity = $TotalAllowSessionsInOffPeak + $HostpoolInfo.MaxSessionLimit
 						[int]$TotalRunningCores = [int]$TotalRunningCores + $RoleSize.NumberOfCores
 						Write-Output "New available session capacity is: $AvailableSessionCapacity"
 						break
