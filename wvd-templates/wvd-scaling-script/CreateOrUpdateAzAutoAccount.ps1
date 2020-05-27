@@ -233,7 +233,7 @@ function Add-ModuleToAutoAccount {
 $URISuffix = "?time=$(get-date -f "yyyy-MM-dd_HH-mm-ss")"
 $ScriptURI = "$ArtifactsURI/basicScale.ps1"
 if (!$UseRDSAPI) {
-	$ScriptURI = "$ArtifactsURI/ARM/basicScale.ps1"
+	$ScriptURI = "$ArtifactsURI/ARM_based/basicScale.ps1"
 }
 
 # //todo confirm with roop if ok to create auto account as part of ARM
