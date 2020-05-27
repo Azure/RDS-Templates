@@ -36,13 +36,7 @@ try {
 	$ConnectionAssetName = $Input.ConnectionAssetName
 	$AADTenantId = $Input.AADTenantId
 	$SubscriptionId = $Input.SubscriptionId
-	$UseRDSAPI = $Input.UseRDSAPI
-	# $ResourceGroupName = $Input.ResourceGroupName
-	if ($UseRDSAPI) {
-		$RDBrokerURL = $Input.RDBrokerURL
-		$TenantGroupName = $Input.TenantGroupName
-		$TenantName = $Input.TenantName
-	}
+	$ResourceGroupName = $Input.ResourceGroupName
 	$HostPoolName = $Input.HostPoolName
 	$MaintenanceTagName = $Input.MaintenanceTagName
 	$TimeDifference = $Input.TimeDifference
@@ -197,21 +191,6 @@ try {
 			throw [System.Exception]::new('Failed to authenticate Azure', $PSItem.Exception)
 		}
 		Write-Log "Successfully authenticated with Azure using service principal. Result: `n$($AZAuthentication | Out-String)"
-
-		if ($UseRDSAPI) {
-			# Authenticating to WVD
-			$WVDAuthentication = $null
-			try {
-				$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AADTenantId
-				if (!$WVDAuthentication) {
-					throw $WVDAuthentication
-				}
-			}
-			catch {
-				throw [System.Exception]::new('Failed to authenticate WVD', $PSItem.Exception)
-			}
-			Write-Log "Successfully authenticated with WVD using service principal. Result: `n$($WVDAuthentication | Out-String)"
-		}
 	}
 
 
@@ -231,33 +210,6 @@ try {
 			throw [System.Exception]::new("Failed to set Azure context with provided Subscription ID: $SubscriptionId (Please provide a valid subscription)", $PSItem.Exception)
 		}
 		Write-Log "Successfully set the Azure context with the provided Subscription ID. Result: `n$($AzContext | Out-String)"
-	}
-
-	if ($UseRDSAPI) {
-		# Set WVD context to the appropriate tenant group
-		[string]$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
-		if ($TenantGroupName -ne $CurrentTenantGroupName) {
-			try {
-				Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
-				# Note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
-				Set-RdsContext -TenantGroupName $TenantGroupName
-			}
-			catch {
-				throw [System.Exception]::new("Error switch WVD context to tenant group '$TenantGroupName' from '$CurrentTenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
-			}
-		}
-		
-		# Validate Tenant
-		try {
-			$Tenant = $null
-			$Tenant = Get-RdsTenant -Name $TenantName
-			if (!$Tenant) {
-				throw "No tenant with name '$TenantName' exists or the account doesn't have access to it."
-			}
-		}
-		catch {
-			throw [System.Exception]::new("Error getting the tenant '$TenantName'. This may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
-		}
 	}
 
 	# Validate and get HostPool info
