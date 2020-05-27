@@ -264,12 +264,7 @@ try {
 	$HostPool = $null
 	try {
 		Write-Log "Get Hostpool info: $HostPoolName in Tenant: $TenantName"
-		if ($UseRDSAPI) {
-			$HostPool = Get-RdsHostPool -Name $HostPoolName -TenantName $TenantName
-		}
-		else {
-			$HostPool = Get-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName
-		}
+		$HostPool = Get-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName
 		if (!$HostPool) {
 			throw $HostPool
 		}
@@ -284,13 +279,7 @@ try {
 	}
 
 	Write-Log 'Get all session hosts'
-	$SessionHosts = $null
-	if ($UseRDSAPI) {
-		$SessionHosts = Get-RdsSessionHost -HostPoolName $HostPoolName -TenantName $TenantName
-	}
-	else {
-		$SessionHosts = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName
-	}
+	$SessionHosts = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName
 	if (!$SessionHosts) {
 		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool have session hosts."
 		return
@@ -334,12 +323,7 @@ try {
 	if ($HostPool.LoadBalancerType -ne 'BreadthFirst') {
 		Write-Log "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')"
 		if ($PSCmdlet.ShouldProcess($HostPoolName, "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')")) {
-			if ($UseRDSAPI) {
-				$HostPool = Set-RdsHostPool -Name $HostPoolName -TenantName $TenantName -BreadthFirstLoadBalancer
-			}
-			else {
-				$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'BreadthFirst'
-			}
+			$HostPool = Update-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName -LoadBalancerType 'BreadthFirst'
 		}
 	}
 
