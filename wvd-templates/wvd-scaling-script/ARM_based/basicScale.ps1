@@ -30,6 +30,7 @@ try {
 	# Collect Input converted from JSON request body of Webhook.
 	$Input = (ConvertFrom-Json -InputObject $WebHookData.RequestBody)
 
+	# //todo validate params
 	$LogAnalyticsWorkspaceId = $Input.LogAnalyticsWorkspaceId
 	$LogAnalyticsPrimaryKey = $Input.LogAnalyticsPrimaryKey
 	$ConnectionAssetName = $Input.ConnectionAssetName
@@ -192,7 +193,7 @@ try {
 	}
 
 
-	#region set az context, WVD tenant context, validate tenant & host pool, validate HostPool load balancer type, ensure there is at least 1 session host
+	#region set az context, validate host pool, validate HostPool load balancer type, ensure there is at least 1 session host
 
 	if ($PSCmdlet.ShouldProcess($SubscriptionId, 'Set Azure context with the subscription ID')) {
 		# Set the Azure context with Subscription
@@ -213,14 +214,14 @@ try {
 	# Validate and get HostPool info
 	$HostPool = $null
 	try {
-		Write-Log "Get Hostpool info: $HostPoolName in Tenant: $TenantName"
+		Write-Log "Get Hostpool info: $HostPoolName in resource group: $ResourceGroupName"
 		$HostPool = Get-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $ResourceGroupName
 		if (!$HostPool) {
 			throw $HostPool
 		}
 	}
 	catch {
-		throw [System.Exception]::new("Hostpool '$HostPoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values.", $PSItem.Exception)
+		throw [System.Exception]::new("Hostpool '$HostPoolName' does not exist in the resource group '$ResourceGroupName'. Ensure that you have entered the correct values.", $PSItem.Exception)
 	}
 
 	# Ensure HostPool load balancer type is not persistent
@@ -303,13 +304,13 @@ try {
 	foreach ($VMInstance in (Get-AzVM -Status)) {
 		if (!$VMs.ContainsKey($VMInstance.Name.ToLower())) {
 			# This VM is not a WVD session host
-			return
+			continue
 		}
 		$VMName = $VMInstance.Name.ToLower()
 		if ($VMInstance.Tags.Keys -contains $MaintenanceTagName) {
 			Write-Log "VM '$VMName' is in maintenance and will be ignored"
 			$VMs.Remove($VMName)
-			return
+			continue
 		}
 
 		$VM = $VMs[$VMName]

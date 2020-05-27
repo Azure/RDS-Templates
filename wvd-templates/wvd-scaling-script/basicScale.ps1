@@ -30,6 +30,7 @@ try {
 	# Collect Input converted from JSON request body of Webhook.
 	$Input = (ConvertFrom-Json -InputObject $WebHookData.RequestBody)
 
+	# //todo validate params
 	$LogAnalyticsWorkspaceId = $Input.LogAnalyticsWorkspaceId
 	$LogAnalyticsPrimaryKey = $Input.LogAnalyticsPrimaryKey
 	$ConnectionAssetName = $Input.ConnectionAssetName
@@ -341,20 +342,20 @@ try {
 	foreach ($VMInstance in (Get-AzVM -Status)) {
 		if (!$VMs.ContainsKey($VMInstance.Name.ToLower())) {
 			# This VM is not a WVD session host
-			return
+			continue
 		}
 		$VMName = $VMInstance.Name.ToLower()
 		if ($VMInstance.Tags.Keys -contains $MaintenanceTagName) {
 			Write-Log "VM '$VMName' is in maintenance and will be ignored"
 			$VMs.Remove($VMName)
-			return
+			continue
 		}
 
 		$VM = $VMs[$VMName]
 		$SessionHost = $VM.SessionHost
 		if ($VMInstance.VmId -ne $SessionHost.AzureVmId) {
 			# This VM is not a WVD session host
-			return
+			continue
 		}
 		if ($VM.Instance) {
 			throw "More than 1 VM found in Azure with same session host name '$($VM.SessionHost.SessionHostName)' (This is not supported):`n$($VMInstance | Out-String)`n$($VM.Instance | Out-String)"
@@ -603,6 +604,7 @@ try {
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
 				$StopSessionHostNames.Add($SessionHostName, $null)
+				# //todo add timeouts to jobs
 				$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
 			}
 		}
