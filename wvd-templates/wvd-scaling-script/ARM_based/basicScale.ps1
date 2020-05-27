@@ -54,12 +54,10 @@ try {
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
 	[array]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
 
-	if ($PSCmdlet.ShouldProcess('PS execution policies', 'Set')) {
-		Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
-		if (!$SkipAuth) {
-			# Note: this requires admin priviledges
-			Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
-		}
+	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
+	if (!$SkipAuth) {
+		# Note: this requires admin priviledges
+		Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 	}
 
 	# Note: https://stackoverflow.com/questions/41674518/powershell-setting-security-protocol-to-tls-1-2
@@ -156,6 +154,7 @@ try {
 	}
 
 	function Update-SessionHostToAllowNewSession {
+		[CmdletBinding(SupportsShouldProcess)]
 		param (
 			[Parameter(Mandatory = $true, ValueFromPipeline = $true)]
 			[PSCustomObject]$SessionHost
@@ -165,7 +164,9 @@ try {
 			if (!$SessionHost.AllowNewSession) {
 				$SessionHostName = $SessionHost.Name.Split('/')[1].ToLower()
 				Write-Log "Update session host '$($SessionHostName)' to allow new sessions"
-				Update-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -Name $SessionHostName -AllowNewSession:$true | Write-Verbose
+				if ($PSCmdlet.ShouldProcess($SessionHostName, 'Update session host to allow new sessions')) {
+					Update-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -Name $SessionHostName -AllowNewSession:$true | Write-Verbose
+				}
 			}
 		}
 		End { }
@@ -430,10 +431,8 @@ try {
 
 			$SessionHostName = $VM.SessionHostName
 
-			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Update session host to allow new sessions')) {
-				# Make sure session host is allowing new user sessions
-				Update-SessionHostToAllowNewSession -SessionHost $VM.SessionHost
-			}
+			# Make sure session host is allowing new user sessions
+			Update-SessionHostToAllowNewSession -SessionHost $VM.SessionHost
 
 			Write-Log "Start session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Start session host as a background job')) {
