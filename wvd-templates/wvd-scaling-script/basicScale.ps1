@@ -253,7 +253,7 @@ try {
 	$HostPool = $null
 	try {
 		Write-Log "Get Hostpool info: $HostPoolName in Tenant: $TenantName"
-		$HostPool = Get-RdsHostPool -Name $HostPoolName -TenantName $TenantName
+		$HostPool = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName
 		if (!$HostPool) {
 			throw $HostPool
 		}
@@ -268,7 +268,7 @@ try {
 	}
 
 	Write-Log 'Get all session hosts'
-	$SessionHosts = Get-RdsSessionHost -HostPoolName $HostPoolName -TenantName $TenantName
+	$SessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName
 	if (!$SessionHosts) {
 		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool have session hosts."
 		return
@@ -333,13 +333,12 @@ try {
 	[int]$nVMsToStart = 0
 
 	# Popoluate all session hosts objects
-	$SessionHosts | ForEach-Object {
-		$VMs.Add($_.SessionHostName.Split('.')[0].ToLower(), @{ 'SessionHost' = $_; 'Instance' = $null })
+	foreach ($SessionHost in $SessionHosts) {
+		$VMs.Add($SessionHost.SessionHostName.Split('.')[0].ToLower(), @{ 'SessionHost' = $SessionHost; 'Instance' = $null })
 	}
 	
 	Write-Log 'Get all VMs, check session host status and get usage info'
-	Get-AzVM -Status | ForEach-Object {
-		$VMInstance = $_
+	foreach ($VMInstance in (Get-AzVM -Status)) {
 		if (!$VMs.ContainsKey($VMInstance.Name.ToLower())) {
 			# This VM is not a WVD session host
 			return
@@ -367,7 +366,9 @@ try {
 		# Check if we know how many cores are in this VM
 		if (!$VMSizeCores.ContainsKey($VMInstance.HardwareProfile.VmSize)) {
 			Write-Log "Get all VM sizes in location: $($VMInstance.Location)"
-			Get-AzVMSize -Location $VMInstance.Location | ForEach-Object { $VMSizeCores.Add($_.Name, $_.NumberOfCores) }
+			foreach ($VMSize in (Get-AzVMSize -Location $VMInstance.Location)) {
+				$VMSizeCores.Add($VMSize.Name, $VMSize.NumberOfCores)
+			}
 		}
 
 		if ($VMInstance.PowerState -eq 'VM running') {
@@ -472,7 +473,7 @@ try {
 
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Update session host to allow new sessions')) {
 				# Make sure session host is allowing new user sessions
-				Update-SessionHostToAllowNewSession $VM.SessionHost
+				Update-SessionHostToAllowNewSession -SessionHost $VM.SessionHost
 			}
 
 			Write-Log "Start session host '$SessionHostName' as a background job"
@@ -654,7 +655,7 @@ try {
 	Wait-ForJobs $StopVMjobs
 
 	Write-Log "Wait for $($StopSessionHostNames.Count) session hosts to be unavailable"
-	$SessionHostsToCheck = $null
+	[array]$SessionHostsToCheck = @()
 	$StartTime = Get-Date
 	while ($true) {
 		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
