@@ -48,7 +48,8 @@ try {
 	$LogOffMessageTitle = $Input.LogOffMessageTitle
 	$LogOffMessageBody = $Input.LogOffMessageBody
 
-	[int]$StatusCheckTimeOut = 60*5 # 5 min
+	[int]$StatusCheckTimeOut = 60*7 # 7 min
+	[int]$SessionHostStatusCheckSleepSecs = 30
 	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
 	[array]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
@@ -145,7 +146,7 @@ try {
 			if (!($Jobs | Where-Object { $_.State -eq 'Running' })) {
 				break
 			}
-			Start-Sleep 10
+			Start-Sleep -Seconds 15
 		}
 
 		$IncompleteJobs = $Jobs | Where-Object { $_.State -ne 'Completed' }
@@ -482,7 +483,7 @@ try {
 			if (!($SessionHostsToCheck | Where-Object { $_.Status -notin $DesiredRunningStates })) {
 				break
 			}
-			Start-Sleep 10
+			Start-Sleep -Seconds $SessionHostStatusCheckSleepSecs
 		}
 		return
 	}
@@ -652,7 +653,7 @@ try {
 		if (!($SessionHostsToCheck | Where-Object { $_.Status -in $DesiredRunningStates })) {
 			break
 		}
-		Start-Sleep 10
+		Start-Sleep -Seconds $SessionHostStatusCheckSleepSecs
 	}
 
 	# Make sure session hosts are allowing new user sessions & update them to allow if not
