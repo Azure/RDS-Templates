@@ -3,6 +3,8 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to schedule basic scale in Microsoft Azure.
+	v0.1.0
+	
 .DESCRIPTION
 	This sample script will create the scale script execution trigger required resources in Microsoft Azure. Resources are azure logic app for each hostpool.
     Run this PowerShell script in adminstrator mode

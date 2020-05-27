@@ -3,6 +3,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to execute scaling script in Microsoft Azure Automation Account.
+	v0.1.0
 
 .DESCRIPTION
 	This sample script will create the scale script execution required resources in Microsoft Azure. Resources are resource group, automation account, automation account runbook,
