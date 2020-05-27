@@ -108,9 +108,6 @@ param(
 	[string]$TenantName,
 
 	[Parameter(mandatory = $true)]
-	[string]$RunAsAccountApplicationId,
-
-	[Parameter(mandatory = $true)]
 	[string]$HostPoolName,
 
 	# Note: only for az wvd api
@@ -234,15 +231,11 @@ if ($UseRDSAPI) {
 	}
 }
 
-# Check if the resourcegroup exist
+# Check if the resource group exists
 $ResourceGroup = Get-AzResourceGroup -Name $ResourceGroupName -Location $Location -ErrorAction SilentlyContinue
 if (!$ResourceGroup) {
 	New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Force -Verbose
 	Write-Output "Resource Group was created with name: $ResourceGroupName"
-}
-
-if ($UseRDSAPI) {
-	New-RdsRoleAssignment -RoleDefinitionName 'RDS Contributor' -ApplicationId $RunAsAccountApplicationId -TenantName $TenantName
 }
 
 # Check if the hostpool load balancer type is persistent.
