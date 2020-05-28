@@ -437,7 +437,6 @@ try {
 			Write-Log "Start session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Start session host as a background job')) {
 				$StartSessionHostFullNames.Add($VM.SessionHost.Name, $null)
-				# //todo add timeouts to jobs
 				$StartVMjobs += ($VM.Instance | Start-AzVM -AsJob)
 			}
 
@@ -516,7 +515,7 @@ try {
 		
 		if ($SessionHost.Session -and !$LimitSecondsToForceLogOffUser) {
 			Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Session) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
-			# //todo explain why break and not continue
+			# Note: why break ? Because the list this loop iterates through is sorted by number of sessions, if it hits this, the rest of items in the loop will also hit this
 			break
 		}
 
@@ -561,7 +560,6 @@ try {
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
 				$StopSessionHostFullNames.Add($SessionHost.Name, $null)
-				# //todo add timeouts to jobs
 				$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
 			}
 		}
@@ -599,7 +597,6 @@ try {
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
 				$StopSessionHostFullNames.Add($SessionHost.Name, $null)
-				# //todo add timeouts to jobs
 				$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
 			}
 		}
