@@ -3,7 +3,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to execute scaling script in Microsoft Azure Automation Account.
-	v0.1.0
+	v0.1.1
 
 .DESCRIPTION
 	This sample script will create the scale script execution required resources in Microsoft Azure. Resources are resource group, automation account, automation account runbook,
@@ -74,6 +74,11 @@ $ErrorActionPreference = "Stop"
 # Initializing variables
 [string]$RunbookName = "WVDAutoScaleRunbook"
 [string]$WebhookName = "WVDAutoScaleWebhook"
+
+if (!$UseRDSAPI) {
+	$RunbookName += 'ARMBased'
+	$WebhookName += 'ARMBased'
+}
 
 # Set the ExecutionPolicy
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
@@ -245,14 +250,18 @@ if ($DeploymentStatus.ProvisioningState -ne 'Succeeded') {
 }
 
 # Check if the Webhook URI exists in automation variable
-$WebhookURI = Get-AzAutomationVariable -Name "WebhookURI" -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
+$WebhookURIAutoVarName = 'WebhookURI'
+if (!$UseRDSAPI) {
+	$WebhookURIAutoVarName += 'ARMBased'
+}
+$WebhookURI = Get-AzAutomationVariable -Name $WebhookURIAutoVarName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
 if (!$WebhookURI) {
-	$Webhook = New-AzAutomationWebhook -Name $WebhookName -RunbookName $runbookName -IsEnabled $true -ExpiryTime (Get-Date).AddYears(5) -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Force -Verbose
+	$Webhook = New-AzAutomationWebhook -Name $WebhookName -RunbookName $RunbookName -IsEnabled $true -ExpiryTime (Get-Date).AddYears(5) -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Force -Verbose
 	Write-Output "Automation Account Webhook is created with name '$WebhookName'"
 	$URIofWebhook = $Webhook.WebhookURI | Out-String
-	New-AzAutomationVariable -Name "WebhookURI" -Encrypted $false -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Value $URIofWebhook
+	New-AzAutomationVariable -Name $WebhookURIAutoVarName -Encrypted $false -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Value $URIofWebhook
 	Write-Output "Webhook URI stored in Azure Automation Acccount variables"
-	$WebhookURI = Get-AzAutomationVariable -Name "WebhookURI" -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
+	$WebhookURI = Get-AzAutomationVariable -Name $WebhookURIAutoVarName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
 }
 
 # Required modules imported from Automation Account Modules gallery for Scale Script execution

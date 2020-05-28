@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.2
+	v0.1.4
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -135,16 +135,12 @@ try {
 		param ([array]$Jobs = @())
 
 		Write-Log "Wait for $($Jobs.Count) jobs"
-		$StartTime = Get-Date
 		while ($true) {
-			if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
-				throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
-			}
 			Write-Log "[Check jobs status] Total: $($Jobs.Count), $(($Jobs | Group-Object State | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 			if (!($Jobs | Where-Object { $_.State -eq 'Running' })) {
 				break
 			}
-			Start-Sleep -Seconds 15
+			Start-Sleep -Seconds 30
 		}
 
 		$IncompleteJobs = $Jobs | Where-Object { $_.State -ne 'Completed' }
