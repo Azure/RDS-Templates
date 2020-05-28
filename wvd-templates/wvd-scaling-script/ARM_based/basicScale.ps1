@@ -48,7 +48,7 @@ try {
 	$LogOffMessageTitle = $Input.LogOffMessageTitle
 	$LogOffMessageBody = $Input.LogOffMessageBody
 
-	[int]$StatusCheckTimeOut = 60 * 7 # 7 min
+	[int]$StatusCheckTimeOut = 60 * 10 # 10 min
 	[int]$SessionHostStatusCheckSleepSecs = 30
 	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
