@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.4
+	v0.1.5
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -48,7 +48,7 @@ try {
 	$LogOffMessageTitle = $Input.LogOffMessageTitle
 	$LogOffMessageBody = $Input.LogOffMessageBody
 
-	[int]$StatusCheckTimeOut = 60 * 10 # 10 min
+	[int]$StatusCheckTimeOut = 60 * 60 # 1 hr
 	[int]$SessionHostStatusCheckSleepSecs = 30
 	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
@@ -135,7 +135,11 @@ try {
 		param ([array]$Jobs = @())
 
 		Write-Log "Wait for $($Jobs.Count) jobs"
+		$StartTime = Get-Date
 		while ($true) {
+			if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
+				throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
+			}
 			Write-Log "[Check jobs status] Total: $($Jobs.Count), $(($Jobs | Group-Object State | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 			if (!($Jobs | Where-Object { $_.State -eq 'Running' })) {
 				break
