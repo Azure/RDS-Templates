@@ -1,14 +1,14 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.0
+	v0.1.1
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
-#>    
+#>
 [CmdletBinding(SupportsShouldProcess)]
 param(
 	[Parameter(mandatory = $false)]
-	[PSCustomObject]$WebHookData,
+	$WebHookData,
 
 	# Note: if this is enabled, the script will assume that all the authentication is already done in current or parent scope before calling this script
 	[switch]$SkipAuth,
@@ -50,7 +50,7 @@ try {
 	$LogOffMessageTitle = $Input.LogOffMessageTitle
 	$LogOffMessageBody = $Input.LogOffMessageBody
 
-	[int]$StatusCheckTimeOut = 60*7 # 7 min
+	[int]$StatusCheckTimeOut = 60 * 7 # 7 min
 	[int]$SessionHostStatusCheckSleepSecs = 30
 	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
@@ -326,9 +326,9 @@ try {
 	# Number of cores that are running
 	[int]$nRunningCores = 0
 	# Object that contains all session host objects, VM instance objects except the ones that are under maintenance
-	[PSCustomObject]$VMs = @{ }
+	$VMs = @{ }
 	# Object that contains the number of cores for each VM size SKU
-	[PSCustomObject]$VMSizeCores = @{ }
+	$VMSizeCores = @{ }
 	# Number of cores to start
 	[int]$nCoresToStart = 0
 	# Number of VMs to start
