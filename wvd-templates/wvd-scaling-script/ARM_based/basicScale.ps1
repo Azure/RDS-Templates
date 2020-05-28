@@ -23,7 +23,7 @@ try {
 	$ErrorActionPreference = 'Stop'
 
 	# If runbook was called from Webhook, WebhookData and its RequestBody will not be null.
-	if (!$WebHookData -or [string]::IsNullOrWhiteSpace($WebHookData['RequestBody'])) {
+	if (!$WebHookData -or [string]::IsNullOrWhiteSpace($WebHookData.RequestBody)) {
 		throw 'Runbook was not started from Webhook (WebHookData or its RequestBody is empty)'
 	}
 
