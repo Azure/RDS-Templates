@@ -3,7 +3,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to execute scaling script in Microsoft Azure Automation Account.
-	v0.1.1
+	v0.1.2
 
 .DESCRIPTION
 	This sample script will create the scale script execution required resources in Microsoft Azure. Resources are resource group, automation account, automation account runbook,
@@ -61,7 +61,8 @@ param(
 	[string]$WorkspaceName,
 
 	[Parameter(mandatory = $false)]
-	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
+	# //todo change this to use master branch when we go GA
+	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/wvd_scaling/wvd-templates/wvd-scaling-script'
 )
 
 $UseRDSAPI = !$UseARMAPI

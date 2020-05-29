@@ -3,7 +3,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to schedule basic scale in Microsoft Azure.
-	v0.1.1
+	v0.1.2
 	
 .DESCRIPTION
 	This sample script will create the scale script execution trigger required resources in Microsoft Azure. Resources are azure logic app for each hostpool.
@@ -159,7 +159,8 @@ param(
 	[string]$WebhookURI,
 
 	[Parameter(mandatory = $false)]
-	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
+	# //todo change this to use master branch when we go GA
+	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/wvd_scaling/wvd-templates/wvd-scaling-script'
 )
 
 $UseRDSAPI = !$UseARMAPI
