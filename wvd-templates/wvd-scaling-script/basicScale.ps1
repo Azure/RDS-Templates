@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.6
+	v0.1.7
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -86,10 +86,10 @@ try {
 			[switch]$Warn
 		)
 
-		$LocalDateTime = Get-LocalDateTime
-		# $WriteMessage = "$($LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
-		$MessagePrefix = "$($LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.ScriptLineNumber)]"
-		$WriteMessage = "$MessagePrefix $Message"
+		$MessageTimeStamp = (Get-LocalDateTime).ToString('yyyy-MM-dd HH:mm:ss')
+		$Message = "[$($MyInvocation.ScriptLineNumber)] $Message"
+		$WriteMessage = "$MessageTimeStamp $Message"
+
 		if ($Err) {
 			Write-Error $WriteMessage
 		}
@@ -103,38 +103,23 @@ try {
 		if (!$LogAnalyticsWorkspaceId -or !$LogAnalyticsPrimaryKey) {
 			return
 		}
+
 		try {
-			$LogMessageObj = @{
-				'hostpoolName_s' = $HostPoolName
-				'logmessage_s'   = $Message
+			$body_obj = @{
+				'hostpoolName' = $HostPoolName
+				'logmessage'   = $Message
+				'TimeStamp'    = $MessageTimeStamp
 			}
-
-			# //todo use ConvertTo-JSON instead of manually converting using strings
-			$LogData = ''
-			foreach ($Key in $LogMessageObj.Keys) {
-				switch ($Key.substring($Key.Length - 2)) {
-					'_s' { $sep = '"'; $trim = $Key.Length - 2 }
-					'_t' { $sep = '"'; $trim = $Key.Length - 2 }
-					'_b' { $sep = ''; $trim = $Key.Length - 2 }
-					'_d' { $sep = ''; $trim = $Key.Length - 2 }
-					'_g' { $sep = '"'; $trim = $Key.Length - 2 }
-					default { $sep = '"'; $trim = $Key.Length }
-				}
-				$LogData = $LogData + '"' + $Key.substring(0, $trim) + '":' + $sep + $LogMessageObj.Item($Key) + $sep + ','
-			}
-			$LogData = $LogData + '"TimeStamp":"' + $LocalDateTime + '"'
-
-			# Write-Verbose "LogData: $LogData"
-			$json = "{$($LogData)}"
-
-			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp'
+			$json_body = ConvertTo-Json -Compress $body_obj
+			
+			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body $json_body -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp'
 			# Write-Verbose "PostResult: $PostResult"
 			if ($PostResult -ne 'Accepted') {
 				throw "Error posting to OMS: $PostResult"
 			}
 		}
 		catch {
-			Write-Warning "$MessagePrefix Some error occurred while logging to log analytics workspace: $($PSItem | Format-List -Force | Out-String)"
+			Write-Warning "$MessageTimeStamp Some error occurred while logging to log analytics workspace: $($PSItem | Format-List -Force | Out-String)"
 		}
 	}
 
