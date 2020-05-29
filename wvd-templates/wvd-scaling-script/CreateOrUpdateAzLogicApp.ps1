@@ -3,7 +3,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to schedule basic scale in Microsoft Azure.
-	v0.1.0
+	v0.1.1
 	
 .DESCRIPTION
 	This sample script will create the scale script execution trigger required resources in Microsoft Azure. Resources are azure logic app for each hostpool.
@@ -294,7 +294,7 @@ if ($UseRDSAPI) {
 	$RequestBody.'TenantName' = $TenantName
 }
 [string]$RequestBodyJson = $RequestBody | ConvertTo-Json
-[string]$LogicAppName = ($HostPoolName + "_" + "Autoscale" + "_" + "Scheduler").Replace(" ", "")
+[string]$LogicAppName = "$($HostPoolName)_Autoscale_Scheduler".Replace(" ", "-")
 
 $SchedulerDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/logicAppCreationTemplate.json" -logicAppName $LogicAppName -WebhookURI $WebhookURI.Replace("`n", "").Replace("`r", "") -actionSettingsBody $RequestBodyJson -recurrenceInterval $RecurrenceInterval -Verbose
 

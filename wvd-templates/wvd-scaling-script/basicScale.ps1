@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.5
+	v0.1.6
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -88,7 +88,8 @@ try {
 
 		$LocalDateTime = Get-LocalDateTime
 		# $WriteMessage = "$($LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.MyCommand.Source): $($MyInvocation.ScriptLineNumber)] $Message"
-		$WriteMessage = "$($LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.ScriptLineNumber)] $Message"
+		$MessagePrefix = "$($LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss')) [$($MyInvocation.ScriptLineNumber)]"
+		$WriteMessage = "$MessagePrefix $Message"
 		if ($Err) {
 			Write-Error $WriteMessage
 		}
@@ -102,33 +103,38 @@ try {
 		if (!$LogAnalyticsWorkspaceId -or !$LogAnalyticsPrimaryKey) {
 			return
 		}
-		$LogMessageObj = @{
-			'hostpoolName_s' = $HostPoolName
-			'logmessage_s'   = $Message
-		}
-
-		# //todo use ConvertTo-JSON instead of manually converting using strings
-		$LogData = ''
-		foreach ($Key in $LogMessageObj.Keys) {
-			switch ($Key.substring($Key.Length - 2)) {
-				'_s' { $sep = '"'; $trim = $Key.Length - 2 }
-				'_t' { $sep = '"'; $trim = $Key.Length - 2 }
-				'_b' { $sep = ''; $trim = $Key.Length - 2 }
-				'_d' { $sep = ''; $trim = $Key.Length - 2 }
-				'_g' { $sep = '"'; $trim = $Key.Length - 2 }
-				default { $sep = '"'; $trim = $Key.Length }
+		try {
+			$LogMessageObj = @{
+				'hostpoolName_s' = $HostPoolName
+				'logmessage_s'   = $Message
 			}
-			$LogData = $LogData + '"' + $Key.substring(0, $trim) + '":' + $sep + $LogMessageObj.Item($Key) + $sep + ','
+
+			# //todo use ConvertTo-JSON instead of manually converting using strings
+			$LogData = ''
+			foreach ($Key in $LogMessageObj.Keys) {
+				switch ($Key.substring($Key.Length - 2)) {
+					'_s' { $sep = '"'; $trim = $Key.Length - 2 }
+					'_t' { $sep = '"'; $trim = $Key.Length - 2 }
+					'_b' { $sep = ''; $trim = $Key.Length - 2 }
+					'_d' { $sep = ''; $trim = $Key.Length - 2 }
+					'_g' { $sep = '"'; $trim = $Key.Length - 2 }
+					default { $sep = '"'; $trim = $Key.Length }
+				}
+				$LogData = $LogData + '"' + $Key.substring(0, $trim) + '":' + $sep + $LogMessageObj.Item($Key) + $sep + ','
+			}
+			$LogData = $LogData + '"TimeStamp":"' + $LocalDateTime + '"'
+
+			# Write-Verbose "LogData: $LogData"
+			$json = "{$($LogData)}"
+
+			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp'
+			# Write-Verbose "PostResult: $PostResult"
+			if ($PostResult -ne 'Accepted') {
+				throw "Error posting to OMS: $PostResult"
+			}
 		}
-		$LogData = $LogData + '"TimeStamp":"' + $LocalDateTime + '"'
-
-		# Write-Verbose "LogData: $LogData"
-		$json = "{$($LogData)}"
-
-		$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body "$json" -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp'
-		# Write-Verbose "PostResult: $PostResult"
-		if ($PostResult -ne 'Accepted') {
-			throw "Error posting to OMS: $PostResult"
+		catch {
+			Write-Warning "$MessagePrefix Some error occurred while logging to log analytics workspace: $($PSItem | Format-List -Force | Out-String)"
 		}
 	}
 
