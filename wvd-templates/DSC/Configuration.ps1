@@ -41,7 +41,10 @@ configuration CreateHostPoolAndRegisterSessionHost
         [string]$DefaultDesktopUsers,
 
         [Parameter(mandatory = $false)]
-        [string]$RDPSModSource = 'attached'
+        [string]$RDPSModSource = 'attached',
+
+        [Parameter(mandatory = $false)]
+        [bool]$EnableVerboseMsiLogging = $false
     )
 
     $ErrorActionPreference = 'Stop'
@@ -104,7 +107,7 @@ configuration CreateHostPoolAndRegisterSessionHost
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
                 try {
-                    & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource
+                    & "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging)
                     return (& "$using:ScriptPath\Script-AddDefaultUsers.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -DefaultDesktopUsers $using:DefaultDesktopUsers -RDPSModSource $using:RDPSModSource)
                 }
                 catch {
@@ -159,7 +162,10 @@ configuration RegisterSessionHost
         [string]$AadTenantId = "",
 
         [Parameter(mandatory = $false)]
-        [string]$RDPSModSource = 'attached'
+        [string]$RDPSModSource = 'attached',
+
+        [Parameter(mandatory = $false)]
+        [bool]$EnableVerboseMsiLogging = $false
     )
 
     $ErrorActionPreference = 'Stop'
@@ -192,7 +198,7 @@ configuration RegisterSessionHost
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
                 try {
-                    return (& "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
+                    return (& "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging) )
                 }
                 catch {
                     $ErrMsg = $PSItem | Format-List -Force | Out-String
@@ -273,7 +279,10 @@ configuration RegisterSessionHostAndCleanup
         [string]$rdshPrefix,
 
         [Parameter(mandatory = $false)]
-        [string]$RDPSModSource = 'attached'
+        [string]$RDPSModSource = 'attached',
+
+        [Parameter(mandatory = $false)]
+        [bool]$EnableVerboseMsiLogging = $false
     )
 
     $ErrorActionPreference = 'Stop'
@@ -306,7 +315,7 @@ configuration RegisterSessionHostAndCleanup
                 . (Join-Path $using:ScriptPath "Functions.ps1")
 
                 try {
-                    return (& "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource)
+                    return (& "$using:ScriptPath\Script-RegisterSessionHost.ps1" -RdBrokerURL $using:RDBrokerURL -DefinedTenantGroupName $using:DefinedTenantGroupName -TenantName $using:TenantName -HostPoolName $using:HostPoolName -Hours $using:Hours -TenantAdminCredentials $using:TenantAdminCredentials -isServicePrincipal $using:isServicePrincipal -aadTenantId $using:AadTenantId -RDPSModSource $using:RDPSModSource -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging) )
                 }
                 catch {
                     $ErrMsg = $PSItem | Format-List -Force | Out-String
