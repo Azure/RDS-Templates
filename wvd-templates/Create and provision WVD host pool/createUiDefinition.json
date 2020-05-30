@@ -207,7 +207,7 @@
 						"name": "virtualMachineSize",
 						"type": "Microsoft.Compute.SizeSelector",
 						"label": "Virtual machine size",
-						"toolTip": "Size of the virtual machines to deploy.",
+						"toolTip": "Size of the virtual machines to deploy. Not all VM sizes are supported by this Azure Marketplace offer however all VM sizes are supported when using other deployment options, see <a target='_blank' href='https://aka.ms/wvdmpsupportedsku'>https://aka.ms/wvdmpsupportedsku</a> for more information.",
 						"osPlatform": "Windows",
 						"constraints": {
 							"allowedSizes": [
