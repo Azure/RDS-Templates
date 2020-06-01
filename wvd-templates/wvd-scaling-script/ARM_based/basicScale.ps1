@@ -138,7 +138,7 @@ try {
 			Start-Sleep -Seconds 30
 		}
 
-		$IncompleteJobs = $Jobs | Where-Object { $_.State -ne 'Completed' }
+		$IncompleteJobs = @($Jobs | Where-Object { $_.State -ne 'Completed' })
 		if ($IncompleteJobs) {
 			throw "$($IncompleteJobs.Count) jobs did not complete successfully: $($IncompleteJobs | Format-List -Force)"
 		}
@@ -153,7 +153,7 @@ try {
 		Begin { }
 		Process {
 			if (!$SessionHost.AllowNewSession) {
-				$SessionHostName = $SessionHost.Name.Split('/')[1].ToLower()
+				$SessionHostName = $SessionHost.Name.Split('/')[-1].ToLower()
 				Write-Log "Update session host '$($SessionHostName)' to allow new sessions"
 				if ($PSCmdlet.ShouldProcess($SessionHostName, 'Update session host to allow new sessions')) {
 					Update-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -Name $SessionHostName -AllowNewSession:$true | Write-Verbose
@@ -222,7 +222,7 @@ try {
 	}
 
 	Write-Log 'Get all session hosts'
-	$SessionHosts = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName
+	$SessionHosts = @(Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName)
 	if (!$SessionHosts) {
 		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool have session hosts."
 		return
@@ -288,7 +288,7 @@ try {
 
 	# Popoluate all session hosts objects
 	foreach ($SessionHost in $SessionHosts) {
-		$SessionHostName = $SessionHost.Name.Split('/')[1].ToLower()
+		$SessionHostName = $SessionHost.Name.Split('/')[-1].ToLower()
 		$VMs.Add($SessionHostName.Split('.')[0], @{ 'SessionHostName' = $SessionHostName; 'SessionHost' = $SessionHost; 'Instance' = $null })
 	}
 	
@@ -333,7 +333,7 @@ try {
 	}
 
 	# Make sure VM instance was found in Azure for every session host
-	$VMsWithoutInstance = $VMs.Values | Where-Object { !$_.Instance }
+	$VMsWithoutInstance = @($VMs.Values | Where-Object { !$_.Instance })
 	if ($VMsWithoutInstance) {
 		throw "There are $($VMsWithoutInstance.Count) session hosts whose VM instance was not found in Azure"
 	}
@@ -363,6 +363,7 @@ try {
 	
 	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		# In peak hours: check if current capacity is meeting the user demands
+		# //todo -ge instead of -gt ?
 		if ($nUserSessions -ge $AvailableSessionCapacity) {
 			$nCoresToStart = [math]::Ceiling(($nUserSessions - $AvailableSessionCapacity) / $SessionThresholdPerCPU)
 			Write-Log "[In peak hours] Number of user sessions is more than the threshold capacity. Need to start $nCoresToStart cores"
@@ -455,8 +456,8 @@ try {
 			if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
 				throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
 			}
-			$SessionHostsToCheck = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName | Where-Object { $StartSessionHostFullNames.ContainsKey($_.Name) }
-			Write-Log "[Check session hosts status] Total: $(@($SessionHostsToCheck).Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+			$SessionHostsToCheck = @(Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName | Where-Object { $StartSessionHostFullNames.ContainsKey($_.Name) })
+			Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 			if (!($SessionHostsToCheck | Where-Object { $_.Status -notin $DesiredRunningStates })) {
 				break
 			}
@@ -524,7 +525,7 @@ try {
 			$SessionHostUserSessions = $null
 			Write-Log "Get all user sessions from session host '$SessionHostName'"
 			try {
-				$VM.UserSessions = $SessionHostUserSessions = Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName
+				$VM.UserSessions = $SessionHostUserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName)
 			}
 			catch {
 				throw [System.Exception]::new("Failed to retrieve user sessions of session host: $SessionHostName", $PSItem.Exception)
@@ -535,14 +536,15 @@ try {
 				if ($Session.SessionState -ne "Active") {
 					continue
 				}
+				$SessionID = $Session.Name.Split('/')[-1]
 				try {
-					Write-Log "Send a log off message to user: $($Session.ActiveDirectoryUserName)"
+					Write-Log "Send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
 					if ($PSCmdlet.ShouldProcess($Session.ActiveDirectoryUserName, 'Send a log off message to user')) {
-						Send-AzWvdUserSessionMessage -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -UserSessionId $Session.Id -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds"
+						Send-AzWvdUserSessionMessage -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -UserSessionId $SessionID -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds"
 					}
 				}
 				catch {
-					throw [System.Exception]::new("Failed to send a log off message to user: $($Session.ActiveDirectoryUserName)", $PSItem.Exception)
+					throw [System.Exception]::new("Failed to send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID", $PSItem.Exception)
 				}
 			}
 			$VMsToStopAfterLogOffTimeOut += $VM
@@ -574,14 +576,15 @@ try {
 
 			Write-Log "Force log off $($SessionHostUserSessions.Count) users on session host: $SessionHostName"
 			foreach ($Session in $SessionHostUserSessions) {
+				$SessionID = $Session.Name.Split('/')[-1]
 				try {
-					Write-Log "Force log off user with session ID $($Session.Id)"
+					Write-Log "Force log off user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
 					if ($PSCmdlet.ShouldProcess($Session.Id, 'Force log off user with session ID')) {
-						Remove-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -Id $Session.Id -Force
+						Remove-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -Id $SessionID -Force
 					}
 				}
 				catch {
-					throw [System.Exception]::new("Failed to force log off user: $($Session.ActiveDirectoryUserName)", $PSItem.Exception)
+					throw [System.Exception]::new("Failed to force log off user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID", $PSItem.Exception)
 				}
 			}
 			
@@ -608,8 +611,8 @@ try {
 		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
 			throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
 		}
-		$SessionHostsToCheck = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName | Where-Object { $StopSessionHostFullNames.ContainsKey($_.Name) }
-		Write-Log "[Check session hosts status] Total: $(@($SessionHostsToCheck).Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+		$SessionHostsToCheck = @(Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName | Where-Object { $StopSessionHostFullNames.ContainsKey($_.Name) })
+		Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 		if (!($SessionHostsToCheck | Where-Object { $_.Status -in $DesiredRunningStates })) {
 			break
 		}
