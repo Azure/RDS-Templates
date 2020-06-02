@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.10
+	v0.1.11
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -199,7 +199,7 @@ try {
 	}
 
 
-	#region set az context, WVD tenant context, validate tenant & host pool, validate HostPool load balancer type, ensure there is at least 1 session host
+	#region set az context, WVD tenant context, validate tenant & host pool, validate HostPool load balancer type, ensure there is at least 1 session host, get num of user sessions
 
 	if ($PSCmdlet.ShouldProcess($SubscriptionId, 'Set Azure context with the subscription ID')) {
 		# Set the Azure context with Subscription
@@ -265,6 +265,16 @@ try {
 	if (!$SessionHosts) {
 		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool have session hosts."
 		return
+	}
+
+	# Check if we need to override the number of user sessions for simulation / testing purpose
+	$nUserSessions = $null
+	if ($null -eq $OverrideNUserSessions) {
+		Write-Log 'Get number of user sessions in Hostpool'
+		$nUserSessions = @(Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName).Count
+	}
+	else {
+		$nUserSessions = $OverrideNUserSessions
 	}
 
 	#endregion
@@ -378,16 +388,6 @@ try {
 	$VMsWithoutInstance = @($VMs.Values | Where-Object { !$_.Instance })
 	if ($VMsWithoutInstance) {
 		throw "There are $($VMsWithoutInstance.Count) session hosts whose VM instance was not found in Azure"
-	}
-
-	# Check if we need to override the number of user sessions for simulation / testing purpose
-	$nUserSessions = $null
-	if ($null -eq $OverrideNUserSessions) {
-		Write-Log 'Get number of user sessions in Hostpool'
-		$nUserSessions = @(Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName).Count
-	}
-	else {
-		$nUserSessions = $OverrideNUserSessions
 	}
 
 	# Calculate available capacity of sessions on running VMs
