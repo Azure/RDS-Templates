@@ -50,9 +50,9 @@ try {
 
 	[int]$StatusCheckTimeOut = 60 * 60 # 1 hr
 	[int]$SessionHostStatusCheckSleepSecs = 30
-	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
+	[string[]]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
-	[array]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
+	[string[]]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
 
 	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
 	if (!$SkipAuth) {
@@ -421,13 +421,11 @@ try {
 				continue
 			}
 
-			$SessionHostName = $VM.SessionHostName
-
 			# Make sure session host is allowing new user sessions
 			Update-SessionHostToAllowNewSession -SessionHost $VM.SessionHost
 
-			Write-Log "Start session host '$SessionHostName' as a background job"
-			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Start session host as a background job')) {
+			Write-Log "Start session host '$($VM.SessionHostName)' as a background job"
+			if ($PSCmdlet.ShouldProcess($VM.SessionHostName, 'Start session host as a background job')) {
 				$StartSessionHostFullNames.Add($VM.SessionHost.Name, $null)
 				$StartVMjobs += ($VM.Instance | Start-AzVM -AsJob)
 			}
@@ -522,17 +520,17 @@ try {
 		}
 
 		if ($SessionHost.Session) {
-			$SessionHostUserSessions = $null
+			[array]$VM.UserSessions = @()
 			Write-Log "Get all user sessions from session host '$SessionHostName'"
 			try {
-				$VM.UserSessions = $SessionHostUserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName)
+				$VM.UserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName)
 			}
 			catch {
 				throw [System.Exception]::new("Failed to retrieve user sessions of session host: $SessionHostName", $PSItem.Exception)
 			}
 
 			Write-Log "Send active user sessions log off message on session host: $SessionHostName"
-			foreach ($Session in $SessionHostUserSessions) {
+			foreach ($Session in $VM.UserSessions) {
 				if ($Session.SessionState -ne "Active") {
 					continue
 				}
@@ -572,10 +570,9 @@ try {
 		Write-Log "Force log off users and stop remaining $($VMsToStopAfterLogOffTimeOut.Count) session hosts"
 		foreach ($VM in $VMsToStopAfterLogOffTimeOut) {
 			$SessionHostName = $VM.SessionHostName
-			$SessionHostUserSessions = $VM.UserSessions
 
-			Write-Log "Force log off $($SessionHostUserSessions.Count) users on session host: $SessionHostName"
-			foreach ($Session in $SessionHostUserSessions) {
+			Write-Log "Force log off $($VM.UserSessions.Count) users on session host: $SessionHostName"
+			foreach ($Session in $VM.UserSessions) {
 				$SessionID = $Session.Name.Split('/')[-1]
 				try {
 					Write-Log "Force log off user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
@@ -590,7 +587,7 @@ try {
 			
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
-				$StopSessionHostFullNames.Add($SessionHost.Name, $null)
+				$StopSessionHostFullNames.Add($VM.SessionHost.Name, $null)
 				$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
 			}
 		}
