@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.7
+	v0.1.8
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -140,7 +140,7 @@ try {
 			Start-Sleep -Seconds 30
 		}
 
-		$IncompleteJobs = $Jobs | Where-Object { $_.State -ne 'Completed' }
+		$IncompleteJobs = @($Jobs | Where-Object { $_.State -ne 'Completed' })
 		if ($IncompleteJobs) {
 			throw "$($IncompleteJobs.Count) jobs did not complete successfully: $($IncompleteJobs | Format-List -Force)"
 		}
@@ -261,7 +261,7 @@ try {
 	}
 
 	Write-Log 'Get all session hosts'
-	$SessionHosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName
+	$SessionHosts = @(Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName)
 	if (!$SessionHosts) {
 		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool have session hosts."
 		return
@@ -375,7 +375,7 @@ try {
 	}
 
 	# Make sure VM instance was found in Azure for every session host
-	$VMsWithoutInstance = $VMs.Values | Where-Object { !$_.Instance }
+	$VMsWithoutInstance = @($VMs.Values | Where-Object { !$_.Instance })
 	if ($VMsWithoutInstance) {
 		throw "There are $($VMsWithoutInstance.Count) session hosts whose VM instance was not found in Azure"
 	}
@@ -497,8 +497,8 @@ try {
 			if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
 				throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
 			}
-			$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StartSessionHostNames.ContainsKey($_.SessionHostName) }
-			Write-Log "[Check session hosts status] Total: $(@($SessionHostsToCheck).Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+			$SessionHostsToCheck = @(Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StartSessionHostNames.ContainsKey($_.SessionHostName) })
+			Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 			if (!($SessionHostsToCheck | Where-Object { $_.Status -notin $DesiredRunningStates })) {
 				break
 			}
@@ -566,7 +566,7 @@ try {
 			$SessionHostUserSessions = $null
 			Write-Log "Get all user sessions from session host '$SessionHostName'"
 			try {
-				$VM.UserSessions = $SessionHostUserSessions = Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $_.SessionHostName -eq $SessionHostName }
+				$VM.UserSessions = $SessionHostUserSessions = @(Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $_.SessionHostName -eq $SessionHostName })
 			}
 			catch {
 				throw [System.Exception]::new("Failed to retrieve user sessions of session host: $SessionHostName", $PSItem.Exception)
@@ -578,13 +578,13 @@ try {
 					continue
 				}
 				try {
-					Write-Log "Send a log off message to user: $($Session.AdUserName)"
+					Write-Log "Send a log off message to user: '$($Session.AdUserName)', session ID: $($Session.SessionId)"
 					if ($PSCmdlet.ShouldProcess($Session.AdUserName, 'Send a log off message to user')) {
 						Send-RdsUserSessionMessage -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds" -NoUserPrompt
 					}
 				}
 				catch {
-					throw [System.Exception]::new("Failed to send a log off message to user: $($Session.AdUserName)", $PSItem.Exception)
+					throw [System.Exception]::new("Failed to send a log off message to user: '$($Session.AdUserName)', session ID: $($Session.SessionId)", $PSItem.Exception)
 				}
 			}
 			$VMsToStopAfterLogOffTimeOut += $VM
@@ -617,13 +617,13 @@ try {
 			Write-Log "Force log off $($SessionHostUserSessions.Count) users on session host: $SessionHostName"
 			foreach ($Session in $SessionHostUserSessions) {
 				try {
-					Write-Log "Force log off user with session ID $($Session.SessionId)"
+					Write-Log "Force log off user: '$($Session.AdUserName)', session ID: $($Session.SessionId)"
 					if ($PSCmdlet.ShouldProcess($Session.SessionId, 'Force log off user with session ID')) {
 						Invoke-RdsUserSessionLogoff -TenantName $TenantName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -SessionId $Session.SessionId -NoUserPrompt -Force
 					}
 				}
 				catch {
-					throw [System.Exception]::new("Failed to force log off user: $($Session.AdUserName)", $PSItem.Exception)
+					throw [System.Exception]::new("Failed to force log off user: '$($Session.AdUserName)', session ID: $($Session.SessionId)", $PSItem.Exception)
 				}
 			}
 			
@@ -650,8 +650,8 @@ try {
 		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
 			throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
 		}
-		$SessionHostsToCheck = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StopSessionHostNames.ContainsKey($_.SessionHostName) }
-		Write-Log "[Check session hosts status] Total: $(@($SessionHostsToCheck).Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+		$SessionHostsToCheck = @(Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StopSessionHostNames.ContainsKey($_.SessionHostName) })
+		Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
 		if (!($SessionHostsToCheck | Where-Object { $_.Status -in $DesiredRunningStates })) {
 			break
 		}
