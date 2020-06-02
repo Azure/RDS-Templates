@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.9
+	v0.1.10
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -363,8 +363,7 @@ try {
 	
 	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		# In peak hours: check if current capacity is meeting the user demands
-		# //todo -ge instead of -gt ?
-		if ($nUserSessions -ge $AvailableSessionCapacity) {
+		if ($nUserSessions -gt $AvailableSessionCapacity) {
 			$nCoresToStart = [math]::Ceiling(($nUserSessions - $AvailableSessionCapacity) / $SessionThresholdPerCPU)
 			Write-Log "[In peak hours] Number of user sessions is more than the threshold capacity. Need to start $nCoresToStart cores"
 		}
