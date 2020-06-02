@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.8
+	v0.1.9
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -52,9 +52,9 @@ try {
 
 	[int]$StatusCheckTimeOut = 60 * 60 # 1 hr
 	[int]$SessionHostStatusCheckSleepSecs = 30
-	[array]$DesiredRunningStates = @('Available', 'NeedsAssistance')
+	[string[]]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
-	[array]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
+	[string[]]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
 
 	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
 	if (!$SkipAuth) {
@@ -563,17 +563,17 @@ try {
 		}
 
 		if ($SessionHost.Sessions) {
-			$SessionHostUserSessions = $null
+			[array]$VM.UserSessions = @()
 			Write-Log "Get all user sessions from session host '$SessionHostName'"
 			try {
-				$VM.UserSessions = $SessionHostUserSessions = @(Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $_.SessionHostName -eq $SessionHostName })
+				$VM.UserSessions = @(Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $_.SessionHostName -eq $SessionHostName })
 			}
 			catch {
 				throw [System.Exception]::new("Failed to retrieve user sessions of session host: $SessionHostName", $PSItem.Exception)
 			}
 
 			Write-Log "Send active user sessions log off message on session host: $SessionHostName"
-			foreach ($Session in $SessionHostUserSessions) {
+			foreach ($Session in $VM.UserSessions) {
 				if ($Session.SessionState -ne "Active") {
 					continue
 				}
@@ -612,10 +612,9 @@ try {
 		Write-Log "Force log off users and stop remaining $($VMsToStopAfterLogOffTimeOut.Count) session hosts"
 		foreach ($VM in $VMsToStopAfterLogOffTimeOut) {
 			$SessionHostName = $VM.SessionHost.SessionHostName
-			$SessionHostUserSessions = $VM.UserSessions
 
-			Write-Log "Force log off $($SessionHostUserSessions.Count) users on session host: $SessionHostName"
-			foreach ($Session in $SessionHostUserSessions) {
+			Write-Log "Force log off $($VM.UserSessions.Count) users on session host: $SessionHostName"
+			foreach ($Session in $VM.UserSessions) {
 				try {
 					Write-Log "Force log off user: '$($Session.AdUserName)', session ID: $($Session.SessionId)"
 					if ($PSCmdlet.ShouldProcess($Session.SessionId, 'Force log off user with session ID')) {
