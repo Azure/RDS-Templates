@@ -49,8 +49,8 @@ function AddDefaultUsers {
 
         [Parameter(Mandatory = $false)]
         [string]$DefaultUsers
-
     )
+    $ErrorActionPreference = "Stop"
 
     Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
 
@@ -142,6 +142,8 @@ function isRdshServer {
 <#
 .Description
 Call this function using dot source notation like ". AuthenticateRdsAccount" because the Add-RdsAccount function this calls creates variables using the AllScope option that other WVD poweshell module functions like Set-RdsContext require. Note that this creates a variable named "$authentication" that will overwrite any existing variable with that name in the scope this is dot sourced to.
+
+Calling code should set $ErrorActionPreference = "Stop" before calling this function to ensure that detailed error information is thrown if there is an error.
 #>
 function AuthenticateRdsAccount {
     param(
@@ -191,6 +193,7 @@ function SetTenantGroupContextAndValidate {
     )
 
     Set-StrictMode -Version Latest
+    $ErrorActionPreference = "Stop"
 
     # Set context to the appropriate tenant group
     $currentTenantGroupName = (Get-RdsContext).TenantGroupName
@@ -244,6 +247,8 @@ function ImportRDPSMod {
         [string]$Source = 'attached',
         [string]$ArtifactsPath
     )
+
+    $ErrorActionPreference = "Stop"
 
     $ModName = 'Microsoft.RDInfra.RDPowershell'
     $Mod = (get-module $ModName)
@@ -304,6 +309,8 @@ function GetSessionHostDesiredStates {
 }
 
 function IsRDAgentRegistryValidForRegistration {
+    $ErrorActionPreference = "Stop"
+
     $RDInfraReg = Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent' -ErrorAction SilentlyContinue
     if (!$RDInfraReg) {
         return @{
