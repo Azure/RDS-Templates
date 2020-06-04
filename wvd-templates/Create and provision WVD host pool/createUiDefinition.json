@@ -442,7 +442,7 @@
 						"type": "Microsoft.Common.DropDown",
 						"label": "Image OS version",
 						"defaultValue": "Windows 10 Enterprise multi-session with Office 365 ProPlus",
-						"toolTip": "Selet the OS Image for the virtual machine.",
+						"toolTip": "Select the OS Image for the virtual machine.",
 						"constraints": {
 							"allowedValues": [
 								{

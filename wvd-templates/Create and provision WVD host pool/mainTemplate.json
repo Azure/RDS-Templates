@@ -12,7 +12,7 @@
         "_createPidResource": {
             "type": "bool",
             "metadata": {
-                "description": "Leave this parameter as is. It is used internally only"
+                "description": "For internally use only, do not set a value for this parameter."
             },
             "defaultValue": true
         },
