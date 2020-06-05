@@ -1,3 +1,6 @@
+#Microsoft.RDInfra.RDPowerShell and Get-Package both require powershell 5.0 or higher.
+#Requires -Version 5.0
+
 <#
 .SYNOPSIS
 Common functions to be used by DSC scripts
@@ -46,8 +49,8 @@ function AddDefaultUsers {
 
         [Parameter(Mandatory = $false)]
         [string]$DefaultUsers
-
     )
+    $ErrorActionPreference = "Stop"
 
     Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
 
@@ -115,7 +118,7 @@ function ExtractDeploymentAgentZipFile {
     New-Item -Path "$DeployAgentLocation" -ItemType directory -Force
     
     # Locating and extracting DeployAgent.zip
-    $DeployAgentFromRepo = (LocateFile -Name 'DeployAgent.zip' -SearchPath $ScriptPath)
+    $DeployAgentFromRepo = (LocateFile -Name 'DeployAgent.zip' -SearchPath $ScriptPath -Recurse)
     
     Write-Log -Message "Extracting 'Deployagent.zip' file into '$DeployAgentLocation' folder inside VM"
     Expand-Archive $DeployAgentFromRepo -DestinationPath "$DeployAgentLocation"
@@ -139,6 +142,8 @@ function isRdshServer {
 <#
 .Description
 Call this function using dot source notation like ". AuthenticateRdsAccount" because the Add-RdsAccount function this calls creates variables using the AllScope option that other WVD poweshell module functions like Set-RdsContext require. Note that this creates a variable named "$authentication" that will overwrite any existing variable with that name in the scope this is dot sourced to.
+
+Calling code should set $ErrorActionPreference = "Stop" before calling this function to ensure that detailed error information is thrown if there is an error.
 #>
 function AuthenticateRdsAccount {
     param(
@@ -188,6 +193,7 @@ function SetTenantGroupContextAndValidate {
     )
 
     Set-StrictMode -Version Latest
+    $ErrorActionPreference = "Stop"
 
     # Set context to the appropriate tenant group
     $currentTenantGroupName = (Get-RdsContext).TenantGroupName
@@ -220,12 +226,12 @@ function LocateFile {
     param (
         [Parameter(mandatory = $true)]
         [string]$Name,
-
-        [string]$SearchPath = '.'
+        [string]$SearchPath = '.',
+        [switch]$Recurse
     )
     
     Write-Log -Message "Locating '$Name' within: '$SearchPath'"
-    $Path = (Get-ChildItem "$SearchPath\" -Filter $Name -Recurse).FullName
+    $Path = (Get-ChildItem "$SearchPath\" -Filter $Name -Recurse:$Recurse).FullName
     if ((-not $Path) -or (-not (Test-Path $Path))) {
         throw "'$Name' file not found at '$SearchPath'"
     }
@@ -241,6 +247,8 @@ function ImportRDPSMod {
         [string]$Source = 'attached',
         [string]$ArtifactsPath
     )
+
+    $ErrorActionPreference = "Stop"
 
     $ModName = 'Microsoft.RDInfra.RDPowershell'
     $Mod = (get-module $ModName)
@@ -262,7 +270,7 @@ function ImportRDPSMod {
         }
 
         # Locating and extracting PowerShellModules.zip
-        $ZipPath = (LocateFile -Name 'PowerShellModules.zip' -SearchPath $ArtifactsPath)
+        $ZipPath = (LocateFile -Name 'PowerShellModules.zip' -SearchPath $ArtifactsPath -Recurse)
 
         Write-Log -Message "Extracting RD PowerShell module file '$ZipPath' into '$Path'"
         Expand-Archive $ZipPath -DestinationPath $Path -Force
@@ -284,7 +292,7 @@ function ImportRDPSMod {
         Write-Log -Message "Successfully downloaded RD PowerShell module (version: v$Version) from PowerShell Gallery into '$Path'"
     }
 
-    $DLLPath = (LocateFile -Name "$ModName.dll" -SearchPath $Path)
+    $DLLPath = (LocateFile -Name "$ModName.dll" -SearchPath $Path -Recurse)
 
     Write-Log -Message "Importing RD PowerShell module DLL '$DLLPath"
     Import-Module $DLLPath -Force
@@ -301,6 +309,8 @@ function GetSessionHostDesiredStates {
 }
 
 function IsRDAgentRegistryValidForRegistration {
+    $ErrorActionPreference = "Stop"
+
     $RDInfraReg = Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent' -ErrorAction SilentlyContinue
     if (!$RDInfraReg) {
         return @{
@@ -327,4 +337,155 @@ function IsRDAgentRegistryValidForRegistration {
     return @{
         result = $true
     }
+}
+
+function RunMsiWithRetry {
+    param(
+        [Parameter(mandatory = $true)]
+        [string]$programDisplayName,
+
+        [Parameter(mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [String[]]$argumentList, #Must have at least 1 value
+
+        [Parameter(mandatory = $true)]
+        [string]$msiOutputLogPath,
+
+        [Parameter(mandatory = $false)]
+        [switch]$isUninstall,
+
+        [Parameter(mandatory = $false)]
+        [switch]$msiLogVerboseOutput
+    )
+    Set-StrictMode -Version Latest
+    $ErrorActionPreference = "Stop"
+
+    if ($msiLogVerboseOutput) {
+        $argumentList += "/l*vx $msiOutputLogPath" 
+    }
+    else {
+        $argumentList += "/l* $msiOutputLogPath"
+    }
+
+    $retryTimeToSleepInSec = 30
+    $retryCount = 0
+    $sts = $null
+    do {
+        $modeAndDisplayName = ($(if ($isUninstall) { "Uninstalling" } else { "Installing" }) + " $programDisplayName")
+
+        if ($retryCount -gt 0) {
+            Write-Log -Message "Retrying $modeAndDisplayName in $retryTimeToSleepInSec seconds because it failed with Exit code=$sts This will be retry number $retryCount"
+            Start-Sleep -Seconds $retryTimeToSleepInSec
+        }
+
+        Write-Log -Message ( "$modeAndDisplayName" + $(if ($msiLogVerboseOutput) { " with verbose msi logging" } else { "" }))
+
+
+        $processResult = Start-Process -FilePath "msiexec.exe" -ArgumentList $argumentList -Wait -Passthru
+        $sts = $processResult.ExitCode
+
+        $retryCount++
+    } 
+    while ($sts -eq 1618 -and $retryCount -lt 20) # Error code 1618 is ERROR_INSTALL_ALREADY_RUNNING see https://docs.microsoft.com/en-us/windows/win32/msi/-msiexecute-mutex .
+
+    if ($sts -eq 1618) {
+        Write-Log -Err "Stopping retries for $modeAndDisplayName. The last attempt failed with Exit code=$sts which is ERROR_INSTALL_ALREADY_RUNNING"
+        throw "Stopping because $modeAndDisplayName finished with Exit code=$sts"
+    }
+    else {
+        Write-Log -Message "$modeAndDisplayName finished with Exit code=$sts"
+    }
+
+    return $sts
+} 
+
+<#
+.DESCRIPTION
+Uninstalls any existing RDAgent BootLoader and RD Infra Agent installations and then installs the RDAgent BootLoader and RD Infra Agent using the specified registration token.
+
+.PARAMETER AgentInstallerFolder
+Required path to MSI installer file
+
+.PARAMETER AgentBootServiceInstallerFolder
+Required path to MSI installer file
+#>
+function InstallRDAgents {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$AgentInstallerFolder,
+        
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$AgentBootServiceInstallerFolder,
+    
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$RegistrationToken,
+    
+        [Parameter(mandatory = $false)]
+        [switch]$EnableVerboseMsiLogging
+    )
+
+    $ErrorActionPreference = "Stop"
+
+    Write-Log -Message "Boot loader folder is $AgentBootServiceInstallerFolder"
+    $AgentBootServiceInstaller = LocateFile -SearchPath $AgentBootServiceInstallerFolder -Name "*.msi"
+
+    Write-Log -Message "Agent folder is $AgentInstallerFolder"
+    $AgentInstaller = LocateFile -SearchPath $AgentInstallerFolder -Name "*.msi"
+
+    if (!$RegistrationToken) {
+        throw "No registration token specified"
+    }
+
+    RunMsiWithRetry -programDisplayName "RDAgentBootLoader" -isUninstall -argumentList @("/x {A38EE409-424D-4A0D-B5B6-5D66F20F62A5}", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentBootLoaderUnInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+
+    while ($true) {
+        try {
+            $oldAgent = Get-Package -ProviderName msi -Name "Remote Desktop Services Infrastructure Agent"
+        }
+        catch {
+            #Ignore the error if it was due to no packages being found.
+            if ($PSItem.FullyQualifiedErrorId -eq "NoMatchFound,Microsoft.PowerShell.PackageManagement.Cmdlets.GetPackage") {
+                break
+            }
+
+            throw;
+        }
+
+        $oldVersion = $oldAgent.Version
+        $productCodeParameter = $oldAgent.FastPackageReference
+
+        RunMsiWithRetry -programDisplayName "RD Infra Agent $oldVersion" -isUninstall -argumentList @("/x $productCodeParameter", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentUninstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+    }
+
+
+    Write-Log -Message "Installing RD Infra Agent on VM $AgentInstaller"
+    RunMsiWithRetry -programDisplayName "RD Infra Agent" -argumentList @("/i $AgentInstaller", "/quiet", "/qn", "/norestart", "/passive", "REGISTRATIONTOKEN=$RegistrationToken") -msiOutputLogPath "C:\Users\AgentInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+
+    Write-Log -Message "Installing RDAgent BootLoader on VM $AgentBootServiceInstaller"
+    RunMsiWithRetry -programDisplayName "RDAgent BootLoader" -argumentList @("/i $AgentBootServiceInstaller", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentBootLoaderInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+
+    $bootloaderServiceName = "RDAgentBootLoader"
+    $startBootloaderRetryCount = 0
+    while ( -not (Get-Service $bootloaderServiceName -ErrorAction SilentlyContinue)) {
+        $retry = ($startBootloaderRetryCount -lt 6)
+        $msgToWrite = "Service $bootloaderServiceName was not found. "
+        if ($retry) { 
+            $msgToWrite += "Retrying again in 30 seconds, this will be retry $startBootloaderRetryCount" 
+            Write-Log -Message $msgToWrite
+        } 
+        else {
+            $msgToWrite += "Retry limit exceeded" 
+            Write-Log -Err $msgToWrite
+            throw $msgToWrite
+        }
+            
+        $startBootloaderRetryCount++
+        Start-Sleep -Seconds 30
+    }
+
+    Write-Log -Message "Starting service $bootloaderServiceName"
+    Start-Service $bootloaderServiceName
 }

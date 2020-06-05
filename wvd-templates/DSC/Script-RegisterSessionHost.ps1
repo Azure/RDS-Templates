@@ -38,7 +38,10 @@ param(
     [string]$AadTenantId = "",
 
     [Parameter(mandatory = $false)]
-    [string]$RDPSModSource = 'attached'
+    [string]$RDPSModSource = 'attached',
+
+    [Parameter(mandatory = $false)]
+    [switch]$EnableVerboseMsiLogging
 )
 
 $ScriptPath = [System.IO.Path]::GetDirectoryName($PSCommandPath)
@@ -93,15 +96,11 @@ else {
     Write-Log -Message "Created new Rds RegistrationInfo into variable 'Registered': $obj"
 }
 
-# Executing DeployAgent ps1 file in rdsh vm and add to hostpool
 Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall"
 
-$DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
-    -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
-    -RegistrationToken $Registered.Token `
-    -StartAgent $true
+InstallRDAgents -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" -RegistrationToken $Registered.Token -EnableVerboseMsiLogging:$EnableVerboseMsiLogging
 
-Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader, RDAgent were installed inside VM for existing hostpool: $HostPoolName`n$DAgentInstall"
+Write-Log -Message "The agent installation code was successfully executed and RDAgentBootLoader, RDAgent installed inside VM for existing hostpool: $HostPoolName"
 
 # Get Session Host Info
 Write-Log -Message "Getting RDSH session host info for '$SessionHostName'"
