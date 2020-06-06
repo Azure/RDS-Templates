@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.11
+	v0.1.12
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -10,45 +10,100 @@ param(
 	[Parameter(mandatory = $false)]
 	$WebHookData,
 
-	# Note: if this is enabled, the script will assume that all the authentication is already done in current or parent scope before calling this script
-	[switch]$SkipAuth,
-
 	# Note: optional for simulating user sessions
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	#region set err action preference, extract input params, set exec policies, set TLS 1.2 security protocol
+	# //todo log why return before every return
+	# //todo log if session host is allow new sessions while getting current state
+	# //todo log warnings about unexpected state while getting current state
+	# //todo no need to poll for session host status
+	# //todo no need to reset the drain mode after VM is down
+	# //todo create an optional param to not change the load balancer type
+	# //optimize az auth and ctx
+	# //log without `n
+	#region set err action preference, extract input params, validate input params, set exec policies, set TLS 1.2 security protocol
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
 	$ErrorActionPreference = 'Stop'
+	$WebHookData = [PSCustomObject]$WebHookData
 
-	# If runbook was called from Webhook, WebhookData and its RequestBody will not be null.
-	if (!$WebHookData -or [string]::IsNullOrWhiteSpace($WebHookData.RequestBody)) {
+	function Get-PSObjectPropVal {
+		param (
+			[PSCustomObject]$Obj,
+			[string]$Key,
+			$DefaultVal = $null
+		)
+		$Prop = $Obj.PSObject.Properties[$Key]
+		if ($Prop) {
+			return $Prop.Value
+		}
+		return $DefaultVal
+	}
+
+	# If runbook was called from Webhook, WebhookData and its RequestBody will not be null
+	if (!$WebHookData -or [string]::IsNullOrWhiteSpace((Get-PSObjectPropVal -Obj $WebHookData -Key 'RequestBody'))) {
 		throw 'Runbook was not started from Webhook (WebHookData or its RequestBody is empty)'
 	}
 
-	# Collect Input converted from JSON request body of Webhook.
-	$Input = (ConvertFrom-Json -InputObject $WebHookData.RequestBody)
+	# Collect Input converted from JSON request body of Webhook
+	$RqtParams = ConvertFrom-Json -InputObject $WebHookData.RequestBody
 
-	# //todo validate params
-	$LogAnalyticsWorkspaceId = $Input.LogAnalyticsWorkspaceId
-	$LogAnalyticsPrimaryKey = $Input.LogAnalyticsPrimaryKey
-	$ConnectionAssetName = $Input.ConnectionAssetName
-	$AADTenantId = $Input.AADTenantId
-	$SubscriptionId = $Input.SubscriptionId
-	$RDBrokerURL = $Input.RDBrokerURL
-	$TenantGroupName = $Input.TenantGroupName
-	$TenantName = $Input.TenantName
-	$HostPoolName = $Input.HostPoolName
-	$MaintenanceTagName = $Input.MaintenanceTagName
-	$TimeDifference = $Input.TimeDifference
-	$BeginPeakTime = $Input.BeginPeakTime
-	$EndPeakTime = $Input.EndPeakTime
-	[double]$SessionThresholdPerCPU = $Input.SessionThresholdPerCPU
-	[int]$MinimumNumberOfRDSH = $Input.MinimumNumberOfRDSH
-	[int]$LimitSecondsToForceLogOffUser = $Input.LimitSecondsToForceLogOffUser
-	$LogOffMessageTitle = $Input.LogOffMessageTitle
-	$LogOffMessageBody = $Input.LogOffMessageBody
+	if (!$RqtParams) {
+		throw 'RequestBody of WebHookData is empty'
+	}
+
+	$RequiredStrParams = @(
+		'AADTenantId'
+		'SubscriptionId'
+		'TenantName'
+		'HostPoolName'
+		'TimeDifference'
+		'BeginPeakTime'
+		'EndPeakTime'
+		'LogOffMessageTitle'
+		'LogOffMessageBody'
+	)
+	$RequiredParams = @('SessionThresholdPerCPU', 'MinimumNumberOfRDSH', 'LimitSecondsToForceLogOffUser')
+	$InvalidParams = @($RequiredStrParams | Where-Object { [string]::IsNullOrWhiteSpace((Get-PSObjectPropVal -Obj $RqtParams -Key $_)) })
+	$InvalidParams += @($RequiredParams | Where-Object { $null -eq (Get-PSObjectPropVal -Obj $RqtParams -Key $_) })
+
+	if ($InvalidParams) {
+		throw "Invalid values for the following params: $($InvalidParams -join ', ')"
+	}
+	
+	[string]$LogAnalyticsWorkspaceId = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsWorkspaceId'
+	[string]$LogAnalyticsPrimaryKey = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsPrimaryKey'
+	[string]$ConnectionAssetName = Get-PSObjectPropVal -Obj $RqtParams -Key 'ConnectionAssetName'
+	[string]$AADTenantId = $RqtParams.AADTenantId
+	[string]$SubscriptionId = $RqtParams.SubscriptionId
+	$RDBrokerURL = Get-PSObjectPropVal -Obj $RqtParams -Key 'RDBrokerURL'
+	$TenantGroupName = Get-PSObjectPropVal -Obj $RqtParams -Key 'TenantGroupName'
+	$TenantName = $RqtParams.TenantName
+	[string]$HostPoolName = $RqtParams.HostPoolName
+	[string]$MaintenanceTagName = Get-PSObjectPropVal -Obj $RqtParams -Key 'MaintenanceTagName'
+	[string]$TimeDifference = $RqtParams.TimeDifference
+	[string]$BeginPeakTime = $RqtParams.BeginPeakTime
+	[string]$EndPeakTime = $RqtParams.EndPeakTime
+	[double]$SessionThresholdPerCPU = $RqtParams.SessionThresholdPerCPU
+	[int]$MinRunningVMs = $RqtParams.MinimumNumberOfRDSH
+	[int]$LimitSecondsToForceLogOffUser = $RqtParams.LimitSecondsToForceLogOffUser
+	[string]$LogOffMessageTitle = $RqtParams.LogOffMessageTitle
+	[string]$LogOffMessageBody = $RqtParams.LogOffMessageBody
+
+	# Note: if this is enabled, the script will assume that all the authentication is already done in current or parent scope before calling this script
+	[bool]$SkipAuth = !!(Get-PSObjectPropVal -Obj $RqtParams -Key 'SkipAuth')
+	[bool]$SkipUpdateLoadBalancerType = !!(Get-PSObjectPropVal -Obj $RqtParams -Key 'SkipUpdateLoadBalancerType')
+
+	if ([string]::IsNullOrWhiteSpace($ConnectionAssetName)) {
+		$ConnectionAssetName = 'AzureRunAsConnection'
+	}
+	if ([string]::IsNullOrWhiteSpace($RDBrokerURL)) {
+		$RDBrokerURL = 'https://rdbroker.wvd.microsoft.com'
+	}
+	if ([string]::IsNullOrWhiteSpace($TenantGroupName)) {
+		$TenantGroupName = 'Default Tenant Group'
+	}
 
 	[int]$StatusCheckTimeOut = 60 * 60 # 1 hr
 	[int]$SessionHostStatusCheckSleepSecs = 30
@@ -164,25 +219,32 @@ try {
 		End { }
 	}
 
+	Write-Log "Request params: $($RqtParams | Format-List -Force | Out-String)"
+
+	if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey) {
+		Write-Log "Log ananlytics is enabled"
+	}
+
 	#endregion
 
 
+	# Azure auth
+	$AzContext = $null
 	if (!$SkipAuth) {
 		# Collect the credentials from Azure Automation Account Assets
+		Write-Log "Get auto connection from asset: $ConnectionAssetName"
 		$Connection = Get-AutomationConnection -Name $ConnectionAssetName
 
-		# Authenticate to Azure
-		$AZAuthentication = $null
 		try {
-			$AZAuthentication = Connect-AzAccount -ApplicationId $Connection.ApplicationId -TenantId $AADTenantId -CertificateThumbprint $Connection.CertificateThumbprint -ServicePrincipal
-			if (!$AZAuthentication) {
-				throw $AZAuthentication
+			$AzContext = Connect-AzAccount -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -TenantId $AADTenantId -SubscriptionId $SubscriptionId -ServicePrincipal
+			if (!$AzContext) {
+				throw $AzContext
 			}
 		}
 		catch {
-			throw [System.Exception]::new('Failed to authenticate Azure', $PSItem.Exception)
+			throw [System.Exception]::new("Failed to authenticate Azure with application ID '$($Connection.ApplicationId)', tenant ID '$AADTenantId', subscription ID '$SubscriptionId'", $PSItem.Exception)
 		}
-		Write-Log "Successfully authenticated with Azure using service principal. Result: `n$($AZAuthentication | Out-String)"
+		Write-Log "Successfully authenticated with Azure using service principal: $($AzContext | Format-List -Force | Out-String)"
 
 		# Authenticating to WVD
 		$WVDAuthentication = $null
@@ -195,26 +257,29 @@ try {
 		catch {
 			throw [System.Exception]::new('Failed to authenticate WVD', $PSItem.Exception)
 		}
-		Write-Log "Successfully authenticated with WVD using service principal. Result: `n$($WVDAuthentication | Out-String)"
+		Write-Log "Successfully authenticated with WVD using service principal: $($WVDAuthentication | Format-List -Force | Out-String)"
+	}
+	else {
+		$AzContext = Get-AzContext
 	}
 
 
 	#region set az context, WVD tenant context, validate tenant & host pool, validate HostPool load balancer type, ensure there is at least 1 session host, get num of user sessions
 
-	if ($PSCmdlet.ShouldProcess($SubscriptionId, 'Set Azure context with the subscription ID')) {
-		# Set the Azure context with Subscription
-		$AzContext = $null
-		try {
-			Write-Log "Set Azure context with the subscription ID '$SubscriptionId'"
-			$AzContext = Set-AzContext -SubscriptionId $SubscriptionId
-			if (!$AzContext) {
-				throw $AzContext
+	# Set Azure context with subscription, tenant
+	if ($AzContext.Tenant.Id -ne $AADTenantId -or $AzContext.Subscription.Id -ne $SubscriptionId) {
+		if ($PSCmdlet.ShouldProcess((@($AADTenantId, $SubscriptionId) -join ', '), 'Set Azure context with tenant ID, subscription ID')) {
+			try {
+				$AzContext = Set-AzContext -TenantId $AADTenantId -SubscriptionId $SubscriptionId
+				if (!$AzContext -or $AzContext.Tenant.Id -ne $AADTenantId -or $AzContext.Subscription.Id -ne $SubscriptionId) {
+					throw $AzContext
+				}
 			}
+			catch {
+				throw [System.Exception]::new("Failed to set Azure context with tenant ID '$AADTenantId', subscription ID: $SubscriptionId", $PSItem.Exception)
+			}
+			Write-Log "Successfully set the Azure context with the tenant ID, subscription ID: $($AzContext | Format-List -Force | Out-String)"
 		}
-		catch {
-			throw [System.Exception]::new("Failed to set Azure context with provided Subscription ID: $SubscriptionId (Please provide a valid subscription)", $PSItem.Exception)
-		}
-		Write-Log "Successfully set the Azure context with the provided Subscription ID. Result: `n$($AzContext | Out-String)"
 	}
 
 	# Set WVD context to the appropriate tenant group
@@ -252,7 +317,7 @@ try {
 		}
 	}
 	catch {
-		throw [System.Exception]::new("Hostpool '$HostPoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values.", $PSItem.Exception)
+		throw [System.Exception]::new("Hostpool '$HostPoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values", $PSItem.Exception)
 	}
 
 	# Ensure HostPool load balancer type is not persistent
@@ -312,14 +377,14 @@ try {
 
 	# Set up breadth 1st load balacing type
 	# Note: breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
-	if ($HostPool.LoadBalancerType -ne 'BreadthFirst') {
+	if (!$SkipUpdateLoadBalancerType -and $HostPool.LoadBalancerType -ne 'BreadthFirst') {
 		Write-Log "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')"
 		if ($PSCmdlet.ShouldProcess($HostPoolName, "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')")) {
 			$HostPool = Set-RdsHostPool -Name $HostPoolName -TenantName $TenantName -BreadthFirstLoadBalancer
 		}
 	}
 
-	Write-Log "HostPool info:`n$($HostPool | Format-List -Force | Out-String)"
+	Write-Log "HostPool info: $($HostPool | Format-List -Force | Out-String)"
 	Write-Log "Number of session hosts in the HostPool: $($SessionHosts.Count)"
 
 	# Number of session hosts that are running
@@ -355,12 +420,12 @@ try {
 
 		$VM = $VMs[$VMName]
 		$SessionHost = $VM.SessionHost
-		if (($SessionHost | Get-Member -Name 'AzureVmId') -and $SessionHost.AzureVmId -and $VMInstance.VmId -ne $SessionHost.AzureVmId) {
+		if ((Get-PSObjectPropVal -Obj $SessionHost -Key 'AzureVmId') -and $VMInstance.VmId -ne $SessionHost.AzureVmId) {
 			# This VM is not a WVD session host
 			continue
 		}
 		if ($VM.Instance) {
-			throw "More than 1 VM found in Azure with same session host name '$($VM.SessionHost.SessionHostName)' (This is not supported):`n$($VMInstance | Out-String)`n$($VM.Instance | Out-String)"
+			throw "More than 1 VM found in Azure with same session host name '$($VM.SessionHost.SessionHostName)' (This is not supported): $($VMInstance | Format-List -Force | Out-String)$($VM.Instance | Format-List -Force | Out-String)"
 		}
 
 		$VM.Instance = $VMInstance
@@ -391,10 +456,10 @@ try {
 	}
 
 	# Calculate available capacity of sessions on running VMs
-	$AvailableSessionCapacity = $nRunningCores * $SessionThresholdPerCPU
+	$SessionThresholdCapacity = $nRunningCores * $SessionThresholdPerCPU
 
 	Write-Log "Number of running session hosts: $nRunningVMs of total $($VMs.Count)"
-	Write-Log "Number of user sessions: $nUserSessions of total threshold capacity: $AvailableSessionCapacity"
+	Write-Log "Number of user sessions: $nUserSessions of total threshold capacity: $SessionThresholdCapacity"
 
 	#endregion
 
@@ -405,24 +470,24 @@ try {
 	
 	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
 		# In peak hours: check if current capacity is meeting the user demands
-		if ($nUserSessions -gt $AvailableSessionCapacity) {
-			$nCoresToStart = [math]::Ceiling(($nUserSessions - $AvailableSessionCapacity) / $SessionThresholdPerCPU)
+		if ($nUserSessions -gt $SessionThresholdCapacity) {
+			$nCoresToStart = [math]::Ceiling(($nUserSessions - $SessionThresholdCapacity) / $SessionThresholdPerCPU)
 			Write-Log "[In peak hours] Number of user sessions is more than the threshold capacity. Need to start $nCoresToStart cores"
 		}
 	}
 	else {
 		# Off peak hours: check if need to adjust minimum number of session hosts running if the number of user sessions is close to the max allowed
 		[double]$MaxSessionsThreshold = 0.9
-		[int]$OffPeakSessionsThreshold = [math]::Floor($MinimumNumberOfRDSH * $HostPool.MaxSessionLimit * $MaxSessionsThreshold)
-		if ($nUserSessions -ge $OffPeakSessionsThreshold) {
-			$MinimumNumberOfRDSH = [math]::Ceiling($nUserSessions / ($HostPool.MaxSessionLimit * $MaxSessionsThreshold))
-			Write-Log "[Off peak hours] Number of user sessions is near the max number of sessions allowed with minimum number of session hosts ($OffPeakSessionsThreshold). Adjusting minimum number of session hosts required to $MinimumNumberOfRDSH"
+		[int]$MaxSessionsThresholdCapacity = [math]::Floor($MinRunningVMs * $HostPool.MaxSessionLimit * $MaxSessionsThreshold)
+		if ($nUserSessions -ge $MaxSessionsThresholdCapacity) {
+			$MinRunningVMs = [math]::Ceiling($nUserSessions / ($HostPool.MaxSessionLimit * $MaxSessionsThreshold))
+			Write-Log "[Off peak hours] Number of user sessions is more than $($MaxSessionsThreshold * 100) % of the max number of sessions allowed with minimum number of session hosts ($MaxSessionsThresholdCapacity). Adjusting minimum number of session hosts required to $MinRunningVMs"
 		}
 	}
 
-	Write-Log "Minimum number of session hosts required: $MinimumNumberOfRDSH"
+	Write-Log "Minimum number of session hosts required: $MinRunningVMs"
 	# Check if minimum number of session hosts running is higher than max allowed
-	if ($VMs.Count -le $MinimumNumberOfRDSH) {
+	if ($VMs.Count -le $MinRunningVMs) {
 		Write-Log -Warn 'Minimum number of RDSH is set higher than total number of session hosts'
 		if ($nRunningVMs -eq $VMs.Count) {
 			Write-Log 'All session hosts are running'
@@ -431,8 +496,8 @@ try {
 	}
 
 	# Check if minimum number of session hosts are running
-	if ($nRunningVMs -lt $MinimumNumberOfRDSH) {
-		$nVMsToStart = $MinimumNumberOfRDSH - $nRunningVMs
+	if ($nRunningVMs -lt $MinRunningVMs) {
+		$nVMsToStart = $MinRunningVMs - $nRunningVMs
 		Write-Log "Number of running session host is less than minimum required. Need to start $nVMsToStart VMs"
 	}
 
@@ -518,12 +583,12 @@ try {
 	}
 
 	# Off peak hours, already running minimum number of session hosts, exit
-	if ($nRunningVMs -le $MinimumNumberOfRDSH) {
+	if ($nRunningVMs -le $MinRunningVMs) {
 		return
 	}
 	
 	# Calculate the number of session hosts to stop
-	[int]$nVMsToStop = $nRunningVMs - $MinimumNumberOfRDSH
+	[int]$nVMsToStop = $nRunningVMs - $MinRunningVMs
 	Write-Log "[Off peak hours] Number of running session host is greater than minimum required. Need to stop $nVMsToStop VMs"
 
 	#endregion
@@ -552,6 +617,7 @@ try {
 			break
 		}
 
+		# //todo only do this if its allow new sessions
 		Write-Log "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions. Set it to disallow new sessions"
 		if ($PSCmdlet.ShouldProcess($SessionHostName, 'Set session host to disallow new sessions')) {
 			try {
@@ -666,7 +732,7 @@ catch {
 	$ErrContainer = $PSItem
 	# $ErrContainer = $_
 
-	$ErrMsg = $ErrContainer | Format-List -force | Out-String
+	$ErrMsg = $ErrContainer | Format-List -Force | Out-String
 	if (Get-Command 'Write-Log' -ErrorAction:SilentlyContinue) {
 		Write-Log -Err $ErrMsg -ErrorAction:Continue
 	}
