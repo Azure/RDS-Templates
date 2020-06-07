@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.16
+	v0.1.17
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -14,7 +14,6 @@ param(
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	# //todo log why return before every return
 	#region set err action preference, extract & validate input rqt params, set exec policies, set TLS 1.2 security protocol
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -275,6 +274,7 @@ try {
 	$SessionHosts = @(Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName)
 	if (!$SessionHosts) {
 		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool has session hosts"
+		Write-Log 'End'
 		return
 	}
 
@@ -452,6 +452,7 @@ try {
 		Write-Log -Warn 'Minimum number of RDSH is set higher than total number of session hosts'
 		if ($nRunningVMs -eq $VMs.Count) {
 			Write-Log 'All session hosts are running'
+			Write-Log 'End'
 			return
 		}
 	}
@@ -515,6 +516,8 @@ try {
 		# Wait for those jobs to start the session hosts
 		Wait-ForJobs $StartVMjobs
 
+		Write-Log 'All jobs completed'
+		Write-Log 'End'
 		return
 
 		# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were started
@@ -541,11 +544,15 @@ try {
 
 	# If in peak hours, exit because no session hosts will need to be stopped
 	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
+		Write-Log '[In peak hours] no need to start any session hosts'
+		Write-Log 'End'
 		return
 	}
 
 	# Off peak hours, already running minimum number of session hosts, exit
 	if ($nRunningVMs -le $MinRunningVMs) {
+		Write-Log '[Off peak hours] no need to start/stop any session hosts'
+		Write-Log 'End'
 		return
 	}
 	
@@ -673,6 +680,8 @@ try {
 	# Wait for those jobs to stop the session hosts
 	Wait-ForJobs $StopVMjobs
 
+	Write-Log 'All jobs completed'
+	Write-Log 'End'
 	return
 
 	# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were stopped
