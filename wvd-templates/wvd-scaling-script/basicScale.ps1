@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.17
+	v0.1.18
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -230,10 +230,11 @@ try {
 		$Connection = Get-AutomationConnection -Name $ConnectionAssetName
 
 		try {
-			$AzContext = Connect-AzAccount -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -TenantId $AADTenantId -SubscriptionId $SubscriptionId -ServicePrincipal
-			if (!$AzContext) {
-				throw $AzContext
+			$AzAuth = Connect-AzAccount -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -TenantId $AADTenantId -SubscriptionId $SubscriptionId -ServicePrincipal
+			if (!$AzAuth -or !$AzAuth.Context) {
+				throw $AzAuth
 			}
+			$AzContext = $AzAuth.Context
 		}
 		catch {
 			throw [System.Exception]::new("Failed to authenticate Azure with application ID: '$($Connection.ApplicationId)', tenant ID: '$AADTenantId', subscription ID: '$SubscriptionId'", $PSItem.Exception)
