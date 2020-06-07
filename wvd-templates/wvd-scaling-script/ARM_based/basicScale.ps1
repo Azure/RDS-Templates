@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.13
+	v0.1.14
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -15,14 +15,8 @@ param(
 )
 try {
 	# //todo log why return before every return
-	# //todo log if session host is allow new sessions while getting current state
-	# //todo log warnings about unexpected state while getting current state
 	# //todo no need to poll for session host status
 	# //todo no need to reset the drain mode after VM is down
-	# //todo create an optional param to not change the load balancer type
-	# //todo optimize az auth and ctx
-	# //todo log without `n
-	# //todo sum n sessions from each VM
 	#region set err action preference, extract & validate input rqt params, set exec policies, set TLS 1.2 security protocol
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -359,6 +353,8 @@ try {
 	[int]$nCoresToStart = 0
 	# Number of VMs to start
 	[int]$nVMsToStart = 0
+	# Number of user sessions reported by each session host
+	[int]$nUserSessionsFromAllVMs = 0
 
 	# Popoluate all session hosts objects
 	foreach ($SessionHost in $SessionHosts) {
@@ -387,7 +383,7 @@ try {
 
 		$VM.Instance = $VMInstance
 
-		Write-Log "Session host '$($VM.SessionHostName)' with power state: $($VMInstance.PowerState), status: $($SessionHost.Status), update state: $($SessionHost.UpdateState), sessions: $($SessionHost.Session)"
+		Write-Log "Session host '$($VM.SessionHostName)' with power state: $($VMInstance.PowerState), status: $($SessionHost.Status), update state: $($SessionHost.UpdateState), sessions: $($SessionHost.Session), allow new session: $($SessionHost.AllowNewSession)"
 		# Check if we know how many cores are in this VM
 		if (!$VMSizeCores.ContainsKey($VMInstance.HardwareProfile.VmSize)) {
 			Write-Log "Get all VM sizes in location: $($VMInstance.Location)"
@@ -398,12 +394,23 @@ try {
 
 		if ($VMInstance.PowerState -eq 'VM running') {
 			if ($SessionHost.Status -notin $DesiredRunningStates) {
-				Write-Log -Warn "VM is in running state but session host is not (this could be because the VM was just started and has not connected to broker yet)"
+				Write-Log -Warn 'VM is in running state but session host is not (this could be because the VM was just started and has not connected to broker yet)'
 			}
 
 			++$nRunningVMs
 			$nRunningCores += $VMSizeCores[$VMInstance.HardwareProfile.VmSize]
 		}
+		else {
+			if ($SessionHost.Status -in $DesiredRunningStates) {
+				Write-Log -Warn "VM is not in running state but session host is (this could be because the VM was just stopped and broker doesn't know that yet)"
+			}
+		}
+
+		$nUserSessionsFromAllVMs += $SessionHost.Session
+	}
+
+	if ($nUserSessionsFromAllVMs -ne $nUserSessions) {
+		Write-Log -Warn "Sum of user sessions reported by every session host ($nUserSessionsFromAllVMs) is not equal to the total number of user sessions reported by the host pool ($nUserSessions)"
 	}
 
 	# Make sure VM instance was found in Azure for every session host

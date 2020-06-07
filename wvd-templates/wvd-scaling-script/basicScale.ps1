@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.13
+	v0.1.14
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -15,14 +15,8 @@ param(
 )
 try {
 	# //todo log why return before every return
-	# //todo log if session host is allow new sessions while getting current state
-	# //todo log warnings about unexpected state while getting current state
 	# //todo no need to poll for session host status
 	# //todo no need to reset the drain mode after VM is down
-	# //todo create an optional param to not change the load balancer type
-	# //todo optimize az auth and ctx
-	# //todo log without `n
-	# //todo sum n sessions from each VM
 	#region set err action preference, extract & validate input rqt params, set exec policies, set TLS 1.2 security protocol
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -233,6 +227,7 @@ try {
 
 	# Azure auth
 	$AzContext = $null
+	$WVDContext = $null
 	if (!$SkipAuth) {
 		# Collect the credentials from Azure Automation Account Assets
 		Write-Log "Get auto connection from asset: $ConnectionAssetName"
@@ -249,21 +244,21 @@ try {
 		}
 		Write-Log "Successfully authenticated with Azure using service principal: $($AzContext | Format-List -Force | Out-String)"
 
-		# Authenticating to WVD
-		$WVDAuthentication = $null
+		# WVD auth
 		try {
-			$WVDAuthentication = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AADTenantId
-			if (!$WVDAuthentication) {
-				throw $WVDAuthentication
+			$WVDContext = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AADTenantId
+			if (!$WVDContext) {
+				throw $WVDContext
 			}
 		}
 		catch {
-			throw [System.Exception]::new('Failed to authenticate WVD', $PSItem.Exception)
+			throw [System.Exception]::new("Failed to authenticate WVD with application ID '$($Connection.ApplicationId)', AAD tenant ID '$AADTenantId', deloyment URL '$RDBrokerURL'", $PSItem.Exception)
 		}
-		Write-Log "Successfully authenticated with WVD using service principal: $($WVDAuthentication | Format-List -Force | Out-String)"
+		Write-Log "Successfully authenticated with WVD using service principal: $($WVDContext | Format-List -Force | Out-String)"
 	}
 	else {
 		$AzContext = Get-AzContext
+		$WVDContext = Get-RdsContext
 	}
 
 	# Set Azure context with subscription, tenant
@@ -283,16 +278,18 @@ try {
 	}
 
 	# Set WVD context to the appropriate tenant group
-	[string]$CurrentTenantGroupName = (Get-RdsContext).TenantGroupName
-	if ($TenantGroupName -ne $CurrentTenantGroupName) {
+	if ($WVDContext.TenantGroupName -ne $TenantGroupName) {
 		try {
-			Write-Log "Switch WVD context to tenant group '$TenantGroupName' (current: '$CurrentTenantGroupName')"
 			# Note: as of Microsoft.RDInfra.RDPowerShell version 1.0.1534.2001 this throws a System.NullReferenceException when the $TenantGroupName doesn't exist.
-			Set-RdsContext -TenantGroupName $TenantGroupName
+			$WVDContext = Set-RdsContext -TenantGroupName $TenantGroupName
+			if (!$WVDContext -or $WVDContext.TenantGroupName -ne $TenantGroupName) {
+				throw $WVDContext
+			}
 		}
 		catch {
-			throw [System.Exception]::new("Error switch WVD context to tenant group '$TenantGroupName' from '$CurrentTenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
+			throw [System.Exception]::new("Failed to set WVD context to tenant group '$TenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
 		}
+		Write-Log "Successfully set the WVD context with the tenant group: $($WVDContext | Format-List -Force | Out-String)"
 	}
 
 	#endregion
@@ -404,6 +401,8 @@ try {
 	[int]$nCoresToStart = 0
 	# Number of VMs to start
 	[int]$nVMsToStart = 0
+	# Number of user sessions reported by each session host
+	[int]$nUserSessionsFromAllVMs = 0
 
 	# Popoluate all session hosts objects
 	foreach ($SessionHost in $SessionHosts) {
@@ -435,7 +434,7 @@ try {
 
 		$VM.Instance = $VMInstance
 
-		Write-Log "Session host '$($SessionHost.SessionHostName)' with power state: $($VMInstance.PowerState), status: $($SessionHost.Status), update state: $($SessionHost.UpdateState), sessions: $($SessionHost.Sessions)"
+		Write-Log "Session host '$($SessionHost.SessionHostName)' with power state: $($VMInstance.PowerState), status: $($SessionHost.Status), update state: $($SessionHost.UpdateState), sessions: $($SessionHost.Sessions), allow new session: $($SessionHost.AllowNewSession)"
 		# Check if we know how many cores are in this VM
 		if (!$VMSizeCores.ContainsKey($VMInstance.HardwareProfile.VmSize)) {
 			Write-Log "Get all VM sizes in location: $($VMInstance.Location)"
@@ -446,12 +445,23 @@ try {
 
 		if ($VMInstance.PowerState -eq 'VM running') {
 			if ($SessionHost.Status -notin $DesiredRunningStates) {
-				Write-Log -Warn "VM is in running state but session host is not (this could be because the VM was just started and has not connected to broker yet)"
+				Write-Log -Warn 'VM is in running state but session host is not (this could be because the VM was just started and has not connected to broker yet)'
 			}
 
 			++$nRunningVMs
 			$nRunningCores += $VMSizeCores[$VMInstance.HardwareProfile.VmSize]
 		}
+		else {
+			if ($SessionHost.Status -in $DesiredRunningStates) {
+				Write-Log -Warn "VM is not in running state but session host is (this could be because the VM was just stopped and broker doesn't know that yet)"
+			}
+		}
+
+		$nUserSessionsFromAllVMs += $SessionHost.Sessions
+	}
+
+	if ($nUserSessionsFromAllVMs -ne $nUserSessions) {
+		Write-Log -Warn "Sum of user sessions reported by every session host ($nUserSessionsFromAllVMs) is not equal to the total number of user sessions reported by the host pool ($nUserSessions)"
 	}
 
 	# Make sure VM instance was found in Azure for every session host
