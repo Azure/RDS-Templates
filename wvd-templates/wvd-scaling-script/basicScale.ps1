@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.15
+	v0.1.16
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -15,8 +15,6 @@ param(
 )
 try {
 	# //todo log why return before every return
-	# //todo no need to poll for session host status
-	# //todo no need to reset the drain mode after VM is down
 	#region set err action preference, extract & validate input rqt params, set exec policies, set TLS 1.2 security protocol
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -294,20 +292,8 @@ try {
 	#endregion
 
 
-	#region validate tenant & host pool, ensure there is at least 1 session host, validate / update HostPool load balancer type, get num of user sessions
+	#region validate host pool, ensure there is at least 1 session host, validate / update HostPool load balancer type, get num of user sessions
 	
-	# Validate Tenant
-	try {
-		$Tenant = $null
-		$Tenant = Get-RdsTenant -Name $TenantName
-		if (!$Tenant) {
-			throw "No tenant with name '$TenantName' exists or the account doesn't have access to it"
-		}
-	}
-	catch {
-		throw [System.Exception]::new("Error getting the tenant '$TenantName'. This may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
-	}
-
 	# Validate and get HostPool info
 	$HostPool = $null
 	try {

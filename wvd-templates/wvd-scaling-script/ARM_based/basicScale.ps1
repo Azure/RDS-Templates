@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.15
+	v0.1.16
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -15,8 +15,6 @@ param(
 )
 try {
 	# //todo log why return before every return
-	# //todo no need to poll for session host status
-	# //todo no need to reset the drain mode after VM is down
 	#region set err action preference, extract & validate input rqt params, set exec policies, set TLS 1.2 security protocol
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
