@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.14
+	v0.1.15
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -163,7 +163,6 @@ try {
 			$json_body = ConvertTo-Json -Compress $body_obj
 			
 			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body $json_body -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp'
-			# Write-Verbose "PostResult: $PostResult"
 			if ($PostResult -ne 'Accepted') {
 				throw "Error posting to OMS: $PostResult"
 			}
@@ -192,7 +191,7 @@ try {
 
 		$IncompleteJobs = @($Jobs | Where-Object { $_.State -ne 'Completed' })
 		if ($IncompleteJobs) {
-			throw "$($IncompleteJobs.Count) jobs did not complete successfully: $($IncompleteJobs | Format-List -Force)"
+			throw "$($IncompleteJobs.Count) jobs did not complete successfully: $($IncompleteJobs | Format-List -Force | Out-String)"
 		}
 	}
 
@@ -230,7 +229,7 @@ try {
 	$WVDContext = $null
 	if (!$SkipAuth) {
 		# Collect the credentials from Azure Automation Account Assets
-		Write-Log "Get auto connection from asset: $ConnectionAssetName"
+		Write-Log "Get auto connection from asset: '$ConnectionAssetName'"
 		$Connection = Get-AutomationConnection -Name $ConnectionAssetName
 
 		try {
@@ -240,7 +239,7 @@ try {
 			}
 		}
 		catch {
-			throw [System.Exception]::new("Failed to authenticate Azure with application ID '$($Connection.ApplicationId)', tenant ID '$AADTenantId', subscription ID '$SubscriptionId'", $PSItem.Exception)
+			throw [System.Exception]::new("Failed to authenticate Azure with application ID: '$($Connection.ApplicationId)', tenant ID: '$AADTenantId', subscription ID: '$SubscriptionId'", $PSItem.Exception)
 		}
 		Write-Log "Successfully authenticated with Azure using service principal: $($AzContext | Format-List -Force | Out-String)"
 
@@ -252,7 +251,7 @@ try {
 			}
 		}
 		catch {
-			throw [System.Exception]::new("Failed to authenticate WVD with application ID '$($Connection.ApplicationId)', AAD tenant ID '$AADTenantId', deloyment URL '$RDBrokerURL'", $PSItem.Exception)
+			throw [System.Exception]::new("Failed to authenticate WVD with application ID: '$($Connection.ApplicationId)', AAD tenant ID: '$AADTenantId', deloyment URL: '$RDBrokerURL'", $PSItem.Exception)
 		}
 		Write-Log "Successfully authenticated with WVD using service principal: $($WVDContext | Format-List -Force | Out-String)"
 	}
@@ -271,7 +270,7 @@ try {
 				}
 			}
 			catch {
-				throw [System.Exception]::new("Failed to set Azure context with tenant ID '$AADTenantId', subscription ID '$SubscriptionId'", $PSItem.Exception)
+				throw [System.Exception]::new("Failed to set Azure context with tenant ID: '$AADTenantId', subscription ID: '$SubscriptionId'", $PSItem.Exception)
 			}
 			Write-Log "Successfully set the Azure context with the tenant ID, subscription ID: $($AzContext | Format-List -Force | Out-String)"
 		}
@@ -287,7 +286,7 @@ try {
 			}
 		}
 		catch {
-			throw [System.Exception]::new("Failed to set WVD context to tenant group '$TenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
+			throw [System.Exception]::new("Failed to set WVD context to tenant group: '$TenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
 		}
 		Write-Log "Successfully set the WVD context with the tenant group: $($WVDContext | Format-List -Force | Out-String)"
 	}
@@ -312,14 +311,14 @@ try {
 	# Validate and get HostPool info
 	$HostPool = $null
 	try {
-		Write-Log "Get Hostpool info: $HostPoolName in Tenant: $TenantName"
+		Write-Log "Get Hostpool info of '$HostPoolName' in tenant '$TenantName'"
 		$HostPool = Get-RdsHostPool -TenantName $TenantName -Name $HostPoolName
 		if (!$HostPool) {
 			throw $HostPool
 		}
 	}
 	catch {
-		throw [System.Exception]::new("Hostpool '$HostPoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values", $PSItem.Exception)
+		throw [System.Exception]::new("Failed to get Hostpool info of '$HostPoolName' in tenant '$TenantName'. Ensure that you have entered the correct values", $PSItem.Exception)
 	}
 
 	Write-Log 'Get all session hosts'
@@ -434,7 +433,7 @@ try {
 
 		$VM.Instance = $VMInstance
 
-		Write-Log "Session host '$($SessionHost.SessionHostName)' with power state: $($VMInstance.PowerState), status: $($SessionHost.Status), update state: $($SessionHost.UpdateState), sessions: $($SessionHost.Sessions), allow new session: $($SessionHost.AllowNewSession)"
+		Write-Log "Session host: '$($SessionHost.SessionHostName)', power state: '$($VMInstance.PowerState)', status: '$($SessionHost.Status)', update state: '$($SessionHost.UpdateState)', sessions: $($SessionHost.Sessions), allow new session: $($SessionHost.AllowNewSession)"
 		# Check if we know how many cores are in this VM
 		if (!$VMSizeCores.ContainsKey($VMInstance.HardwareProfile.VmSize)) {
 			Write-Log "Get all VM sizes in location: $($VMInstance.Location)"
@@ -474,7 +473,7 @@ try {
 	$SessionThresholdCapacity = $nRunningCores * $SessionThresholdPerCPU
 
 	Write-Log "Number of running session hosts: $nRunningVMs of total $($VMs.Count)"
-	Write-Log "Number of user sessions: $nUserSessions of total threshold capacity: $SessionThresholdCapacity"
+	Write-Log "Number of user sessions: $nUserSessions, total threshold capacity: $SessionThresholdCapacity"
 
 	#endregion
 
@@ -571,6 +570,9 @@ try {
 		# Wait for those jobs to start the session hosts
 		Wait-ForJobs $StartVMjobs
 
+		return
+
+		# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were started
 		Write-Log "Wait for $($StartSessionHostNames.Count) session hosts to be available"
 		$StartTime = Get-Date
 		while ($true) {
@@ -632,14 +634,15 @@ try {
 			break
 		}
 
-		# //todo only do this if its allow new sessions
-		Write-Log "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions. Set it to disallow new sessions"
-		if ($PSCmdlet.ShouldProcess($SessionHostName, 'Set session host to disallow new sessions')) {
-			try {
-				$VM.SessionHost = $SessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $false
-			}
-			catch {
-				throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: $SessionHostName", $PSItem.Exception)
+		if ($SessionHost.AllowNewSession) {
+			Write-Log "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions. Set it to disallow new sessions"
+			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Set session host to disallow new sessions')) {
+				try {
+					$VM.SessionHost = $SessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $false
+				}
+				catch {
+					throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: '$SessionHostName'", $PSItem.Exception)
+				}
 			}
 		}
 
@@ -650,10 +653,10 @@ try {
 				$VM.UserSessions = @(Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $_.SessionHostName -eq $SessionHostName })
 			}
 			catch {
-				throw [System.Exception]::new("Failed to retrieve user sessions of session host: $SessionHostName", $PSItem.Exception)
+				throw [System.Exception]::new("Failed to retrieve user sessions of session host: '$SessionHostName'", $PSItem.Exception)
 			}
 
-			Write-Log "Send active user sessions log off message on session host: $SessionHostName"
+			Write-Log "Send log off message to active user sessions on session host: '$SessionHostName'"
 			foreach ($Session in $VM.UserSessions) {
 				if ($Session.SessionState -ne "Active") {
 					continue
@@ -694,7 +697,7 @@ try {
 		foreach ($VM in $VMsToStopAfterLogOffTimeOut) {
 			$SessionHostName = $VM.SessionHost.SessionHostName
 
-			Write-Log "Force log off $($VM.UserSessions.Count) users on session host: $SessionHostName"
+			Write-Log "Force log off $($VM.UserSessions.Count) users on session host: '$SessionHostName'"
 			foreach ($Session in $VM.UserSessions) {
 				try {
 					Write-Log "Force log off user: '$($Session.AdUserName)', session ID: $($Session.SessionId)"
@@ -723,6 +726,9 @@ try {
 	# Wait for those jobs to stop the session hosts
 	Wait-ForJobs $StopVMjobs
 
+	return
+
+	# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were stopped
 	Write-Log "Wait for $($StopSessionHostNames.Count) session hosts to be unavailable"
 	[array]$SessionHostsToCheck = @()
 	$StartTime = Get-Date
