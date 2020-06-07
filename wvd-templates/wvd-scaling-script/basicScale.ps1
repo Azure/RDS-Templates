@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.12
+	v0.1.13
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -20,9 +20,10 @@ try {
 	# //todo no need to poll for session host status
 	# //todo no need to reset the drain mode after VM is down
 	# //todo create an optional param to not change the load balancer type
-	# //optimize az auth and ctx
-	# //log without `n
-	#region set err action preference, extract input params, validate input params, set exec policies, set TLS 1.2 security protocol
+	# //todo optimize az auth and ctx
+	# //todo log without `n
+	# //todo sum n sessions from each VM
+	#region set err action preference, extract & validate input rqt params, set exec policies, set TLS 1.2 security protocol
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
 	$ErrorActionPreference = 'Stop'
@@ -53,7 +54,7 @@ try {
 		throw 'RequestBody of WebHookData is empty'
 	}
 
-	$RequiredStrParams = @(
+	[string[]]$RequiredStrParams = @(
 		'AADTenantId'
 		'SubscriptionId'
 		'TenantName'
@@ -64,12 +65,12 @@ try {
 		'LogOffMessageTitle'
 		'LogOffMessageBody'
 	)
-	$RequiredParams = @('SessionThresholdPerCPU', 'MinimumNumberOfRDSH', 'LimitSecondsToForceLogOffUser')
-	$InvalidParams = @($RequiredStrParams | Where-Object { [string]::IsNullOrWhiteSpace((Get-PSObjectPropVal -Obj $RqtParams -Key $_)) })
-	$InvalidParams += @($RequiredParams | Where-Object { $null -eq (Get-PSObjectPropVal -Obj $RqtParams -Key $_) })
+	[string[]]$RequiredParams = @('SessionThresholdPerCPU', 'MinimumNumberOfRDSH', 'LimitSecondsToForceLogOffUser')
+	[string[]]$InvalidParams = @($RequiredStrParams | Where-Object { [string]::IsNullOrWhiteSpace((Get-PSObjectPropVal -Obj $RqtParams -Key $_)) })
+	[string[]]$InvalidParams += @($RequiredParams | Where-Object { $null -eq (Get-PSObjectPropVal -Obj $RqtParams -Key $_) })
 
 	if ($InvalidParams) {
-		throw "Invalid values for the following params: $($InvalidParams -join ', ')"
+		throw "Invalid values for the following $($InvalidParams.Count) params: $($InvalidParams -join ', ')"
 	}
 	
 	[string]$LogAnalyticsWorkspaceId = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsWorkspaceId'
@@ -77,9 +78,9 @@ try {
 	[string]$ConnectionAssetName = Get-PSObjectPropVal -Obj $RqtParams -Key 'ConnectionAssetName'
 	[string]$AADTenantId = $RqtParams.AADTenantId
 	[string]$SubscriptionId = $RqtParams.SubscriptionId
-	$RDBrokerURL = Get-PSObjectPropVal -Obj $RqtParams -Key 'RDBrokerURL'
-	$TenantGroupName = Get-PSObjectPropVal -Obj $RqtParams -Key 'TenantGroupName'
-	$TenantName = $RqtParams.TenantName
+	[string]$RDBrokerURL = Get-PSObjectPropVal -Obj $RqtParams -Key 'RDBrokerURL'
+	[string]$TenantGroupName = Get-PSObjectPropVal -Obj $RqtParams -Key 'TenantGroupName'
+	[string]$TenantName = $RqtParams.TenantName
 	[string]$HostPoolName = $RqtParams.HostPoolName
 	[string]$MaintenanceTagName = Get-PSObjectPropVal -Obj $RqtParams -Key 'MaintenanceTagName'
 	[string]$TimeDifference = $RqtParams.TimeDifference
@@ -123,7 +124,7 @@ try {
 	#endregion
 
 
-	#region helper/common functions
+	#region helper/common functions, log rqt params
 
 	# Function to return local time converted from UTC
 	function Get-LocalDateTime {
@@ -228,6 +229,8 @@ try {
 	#endregion
 
 
+	#region azure auth, ctx, wvd auth, ctx, validate wvd tenant
+
 	# Azure auth
 	$AzContext = $null
 	if (!$SkipAuth) {
@@ -263,9 +266,6 @@ try {
 		$AzContext = Get-AzContext
 	}
 
-
-	#region set az context, WVD tenant context, validate tenant & host pool, validate HostPool load balancer type, ensure there is at least 1 session host, get num of user sessions
-
 	# Set Azure context with subscription, tenant
 	if ($AzContext.Tenant.Id -ne $AADTenantId -or $AzContext.Subscription.Id -ne $SubscriptionId) {
 		if ($PSCmdlet.ShouldProcess((@($AADTenantId, $SubscriptionId) -join ', '), 'Set Azure context with tenant ID, subscription ID')) {
@@ -276,7 +276,7 @@ try {
 				}
 			}
 			catch {
-				throw [System.Exception]::new("Failed to set Azure context with tenant ID '$AADTenantId', subscription ID: $SubscriptionId", $PSItem.Exception)
+				throw [System.Exception]::new("Failed to set Azure context with tenant ID '$AADTenantId', subscription ID '$SubscriptionId'", $PSItem.Exception)
 			}
 			Write-Log "Successfully set the Azure context with the tenant ID, subscription ID: $($AzContext | Format-List -Force | Out-String)"
 		}
@@ -294,13 +294,18 @@ try {
 			throw [System.Exception]::new("Error switch WVD context to tenant group '$TenantGroupName' from '$CurrentTenantGroupName'. This may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
 		}
 	}
+
+	#endregion
+
+
+	#region validate tenant & host pool, ensure there is at least 1 session host, validate / update HostPool load balancer type, get num of user sessions
 	
 	# Validate Tenant
 	try {
 		$Tenant = $null
 		$Tenant = Get-RdsTenant -Name $TenantName
 		if (!$Tenant) {
-			throw "No tenant with name '$TenantName' exists or the account doesn't have access to it."
+			throw "No tenant with name '$TenantName' exists or the account doesn't have access to it"
 		}
 	}
 	catch {
@@ -320,17 +325,29 @@ try {
 		throw [System.Exception]::new("Hostpool '$HostPoolName' does not exist in the tenant '$TenantName'. Ensure that you have entered the correct values", $PSItem.Exception)
 	}
 
+	Write-Log 'Get all session hosts'
+	$SessionHosts = @(Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName)
+	if (!$SessionHosts) {
+		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool has session hosts"
+		return
+	}
+
 	# Ensure HostPool load balancer type is not persistent
 	if ($HostPool.LoadBalancerType -eq 'Persistent') {
 		throw "HostPool '$HostPoolName' is configured with 'Persistent' load balancer type. Scaling tool only supports these load balancer types: BreadthFirst, DepthFirst"
 	}
 
-	Write-Log 'Get all session hosts'
-	$SessionHosts = @(Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName)
-	if (!$SessionHosts) {
-		Write-Log "There are no session hosts in the Hostpool '$HostPoolName'. Ensure that hostpool have session hosts."
-		return
+	# Set up breadth 1st load balacing type
+	# Note: breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
+	if (!$SkipUpdateLoadBalancerType -and $HostPool.LoadBalancerType -ne 'BreadthFirst') {
+		Write-Log "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')"
+		if ($PSCmdlet.ShouldProcess($HostPoolName, "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')")) {
+			$HostPool = Set-RdsHostPool -Name $HostPoolName -TenantName $TenantName -BreadthFirstLoadBalancer
+		}
 	}
+
+	Write-Log "HostPool info: $($HostPool | Format-List -Force | Out-String)"
+	Write-Log "Number of session hosts in the HostPool: $($SessionHosts.Count)"
 
 	# Check if we need to override the number of user sessions for simulation / testing purpose
 	$nUserSessions = $null
@@ -373,19 +390,7 @@ try {
 	#endregion
 
 
-	#region set up load balancing type, get all session hosts, VMs & user sessions info and compute workload
-
-	# Set up breadth 1st load balacing type
-	# Note: breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
-	if (!$SkipUpdateLoadBalancerType -and $HostPool.LoadBalancerType -ne 'BreadthFirst') {
-		Write-Log "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')"
-		if ($PSCmdlet.ShouldProcess($HostPoolName, "Update HostPool with BreadthFirstLoadBalancer type (current: '$($HostPool.LoadBalancerType)')")) {
-			$HostPool = Set-RdsHostPool -Name $HostPoolName -TenantName $TenantName -BreadthFirstLoadBalancer
-		}
-	}
-
-	Write-Log "HostPool info: $($HostPool | Format-List -Force | Out-String)"
-	Write-Log "Number of session hosts in the HostPool: $($SessionHosts.Count)"
+	#region get all session hosts, VMs & user sessions info and compute workload
 
 	# Number of session hosts that are running
 	[int]$nRunningVMs = 0
