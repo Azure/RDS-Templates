@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.18
+	v0.1.19
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -256,7 +256,7 @@ try {
 	#endregion
 
 
-	#region validate host pool, ensure there is at least 1 session host, validate / update HostPool load balancer type, get num of user sessions
+	#region validate host pool, validate / update HostPool load balancer type, ensure there is at least 1 session host, get num of user sessions
 
 	# Validate and get HostPool info
 	$HostPool = $null
@@ -271,6 +271,11 @@ try {
 		throw [System.Exception]::new("Failed to get Hostpool info of '$HostPoolName' in resource group '$ResourceGroupName'. Ensure that you have entered the correct values", $PSItem.Exception)
 	}
 
+	# Ensure HostPool load balancer type is not persistent
+	if ($HostPool.LoadBalancerType -eq 'Persistent') {
+		throw "HostPool '$HostPoolName' is configured with 'Persistent' load balancer type. Scaling tool only supports these load balancer types: BreadthFirst, DepthFirst"
+	}
+
 	Write-Log 'Get all session hosts'
 	$SessionHosts = @(Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName)
 	if (!$SessionHosts) {
@@ -279,9 +284,14 @@ try {
 		return
 	}
 
-	# Ensure HostPool load balancer type is not persistent
-	if ($HostPool.LoadBalancerType -eq 'Persistent') {
-		throw "HostPool '$HostPoolName' is configured with 'Persistent' load balancer type. Scaling tool only supports these load balancer types: BreadthFirst, DepthFirst"
+	# Check if we need to override the number of user sessions for simulation / testing purpose
+	$nUserSessions = $null
+	if ($null -eq $OverrideNUserSessions) {
+		Write-Log 'Get number of user sessions in Hostpool'
+		$nUserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName).Count
+	}
+	else {
+		$nUserSessions = $OverrideNUserSessions
 	}
 
 	# Set up breadth 1st load balacing type
@@ -295,16 +305,6 @@ try {
 
 	Write-Log "HostPool info: $($HostPool | Format-List -Force | Out-String)"
 	Write-Log "Number of session hosts in the HostPool: $($SessionHosts.Count)"
-
-	# Check if we need to override the number of user sessions for simulation / testing purpose
-	$nUserSessions = $null
-	if ($null -eq $OverrideNUserSessions) {
-		Write-Log 'Get number of user sessions in Hostpool'
-		$nUserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName).Count
-	}
-	else {
-		$nUserSessions = $OverrideNUserSessions
-	}
 
 	#endregion
 	
@@ -618,6 +618,7 @@ try {
 				try {
 					Write-Log "Send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
 					if ($PSCmdlet.ShouldProcess($Session.ActiveDirectoryUserName, 'Send a log off message to user')) {
+						# //todo what if user logged off by this time
 						Send-AzWvdUserSessionMessage -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -UserSessionId $SessionID -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds"
 					}
 				}
@@ -657,6 +658,7 @@ try {
 				try {
 					Write-Log "Force log off user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
 					if ($PSCmdlet.ShouldProcess($Session.Id, 'Force log off user with session ID')) {
+						# //todo what if user logged off by this time
 						Remove-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -Id $SessionID -Force
 					}
 				}
