@@ -71,7 +71,7 @@ Ignore the following parameters:
 Enter the remaining configuration parameters for the virtual machines.
 - **Vm Size**
 - **Enable Accelerated Networking**. Please notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs. Default value is `false`.
-- **Rdsh Name Prefix**
+- **Rdsh Name Prefix**. This prefix must be unique and can't be same as the existing VMs because this template is designed to create new VMs with the specified prefix name and delete/deallocate any other existing VMs from the host pool
   > [!WARNING]
   Starting from **June 1st 2020**, this parameter will be renamed to **newRdshNamePrefix** and the default value for this parameter will be removed, so the value will need to be specified.
 - **Rdsh Number Of Instances**

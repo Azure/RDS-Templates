@@ -79,8 +79,7 @@
             "type": "string",
             "metadata": {
                 "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory. Warning: Please note that starting from June 1st 2020, the default value for this parameter will be removed, so the value will need to be specified"
-            },
-            "defaultValue": "[take(toLower(resourceGroup().name), 10)]"
+            }
         },
         "rdshNumberOfInstances": {
             "type": "int",
