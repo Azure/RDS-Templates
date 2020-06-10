@@ -68,12 +68,11 @@
                 "description": "(Required when rdshImageSource = CustomImage) Resource group name for the managed disk, if you choose to provide one."
             }
         },
-        "rdshNamePrefix": {
+        "newRdshNamePrefix": {
             "type": "string",
             "metadata": {
-                "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory. Warning: Please note that starting from June 1st 2020, this parameter will be renamed to 'newRdshNamePrefix' and the default value will be removed, so the value will need to be specified"
-            },
-            "defaultValue": "[take(toLower(resourceGroup().name), 10)]"
+                "description": "This prefix will be used in combination with the VM number to create the VM name for the new VMs. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. This prefix must be unique and can't be same as the existing VMs because this template is designed to create new VMs with the specified prefix name and delete/deallocate any other existing VMs from the host pool. You should use a unique prefix to reduce name collisions in Active Directory. Warning: Please note that starting from June 1st 2020, this parameter will be renamed to 'newRdshNamePrefix' and the default value will be removed, so the value will need to be specified"
+            }
         },
         "rdshNumberOfInstances": {
             "type": "int",
@@ -292,7 +291,7 @@
         }
     },
     "variables": {
-        "rdshPrefix": "[concat(parameters('rdshNamePrefix'), '-')]",
+        "rdshPrefix": "[concat(parameters('newRdshNamePrefix'), '-')]",
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "existingTenantName": "[replace(parameters('existingTenantName'), '\"', '')]",
