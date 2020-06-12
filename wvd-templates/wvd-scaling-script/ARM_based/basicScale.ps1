@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.19
+	v0.1.20
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -595,6 +595,12 @@ try {
 				}
 				catch {
 					throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: '$SessionHostName'", $PSItem.Exception)
+				}
+
+				if ($SessionHost.Session -and !$LimitSecondsToForceLogOffUser) {
+					Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Session) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
+					Update-SessionHostToAllowNewSession -SessionHost $SessionHost
+					continue
 				}
 			}
 		}
