@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.21
+	v0.1.22
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -410,9 +410,9 @@ try {
 	}
 
 	# Make sure VM instance was found in Azure for every session host
-	$VMsWithoutInstance = @($VMs.Values | Where-Object { !$_.Instance })
-	if ($VMsWithoutInstance) {
-		throw "There are $($VMsWithoutInstance.Count) session hosts whose VM instance was not found in Azure"
+	$nVMsWithoutInstance = @($VMs.Values | Where-Object { !$_.Instance }).Count
+	if ($nVMsWithoutInstance) {
+		throw "There are $nVMsWithoutInstance session hosts whose VM instance was not found in Azure"
 	}
 
 	# Calculate available capacity of sessions on running VMs
