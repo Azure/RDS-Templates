@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.20
+	v0.1.21
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -284,15 +284,8 @@ try {
 		return
 	}
 
-	# Check if we need to override the number of user sessions for simulation / testing purpose
-	$nUserSessions = $null
-	if ($null -eq $OverrideNUserSessions) {
-		Write-Log 'Get number of user sessions in Hostpool'
-		$nUserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName).Count
-	}
-	else {
-		$nUserSessions = $OverrideNUserSessions
-	}
+	Write-Log 'Get number of user sessions in Hostpool'
+	[int]$nUserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName).Count
 
 	# Set up breadth 1st load balacing type
 	# Note: breadth 1st is enforced on AND off peak hours to simplify the things with scaling in the start/end of peak hours
@@ -351,8 +344,8 @@ try {
 	[int]$nCoresToStart = 0
 	# Number of VMs to start
 	[int]$nVMsToStart = 0
-	# Number of user sessions reported by each session host
-	[int]$nUserSessionsFromAllVMs = 0
+	# Number of user sessions reported by each session host that is running
+	[int]$nUserSessionsFromAllRunningVMs = 0
 
 	# Popoluate all session hosts objects
 	foreach ($SessionHost in $SessionHosts) {
@@ -397,18 +390,23 @@ try {
 
 			++$nRunningVMs
 			$nRunningCores += $VMSizeCores[$VMInstance.HardwareProfile.VmSize]
+			$nUserSessionsFromAllRunningVMs += $SessionHost.Session
 		}
 		else {
 			if ($SessionHost.Status -in $DesiredRunningStates) {
 				Write-Log -Warn "VM is not in running state but session host is (this could be because the VM was just stopped and broker doesn't know that yet)"
 			}
 		}
-
-		$nUserSessionsFromAllVMs += $SessionHost.Session
 	}
 
-	if ($nUserSessionsFromAllVMs -ne $nUserSessions) {
-		Write-Log -Warn "Sum of user sessions reported by every session host ($nUserSessionsFromAllVMs) is not equal to the total number of user sessions reported by the host pool ($nUserSessions)"
+	if ($nUserSessionsFromAllRunningVMs -ne $nUserSessions) {
+		Write-Log -Warn "Sum of user sessions reported by every running session host ($nUserSessionsFromAllRunningVMs) is not equal to the total number of user sessions reported by the host pool ($nUserSessions)"
+	}
+
+	$nUserSessions = $nUserSessionsFromAllRunningVMs
+	# Check if we need to override the number of user sessions for simulation / testing purpose
+	if ($null -ne $OverrideNUserSessions) {
+		$nUserSessions = $OverrideNUserSessions
 	}
 
 	# Make sure VM instance was found in Azure for every session host
