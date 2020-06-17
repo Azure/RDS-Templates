@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.22
+	v0.1.23
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -14,7 +14,7 @@ param(
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	#region set err action preference, extract & validate input rqt params, set exec policies, set TLS 1.2 security protocol
+	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
 	$ErrorActionPreference = 'Stop'
@@ -77,7 +77,7 @@ try {
 	[string]$TimeDifference = $RqtParams.TimeDifference
 	[string]$BeginPeakTime = $RqtParams.BeginPeakTime
 	[string]$EndPeakTime = $RqtParams.EndPeakTime
-	[double]$SessionThresholdPerCPU = $RqtParams.SessionThresholdPerCPU
+	[double]$UserSessionThresholdPerCore = $RqtParams.SessionThresholdPerCPU
 	[int]$MinRunningVMs = $RqtParams.MinimumNumberOfRDSH
 	[int]$LimitSecondsToForceLogOffUser = $RqtParams.LimitSecondsToForceLogOffUser
 	[string]$LogOffMessageTitle = $RqtParams.LogOffMessageTitle
@@ -103,19 +103,10 @@ try {
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
 	[string[]]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
 
-	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
-	if (!$SkipAuth) {
-		# Note: this requires admin priviledges
-		Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
-	}
-
-	# Note: https://stackoverflow.com/questions/41674518/powershell-setting-security-protocol-to-tls-1-2
-	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
 	#endregion
 
 
-	#region helper/common functions, log rqt params
+	#region helper/common functions, set exec policies, set TLS 1.2 security protocol, log rqt params
 
 	# Function to return local time converted from UTC
 	function Get-LocalDateTime {
@@ -169,6 +160,58 @@ try {
 		}
 	}
 
+	function Set-nVMsToStartOrStop {
+		param(
+			[Parameter(Mandatory = $true)]
+			[int]$nRunningVMs,
+			
+			[Parameter(Mandatory = $true)]
+			[int]$nRunningCores,
+			
+			[Parameter(Mandatory = $true)]
+			[int]$nUserSessions,
+
+			[Parameter(Mandatory = $true)]
+			[int]$MaxUserSessionsPerVM,
+			
+			[switch]$InPeakHours,
+			
+			[Parameter(Mandatory = $true)]
+			$Res
+		)
+
+		# check if need to adjust min num of running session hosts required if the number of user sessions is close to the max allowed by the min num of running session hosts required
+		[double]$MaxSessionsThreshold = 0.9
+		[int]$MaxSessionsThresholdCapacity = [math]::Floor($MinRunningVMs * $MaxUserSessionsPerVM * $MaxSessionsThreshold)
+		if ($nUserSessions -gt $MaxSessionsThresholdCapacity) {
+			$MinRunningVMs = [math]::Ceiling($nUserSessions / ($MaxUserSessionsPerVM * $MaxSessionsThreshold))
+			Write-Log "Number of user sessions is more than $($MaxSessionsThreshold * 100) % of the max number of sessions allowed with minimum number of running session hosts required ($MaxSessionsThresholdCapacity). Adjusted minimum number of running session hosts required to $MinRunningVMs"
+		}
+
+		# Check if minimum number of session hosts are running
+		if ($nRunningVMs -lt $MinRunningVMs) {
+			$res.nVMsToStart = $MinRunningVMs - $nRunningVMs
+			Write-Log "Number of running session host is less than minimum required. Need to start $($res.nVMsToStart) VMs"
+		}
+		
+		if ($InPeakHours) {
+			[double]$nUserSessionsPerCore = $nUserSessions / $nRunningCores
+			# In peak hours: check if current capacity is meeting the user demands
+			if ($nUserSessionsPerCore -gt $UserSessionThresholdPerCore) {
+				$res.nCoresToStart = [math]::Ceiling(($nUserSessions / $UserSessionThresholdPerCore) - $nRunningCores)
+				Write-Log "[In peak hours] Number of user sessions per Core is more than the threshold. Need to start $($res.nCoresToStart) cores"
+			}
+
+			return
+		}
+
+		if ($nRunningVMs -gt $MinRunningVMs) {
+			# Calculate the number of session hosts to stop
+			$res.nVMsToStop = $nRunningVMs - $MinRunningVMs
+			Write-Log "[Off peak hours] Number of running session host is greater than minimum required. Need to stop $($res.nVMsToStop) VMs"
+		}
+	}
+
 	# Function to wait for background jobs
 	function Wait-ForJobs {
 		param ([array]$Jobs = @())
@@ -209,6 +252,15 @@ try {
 		}
 		End { }
 	}
+
+	Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
+	if (!$SkipAuth) {
+		# Note: this requires admin priviledges
+		Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+	}
+
+	# Note: https://stackoverflow.com/questions/41674518/powershell-setting-security-protocol-to-tls-1-2
+	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 	Write-Log "Request params: $($RqtParams | Format-List -Force | Out-String)"
 
@@ -344,7 +396,7 @@ try {
 	$CurrentDateTime = Get-LocalDateTime
 	$BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
-
+	
 	# Adjust peak times to make sure begin peak time is always before end peak time
 	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
 		if ($CurrentDateTime -lt $EndPeakDateTime) {
@@ -354,13 +406,15 @@ try {
 			$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
 		}
 	}
-
+	
 	Write-Log "Using current time: $($CurrentDateTime.ToString('yyyy-MM-dd HH:mm:ss')), begin peak time: $($BeginPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss')), end peak time: $($EndPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss'))"
-	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
-		Write-Log "In peak hours"
+
+	[bool]$InPeakHours = ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime)
+	if ($InPeakHours) {
+		Write-Log 'In peak hours'
 	}
 	else {
-		Write-Log "Off peak hours"
+		Write-Log 'Off peak hours'
 	}
 
 	#endregion
@@ -376,10 +430,6 @@ try {
 	$VMs = @{ }
 	# Object that contains the number of cores for each VM size SKU
 	$VMSizeCores = @{ }
-	# Number of cores to start
-	[int]$nCoresToStart = 0
-	# Number of VMs to start
-	[int]$nVMsToStart = 0
 	# Number of user sessions reported by each session host that is running
 	[int]$nUserSessionsFromAllRunningVMs = 0
 
@@ -449,57 +499,38 @@ try {
 	}
 
 	# Make sure VM instance was found in Azure for every session host
-	$nVMsWithoutInstance = @($VMs.Values | Where-Object { !$_.Instance }).Count
+	[int]$nVMsWithoutInstance = @($VMs.Values | Where-Object { !$_.Instance }).Count
 	if ($nVMsWithoutInstance) {
 		throw "There are $nVMsWithoutInstance session hosts whose VM instance was not found in Azure"
 	}
 
-	# Calculate available capacity of sessions on running VMs
-	$SessionThresholdCapacity = $nRunningCores * $SessionThresholdPerCPU
+	if (!$nRunningCores) {
+		$nRunningCores = 1
+	}
 
 	Write-Log "Number of running session hosts: $nRunningVMs of total $($VMs.Count)"
-	Write-Log "Number of user sessions: $nUserSessions, total threshold capacity: $SessionThresholdCapacity"
+	Write-Log "Number of user sessions: $nUserSessions of total allowed $($nRunningVMs * $HostPool.MaxSessionLimit)"
+	Write-Log "Number of user sessions per Core: $($nUserSessions / $nRunningCores), threshold: $UserSessionThresholdPerCore"
+	Write-Log "Minimum number of running session hosts required: $MinRunningVMs"
+
+	# Check if minimum num of running session hosts required is higher than max allowed
+	if ($VMs.Count -le $MinRunningVMs) {
+		Write-Log -Warn 'Minimum number of RDSH is set higher than or equal to total number of session hosts'
+	}
 
 	#endregion
 
 
-	#region determine number of session hosts to start if any
+	#region determine number of session hosts to start/stop if any
 
 	# Now that we have all the info about the session hosts & their usage, figure how many session hosts to start/stop depending on in/off peak hours and the demand
-	
-	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
-		# In peak hours: check if current capacity is meeting the user demands
-		if ($nUserSessions -gt $SessionThresholdCapacity) {
-			$nCoresToStart = [math]::Ceiling(($nUserSessions - $SessionThresholdCapacity) / $SessionThresholdPerCPU)
-			Write-Log "[In peak hours] Number of user sessions is more than the threshold capacity. Need to start $nCoresToStart cores"
-		}
-	}
-	else {
-		# Off peak hours: check if need to adjust minimum number of session hosts running if the number of user sessions is close to the max allowed
-		[double]$MaxSessionsThreshold = 0.9
-		[int]$MaxSessionsThresholdCapacity = [math]::Floor($MinRunningVMs * $HostPool.MaxSessionLimit * $MaxSessionsThreshold)
-		if ($nUserSessions -ge $MaxSessionsThresholdCapacity) {
-			$MinRunningVMs = [math]::Ceiling($nUserSessions / ($HostPool.MaxSessionLimit * $MaxSessionsThreshold))
-			Write-Log "[Off peak hours] Number of user sessions is more than $($MaxSessionsThreshold * 100) % of the max number of sessions allowed with minimum number of session hosts ($MaxSessionsThresholdCapacity). Adjusting minimum number of session hosts required to $MinRunningVMs"
-		}
+	$Ops = @{
+		nVMsToStart   = 0
+		nCoresToStart = 0
+		nVMsToStop    = 0
 	}
 
-	Write-Log "Minimum number of session hosts required: $MinRunningVMs"
-	# Check if minimum number of session hosts running is higher than max allowed
-	if ($VMs.Count -le $MinRunningVMs) {
-		Write-Log -Warn 'Minimum number of RDSH is set higher than total number of session hosts'
-		if ($nRunningVMs -eq $VMs.Count) {
-			Write-Log 'All session hosts are running'
-			Write-Log 'End'
-			return
-		}
-	}
-
-	# Check if minimum number of session hosts are running
-	if ($nRunningVMs -lt $MinRunningVMs) {
-		$nVMsToStart = $MinRunningVMs - $nRunningVMs
-		Write-Log "Number of running session host is less than minimum required. Need to start $nVMsToStart VMs"
-	}
+	Set-nVMsToStartOrStop -nRunningVMs $nRunningVMs -nRunningCores $nRunningCores -nUserSessions $nUserSessions -MaxUserSessionsPerVM $HostPool.MaxSessionLimit -InPeakHours:$InPeakHours -Res $Ops
 
 	#endregion
 
@@ -507,7 +538,14 @@ try {
 	#region start any session hosts if need to
 
 	# Check if we have any session hosts to start
-	if ($nVMsToStart -or $nCoresToStart) {
+	if ($Ops.nVMsToStart -or $Ops.nCoresToStart) {
+
+		if ($nRunningVMs -eq $VMs.Count) {
+			Write-Log 'All session hosts are running'
+			Write-Log 'End'
+			return
+		}
+
 		# Object that contains names of session hosts that will be started
 		$StartSessionHostNames = @{ }
 		# Array that contains jobs of starting the session hosts
@@ -515,7 +553,7 @@ try {
 
 		Write-Log 'Find session hosts that are stopped and healthy'
 		foreach ($VM in $VMs.Values) {
-			if (!$nVMsToStart -and !$nCoresToStart) {
+			if (!$Ops.nVMsToStart -and !$Ops.nCoresToStart) {
 				# Done with starting session hosts that needed to be
 				break
 			}
@@ -538,19 +576,19 @@ try {
 				$StartVMjobs += ($VM.Instance | Start-AzVM -AsJob)
 			}
 
-			--$nVMsToStart
-			if ($nVMsToStart -lt 0) {
-				$nVMsToStart = 0
+			--$Ops.nVMsToStart
+			if ($Ops.nVMsToStart -lt 0) {
+				$Ops.nVMsToStart = 0
 			}
-			$nCoresToStart -= $VMSizeCores[$VM.Instance.HardwareProfile.VmSize]
-			if ($nCoresToStart -lt 0) {
-				$nCoresToStart = 0
+			$Ops.nCoresToStart -= $VMSizeCores[$VM.Instance.HardwareProfile.VmSize]
+			if ($Ops.nCoresToStart -lt 0) {
+				$Ops.nCoresToStart = 0
 			}
 		}
 
 		# Check if there were enough number of session hosts to start
-		if ($nVMsToStart -or $nCoresToStart) {
-			Write-Log -Warn "Not enough session hosts to start. Still need to start maximum of either $nVMsToStart VMs or $nCoresToStart cores"
+		if ($Ops.nVMsToStart -or $Ops.nCoresToStart) {
+			Write-Log -Warn "Not enough session hosts to start. Still need to start maximum of either $($Ops.nVMsToStart) VMs or $($Ops.nCoresToStart) cores"
 		}
 
 		# Wait for those jobs to start the session hosts
@@ -580,30 +618,13 @@ try {
 	#endregion
 
 
-	#region determine number of session hosts to stop if any
-
-	# If in peak hours, exit because no session hosts will need to be stopped
-	if ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime) {
-		Write-Log '[In peak hours] no need to start any session hosts'
-		Write-Log 'End'
-		return
-	}
-
-	# Off peak hours, already running minimum number of session hosts, exit
-	if ($nRunningVMs -le $MinRunningVMs) {
-		Write-Log '[Off peak hours] no need to start/stop any session hosts'
-		Write-Log 'End'
-		return
-	}
-	
-	# Calculate the number of session hosts to stop
-	[int]$nVMsToStop = $nRunningVMs - $MinRunningVMs
-	Write-Log "[Off peak hours] Number of running session host is greater than minimum required. Need to stop $nVMsToStop VMs"
-
-	#endregion
-
-
 	#region stop any session hosts if need to
+
+	if (!$Ops.nVMsToStop) {
+		Write-Log 'No need to start/stop any session hosts'
+		Write-Log 'End'
+		return
+	}
 
 	# Object that contains names of session hosts that will be stopped
 	$StopSessionHostNames = @{ }
@@ -613,7 +634,7 @@ try {
 
 	Write-Log 'Find session hosts that are running, sort them by number of user sessions'
 	foreach ($VM in ($VMs.Values | Where-Object { $_.Instance.PowerState -eq 'VM running' } | Sort-Object { $_.SessionHost.Sessions })) {
-		if (!$nVMsToStop) {
+		if (!$Ops.nVMsToStop) {
 			# Done with stopping session hosts that needed to be
 			break
 		}
@@ -679,9 +700,9 @@ try {
 			}
 		}
 
-		--$nVMsToStop
-		if ($nVMsToStop -lt 0) {
-			$nVMsToStop = 0
+		--$Ops.nVMsToStop
+		if ($Ops.nVMsToStop -lt 0) {
+			$Ops.nVMsToStop = 0
 		}
 	}
 
@@ -717,8 +738,8 @@ try {
 	}
 
 	# Check if there were enough number of session hosts to stop
-	if ($nVMsToStop) {
-		Write-Log -Warn "Not enough session hosts to stop. Still need to stop $nVMsToStop VMs"
+	if ($Ops.nVMsToStop) {
+		Write-Log -Warn "Not enough session hosts to stop. Still need to stop $($Ops.nVMsToStop) VMs"
 	}
 
 	# Wait for those jobs to stop the session hosts
