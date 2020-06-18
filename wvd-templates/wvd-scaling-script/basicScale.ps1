@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.23
+	v0.1.24
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -181,11 +181,11 @@ try {
 		)
 
 		# check if need to adjust min num of running session hosts required if the number of user sessions is close to the max allowed by the min num of running session hosts required
-		[double]$MaxSessionsThreshold = 0.9
-		[int]$MaxSessionsThresholdCapacity = [math]::Floor($MinRunningVMs * $MaxUserSessionsPerVM * $MaxSessionsThreshold)
-		if ($nUserSessions -gt $MaxSessionsThresholdCapacity) {
-			$MinRunningVMs = [math]::Ceiling($nUserSessions / ($MaxUserSessionsPerVM * $MaxSessionsThreshold))
-			Write-Log "Number of user sessions is more than $($MaxSessionsThreshold * 100) % of the max number of sessions allowed with minimum number of running session hosts required ($MaxSessionsThresholdCapacity). Adjusted minimum number of running session hosts required to $MinRunningVMs"
+		[double]$MaxUserSessionsThreshold = 0.9
+		[int]$MaxUserSessionsThresholdCapacity = [math]::Floor($MinRunningVMs * $MaxUserSessionsPerVM * $MaxUserSessionsThreshold)
+		if ($nUserSessions -gt $MaxUserSessionsThresholdCapacity) {
+			$MinRunningVMs = [math]::Ceiling($nUserSessions / ($MaxUserSessionsPerVM * $MaxUserSessionsThreshold))
+			Write-Log "Number of user sessions is more than $($MaxUserSessionsThreshold * 100) % of the max number of sessions allowed with minimum number of running session hosts required ($MaxUserSessionsThresholdCapacity). Adjusted minimum number of running session hosts required to $MinRunningVMs"
 		}
 
 		# Check if minimum number of session hosts are running
