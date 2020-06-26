@@ -16,7 +16,10 @@ param(
     [string]$HostPoolName,
 
     [Parameter(Mandatory = $true)]
-    [string]$RegistrationInfoToken
+    [string]$RegistrationInfoToken,
+    
+    [Parameter(mandatory = $false)] 
+    [switch]$EnableVerboseMsiLogging
 )
 
 $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
@@ -26,9 +29,6 @@ $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
-
-Write-Log -Message "Identifying if this VM is Build >= 1809"
-$rdshIs1809OrLaterBool = Is1809OrLater
 
 Write-Log -Message "Creating a folder inside rdsh vm for extracting deployagent zip file"
 $DeployAgentLocation = "C:\DeployAgent"
@@ -50,15 +50,9 @@ else
 {
     Write-Log -Message "VM not registered with RDInfraAgent, script execution will continue"
 
-    # Executing DeployAgent psl file in rdsh vm and add to hostpool
-    Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall, SxS is $DeployAgentLocation\RDInfraSxSStackInstall"
-    $DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
-                                       -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
-                                       -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" `
-                                       -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" `
-                                       -RegistrationToken $RegistrationInfoToken `
-                                       -StartAgent $true `
-                                       -rdshIs1809OrLater $rdshIs1809OrLaterBool
-    
-    Write-Log -Message "DeployAgent Script was successfully executed and RDAgentBootLoader,RDAgent,StackSxS installed inside VM for existing hostpool: $HostPoolName`n$DAgentInstall"
+    Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall"
+
+    InstallRDAgents -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" -RegistrationToken $RegistrationInfoToken -EnableVerboseMsiLogging:$EnableVerboseMsiLogging
+
+    Write-Log -Message "The agent installation code was successfully executed and RDAgentBootLoader, RDAgent installed inside VM for existing hostpool: $HostPoolName"
 }

@@ -6,21 +6,18 @@ configuration AddSessionHost
         [string]$HostPoolName,
 
         [Parameter(Mandatory = $true)]
-        [string]$RegistrationInfoToken
+        [string]$RegistrationInfoToken,
+
+        [Parameter(mandatory = $false)]
+        [bool]$EnableVerboseMsiLogging = $false
     )
 
-    $rdshIsServer = $true
-    $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
-
-    $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+    $ErrorActionPreference = 'Stop'
     
-    if ($OSVersionInfo -ne $null)
-    {
-        if ($OSVersionInfo.InstallationType -ne $null)
-        {
-            $rdshIsServer=@{$true = $true; $false = $false}[$OSVersionInfo.InstallationType -eq "Server"]
-        }
-    }
+    $ScriptPath = [system.io.path]::GetDirectoryName($PSCommandPath)
+    . (Join-Path $ScriptPath "Functions.ps1")
+
+    $rdshIsServer = isRdshServer
 
     Node localhost
     {
@@ -46,10 +43,30 @@ configuration AddSessionHost
                     return @{'Result' = ''}
                 }
                 SetScript = {
-                    & "$using:ScriptPath\Script-AddRdshServer.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken
+                    . (Join-Path $using:ScriptPath "Functions.ps1")
+
+                    try {
+                        & "$using:ScriptPath\Script-AddRdshServer.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging)
+                    }
+                    catch {
+                        $ErrMsg = $PSItem | Format-List -Force | Out-String
+                        Write-Log -Err $ErrMsg
+                        throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallServer SetScript: $ErrMsg", $PSItem.Exception)
+                    }
+
                 }
                 TestScript = {
-                    return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
+                    . (Join-Path $using:ScriptPath "Functions.ps1")
+                    
+                    try {
+                        return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
+                    }
+                    catch {
+                        $ErrMsg = $PSItem | Format-List -Force | Out-String
+                        Write-Log -Err $ErrMsg
+                        throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallServer TestScript: $ErrMsg", $PSItem.Exception)
+                    }
+
                 }
             }
         }
@@ -62,10 +79,30 @@ configuration AddSessionHost
                     return @{'Result' = ''}
                 }
                 SetScript = {
-                    & "$using:ScriptPath\Script-AddRdshServer.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken
+                    . (Join-Path $using:ScriptPath "Functions.ps1")
+                    
+                    try {
+                        & "$using:ScriptPath\Script-AddRdshServer.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging)
+                    }
+                    catch {
+                        $ErrMsg = $PSItem | Format-List -Force | Out-String
+                        Write-Log -Err $ErrMsg
+                        throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallClient SetScript: $ErrMsg", $PSItem.Exception)
+                    }
+
                 }
                 TestScript = {
-                    return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
+                    . (Join-Path $using:ScriptPath "Functions.ps1")
+                    
+                    try {
+                        return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
+                    }
+                    catch {
+                        $ErrMsg = $PSItem | Format-List -Force | Out-String
+                        Write-Log -Err $ErrMsg
+                        throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallClient TestScript: $ErrMsg", $PSItem.Exception)
+                    }
+
                 }
             }
         }
