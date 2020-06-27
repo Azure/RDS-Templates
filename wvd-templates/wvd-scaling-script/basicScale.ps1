@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.24
+	v0.1.25
 .DESCRIPTION
 	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
@@ -561,8 +561,7 @@ try {
 				continue
 			}
 			if ($VM.SessionHost.UpdateState -ne 'Succeeded') {
-				Write-Log -Warn "Session host '$($VM.SessionHost.SessionHostName)' is not healthy to start"
-				continue
+				Write-Log -Warn "Session host '$($VM.SessionHost.SessionHostName)' may not be healthy"
 			}
 
 			$SessionHostName = $VM.SessionHost.SessionHostName
