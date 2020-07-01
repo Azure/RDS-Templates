@@ -420,7 +420,7 @@
       },
       "defaultValue": ""
     },
-    "validationEnviroment": {
+    "validationEnvironment": {
       "type": "bool",
       "metadata": {
         "description": "Whether to use validation enviroment."
@@ -486,7 +486,7 @@
         "personalDesktopAssignmentType": "[parameters('personalDesktopAssignmentType')]",
         "maxSessionLimit": "[parameters('maxSessionLimit')]",
         "loadBalancerType": "[parameters('loadBalancerType')]",
-        "validationEnviroment": "[parameters('validationEnviroment')]",
+        "validationEnvironment": "[parameters('validationEnvironment')]",
         "ring": null,
         "registrationInfo": {
           "expirationTime": "[parameters('tokenExpirationTime')]",
