@@ -277,8 +277,8 @@ if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey)
     if ($EndPeakDateTime -lt $BeginPeakDateTime) {
     if ($CurrentDateTime -lt $EndPeakDateTime) { $BeginPeakDateTime = $BeginPeakDateTime.AddDays(-1) } else { $EndPeakDateTime = $EndPeakDateTime.AddDays(1) }
     }
-	# Checking givne host pool name exists in Tenant
-	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName
+	# Checking given host pool name exists in Tenant
+	$HostpoolInfo = Get-RdsHostPool -TenantName $TenantName -Name $HostpoolName -ErrorAction SilentlyContinue
 	if ($HostpoolInfo -eq $null) {
 		Write-Output "Hostpoolname '$HostpoolName' does not exist in the tenant of '$TenantName'. Ensure that you have entered the correct values."
 		$LogMessage = @{ hostpoolName_s = $HostpoolName; logmessage_s = "Hostpoolname '$HostpoolName' does not exist in the tenant of '$TenantName'. Ensure that you have entered the correct values." }
