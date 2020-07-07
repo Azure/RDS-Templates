@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.26
+	v0.1.27
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -22,13 +22,13 @@ try {
 		param (
 			[PSCustomObject]$Obj,
 			[string]$Key,
-			$DefaultVal = $null
+			$Default = $null
 		)
 		$Prop = $Obj.PSObject.Properties[$Key]
 		if ($Prop) {
 			return $Prop.Value
 		}
-		return $DefaultVal
+		return $Default
 	}
 
 	# If runbook was called from Webhook, WebhookData and its RequestBody will not be null
@@ -51,9 +51,10 @@ try {
 		'TimeDifference'
 		'BeginPeakTime'
 		'EndPeakTime'
-		'LogOffMessageTitle'
-		'LogOffMessageBody'
 	)
+	if (Get-PSObjectPropVal -Obj $RqtParams -Key 'LimitSecondsToForceLogOffUser') {
+		$RequiredStrParams += @('LogOffMessageTitle', 'LogOffMessageBody')
+	}
 	[string[]]$RequiredParams = @('SessionThresholdPerCPU', 'MinimumNumberOfRDSH', 'LimitSecondsToForceLogOffUser')
 	[string[]]$InvalidParams = @($RequiredStrParams | Where-Object { [string]::IsNullOrWhiteSpace((Get-PSObjectPropVal -Obj $RqtParams -Key $_)) })
 	[string[]]$InvalidParams += @($RequiredParams | Where-Object { $null -eq (Get-PSObjectPropVal -Obj $RqtParams -Key $_) })
@@ -76,8 +77,8 @@ try {
 	[double]$UserSessionThresholdPerCore = $RqtParams.SessionThresholdPerCPU
 	[int]$MinRunningVMs = $RqtParams.MinimumNumberOfRDSH
 	[int]$LimitSecondsToForceLogOffUser = $RqtParams.LimitSecondsToForceLogOffUser
-	[string]$LogOffMessageTitle = $RqtParams.LogOffMessageTitle
-	[string]$LogOffMessageBody = $RqtParams.LogOffMessageBody
+	[string]$LogOffMessageTitle = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogOffMessageTitle'
+	[string]$LogOffMessageBody = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogOffMessageBody'
 
 	# Note: if this is enabled, the script will assume that all the authentication is already done in current or parent scope before calling this script
 	[bool]$SkipAuth = !!(Get-PSObjectPropVal -Obj $RqtParams -Key 'SkipAuth')
@@ -87,7 +88,7 @@ try {
 		$ConnectionAssetName = 'AzureRunAsConnection'
 	}
 
-	[int]$StatusCheckTimeOut = Get-PSObjectPropVal -Obj $RqtParams -Key 'StatusCheckTimeOut' -DefaultVal (60 * 60) # 1 hr
+	[int]$StatusCheckTimeOut = Get-PSObjectPropVal -Obj $RqtParams -Key 'StatusCheckTimeOut' -Default (60 * 60) # 1 hr
 	# [int]$SessionHostStatusCheckSleepSecs = 30
 	[string[]]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
