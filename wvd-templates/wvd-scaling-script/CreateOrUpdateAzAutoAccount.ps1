@@ -1,43 +1,9 @@
 ﻿
-# //todo refactor
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to execute scaling script in Microsoft Azure Automation Account.
-	v0.1.2
-
-.DESCRIPTION
-	This sample script will create the scale script execution required resources in Microsoft Azure. Resources are resource group, automation account, automation account runbook,
-    automation account webhook, log analytic workspace and customtables.
-    Run this PowerShell script in adminstrator mode
-    This script depends on Az PowerShell module. To install Az module execute the following commands. Use "-AllowClobber" parameter if you have more than one version of PowerShell modules installed.
-	
-    PS C:\> Install-Module Az -AllowClobber
-
-.PARAMETER SubscriptionId
- Required
- Provide Subscription Id of the Azure.
-
-.PARAMETER ResourceGroupName
- Optional
- Name of the resource group to use
- If the resource group does not exist it will be created
- 
-.PARAMETER AutomationAccountName
- Optional
- Provide the name of the automation account name you want to create.
-
-.PARAMETER Location
- Optional
- The datacenter location of the resources
-
-.PARAMETER WorkspaceName
- Optional
- Provide name of the log analytics workspace.
-
-.NOTES
- If you are providing existing automation account, you need to provide existing automation account ResourceGroupName for ResourceGroupName parameter.
- 
- Example: .\createazureautomationaccount.ps1 -SubscriptionId "Your Azure SubscriptionId" -ResourceGroupName "Name of the resource group" -AutomationAccountName "Name of the automation account name" -Location "The datacenter location of the resources" -WorkspaceName "Provide existing log analytics workspace name" 
+	v0.1.3
+	# //todo refactor stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
 param(
 	[Parameter(mandatory = $false)]
@@ -67,7 +33,7 @@ param(
 
 $UseRDSAPI = !$UseARMAPI
 
-# //todo improve error logging, externalize, centralize vars
+# //todo refactor, improve error logging, externalize, centralize vars
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
@@ -154,8 +120,13 @@ function Wait-ForModuleToBeImported {
 		[string]$ModuleName
 	)
 
-	# //todo add time out ?
+	$StartTime = Get-Date
+	$TimeOut = 30*60 # 30 min
+
 	while ($true) {
+		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $TimeOut) {
+			throw "Wait timed out. Taking more than $TimeOut seconds"
+		}
 		$AutoModule = Get-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ErrorAction SilentlyContinue
 		if ($AutoModule.ProvisioningState -eq 'Succeeded') {
 			Write-Output "Successfully imported module '$ModuleName' into Automation Account Modules"
@@ -242,7 +213,6 @@ if (!$UseRDSAPI) {
 	$ScriptURI = "$ArtifactsURI/ARM_based/basicScale.ps1"
 }
 
-# //todo confirm with roop if ok to create auto account as part of ARM
 # Creating an automation account & runbook and publish the scaling script file
 $DeploymentStatus = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri "$ArtifactsURI/runbookCreationTemplate.json" -automationAccountName $AutomationAccountName -RunbookName $RunbookName -location $Location -scriptUri "$ScriptURI$($URISuffix)" -Force -Verbose
 

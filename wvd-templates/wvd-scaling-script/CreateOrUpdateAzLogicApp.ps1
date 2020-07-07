@@ -1,86 +1,9 @@
 ﻿
-# //todo refactor
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to schedule basic scale in Microsoft Azure.
-	v0.1.2
-	
-.DESCRIPTION
-	This sample script will create the scale script execution trigger required resources in Microsoft Azure. Resources are azure logic app for each hostpool.
-    Run this PowerShell script in adminstrator mode
-    This script depends on Az PowerShell module. To install Az module execute the following command. Use "-AllowClobber" parameter if you have more than one version of PowerShell modules installed.
-	
-    PS C:\> Install-Module Az -AllowClobber
-    
-.PARAMETER TenantGroupName
- Optional
- Provide the name of the tenant group in the Windows Virtual Desktop deployment.
-.PARAMETER TenantName
- Required
- Provide the name of the tenant in the Windows Virtual Desktop deployment.
-.PARAMETER HostpoolName
- Required
- Provide the name of the WVD Host Pool.
-.PARAMETER AutomationAccountName
- Required
- Provide the name of the name of the automation account which has the published basic scale script.
-.PARAMETER RecurrenceInterval
- Required
- Provide the RecurrenceInterval. Scheduler job will run on recurrence basis, so provide RecurrenceInterval in minutes.
-.PARAMETER AADTenantId
- Required
- Provide Tenant ID of Azure Active Directory.
-.PARAMETER SubscriptionId
- Required
- Provide Subscription Id of the Azure.
-.PARAMETER BeginPeakTime
- Required
- Provide begin of the peak usage time.
-.PARAMETER EndPeakTime
- Required
- Provide end of the peak usage time.
-.PARAMETER TimeDifference
- Required
- Provide the Time difference between local time and UTC, in hours (Example: India Standard Time is +5:30).
-.PARAMETER SessionThresholdPerCPU
- Required
- Provide the Maximum number of sessions per CPU threshold used to determine when a new RDSH server needs to be started.
-.PARAMETER MinimumNumberOfRDSH
- Required
- Provide the Minimum number of host pool VMs to keep running during off-peak usage time.
-.PARAMETER MaintenanceTagName
- Required
- Provide the name of the MaintenanceTagName. Any session host VM with this tag will be ignored
-.PARAMETER LimitSecondsToForceLogOffUser
- Required
- Provide the number of seconds to wait before forcing users to logoff. If 0, the session host will skipped, nothing will be done. (https://aka.ms/wvdscale#how-the-scaling-tool-works)
-.PARAMETER Location
- Required
- Provide the name of the Location to create azure resources.
-.PARAMETER LogOffMessageTitle
- Required
- Provide the Message title sent to a user before forcing logoff.
-.PARAMETER LogOffMessageBody
- Required
- Provide the Message body to send to a user before forcing logoff.
-.PARAMETER LogAnalyticsWorkspaceId
- Optional
- Provide the log anayltics workspace id.
-.PARAMETER LogAnalyticsPrimaryKey
- Optional
- Provide the log anayltics workspace primary key.
-.PARAMETER ResourcegroupName
- Required
- Provide the name of the resouce gorup name to create logic app.
-.PARAMETER ConnectionAssetName
- Required
- Provide name of the AzureRunAsAccount which is created manually from azure portal.
-.PARAMETER WebhookURI
- Required
- Provide URI of the azure automation account webhook
-
- Example: .\createazurelogicapp.ps1 -AADTenantID "Your Azure TenantID" -SubscriptionID "Your Azure SubscriptionID" -TenantGroupName "Name of the WVD Tenant Group Name" -TenantName "Name of the WVD Tenant Name" -HostPoolName "Name of the HostPoolName" -PeakLoadBalancingType "Load balancing type in Peak hours" -MaintenanceTagName "Name of the Tag Name" -RecurrenceInterval "Repeat job every and select the appropriate period of time in minutes (Ex. 15)" -BeginPeakTime "9:00" -EndPeakTime "18:00" -TimeDifference "+5:30" -SessionThresholdPerCPU 6 -MinimumNumberOfRDSH 2 -LimitSecondsToForceLogOffUser 20 –LogOffMessageTitle "System Under Maintenance" -LogOffMessageBody "Please save your work and logoff!" –Location "Central US" -LogAnalyticsWorkspaceId "log analytic workspace id" -LogAnalyticsPrimaryKey "log analytic workspace primary key" -ResourcegroupName "Name of the resoure group" -ConnectionAssetName "Name of the azure automation account connection" -WebhookURI "URI of the Azure automation account Webhook" -AutomationAccountName	"Name of the automation account which is basic scale script published"
-
+	v0.1.3
+	# //todo refactor stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
 param(
 	[Parameter(mandatory = $false)]
@@ -165,7 +88,7 @@ param(
 
 $UseRDSAPI = !$UseARMAPI
 
-# //todo improve error logging, externalize, centralize vars
+# //todo refactor, improve error logging, externalize, centralize vars
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
