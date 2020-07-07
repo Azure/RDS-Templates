@@ -1,9 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.25
-.DESCRIPTION
-	# //todo add stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
+	v0.1.26
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -97,8 +95,8 @@ try {
 		$TenantGroupName = 'Default Tenant Group'
 	}
 
-	[int]$StatusCheckTimeOut = 60 * 60 # 1 hr
-	[int]$SessionHostStatusCheckSleepSecs = 30
+	[int]$StatusCheckTimeOut = Get-PSObjectPropVal -Obj $RqtParams -Key 'StatusCheckTimeOut' -DefaultVal (60 * 60) # 1 hr
+	# [int]$SessionHostStatusCheckSleepSecs = 30
 	[string[]]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
 	[string[]]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
