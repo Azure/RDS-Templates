@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.27
+	v0.1.28
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -113,6 +113,7 @@ try {
 	}
 
 	function Write-Log {
+		# Note: this is required to support param such as ErrorAction
 		[CmdletBinding()]
 		param(
 			[Parameter(Mandatory = $true)]
@@ -129,9 +130,11 @@ try {
 
 		if ($Err) {
 			Write-Error $WriteMessage
+			$Message = "ERROR: $Message"
 		}
 		elseif ($Warn) {
 			Write-Warning $WriteMessage
+			$Message = "WARN: $Message"
 		}
 		else {
 			Write-Output $WriteMessage
@@ -473,12 +476,17 @@ try {
 
 		if ($VMInstance.PowerState -eq 'VM running') {
 			if ($SessionHost.Status -notin $DesiredRunningStates) {
-				Write-Log -Warn 'VM is in running state but session host is not (this could be because the VM was just started and has not connected to broker yet)'
+				Write-Log -Warn 'VM is in running state but session host is not and so it will be ignored (this could be because the VM was just started and has not connected to broker yet)'
+			}
+			if (!$SessionHost.AllowNewSession) {
+				Write-Log -Warn 'VM is in running state but session host is not allowing new sessions and so it will be ignored'
 			}
 
-			++$nRunningVMs
-			$nRunningCores += $VMSizeCores[$VMInstance.HardwareProfile.VmSize]
-			$nUserSessionsFromAllRunningVMs += $SessionHost.Sessions
+			if ($SessionHost.Status -in $DesiredRunningStates -and $SessionHost.AllowNewSession) {
+				++$nRunningVMs
+				$nRunningCores += $VMSizeCores[$VMInstance.HardwareProfile.VmSize]
+				$nUserSessionsFromAllRunningVMs += $SessionHost.Sessions
+			}
 		}
 		else {
 			if ($SessionHost.Status -in $DesiredRunningStates) {
