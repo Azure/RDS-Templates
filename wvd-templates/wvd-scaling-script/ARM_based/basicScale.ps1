@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.29
+	v0.1.30
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -652,7 +652,7 @@ try {
 				$VM.UserSessions = @(Get-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName)
 			}
 			catch {
-				throw [System.Exception]::new("Failed to retrieve user sessions of session host: '$SessionHostName'", $PSItem.Exception)
+				Write-Log -Warn "Failed to retrieve user sessions of session host '$SessionHostName': $($PSItem | Format-List -Force | Out-String)"
 			}
 
 			Write-Log "Send log off message to active user sessions on session host: '$SessionHostName'"
@@ -669,7 +669,7 @@ try {
 					}
 				}
 				catch {
-					throw [System.Exception]::new("Failed to send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID", $PSItem.Exception)
+					Write-Log -Warn "Failed to send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID $($PSItem | Format-List -Force | Out-String)"
 				}
 			}
 			$VMsToStopAfterLogOffTimeOut += $VM
@@ -704,12 +704,11 @@ try {
 				try {
 					Write-Log "Force log off user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
 					if ($PSCmdlet.ShouldProcess($Session.Id, 'Force log off user with session ID')) {
-						# //todo what if user logged off by this time
 						Remove-AzWvdUserSession -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName -SessionHostName $SessionHostName -Id $SessionID -Force
 					}
 				}
 				catch {
-					throw [System.Exception]::new("Failed to force log off user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID", $PSItem.Exception)
+					Write-Log -Warn "Failed to force log off user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID $($PSItem | Format-List -Force | Out-String)"
 				}
 			}
 			

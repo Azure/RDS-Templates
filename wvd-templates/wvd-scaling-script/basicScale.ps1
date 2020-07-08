@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.29
+	v0.1.30
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -693,7 +693,7 @@ try {
 				$VM.UserSessions = @(Get-RdsUserSession -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $_.SessionHostName -eq $SessionHostName })
 			}
 			catch {
-				throw [System.Exception]::new("Failed to retrieve user sessions of session host: '$SessionHostName'", $PSItem.Exception)
+				Write-Log -Warn "Failed to retrieve user sessions of session host '$SessionHostName': $($PSItem | Format-List -Force | Out-String)"
 			}
 
 			Write-Log "Send log off message to active user sessions on session host: '$SessionHostName'"
@@ -708,7 +708,7 @@ try {
 					}
 				}
 				catch {
-					throw [System.Exception]::new("Failed to send a log off message to user: '$($Session.AdUserName)', session ID: $($Session.SessionId)", $PSItem.Exception)
+					Write-Log -Warn "Failed to send a log off message to user: '$($Session.AdUserName)', session ID: $($Session.SessionId) $($PSItem | Format-List -Force | Out-String)"
 				}
 			}
 			$VMsToStopAfterLogOffTimeOut += $VM
@@ -746,7 +746,7 @@ try {
 					}
 				}
 				catch {
-					throw [System.Exception]::new("Failed to force log off user: '$($Session.AdUserName)', session ID: $($Session.SessionId)", $PSItem.Exception)
+					Write-Log -Warn "Failed to force log off user: '$($Session.AdUserName)', session ID: $($Session.SessionId) $($PSItem | Format-List -Force | Out-String)"
 				}
 			}
 			
