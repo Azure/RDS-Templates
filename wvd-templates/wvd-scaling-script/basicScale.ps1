@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.28
+	v0.1.29
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -16,6 +16,7 @@ try {
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
 	$ErrorActionPreference = 'Stop'
+	# Note: this is to force cast in case it's not of the desired type. Specifying this type inside before the param inside param() doesn't work because it still accepts other types and doesn't cast it to this type
 	$WebHookData = [PSCustomObject]$WebHookData
 
 	function Get-PSObjectPropVal {
@@ -237,18 +238,32 @@ try {
 		}
 	}
 
-	function Update-SessionHostToAllowNewSession {
+	function TryUpdateSessionHostDrainMode {
 		[CmdletBinding(SupportsShouldProcess)]
 		param (
 			[Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-			[Microsoft.RDInfra.RDManagementData.RdMgmtSessionHost]$SessionHost
+			[ref]$SessionHostRef,
+
+			[switch]$AllowNewSession
 		)
 		Begin { }
 		Process {
-			if (!$SessionHost.AllowNewSession) {
-				Write-Log "Update session host '$($SessionHost.SessionHostName)' to allow new sessions"
-				if ($PSCmdlet.ShouldProcess($SessionHost.SessionHostName, 'Update session host to allow new sessions')) {
-					Set-RdsSessionHost -TenantName $SessionHost.TenantName -HostPoolName $SessionHost.HostPoolName -Name $SessionHost.SessionHostName -AllowNewSession $true | Write-Verbose
+			$SessionHost = $SessionHostRef.Value
+			if ($SessionHost.AllowNewSession -eq $AllowNewSession) {
+				return
+			}
+			
+			$SessionHostName = $SessionHost.SessionHostName
+			Write-Log "Update session host '$($SessionHostName)' to set allow new sessions to $AllowNewSession"
+			if ($PSCmdlet.ShouldProcess($SessionHostName, "Update session host to set allow new sessions to $AllowNewSession")) {
+				try {
+					$SessionHost = $SessionHostRef.Value = Set-RdsSessionHost -HostPoolName $HostPoolName -TenantName $TenantName -Name $SessionHostName -AllowNewSession:$AllowNewSession
+					if ($SessionHost.AllowNewSession -ne $AllowNewSession) {
+						throw $SessionHost
+					}
+				}
+				catch {
+					Write-Log -Warn "Failed to update the session host '$SessionHostName' to set allow new sessions to $($AllowNewSession): $($PSItem | Format-List -Force | Out-String)"
 				}
 			}
 		}
@@ -424,20 +439,22 @@ try {
 
 	#region get all session hosts, VMs & user sessions info and compute workload
 
-	# Number of session hosts that are running
+	# Note: session host is considered "running" if its running AND is in desired states AND allowing new sessions
+	# Number of session hosts that are running, are in desired states and allowing new sessions
 	[int]$nRunningVMs = 0
-	# Number of cores that are running
+	# Number of cores that are running, are in desired states and allowing new sessions
 	[int]$nRunningCores = 0
 	# Object that contains all session host objects, VM instance objects except the ones that are under maintenance
 	$VMs = @{ }
 	# Object that contains the number of cores for each VM size SKU
 	$VMSizeCores = @{ }
-	# Number of user sessions reported by each session host that is running
+	# Number of user sessions reported by each session host that is running, is in desired state and allowing new sessions
 	[int]$nUserSessionsFromAllRunningVMs = 0
 
 	# Popoluate all session hosts objects
 	foreach ($SessionHost in $SessionHosts) {
-		$VMs.Add($SessionHost.SessionHostName.Split('.')[0].ToLower(), @{ 'SessionHost' = $SessionHost; 'Instance' = $null })
+		$SessionHostName = $SessionHost.SessionHostName.ToLower()
+		$VMs.Add($SessionHostName.Split('.')[0], @{ 'SessionHostName' = $SessionHostName; 'SessionHost' = $SessionHost; 'Instance' = $null })
 	}
 	
 	Write-Log 'Get all VMs, check session host status and get usage info'
@@ -460,12 +477,12 @@ try {
 			continue
 		}
 		if ($VM.Instance) {
-			throw "More than 1 VM found in Azure with same session host name '$($VM.SessionHost.SessionHostName)' (This is not supported): $($VMInstance | Format-List -Force | Out-String)$($VM.Instance | Format-List -Force | Out-String)"
+			throw "More than 1 VM found in Azure with same session host name '$($VM.SessionHostName)' (This is not supported): $($VMInstance | Format-List -Force | Out-String)$($VM.Instance | Format-List -Force | Out-String)"
 		}
 
 		$VM.Instance = $VMInstance
 
-		Write-Log "Session host: '$($SessionHost.SessionHostName)', power state: '$($VMInstance.PowerState)', status: '$($SessionHost.Status)', update state: '$($SessionHost.UpdateState)', sessions: $($SessionHost.Sessions), allow new session: $($SessionHost.AllowNewSession)"
+		Write-Log "Session host: '$($VM.SessionHostName)', power state: '$($VMInstance.PowerState)', status: '$($SessionHost.Status)', update state: '$($SessionHost.UpdateState)', sessions: $($SessionHost.Sessions), allow new session: $($SessionHost.AllowNewSession)"
 		# Check if we know how many cores are in this VM
 		if (!$VMSizeCores.ContainsKey($VMInstance.HardwareProfile.VmSize)) {
 			Write-Log "Get all VM sizes in location: $($VMInstance.Location)"
@@ -530,7 +547,7 @@ try {
 
 	#region determine number of session hosts to start/stop if any
 
-	# Now that we have all the info about the session hosts & their usage, figure how many session hosts to start/stop depending on in/off peak hours and the demand
+	# Now that we have all the info about the session hosts & their usage, figure how many session hosts to start/stop depending on in/off peak hours and the demand [Ops = operations to perform]
 	$Ops = @{
 		nVMsToStart   = 0
 		nCoresToStart = 0
@@ -554,7 +571,7 @@ try {
 		}
 
 		# Object that contains names of session hosts that will be started
-		$StartSessionHostNames = @{ }
+		# $StartSessionHostNames = @{ }
 		# Array that contains jobs of starting the session hosts
 		[array]$StartVMjobs = @()
 
@@ -568,17 +585,20 @@ try {
 				continue
 			}
 			if ($VM.SessionHost.UpdateState -ne 'Succeeded') {
-				Write-Log -Warn "Session host '$($VM.SessionHost.SessionHostName)' may not be healthy"
+				Write-Log -Warn "Session host '$($VM.SessionHostName)' may not be healthy"
 			}
 
-			$SessionHostName = $VM.SessionHost.SessionHostName
+			$SessionHostName = $VM.SessionHostName
 
 			# Make sure session host is allowing new user sessions
-			Update-SessionHostToAllowNewSession -SessionHost $VM.SessionHost
+			TryUpdateSessionHostDrainMode -SessionHostRef ([ref]$VM.SessionHost) -AllowNewSession:$true
+			if (!$VM.SessionHost.AllowNewSession) {
+				continue
+			}
 
 			Write-Log "Start session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Start session host as a background job')) {
-				$StartSessionHostNames.Add($SessionHostName, $null)
+				# $StartSessionHostNames.Add($SessionHostName, $null)
 				$StartVMjobs += ($VM.Instance | Start-AzVM -AsJob)
 			}
 
@@ -604,6 +624,7 @@ try {
 		Write-Log 'End'
 		return
 
+		<#
 		# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were started
 		Write-Log "Wait for $($StartSessionHostNames.Count) session hosts to be available"
 		$StartTime = Get-Date
@@ -619,6 +640,7 @@ try {
 			Start-Sleep -Seconds $SessionHostStatusCheckSleepSecs
 		}
 		return
+		#>
 	}
 
 	#endregion
@@ -633,7 +655,7 @@ try {
 	}
 
 	# Object that contains names of session hosts that will be stopped
-	$StopSessionHostNames = @{ }
+	# $StopSessionHostNames = @{ }
 	# Array that contains jobs of stopping the session hosts
 	[array]$StopVMjobs = @()
 	[array]$VMsToStopAfterLogOffTimeOut = @()
@@ -645,7 +667,7 @@ try {
 			break
 		}
 		$SessionHost = $VM.SessionHost
-		$SessionHostName = $SessionHost.SessionHostName
+		$SessionHostName = $VM.SessionHostName
 		
 		if ($SessionHost.Sessions -and !$LimitSecondsToForceLogOffUser) {
 			Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
@@ -653,22 +675,15 @@ try {
 			break
 		}
 
-		if ($SessionHost.AllowNewSession) {
-			Write-Log "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions. Set it to disallow new sessions"
-			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Set session host to disallow new sessions')) {
-				try {
-					$VM.SessionHost = $SessionHost = Set-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -AllowNewSession $false
-				}
-				catch {
-					throw [System.Exception]::new("Failed to set it to disallow new sessions on session host: '$SessionHostName'", $PSItem.Exception)
-				}
+		TryUpdateSessionHostDrainMode -SessionHostRef ([ref]$VM.SessionHost) -AllowNewSession:$false
+		$SessionHost = $VM.SessionHost
 
-				if ($SessionHost.Sessions -and !$LimitSecondsToForceLogOffUser) {
-					Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
-					Update-SessionHostToAllowNewSession -SessionHost $SessionHost
-					continue
-				}
-			}
+		# Note: check if there were new user sessions since session host info was 1st fetched
+		if ($SessionHost.Sessions -and !$LimitSecondsToForceLogOffUser) {
+			Write-Log -Warn "Session host '$SessionHostName' has $($SessionHost.Sessions) sessions but limit seconds to force log off user is set to 0, so will not stop any more session hosts (https://aka.ms/wvdscale#how-the-scaling-tool-works)"
+			TryUpdateSessionHostDrainMode -SessionHostRef ([ref]$VM.SessionHost) -AllowNewSession:$true
+			$SessionHost = $VM.SessionHost
+			continue
 		}
 
 		if ($SessionHost.Sessions) {
@@ -701,7 +716,7 @@ try {
 		else {
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
-				$StopSessionHostNames.Add($SessionHostName, $null)
+				# $StopSessionHostNames.Add($SessionHostName, $null)
 				$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
 			}
 		}
@@ -720,7 +735,7 @@ try {
 
 		Write-Log "Force log off users and stop remaining $($VMsToStopAfterLogOffTimeOut.Count) session hosts"
 		foreach ($VM in $VMsToStopAfterLogOffTimeOut) {
-			$SessionHostName = $VM.SessionHost.SessionHostName
+			$SessionHostName = $VM.SessionHostName
 
 			Write-Log "Force log off $($VM.UserSessions.Count) users on session host: '$SessionHostName'"
 			foreach ($Session in $VM.UserSessions) {
@@ -737,7 +752,7 @@ try {
 			
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
-				$StopSessionHostNames.Add($SessionHostName, $null)
+				# $StopSessionHostNames.Add($SessionHostName, $null)
 				$StopVMjobs += ($VM.Instance | Stop-AzVM -Force -AsJob)
 			}
 		}
@@ -755,6 +770,7 @@ try {
 	Write-Log 'End'
 	return
 
+	<#
 	# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were stopped
 	Write-Log "Wait for $($StopSessionHostNames.Count) session hosts to be unavailable"
 	[array]$SessionHostsToCheck = @()
@@ -773,6 +789,7 @@ try {
 
 	# Make sure session hosts are allowing new user sessions & update them to allow if not
 	$SessionHostsToCheck | Update-SessionHostToAllowNewSession
+	#>
 
 	#endregion
 }
