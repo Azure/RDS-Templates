@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.32
+	v0.1.33
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.32'
+	[version]$Version = '0.1.33'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -46,8 +46,6 @@ try {
 	}
 
 	[string[]]$RequiredStrParams = @(
-		'AADTenantId'
-		'SubscriptionId'
 		'TenantName'
 		'HostPoolName'
 		'TimeDifference'
@@ -68,8 +66,6 @@ try {
 	[string]$LogAnalyticsWorkspaceId = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsWorkspaceId'
 	[string]$LogAnalyticsPrimaryKey = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsPrimaryKey'
 	[string]$ConnectionAssetName = Get-PSObjectPropVal -Obj $RqtParams -Key 'ConnectionAssetName'
-	[string]$AADTenantId = $RqtParams.AADTenantId
-	[string]$SubscriptionId = $RqtParams.SubscriptionId
 	[string]$RDBrokerURL = Get-PSObjectPropVal -Obj $RqtParams -Key 'RDBrokerURL'
 	[string]$TenantGroupName = Get-PSObjectPropVal -Obj $RqtParams -Key 'TenantGroupName'
 	[string]$TenantName = $RqtParams.TenantName
@@ -356,57 +352,56 @@ try {
 
 	#region azure auth, ctx, wvd auth, ctx, validate wvd tenant
 
-	# Azure auth
-	$AzContext = $null
 	$WVDContext = $null
 	if (!$SkipAuth) {
 		# Collect the credentials from Azure Automation Account Assets
 		Write-Log "Get auto connection from asset: '$ConnectionAssetName'"
-		$Connection = Get-AutomationConnection -Name $ConnectionAssetName
-
+		$ConnectionAsset = Get-AutomationConnection -Name $ConnectionAssetName
+		
+		# Azure auth
+		$AzContext = $null
 		try {
-			$AzAuth = Connect-AzAccount -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -TenantId $AADTenantId -SubscriptionId $SubscriptionId -ServicePrincipal
+			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -ServicePrincipal
 			if (!$AzAuth -or !$AzAuth.Context) {
 				throw $AzAuth
 			}
 			$AzContext = $AzAuth.Context
 		}
 		catch {
-			throw [System.Exception]::new("Failed to authenticate Azure with application ID: '$($Connection.ApplicationId)', tenant ID: '$AADTenantId', subscription ID: '$SubscriptionId'", $PSItem.Exception)
+			throw [System.Exception]::new("Failed to authenticate Azure with application ID: '$($ConnectionAsset.ApplicationId)', tenant ID: '$($ConnectionAsset.TenantId)', subscription ID: '$($ConnectionAsset.SubscriptionId)'", $PSItem.Exception)
 		}
 		Write-Log "Successfully authenticated with Azure using service principal: $($AzContext | Format-List -Force | Out-String)"
 
+		# Set Azure context with subscription, tenant
+		if ($AzContext.Tenant.Id -ine $ConnectionAsset.TenantId -or $AzContext.Subscription.Id -ine $ConnectionAsset.SubscriptionId) {
+			if ($PSCmdlet.ShouldProcess((@($ConnectionAsset.TenantId, $ConnectionAsset.SubscriptionId) -join ', '), 'Set Azure context with tenant ID, subscription ID')) {
+				try {
+					$AzContext = Set-AzContext -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId
+					if (!$AzContext -or $AzContext.Tenant.Id -ine $ConnectionAsset.TenantId -or $AzContext.Subscription.Id -ine $ConnectionAsset.SubscriptionId) {
+						throw $AzContext
+					}
+				}
+				catch {
+					throw [System.Exception]::new("Failed to set Azure context with tenant ID: '$($ConnectionAsset.TenantId)', subscription ID: '$($ConnectionAsset.SubscriptionId)'", $PSItem.Exception)
+				}
+				Write-Log "Successfully set the Azure context with the tenant ID, subscription ID: $($AzContext | Format-List -Force | Out-String)"
+			}
+		}
+		
 		# WVD auth
 		try {
-			$WVDContext = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $Connection.ApplicationId -CertificateThumbprint $Connection.CertificateThumbprint -AADTenantId $AADTenantId
+			$WVDContext = Add-RdsAccount -DeploymentUrl $RDBrokerURL -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -AADTenantId $ConnectionAsset.TenantId
 			if (!$WVDContext) {
 				throw $WVDContext
 			}
 		}
 		catch {
-			throw [System.Exception]::new("Failed to authenticate WVD with application ID: '$($Connection.ApplicationId)', AAD tenant ID: '$AADTenantId', deloyment URL: '$RDBrokerURL'", $PSItem.Exception)
+			throw [System.Exception]::new("Failed to authenticate WVD with application ID: '$($ConnectionAsset.ApplicationId)', AAD tenant ID: '$($ConnectionAsset.TenantId)', deloyment URL: '$RDBrokerURL'", $PSItem.Exception)
 		}
 		Write-Log "Successfully authenticated with WVD using service principal: $($WVDContext | Format-List -Force | Out-String)"
 	}
 	else {
-		$AzContext = Get-AzContext
 		$WVDContext = Get-RdsContext
-	}
-
-	# Set Azure context with subscription, tenant
-	if ($AzContext.Tenant.Id -ine $AADTenantId -or $AzContext.Subscription.Id -ine $SubscriptionId) {
-		if ($PSCmdlet.ShouldProcess((@($AADTenantId, $SubscriptionId) -join ', '), 'Set Azure context with tenant ID, subscription ID')) {
-			try {
-				$AzContext = Set-AzContext -TenantId $AADTenantId -SubscriptionId $SubscriptionId
-				if (!$AzContext -or $AzContext.Tenant.Id -ine $AADTenantId -or $AzContext.Subscription.Id -ine $SubscriptionId) {
-					throw $AzContext
-				}
-			}
-			catch {
-				throw [System.Exception]::new("Failed to set Azure context with tenant ID: '$AADTenantId', subscription ID: '$SubscriptionId'", $PSItem.Exception)
-			}
-			Write-Log "Successfully set the Azure context with the tenant ID, subscription ID: $($AzContext | Format-List -Force | Out-String)"
-		}
 	}
 
 	# Set WVD context to the appropriate tenant group

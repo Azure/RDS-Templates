@@ -197,8 +197,6 @@ elseif ($SessionHostsList.Count -le $MinimumNumberOfRDSH) {
 	"LogAnalyticsWorkspaceId"       = $LogAnalyticsWorkspaceId
 	"LogAnalyticsPrimaryKey"        = $LogAnalyticsPrimaryKey
 	"ConnectionAssetName"           = $ConnectionAssetName
-	"AADTenantId"                   = $AADTenantId
-	"SubscriptionId"                = $SubscriptionId
 	"UseARMAPI"                     = $UseARMAPI
 	"ResourceGroupName"             = $HostPoolResourceGroupName
 	"HostPoolName"                  = $HostPoolName
