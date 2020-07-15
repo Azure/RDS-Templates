@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.31
+	v0.1.32
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,6 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
+	[version]$Version = '0.1.32'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -221,11 +222,13 @@ try {
 
 		Write-Log "Wait for $($Jobs.Count) jobs"
 		$StartTime = Get-Date
+		[string]$StatusInfo = ''
 		while ($true) {
 			if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
-				throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
+				throw "Jobs status check timed out. Taking more than $StatusCheckTimeOut seconds. $StatusInfo"
 			}
-			Write-Log "[Check jobs status] Total: $($Jobs.Count), $(($Jobs | Group-Object State | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+			$StatusInfo = "[Check jobs status] Total: $($Jobs.Count), $(($Jobs | Group-Object State | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+			Write-Log $StatusInfo
 			if (!($Jobs | Where-Object { $_.State -ieq 'Running' })) {
 				break
 			}
@@ -234,7 +237,7 @@ try {
 
 		[array]$IncompleteJobs = @($Jobs | Where-Object { $_.State -ine 'Completed' })
 		if ($IncompleteJobs) {
-			throw "$($IncompleteJobs.Count) jobs did not complete successfully: $($IncompleteJobs | Format-List -Force | Out-String)"
+			throw "$($IncompleteJobs.Count)/$($Jobs.Count) jobs did not complete successfully: $($IncompleteJobs | Format-List -Force | Out-String)"
 		}
 	}
 
@@ -588,7 +591,7 @@ try {
 	# Make sure VM instance was found in Azure for every session host
 	[int]$nVMsWithoutInstance = @($VMs.Values | Where-Object { !$_.Instance }).Count
 	if ($nVMsWithoutInstance) {
-		throw "There are $nVMsWithoutInstance session hosts whose VM instance was not found in Azure"
+		throw "There are $nVMsWithoutInstance/$($VMs.Count) session hosts whose VM instance was not found in Azure"
 	}
 
 	if (!$nRunningCores) {
@@ -841,17 +844,18 @@ try {
 		}
 	}
 
-	Write-Log "[Check jobs status] Total: $($StopVMjobs.Count), $(($StopVMjobs | Group-Object State | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+	[string]$StopVMJobsStatusInfo = "[Check jobs status] Total: $($StopVMjobs.Count), $(($StopVMjobs | Group-Object State | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
+	Write-Log $StopVMJobsStatusInfo
 
 	$VMsToStop.Values | TryResetSessionHostDrainModeAndUserSessions
 
 	if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
-		throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
+		throw "Jobs status check timed out. Taking more than $StatusCheckTimeOut seconds. $StopVMJobsStatusInfo"
 	}
 
 	[array]$IncompleteJobs = @($StopVMjobs | Where-Object { $_.State -ine 'Completed' })
 	if ($IncompleteJobs) {
-		throw "$($IncompleteJobs.Count) jobs did not complete successfully: $($IncompleteJobs | Format-List -Force | Out-String)"
+		throw "$($IncompleteJobs.Count)/$($StopVMjobs.Count) jobs did not complete successfully: $($IncompleteJobs | Format-List -Force | Out-String)"
 	}
 
 	Write-Log 'All jobs completed'
@@ -893,6 +897,8 @@ catch {
 		Write-Error $ErrMsg -ErrorAction:Continue
 	}
 
-	throw
-	# throw [System.Exception]::new($ErrMsg, $ErrContainer.Exception)
+	$ErrMsg += ($WebHookData | Format-List -Force | Out-String)
+	$ErrMsg += "Version: $Version`n"
+
+	throw [System.Exception]::new($ErrMsg, $ErrContainer.Exception)
 }

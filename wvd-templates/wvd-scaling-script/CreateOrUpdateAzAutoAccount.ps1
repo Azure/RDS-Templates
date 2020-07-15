@@ -241,7 +241,7 @@ foreach ($ModuleName in $RequiredModules) {
 }
 
 if (!$WorkspaceName) {
-	Write-Output "Automation Account Name: $AutomationAccountName"
+	Write-Output "Azure Automation Account Name: $AutomationAccountName"
 	Write-Output "Webhook URI: $($WebhookURI.value)"
 	return
 }
@@ -310,8 +310,8 @@ $CustomLogWVDTenantScale = @"
 # Submit the data to the API endpoint
 Send-LogAnalyticsData -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body ([System.Text.Encoding]::UTF8.GetBytes($CustomLogWVDTenantScale)) -logType $TenantScaleLogType
 
-Write-Output "Log Analytics workspace id: $LogAnalyticsWorkspaceId"
-Write-Output "Log Analytics workspace primarykey: $LogAnalyticsPrimaryKey"
+Write-Output "Log Analytics Workspace ID: $LogAnalyticsWorkspaceId"
+Write-Output "Log Analytics Primary Key: $LogAnalyticsPrimaryKey"
 
-Write-Output "Automation Account Name: $AutomationAccountName"
+Write-Output "Azure Automation Account Name: $AutomationAccountName"
 Write-Output "Webhook URI: $($WebhookURI.value)"
