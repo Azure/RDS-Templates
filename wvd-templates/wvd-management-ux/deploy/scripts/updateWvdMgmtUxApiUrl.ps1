@@ -3,9 +3,8 @@
 Update the main bundle js file with API URL
 .DESCRIPTION
 This script is used to Update the main bundle js file of web application with API URL.
-This script depends on two PowerShell modules: Az and AzureAD . To install Az and AzureAD modules execute the following commands. Use "-AllowClobber" parameter if you have more than one version of PowerShell modules installed.
+This script depends PowerShell module Az. To install Az module execute the following command. Use "-AllowClobber" parameter if you have more than one version of PowerShell modules installed.
 	PS C:\>Install-Module Az  -AllowClobber
-    PS C:\>Install-Module AzureAD  -AllowClobber
 
 .ROLE
 Administrator
@@ -38,7 +37,6 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Con
 
 # Import Az and AzureAD modules
 Import-Module Az
-Import-Module AzureAD
 
 
 # Function to get the publishing profile credentials
@@ -69,7 +67,8 @@ if ($context -eq $null)
 }
 
 # Select the subscription
-Get-AzSubscription -SubscriptionId $subscriptionId | Select-AzSubscription
+$Subscription = Select-AzSubscription -SubscriptionId $SubscriptionId
+Set-AzContext -SubscriptionObject $Subscription.ExtendedProperties
 
 # Get the Role Assignment of the authenticated user
 $RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account

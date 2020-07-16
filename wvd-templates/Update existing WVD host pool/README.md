@@ -7,7 +7,7 @@ Click the button below to deploy:
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
 
-# ARM Template to Update an exisiting Windows Virtual Desktop hostpool
+# ARM Template to Update an existing Windows Virtual Desktop hostpool
 
 This template will remove or stop the old instance of Windows Virtual Desktop Hostpool session hosts and creates new virtual machines and registers them as session hosts to Windows Virtual Desktop host pool. There are different sets of parameters you must enter to successfully deploy the template:
 - VM image
@@ -72,6 +72,8 @@ Enter the remaining configuration parameters for the virtual machines.
 - **Vm Size**
 - **Enable Accelerated Networking**. Please notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs. Default value is `false`.
 - **Rdsh Name Prefix**
+  > [!WARNING]
+  Starting from **June 1st 2020**, this parameter will be renamed to **newRdshNamePrefix** and the default value for this parameter will be removed, so the value will need to be specified.
 - **Rdsh Number Of Instances**
 - **Rdsh VM Disk Type**. If you selected **CustomVHD** as the **Rdsh Image Source** and **false** for **Rdsh Use Managed Disks**, ensure that this parameter matches the storage account type where the source image is located.
 

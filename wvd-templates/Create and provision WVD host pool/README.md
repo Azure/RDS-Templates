@@ -71,6 +71,8 @@ Enter the remaining configuration parameters for the virtual machines.
 - **Vm Size**
 - **Enable Accelerated Networking**. Please notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs. Default value is `false`.
 - **Rdsh Name Prefix**
+  > [!WARNING]
+  Starting from **June 1st 2020**, the default value for this parameter will be removed, so the value will need to be specified.
 - **Rdsh Number Of Instances**
 - **Rdsh VM Disk Type**. If you selected **CustomVHD** as the **Rdsh Image Source** and **false** for **Rdsh Use Managed Disks**, ensure that this parameter matches the storage account type where the source image is located.
 

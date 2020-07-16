@@ -99,7 +99,6 @@
         },
         "location": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "Location for all resources to be created in."
             }

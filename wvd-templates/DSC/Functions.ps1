@@ -1,139 +1,37 @@
+#Microsoft.RDInfra.RDPowerShell and Get-Package both require powershell 5.0 or higher.
+#Requires -Version 5.0
+
 <#
-
 .SYNOPSIS
-Functions/Common variables file to be used by both Script-FirstRdsh.ps1 and Script-AdditionalRdshServers.ps1
-
+Common functions to be used by DSC scripts
 #>
-
-# Variables
 
 # Setting to Tls12 due to Azure web app security requirements
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-class PsRdsSessionHost {
-    [string]$TenantName = [string]::Empty
-    [string]$HostPoolName = [string]::Empty
-    [string]$SessionHostName = [string]::Empty
-    [int]$TimeoutInSec = 900
-    [bool]$CheckForAvailableState = $false
-
-    PsRdsSessionHost() { }
-
-    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName) {
-        $this.TenantName = $TenantName
-        $this.HostPoolName = $HostPoolName
-        $this.SessionHostName = $SessionHostName
-    }
-
-    PsRdsSessionHost([string]$TenantName, [string]$HostPoolName, [string]$SessionHostName, [int]$TimeoutInSec) {
-        
-        if ($TimeoutInSec -gt 1800) {
-            throw "TimeoutInSec is too high, maximum value is 1800"
-        }
-
-        $this.TenantName = $TenantName
-        $this.HostPoolName = $HostPoolName
-        $this.SessionHostName = $SessionHostName
-        $this.TimeoutInSec = $TimeoutInSec
-    }
-
-    hidden [object] _trySessionHost([string]$operation) {
-        if ($operation -ne "get" -and $operation -ne "set") {
-            throw "PsRdsSessionHost: Invalid operation: $operation. Valid Operations are get or set"
-        }
-
-        $specificToSet = @{$true = "-AllowNewSession `$true"; $false = "" }[$operation -eq "set"]
-        $commandToExecute = "$operation-RdsSessionHost -TenantName `"`$(`$this.TenantName)`" -HostPoolName `"`$(`$this.HostPoolName)`" -Name `$this.SessionHostName -ErrorAction SilentlyContinue $specificToSet"
-
-        $sessionHost = (Invoke-Expression $commandToExecute )
-
-        $StartTime = Get-Date
-        while ($sessionHost -eq $null) {
-            Start-Sleep -Seconds 30
-            $sessionHost = (Invoke-Expression $commandToExecute)
-    
-            if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                if ($sessionHost -eq $null) {
-                    return $null
-                }
-            }
-        }
-
-        if (($operation -eq "get") -and $this.CheckForAvailableState) {
-            $StartTime = Get-Date
-
-            while ($sessionHost.Status -ine "Available") {
-                Start-Sleep -Seconds 60
-                $sessionHost = (Invoke-Expression $commandToExecute)
-        
-                if ((get-date).Subtract($StartTime).TotalSeconds -gt $this.TimeoutInSec) {
-                    if ($sessionHost.Status -ine "Available") {
-                        $this.CheckForAvailableState = $false
-                        return $null
-                    }
-                }
-            }
-        }
-
-        $this.CheckForAvailableState = $false
-        return $sessionHost
-    }
-
-    [object] SetSessionHost() {
-
-        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName)) {
-            return $null
-        }
-        else {
-            
-            return ($this._trySessionHost("set"))
-        }
-    }
-    
-    [object] GetSessionHost() {
-
-        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName)) {
-            return $null
-        }
-        else {
-            return ($this._trySessionHost("get"))
-        }
-    }
-
-    [object] GetSessionHostWhenAvailable() {
-
-        if ([string]::IsNullOrEmpty($this.TenantName) -or [string]::IsNullOrEmpty($this.HostPoolName) -or [string]::IsNullOrEmpty($this.HostPoolName)) {
-            return $null
-        }
-        else {
-            $this.CheckForAvailableState = $true
-            return ($this._trySessionHost("get"))
-        }
-    }
-}
 
 function Write-Log {
     [CmdletBinding()]
     param
     (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $true)]
         [string]$Message,
-        [Parameter(Mandatory = $false)]
-        [string]$Error
+
+        # note: can't use variable named '$Error': https://github.com/PowerShell/PSScriptAnalyzer/blob/master/RuleDocumentation/AvoidAssignmentToAutomaticVariable.md
+        [switch]$Err
     )
      
     try {
         $DateTime = Get-Date -Format "MM-dd-yy HH:mm:ss"
         $Invocation = "$($MyInvocation.MyCommand.Source):$($MyInvocation.ScriptLineNumber)"
-        if ($Message) {
-            Add-Content -Value "$DateTime - $Invocation - $Message" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
+
+        if ($Err) {
+            $Message = "[ERROR] $Message"
         }
-        else {
-            Add-Content -Value "$DateTime - $Invocation - $Error" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
-        }
+        
+        Add-Content -Value "$DateTime - $Invocation - $Message" -Path "$([environment]::GetEnvironmentVariable('TEMP', 'Machine'))\ScriptLog.log"
     }
     catch {
-        Write-Error $_.Exception.Message
+        throw [System.Exception]::new("Some error occurred while writing to log file with message: $Message", $PSItem.Exception)
     }
 }
 
@@ -151,10 +49,9 @@ function AddDefaultUsers {
 
         [Parameter(Mandatory = $false)]
         [string]$DefaultUsers
-
     )
+    $ErrorActionPreference = "Stop"
 
-    # Checking for null parameters
     Write-Log "Adding Default users. Argument values: App Group: $ApplicationGroupName, TenantName: $TenantName, HostPoolName: $HostPoolName, DefaultUsers: $DefaultUsers"
 
     # Sanitizing DefaultUsers string
@@ -169,8 +66,8 @@ function AddDefaultUsers {
                 Write-Log "Successfully assigned user $user to App Group: $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
             }
             catch {
-                Write-Log "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
-                Write-Log "Error details: $_"
+                Write-Log -Err "An error ocurred assigining user $user to App Group $ApplicationGroupName. Other details -> TenantName: $TenantName, HostPoolName: $HostPoolName."
+                Write-Log -Err ($PSItem | Format-List -Force | Out-String)
             }
         }
     }
@@ -196,8 +93,8 @@ function ValidateServicePrincipal {
 
 function Is1809OrLater {
     $OSVersionInfo = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-    if ($OSVersionInfo -ne $null) {
-        if ($OSVersionInfo.ReleaseId -ne $null) {
+    if ($null -ne $OSVersionInfo) {
+        if ($null -ne $OSVersionInfo.ReleaseId) {
             Write-Log -Message "Build: $($OSVersionInfo.ReleaseId)"
             $rdshIs1809OrLaterBool = @{$true = $true; $false = $false }[$OSVersionInfo.ReleaseId -ge 1809]
         }
@@ -221,7 +118,7 @@ function ExtractDeploymentAgentZipFile {
     New-Item -Path "$DeployAgentLocation" -ItemType directory -Force
     
     # Locating and extracting DeployAgent.zip
-    $DeployAgentFromRepo = (LocateFile -Name 'DeployAgent.zip' -SearchPath $ScriptPath)
+    $DeployAgentFromRepo = (LocateFile -Name 'DeployAgent.zip' -SearchPath $ScriptPath -Recurse)
     
     Write-Log -Message "Extracting 'Deployagent.zip' file into '$DeployAgentLocation' folder inside VM"
     Expand-Archive $DeployAgentFromRepo -DestinationPath "$DeployAgentLocation"
@@ -245,6 +142,8 @@ function isRdshServer {
 <#
 .Description
 Call this function using dot source notation like ". AuthenticateRdsAccount" because the Add-RdsAccount function this calls creates variables using the AllScope option that other WVD poweshell module functions like Set-RdsContext require. Note that this creates a variable named "$authentication" that will overwrite any existing variable with that name in the scope this is dot sourced to.
+
+Calling code should set $ErrorActionPreference = "Stop" before calling this function to ensure that detailed error information is thrown if there is an error.
 #>
 function AuthenticateRdsAccount {
     param(
@@ -262,7 +161,7 @@ function AuthenticateRdsAccount {
     )
 
     if ($ServicePrincipal) {
-        Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId "
+        Write-Log -Message "Authenticating using service principal $($Credential.username) and Tenant id: $TenantId"
     }
     else {
         $PSBoundParameters.Remove('ServicePrincipal')
@@ -278,37 +177,9 @@ function AuthenticateRdsAccount {
         }
     }
     catch {
-        #This creates a new script scope so that these variables aren't included in this function scope since this function is being called using dot source notation.
-        & {
-            Set-StrictMode -Version Latest
-            
-            $innerExAsStr = ""
-            $numInnerExceptions = 0
-            if($_.Exception -is [System.AggregateException] -and $_.Exception.InnerExceptions)
-            {
-                $numInnerExceptions = $_.Exception.InnerExceptions.Count
-                foreach ($innerEx in $_.Exception.InnerExceptions)
-                {
-                    if($innerExAsStr.Length -gt 0)
-                    {
-                        $innerExAsStr += "`n"
-                    } 
-                    $innerExAsStr += $innerEx
-                }
-            }
-            
-            $errMsg = "Error authenticating Windows Virtual Desktop account, ServicePrincipal=" + $ServicePrincipal
-            $errMsg += " Error Details:`n$($_ | Out-String)"
-            if($innerExAsStr.Length -gt 0)
-            {
-                $errMsg += " Inner Errors (there are " + $numInnerExceptions +"): `n$($innerExAsStr | Out-String)"
-            } 
-
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
-        }
-
+        throw [System.Exception]::new("Error authenticating Windows Virtual Desktop account, ServicePrincipal = $ServicePrincipal", $PSItem.Exception)
     }
+    
     Write-Log -Message "Windows Virtual Desktop account authentication successful. Result:`n$($authentication | Out-String)"
 }
 
@@ -322,6 +193,7 @@ function SetTenantGroupContextAndValidate {
     )
 
     Set-StrictMode -Version Latest
+    $ErrorActionPreference = "Stop"
 
     # Set context to the appropriate tenant group
     $currentTenantGroupName = (Get-RdsContext).TenantGroupName
@@ -333,26 +205,20 @@ function SetTenantGroupContextAndValidate {
             Set-RdsContext -TenantGroupName $TenantGroupName
         }
         catch {
-            $errMsg ="Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group. Error Details: $($PSItem | Out-String)"
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
+            throw [System.Exception]::new("Error setting RdsContext using tenant group ""$TenantGroupName"", this may be caused by the tenant group not existing or the user not having access to the tenant group", $PSItem.Exception)
         }
-
-        $tenants = $null
-        try {
-            $tenants = Get-RdsTenant -Name $TenantName
-        }
-        catch {
-            $errMsg = "Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant. Error Details: $($PSItem | Out-String)"
-            Write-Log -Error $errMsg
-            throw [System.Exception]::new($errMsg, $PSItem.Exception)
-        }
-
-        if (!$tenants) {
-            $errMsg = "No tenant with name ""$TenantName"" exists or the account doesn't have access to it." 
-            Write-Log -Error $errMsg
-            throw $errMsg
-        }
+    }
+    
+    $tenants = $null
+    try {
+        $tenants = (Get-RdsTenant -Name $TenantName)
+    }
+    catch {
+        throw [System.Exception]::new("Error getting the tenant with name ""$TenantName"", this may be caused by the tenant not existing or the account doesn't have access to the tenant", $PSItem.Exception)
+    }
+    
+    if (!$tenants) {
+        throw "No tenant with name ""$TenantName"" exists or the account doesn't have access to it."
     }
 }
 
@@ -360,12 +226,12 @@ function LocateFile {
     param (
         [Parameter(mandatory = $true)]
         [string]$Name,
-
-        [string]$SearchPath = '.'
+        [string]$SearchPath = '.',
+        [switch]$Recurse
     )
     
     Write-Log -Message "Locating '$Name' within: '$SearchPath'"
-    $Path = (Get-ChildItem "$SearchPath\" -Filter $Name -Recurse).FullName
+    $Path = (Get-ChildItem "$SearchPath\" -Filter $Name -Recurse:$Recurse).FullName
     if ((-not $Path) -or (-not (Test-Path $Path))) {
         throw "'$Name' file not found at '$SearchPath'"
     }
@@ -381,6 +247,8 @@ function ImportRDPSMod {
         [string]$Source = 'attached',
         [string]$ArtifactsPath
     )
+
+    $ErrorActionPreference = "Stop"
 
     $ModName = 'Microsoft.RDInfra.RDPowershell'
     $Mod = (get-module $ModName)
@@ -402,7 +270,7 @@ function ImportRDPSMod {
         }
 
         # Locating and extracting PowerShellModules.zip
-        $ZipPath = (LocateFile -Name 'PowerShellModules.zip' -SearchPath $ArtifactsPath)
+        $ZipPath = (LocateFile -Name 'PowerShellModules.zip' -SearchPath $ArtifactsPath -Recurse)
 
         Write-Log -Message "Extracting RD PowerShell module file '$ZipPath' into '$Path'"
         Expand-Archive $ZipPath -DestinationPath $Path -Force
@@ -410,7 +278,7 @@ function ImportRDPSMod {
     }
     else {
         $Version = ($Source.Trim().ToLower() -split 'gallery@')[1]
-        if ($Version -eq $null -or $Version.Trim() -eq '') {
+        if ($null -eq $Version -or $Version.Trim() -eq '') {
             throw "invalid param: Source = $Source"
         }
 
@@ -424,9 +292,200 @@ function ImportRDPSMod {
         Write-Log -Message "Successfully downloaded RD PowerShell module (version: v$Version) from PowerShell Gallery into '$Path'"
     }
 
-    $DLLPath = (LocateFile -Name "$ModName.dll" -SearchPath $Path)
+    $DLLPath = (LocateFile -Name "$ModName.dll" -SearchPath $Path -Recurse)
 
     Write-Log -Message "Importing RD PowerShell module DLL '$DLLPath"
     Import-Module $DLLPath -Force
     Write-Log -Message "Successfully imported RD PowerShell module DLL '$DLLPath"
+}
+
+function GetCurrSessionHostName {
+    $Wmi = (Get-WmiObject win32_computersystem)
+    return "$($Wmi.DNSHostName).$($Wmi.Domain)"
+}
+
+function GetSessionHostDesiredStates {
+    return ('Available', 'NeedsAssistance')
+}
+
+function IsRDAgentRegistryValidForRegistration {
+    $ErrorActionPreference = "Stop"
+
+    $RDInfraReg = Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent' -ErrorAction SilentlyContinue
+    if (!$RDInfraReg) {
+        return @{
+            result = $false;
+            msg    = 'RD Infra registry missing';
+        }
+    }
+    Write-Log -Message 'RD Infra registry exists'
+
+    Write-Log -Message 'Check RD Infra registry values to see if RD Agent is registered'
+    if ($RDInfraReg.RegistrationToken -ne '') {
+        return @{
+            result = $false;
+            msg    = 'RegistrationToken in RD Infra registry is not empty'
+        }
+    }
+    if ($RDInfraReg.IsRegistered -ne 1) {
+        return @{
+            result = $false;
+            msg    = "Value of 'IsRegistered' in RD Infra registry is $($RDInfraReg.IsRegistered), but should be 1"
+        }
+    }
+    
+    return @{
+        result = $true
+    }
+}
+
+function RunMsiWithRetry {
+    param(
+        [Parameter(mandatory = $true)]
+        [string]$programDisplayName,
+
+        [Parameter(mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [String[]]$argumentList, #Must have at least 1 value
+
+        [Parameter(mandatory = $true)]
+        [string]$msiOutputLogPath,
+
+        [Parameter(mandatory = $false)]
+        [switch]$isUninstall,
+
+        [Parameter(mandatory = $false)]
+        [switch]$msiLogVerboseOutput
+    )
+    Set-StrictMode -Version Latest
+    $ErrorActionPreference = "Stop"
+
+    if ($msiLogVerboseOutput) {
+        $argumentList += "/l*vx $msiOutputLogPath" 
+    }
+    else {
+        $argumentList += "/l* $msiOutputLogPath"
+    }
+
+    $retryTimeToSleepInSec = 30
+    $retryCount = 0
+    $sts = $null
+    do {
+        $modeAndDisplayName = ($(if ($isUninstall) { "Uninstalling" } else { "Installing" }) + " $programDisplayName")
+
+        if ($retryCount -gt 0) {
+            Write-Log -Message "Retrying $modeAndDisplayName in $retryTimeToSleepInSec seconds because it failed with Exit code=$sts This will be retry number $retryCount"
+            Start-Sleep -Seconds $retryTimeToSleepInSec
+        }
+
+        Write-Log -Message ( "$modeAndDisplayName" + $(if ($msiLogVerboseOutput) { " with verbose msi logging" } else { "" }))
+
+
+        $processResult = Start-Process -FilePath "msiexec.exe" -ArgumentList $argumentList -Wait -Passthru
+        $sts = $processResult.ExitCode
+
+        $retryCount++
+    } 
+    while ($sts -eq 1618 -and $retryCount -lt 20) # Error code 1618 is ERROR_INSTALL_ALREADY_RUNNING see https://docs.microsoft.com/en-us/windows/win32/msi/-msiexecute-mutex .
+
+    if ($sts -eq 1618) {
+        Write-Log -Err "Stopping retries for $modeAndDisplayName. The last attempt failed with Exit code=$sts which is ERROR_INSTALL_ALREADY_RUNNING"
+        throw "Stopping because $modeAndDisplayName finished with Exit code=$sts"
+    }
+    else {
+        Write-Log -Message "$modeAndDisplayName finished with Exit code=$sts"
+    }
+
+    return $sts
+} 
+
+<#
+.DESCRIPTION
+Uninstalls any existing RDAgent BootLoader and RD Infra Agent installations and then installs the RDAgent BootLoader and RD Infra Agent using the specified registration token.
+
+.PARAMETER AgentInstallerFolder
+Required path to MSI installer file
+
+.PARAMETER AgentBootServiceInstallerFolder
+Required path to MSI installer file
+#>
+function InstallRDAgents {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$AgentInstallerFolder,
+        
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$AgentBootServiceInstallerFolder,
+    
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$RegistrationToken,
+    
+        [Parameter(mandatory = $false)]
+        [switch]$EnableVerboseMsiLogging
+    )
+
+    $ErrorActionPreference = "Stop"
+
+    Write-Log -Message "Boot loader folder is $AgentBootServiceInstallerFolder"
+    $AgentBootServiceInstaller = LocateFile -SearchPath $AgentBootServiceInstallerFolder -Name "*.msi"
+
+    Write-Log -Message "Agent folder is $AgentInstallerFolder"
+    $AgentInstaller = LocateFile -SearchPath $AgentInstallerFolder -Name "*.msi"
+
+    if (!$RegistrationToken) {
+        throw "No registration token specified"
+    }
+
+    RunMsiWithRetry -programDisplayName "RDAgentBootLoader" -isUninstall -argumentList @("/x {A38EE409-424D-4A0D-B5B6-5D66F20F62A5}", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentBootLoaderUnInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+
+    while ($true) {
+        try {
+            $oldAgent = Get-Package -ProviderName msi -Name "Remote Desktop Services Infrastructure Agent"
+        }
+        catch {
+            #Ignore the error if it was due to no packages being found.
+            if ($PSItem.FullyQualifiedErrorId -eq "NoMatchFound,Microsoft.PowerShell.PackageManagement.Cmdlets.GetPackage") {
+                break
+            }
+
+            throw;
+        }
+
+        $oldVersion = $oldAgent.Version
+        $productCodeParameter = $oldAgent.FastPackageReference
+
+        RunMsiWithRetry -programDisplayName "RD Infra Agent $oldVersion" -isUninstall -argumentList @("/x $productCodeParameter", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentUninstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+    }
+
+
+    Write-Log -Message "Installing RD Infra Agent on VM $AgentInstaller"
+    RunMsiWithRetry -programDisplayName "RD Infra Agent" -argumentList @("/i $AgentInstaller", "/quiet", "/qn", "/norestart", "/passive", "REGISTRATIONTOKEN=$RegistrationToken") -msiOutputLogPath "C:\Users\AgentInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+
+    Write-Log -Message "Installing RDAgent BootLoader on VM $AgentBootServiceInstaller"
+    RunMsiWithRetry -programDisplayName "RDAgent BootLoader" -argumentList @("/i $AgentBootServiceInstaller", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentBootLoaderInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+
+    $bootloaderServiceName = "RDAgentBootLoader"
+    $startBootloaderRetryCount = 0
+    while ( -not (Get-Service $bootloaderServiceName -ErrorAction SilentlyContinue)) {
+        $retry = ($startBootloaderRetryCount -lt 6)
+        $msgToWrite = "Service $bootloaderServiceName was not found. "
+        if ($retry) { 
+            $msgToWrite += "Retrying again in 30 seconds, this will be retry $startBootloaderRetryCount" 
+            Write-Log -Message $msgToWrite
+        } 
+        else {
+            $msgToWrite += "Retry limit exceeded" 
+            Write-Log -Err $msgToWrite
+            throw $msgToWrite
+        }
+            
+        $startBootloaderRetryCount++
+        Start-Sleep -Seconds 30
+    }
+
+    Write-Log -Message "Starting service $bootloaderServiceName"
+    Start-Service $bootloaderServiceName
 }

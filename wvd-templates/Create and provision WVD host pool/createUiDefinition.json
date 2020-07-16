@@ -3,11 +3,19 @@
 	"handler": "Microsoft.Azure.CreateUIDef",
 	"version": "0.1.2-preview",
 	"parameters": {
+		"config": {
+			"basics": {
+				"resourceGroup": {
+					"allowExisting": true
+				}
+			}
+		},
 		"basics": [
 			{
 				"name": "hostpoolName",
 				"type": "Microsoft.Common.TextBox",
-				"label": "Hostpool name",
+				"label": "Host pool name",
+				"toolTip": "Windows Virtual Desktop Host pools are a collection of one or more identical virtual machines within Windows Virtual Desktop tenant environments.",
 				"constraints": {
 					"required": true,
 					"regex": "^[\\w-'][\\w-'\\s]*[\\w-']+$",
@@ -68,6 +76,7 @@
 				"name": "serviceMetadataLocation",
 				"type": "Microsoft.Common.DropDown",
 				"label": "Service metadata location",
+				"toolTip": "Windows Virtual Desktop is currently available for all geographical locations. Initially, service metadata can only be stored in the United States (US) geography.",
 				"defaultValue": "United States",
 				"constraints": {
 					"allowedValues": [
@@ -116,7 +125,7 @@
 						"type": "Microsoft.Common.OptionsGroup",
 						"label": "Usage Profile",
 						"defaultValue": "Medium",
-						"toolTip": "Select a usage profile to determine the number of users per vCPU--Light (6), Medium (4), or Heavy (2)--to use to calculate the number of virtual machines to create based on the selected VM size. If you would like to create a specific number of VMs, select 'Custom'.",
+						"toolTip": "Select a usage profile to determine the number of users per vCPU--Light (6), Medium (4), Heavy (2), or Power (1)--to use to calculate the number of virtual machines to create based on the selected VM size. If you would like to create a specific number of VMs, select 'Custom'.",
 						"constraints": {
 							"allowedValues": [
 								{
@@ -152,7 +161,7 @@
 										"boolean": true,
 										"value": 1,
 										"usageProfileMultiplier": 1,
-										"vmCountMultipler": 0
+										"vmCountMultiplier": 0
 									}
 								},
 								{
@@ -172,6 +181,7 @@
 						"name": "totalUsers",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Total users",
+						"toolTip": "Enter number of users. This will be used to calculate number of virtual machines to deploy.",
 						"defaultValue": "100",
 						"constraints": {
 							"required": true,
@@ -184,6 +194,7 @@
 						"name": "virtualMachineCount",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Number of virtual machines",
+						"toolTip": "Number of virtual machines to deploy.",
 						"defaultValue": "100",
 						"constraints": {
 							"required": true,
@@ -196,6 +207,7 @@
 						"name": "virtualMachineSize",
 						"type": "Microsoft.Compute.SizeSelector",
 						"label": "Virtual machine size",
+						"toolTip": "Size of the virtual machines to deploy. Not all VM sizes are supported by this Azure Marketplace offer however all VM sizes are supported when using other deployment options, see <a target='_blank' href='https://aka.ms/wvdmpsupportedsku'>https://aka.ms/wvdmpsupportedsku</a> for more information.",
 						"osPlatform": "Windows",
 						"constraints": {
 							"allowedSizes": [
@@ -298,7 +310,25 @@
 								"Standard_NV12",
 								"Standard_NV12s_v2",
 								"Standard_NV24",
-								"Standard_NV24s_v2"
+								"Standard_NV24s_v2",
+								"Standard_D2hs_v3",
+								"Standard_D4hs_v3",
+								"Standard_D8hs_v3",
+								"Standard_B2hms",
+								"Standard_B4hms",
+								"Standard_NV4ahs_v4",
+								"Standard_NV8ahs_v4",
+								"Standard_NV16ahs_v4",
+								"Standard_NV32ah7s_v4",
+								"Standard_NV12hs_v3",
+								"Standard_NV6h",
+								"Standard_NV12s_v3",
+								"Standard_NV24s_v3",
+								"Standard_NV48s_v3",
+								"Standard_NV4as_v4",
+								"Standard_NV8as_v4",
+								"Standard_NV16as_v4",
+								"Standard_NV32as_v4"
 							]
 						},
 						"recommendedSizes": [
@@ -312,7 +342,7 @@
 							"sku": "rs5-evd"
 						},
 						"visible": true,
-						"count": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]"
+						"count": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(take(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(skip(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), 1), '_', '  '), 'C', ''), 'V', ''), 'S', ''), 'D', ''), 'B', ''), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '), 'h', ' '), 'a', ' '), 'l', ' '), 't', ' '), 3)), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(take(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(skip(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), 1), '_', '  '), 'C', ''), 'V', ''), 'S', ''), 'D', ''), 'B', ''), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '), 'h', ' '), 'a', ' '), 'l', ' '), 't', ' '), 3)), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]"
 					},
 					{
 						"name": "rdshNamePrefix",
@@ -403,8 +433,8 @@
 						"type": "Microsoft.Common.InfoBox",
 						"visible": "[equals(steps('virtualMachineSettings').vmImageType, 'CustomImage')]",
 						"options": {
-						  "icon": "Warning",
-						  "text": "Ensure that the managed image is both in the specified Azure subscription and in the Azure location you selected."
+							"icon": "Warning",
+							"text": "Ensure that the managed image is both in the specified Azure subscription and in the Azure location you selected."
 						}
 					},
 					{
@@ -412,6 +442,7 @@
 						"type": "Microsoft.Common.DropDown",
 						"label": "Image OS version",
 						"defaultValue": "Windows 10 Enterprise multi-session with Office 365 ProPlus",
+						"toolTip": "Select the OS Image for the virtual machine.",
 						"constraints": {
 							"allowedValues": [
 								{
@@ -439,6 +470,7 @@
 						"type": "Microsoft.Common.DropDown",
 						"label": "Disk Type",
 						"defaultValue": "Premium SSD",
+						"toolTip": "These are the disk types available with the selected VM SKU.",
 						"constraints": {
 							"allowedValues": [
 								{
@@ -584,7 +616,7 @@
 								},
 								"constraints": {
 									"minAddressPrefixSize": "/30",
-									"minAddressCount": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
+									"minAddressCount": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(take(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(skip(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), 1), '_', '  '), 'C', ''), 'V', ''), 'S', ''), 'D', ''), 'B', ''), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '), 'h', ' '), 'a', ' '), 'l', ' '), 't', ' '), 3)), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(take(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(skip(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), 1), '_', '  '), 'C', ''), 'V', ''), 'S', ''), 'D', ''), 'B', ''), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '), 'h', ' '), 'a', ' '), 'l', ' '), 't', ' '), 3)), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
 									"requireContiguousAddresses": false
 								}
 							}
@@ -596,8 +628,8 @@
 						"type": "Microsoft.Common.InfoBox",
 						"visible": "[equals('new', steps('virtualMachineSettings').hostpoolVnet.newOrExisting)]",
 						"options": {
-						  "icon": "Error",
-						  "text": "You must select an existing virtual network that has access to the Active Directory. If you do not see it listed, you must re-start the deployment with the correct Azure location selected."
+							"icon": "Error",
+							"text": "You must select an existing virtual network that has access to the Active Directory. If you do not see it listed, you must re-start the deployment with the correct Azure location selected."
 						}
 					}
 				]
@@ -648,7 +680,7 @@
 								},
 								{
 									"label": "Service principal",
-									"value": true								
+									"value": true
 								}
 							]
 						},
@@ -711,9 +743,9 @@
 						"type": "Microsoft.Common.InfoBox",
 						"visible": "[not(steps('wvdTenantInfo').tenantAdminIsServicePrincipal)]",
 						"options": {
-						  "icon": "Warning",
-						  "text": "You cannot enter a user account that requires MFA. If you intend to use MFA, consider creating a service principal for this purpose.",
-						  "uri": "https://aka.ms/wvdsp"
+							"icon": "Warning",
+							"text": "You cannot enter a user account that requires MFA. If you intend to use MFA, consider creating a service principal for this purpose.",
+							"uri": "https://aka.ms/wvdsp"
 						}
 					}
 				]
@@ -726,12 +758,11 @@
 			"rdshCustomImageSourceName": "[coalesce(steps('virtualMachineSettings').rdshCustomImageSourceName, '')]",
 			"rdshCustomImageSourceResourceGroup": "[coalesce(steps('virtualMachineSettings').rdshCustomImageSourceResourceGroup, '')]",
 			"rdshNamePrefix": "[steps('configureVirtualMachines').rdshNamePrefix]",
-			"rdshNumberOfInstances": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(  take(replace(replace(replace(replace(skip(replace(replace(replace(replace(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), '_' ,'  '), 'C', ''), 'V', ''), 'S', ''),1), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '),3)   ), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
+			"rdshNumberOfInstances": "[max( mul(coalesce(steps('configureVirtualMachines').usageProfile.vmCountMultiplier, '0'),int(coalesce(steps('configureVirtualMachines').virtualMachineCount, '1'))), max(mul(basics('isPersonalDesktop').personalMultiplier, int(coalesce(steps('configureVirtualMachines').totalUsers,'1'))), mul( coalesce(steps('configureVirtualMachines').usageProfile.usageProfileMultiplier,'0'), div (sub (add( mul(int(take(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(skip(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), 1), '_', '  '), 'C', ''), 'V', ''), 'S', ''), 'D', ''), 'B', ''), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '), 'h', ' '), 'a', ' '), 'l', ' '), 't', ' '), 3)), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ), int(coalesce(steps('configureVirtualMachines').totalUsers,'1') )),1),   mul(int(take(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(skip(replace(replace(steps('configureVirtualMachines').virtualMachineSize, 'Standard_', ''), 'Basic_', ''), 1), '_', '  '), 'C', ''), 'V', ''), 'S', ''), 'D', ''), 'B', ''), 's', ' '), 'm', ' '), 'r', ' '), 'i', ' '), 'h', ' '), 'a', ' '), 'l', ' '), 't', ' '), 3)), coalesce(steps('configureVirtualMachines').usageProfile.value,'1') ))  )))]",
 			"rdshVMDiskType": "[coalesce(steps('virtualMachineSettings').rdshVMDiskTypeAll, steps('virtualMachineSettings').rdshVMDiskTypeStandard)]",
 			"rdshVmSize": "[steps('configureVirtualMachines').virtualMachineSize]",
 			"enableAcceleratedNetworking": false,
 			"rdshUseManagedDisks": "[bool(true)]",
-			"storageAccountResourceGroupName": "''",
 			"domainToJoin": "[coalesce(steps('virtualMachineSettings').domainToJoin , last(parse(concat('[\"', replace(steps('virtualMachineSettings').domainUser, '@', '\",\"' ) , '\"]'))))]",
 			"existingDomainUPN": "[steps('virtualMachineSettings').domainUser]",
 			"existingDomainPassword": "[steps('virtualMachineSettings').password.password]",
