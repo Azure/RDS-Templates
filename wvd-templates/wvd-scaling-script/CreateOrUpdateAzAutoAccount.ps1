@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to execute scaling script in Microsoft Azure Automation Account.
-	v0.1.3
+	v0.1.4
 	# //todo refactor stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
 param(
@@ -27,8 +27,7 @@ param(
 	[string]$WorkspaceName,
 
 	[Parameter(mandatory = $false)]
-	# //todo change this to use master branch when we go GA
-	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/wvd_scaling/wvd-templates/wvd-scaling-script'
+	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
 )
 
 $UseRDSAPI = !$UseARMAPI
