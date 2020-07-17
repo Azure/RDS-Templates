@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.33
+	v0.1.34
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.33'
+	[version]$Version = '0.1.34'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -885,6 +885,8 @@ catch {
 	# $ErrContainer = $_
 
 	[string]$ErrMsg = $ErrContainer | Format-List -Force | Out-String
+	$ErrMsg += "Version: $Version`n"
+
 	if (Get-Command 'Write-Log' -ErrorAction:SilentlyContinue) {
 		Write-Log -Err $ErrMsg -ErrorAction:Continue
 	}
@@ -892,8 +894,7 @@ catch {
 		Write-Error $ErrMsg -ErrorAction:Continue
 	}
 
-	$ErrMsg += ($WebHookData | Format-List -Force | Out-String)
-	$ErrMsg += "Version: $Version`n"
+	# $ErrMsg += ($WebHookData | Format-List -Force | Out-String)
 
 	throw [System.Exception]::new($ErrMsg, $ErrContainer.Exception)
 }
