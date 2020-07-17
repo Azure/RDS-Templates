@@ -441,20 +441,32 @@
 						"name": "galleryImageSelection",
 						"type": "Microsoft.Common.DropDown",
 						"label": "Image OS version",
-						"defaultValue": "Windows 10 Enterprise multi-session with Office 365 ProPlus",
+						"defaultValue": "Windows 10 Enterprise multi-session, Version 2004 + Microsoft 365 Apps",
 						"toolTip": "Select the OS Image for the virtual machine.",
 						"constraints": {
 							"allowedValues": [
 								{
-									"label": "Windows 10 Enterprise multi-session with Office 365 ProPlus",
+									"label": "Windows 10 Enterprise multi-session, Version 2004 + Microsoft 365 Apps",
+									"value": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-2004"
+								},
+								{
+									"label": "Windows 10 Enterprise multi-session, Version 2004",
+									"value": "Windows-10-Enterprise-multi-session-2004"
+								},
+								{
+									"label": "Windows 10 Enterprise, Version 2004",
+									"value": "Windows-10-Enterprise-2004"
+								},
+								{
+									"label": "Windows 10 Enterprise multi-session, Version 1909 + Microsoft 365 Apps",
 									"value": "Windows-10-Enterprise-multi-session-with-Office-365-ProPlus-1909"
 								},
 								{
-									"label": "Windows 10 Enterprise multi-session",
+									"label": "Windows 10 Enterprise multi-session, Version 1909",
 									"value": "Windows-10-Enterprise-multi-session-1909"
 								},
 								{
-									"label": "Windows 10 Enterprise",
+									"label": "Windows 10 Enterprise, Version 1909",
 									"value": "Windows-10-Enterprise-1909"
 								},
 								{
