@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.34
+	v0.1.35
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.34'
+	[version]$Version = '0.1.35'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -362,7 +362,7 @@ try {
 			$AzContext = $AzAuth.Context
 		}
 		catch {
-			throw [System.Exception]::new("Failed to authenticate Azure with application ID: '$($ConnectionAsset.ApplicationId)', tenant ID: '$($ConnectionAsset.TenantId)', subscription ID: '$($ConnectionAsset.SubscriptionId)'", $PSItem.Exception)
+			throw [System.Exception]::new('Failed to authenticate Azure with application ID, tenant ID, subscription ID', $PSItem.Exception)
 		}
 		Write-Log "Successfully authenticated with Azure using service principal: $($AzContext | Format-List -Force | Out-String)"
 
@@ -376,7 +376,7 @@ try {
 					}
 				}
 				catch {
-					throw [System.Exception]::new("Failed to set Azure context with tenant ID: '$($ConnectionAsset.TenantId)', subscription ID: '$($ConnectionAsset.SubscriptionId)'", $PSItem.Exception)
+					throw [System.Exception]::new('Failed to set Azure context with tenant ID, subscription ID', $PSItem.Exception)
 				}
 				Write-Log "Successfully set the Azure context with the tenant ID, subscription ID: $($AzContext | Format-List -Force | Out-String)"
 			}
