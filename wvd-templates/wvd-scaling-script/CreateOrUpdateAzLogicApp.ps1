@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to schedule basic scale in Microsoft Azure.
-	v0.1.3
+	v0.1.4
 	# //todo refactor stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
 param(
@@ -70,7 +70,7 @@ param(
 	[string]$MaintenanceTagName,
 
 	[Parameter(mandatory = $false)]
-	[int]$LimitSecondsToForceLogOffUser = 15*60,
+	[int]$LimitSecondsToForceLogOffUser = 15 * 60,
 
 	[Parameter(mandatory = $false)]
 	[string]$LogOffMessageTitle = 'Machine is about to shutdown.',
@@ -197,6 +197,8 @@ elseif ($SessionHostsList.Count -le $MinimumNumberOfRDSH) {
 	"LogAnalyticsWorkspaceId"       = $LogAnalyticsWorkspaceId
 	"LogAnalyticsPrimaryKey"        = $LogAnalyticsPrimaryKey
 	"ConnectionAssetName"           = $ConnectionAssetName
+	"AADTenantId"                   = $AADTenantId
+	"SubscriptionId"                = $SubscriptionId
 	"UseARMAPI"                     = $UseARMAPI
 	"ResourceGroupName"             = $HostPoolResourceGroupName
 	"HostPoolName"                  = $HostPoolName
