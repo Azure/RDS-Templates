@@ -70,7 +70,7 @@ param(
 	[string]$MaintenanceTagName,
 
 	[Parameter(mandatory = $false)]
-	[int]$LimitSecondsToForceLogOffUser = 15*60,
+	[int]$LimitSecondsToForceLogOffUser = 15 * 60,
 
 	[Parameter(mandatory = $false)]
 	[string]$LogOffMessageTitle = 'Machine is about to shutdown.',
@@ -196,6 +196,8 @@ elseif ($SessionHostsList.Count -le $MinimumNumberOfRDSH) {
 	"LogAnalyticsWorkspaceId"       = $LogAnalyticsWorkspaceId
 	"LogAnalyticsPrimaryKey"        = $LogAnalyticsPrimaryKey
 	"ConnectionAssetName"           = $ConnectionAssetName
+	"AADTenantId"                   = $AADTenantId 		# Note: only used by the basicScale.ps1 v0.1.32 and before, so this is added for backwards compatibility
+	"SubscriptionId"                = $SubscriptionId 	# Note: only used by the basicScale.ps1 v0.1.32 and before, so this is added for backwards compatibility
 	"UseARMAPI"                     = $UseARMAPI
 	"ResourceGroupName"             = $HostPoolResourceGroupName
 	"HostPoolName"                  = $HostPoolName
