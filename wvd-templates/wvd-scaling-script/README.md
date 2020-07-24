@@ -1,6 +1,10 @@
 
 # Windows Virtual Desktop Scaling Tool
 
->**Reporting issues**: Please follow the guidance from the [documentation](https://aka.ms/wvdscale#report-issues) for reporting issues.
+## For the ARM based WVD using the new 2020 Spring update
 
-Review the [documentation](https://aka.ms/wvdscale) for deployment guidance.
+Review this [documentation](https://docs.microsoft.com/en-us/azure/virtual-desktop/set-up-scaling-script) for deployment guidance.
+
+## For the ARM based WVD using the new 2020 Spring update
+
+Review this [documentation](https://docs.microsoft.com/en-us/azure/virtual-desktop/virtual-desktop-fall-2019/set-up-scaling-script) for deployment guidance.
