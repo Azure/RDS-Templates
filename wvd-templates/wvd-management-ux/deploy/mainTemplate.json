@@ -47,7 +47,7 @@
         "resourceURL": "https://mrs-prod.ame.gbl/mrs-RDInfra-prod",
         "webAPIAppName": "[concat(parameters('applicationName'),'-API')]",
         "hostingPlanName": "[concat(parameters('applicationName'),'-SPlan')]",
-        "serviceplansku": "S1",
+        "serviceplansku": "F1",
         "workerSize": "0",
         "sku": "Free",
         "webApiPackageURL": "[concat(parameters('_artifactsLocation'),'msft-wvd-saas-api.zip')]",
