@@ -26,7 +26,7 @@
     "variables": {
         "webAPIAppName": "[concat(parameters('existingApplicationName'),'-API')]",
         "hostingPlanName": "[concat(parameters('existingApplicationName'),'-SPlan')]",
-        "serviceplansku": "S1",
+        "serviceplansku": "F1",
         "workerSize": "0",
         "sku": "Free",
         "webApiPackageURL": "[concat(parameters('_artifactsLocation'),'msft-wvd-saas-api.zip')]",
