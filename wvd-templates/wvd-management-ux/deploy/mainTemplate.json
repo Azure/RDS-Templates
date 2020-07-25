@@ -28,7 +28,7 @@
             }
         },
         "_artifactsLocation": {
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/",
+            "defaultValue": "https://raw.githubusercontent.com/ravibak/RDS-Templates/master/wvd-templates/wvd-management-ux/deploy/",
             "type": "string",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
