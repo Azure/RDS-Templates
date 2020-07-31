@@ -9,5 +9,7 @@ Click the button below to deploy:
 
 # ARM Template to Add sessionhosts to an existing Windows Virtual Desktop hostpool
 
+This ARM template only supports Azure Resource Manager Windows Virtual Desktop objects, and does not support Windows Virtual Desktop (classic). Link to the v1 readme [here](https://github.com/Azure/RDS-Templates/tree/master/wvd-templates/Update%20existing%20WVD%20host%20pool)
+
 > **Reporting issues:**
 > Microsoft Support is not handling issues for any published tools in this repository. These tools are published as is with no implied support. However, we would like to welcome you to open issues using GitHub issues to collaborate and improve these tools. You can open [an issue](https://github.com/Azure/rds-templates/issues) and add the label **2-Update-existing-WVD-host-pool-arm** to associate it with this tool.
