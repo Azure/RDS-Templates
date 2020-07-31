@@ -7,14 +7,14 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/test_wvd_springUpdate_template/spring20-wvd-templates/nestedtemplates/"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/nestedtemplates/"
         },
         "artifactsLocation": {
             "type": "string",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/test_wvd_springUpdate_template/spring20-wvd-templates/DSC/Configuration.zip"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
         },
         "subscription": {
             "type": "string",

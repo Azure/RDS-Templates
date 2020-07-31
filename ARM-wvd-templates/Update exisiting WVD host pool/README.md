@@ -1,9 +1,9 @@
 Click the button below to deploy:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2FARM-wvd-templates%2FUpdate%20existing%20WVD%20host%20pool%2FmainTemplate.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2FARM-wvd-templates%2FUpdate%20existing%20WVD%20host%20pool%2FAddVirtualMachinesTemplate.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2FARM-wvd-templates%2FUpdate%20existing%20WVD%20host%20pool%2FmainTemplate.json" target="_blank">
+<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2FARM-wvd-templates%2FUpdate%20existing%20WVD%20host%20pool%2FAddVirtualMachinesTemplate.json" target="_blank">
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
 
@@ -19,7 +19,7 @@ This template will remove or stop the old instance of Windows Virtual Desktop Ho
 Follow the guidance below for entering the appropriate parameters for your scenario.
 
 > **Reporting issues:**
-> Microsoft Support is not handling issues for any published tools in this repository. These tools are published as is with no implied support. However, we would like to welcome you to open issues using GitHub issues to collaborate and improve these tools. You can open [an issue](https://github.com/Azure/rds-templates/issues) and add the label **2-Update-existing-WVD-host-pool** to associate it with this tool.
+> Microsoft Support is not handling issues for any published tools in this repository. These tools are published as is with no implied support. However, we would like to welcome you to open issues using GitHub issues to collaborate and improve these tools. You can open [an issue](https://github.com/Azure/rds-templates/issues) and add the label **2-Update-existing-WVD-host-pool-arm** to associate it with this tool.
 
 ## VM image
 When creating the new virtual machines, you have three options:
@@ -108,5 +108,3 @@ When updating a host pool, you can choose how to notify users who are currently 
 - **ActionOnPreviousVirtualMachines**. Select **Delete** or **Deallocate**. If **Delete** is selected, the previous session host VMs will be deleted, along with the associated network interfaces and OS disk. If **Deallocate** is selected, Azure VMs (hosts) will be removed from hostpool and simply de-allocated in Azure, allowing you to preserve or connect to them later.
 - **UserLogoffDelayInMinutes**. The delay before users are automatically logged off from existing sessions in the host pool.
 - **UserNotificationMessage**. The message that will be sent to users with existing sessions before the logoff delay counter starts ticking. You can use this message to notify users to save their work or logoff themselves, before they will be logged off automatically. 
-
-[![Deploy](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fstaging%2Fwvd-templates%2FUpdate%20existing%20WVD%20host%20pool%2FmainTemplate.json)

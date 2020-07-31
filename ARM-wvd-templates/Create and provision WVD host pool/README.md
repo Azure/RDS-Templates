@@ -1,9 +1,9 @@
 Click the button below to deploy:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2FARM-wvd-templates%2FCreate%20and%20provision%20WVD%20host%20pool%2FmainTemplate.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2FARM-wvd-templates%2FCreate%20and%20provision%20WVD%20host%20pool%2FCreateHostpoolTemplate.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2FARM-wvd-templates%2FCreate%20and%20provision%20WVD%20host%20pool%2FmainTemplate.json" target="_blank">
+<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FRDS-Templates%2Fmaster%2FARM-wvd-templates%2FCreate%20and%20provision%20WVD%20host%20pool%2FCreateHostpoolTemplate.json" target="_blank">
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
 
@@ -18,7 +18,7 @@ This template creates virtual machines and registers them as session hosts to a 
 Follow the guidance below for entering the appropriate parameters for your scenario.
 
 > **Reporting issues:**
-> Microsoft Support is not handling issues for any published tools in this repository. These tools are published as is with no implied support. However, we would like to welcome you to open issues using GitHub issues to collaborate and improve these tools. You can open [an issue](https://github.com/Azure/rds-templates/issues) and add the label **1-Create-and-provision-host-pool** to associate it with this tool.
+> Microsoft Support is not handling issues for any published tools in this repository. These tools are published as is with no implied support. However, we would like to welcome you to open issues using GitHub issues to collaborate and improve these tools. You can open [an issue](https://github.com/Azure/rds-templates/issues) and add the label **1-Create-and-provision-host-pool-arm** to associate it with this tool.
 
 ## VM image
 When creating the virtual machines, you have three options:
