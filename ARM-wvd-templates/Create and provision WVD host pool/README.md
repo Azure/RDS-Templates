@@ -13,7 +13,6 @@ This template creates virtual machines and registers them as session hosts to a 
 - VM image
 - VM configuration
 - Domain and network properties
-- Authentication to Windows Virtual Desktop
 
 Follow the guidance below for entering the appropriate parameters for your scenario.
 
@@ -91,22 +90,3 @@ Enter the following properties to connect the virtual machines to the appropriat
 The following property will change the default template behavior from setting up a non-persistent environment to persistent if changed to True.
 
 - **Enable Persistent Desktop**. Default value is False, change to True to create the host pool with persistent desktops.
-
-## Authentication to Windows Virtual Desktop
-Enter the following information to authenticate to Windows Virtual Desktop and register the new virtual machines as session hosts to a new or existing host pool.
-
-- **Rd Broker URL**
-- **Existing Tenant Group Name**. If you were not given a specific tenant group name, leave this value as "Default Tenant Group".
-- **Existing Tenant Name**
-- **Host Pool Name**
-- **Tenant Admin Upn or Application Id**. If you are creating a new host pool, this principal must be assigned either the *RDS Owner* or *RDS Contributor* role at the tenant scope (or higher). If you are registering these virtual machines to an existing host pool, this principal must be assigned either the *RDS Owner* or *RDS Contributor* role at the host pool scope (or higher).
-  
-  > [!WARNING]
-  You cannot enter a UPN that requires MFA to successfully authenticate. If you do, this template will create the virtual machines but fail to register them to a host pool.
-
-- **Tenant Admin Password**
-- **Is Service Principal**. If you select **True** for **Is Service Principal**, enter your Azure AD tenant ID for the **Aad Tenant Id** parameter to properly identify the directory of your service principal and successfully authenticate to Windows Virtual Desktop. Otherwise, leave the **Aad Tenant Id** parameter empty.
-
-### Default Desktop users
-If you want to assign default users to the "Desktop Application Group", please use the following parameter and provide a comma separated list of users you would like to assign to access the desktop for this host pool. Example: user1@contoso.com,user2@contoso.com,user3@contoso.com.
-- **defaultDesktopUsers**. Make sure you don't use spaces between the commas so it will not interfere with any tool you may be using to deploy this template.
