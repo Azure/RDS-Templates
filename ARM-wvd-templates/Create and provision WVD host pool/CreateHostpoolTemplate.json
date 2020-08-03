@@ -426,6 +426,13 @@
       },
       "defaultValue": false
     },
+    "preferredAppGroupType": {
+      "type": "string",
+      "metadata": {
+        "description": "Preferred App Group type to display"
+      },
+      "defaultValue": "Desktop"
+    },
     "ouPath": {
       "type": "string",
       "metadata": {
@@ -486,6 +493,7 @@
         "maxSessionLimit": "[parameters('maxSessionLimit')]",
         "loadBalancerType": "[parameters('loadBalancerType')]",
         "validationEnvironment": "[parameters('validationEnvironment')]",
+        "preferredAppGroupType": "[parameters('preferredAppGroupType')]",
         "ring": null,
         "registrationInfo": {
           "expirationTime": "[parameters('tokenExpirationTime')]",
