@@ -9,7 +9,7 @@ Click the button below to deploy:
 
 # ARM Template to Create and provision new Windows Virtual Desktop hostpool
 
-This ARM template only supports Azure Resource Manager Windows Virtual Desktop objects, and does not support Windows Virtual Desktop (classic). Link to the v1 readme [here](https://github.com/Azure/RDS-Templates/tree/master/wvd-templates/CreateAndProvisionHostPool)
+This ARM template only supports Azure Resource Manager Windows Virtual Desktop objects, and does not support Windows Virtual Desktop (classic). Information on ARM Templates for Windows Virtual Desktop (classic) is [here](https://docs.microsoft.com/en-us/azure/virtual-desktop/virtual-desktop-fall-2019/create-host-pools-arm-template).
 
 This template creates virtual machines and registers them as session hosts to a new or existing Windows Virtual Desktop host pool. There are multiple sets of parameters you must enter to successfully deploy the template:
 - VM image
