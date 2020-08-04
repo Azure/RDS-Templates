@@ -9,6 +9,7 @@ Common functions to be used by DSC scripts
 # Setting to Tls12 due to Azure web app security requirements
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+<# [CalledByARMTemplate] #>
 function Write-Log {
     [CmdletBinding()]
     param
@@ -124,6 +125,7 @@ function ExtractDeploymentAgentZipFile {
     Expand-Archive $DeployAgentFromRepo -DestinationPath "$DeployAgentLocation"
 }
 
+<# [CalledByARMTemplate] #>
 function isRdshServer {
     $rdshIsServer = $true
 
@@ -339,6 +341,7 @@ function IsRDAgentRegistryValidForRegistration {
     }
 }
 
+<# [CalledByARMTemplate] indirectly because this is called by InstallRDAgents #>
 function RunMsiWithRetry {
     param(
         [Parameter(mandatory = $true)]
@@ -408,6 +411,8 @@ Required path to MSI installer file
 
 .PARAMETER AgentBootServiceInstallerFolder
 Required path to MSI installer file
+
+[CalledByARMTemplate]
 #>
 function InstallRDAgents {
     Param(
