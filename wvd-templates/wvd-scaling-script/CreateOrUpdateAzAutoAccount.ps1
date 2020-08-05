@@ -47,7 +47,7 @@ if (!$UseRDSAPI) {
 }
 
 # Set the ExecutionPolicy if not being ran in CloudShell as this command fails in CloudShell
-if (-not ($env:POWERSHELL_DISTRIBUTION_CHANNEL -eq 'CloudShell') {
+if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -ne 'CloudShell') {
 	Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
 }
 
