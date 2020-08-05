@@ -99,8 +99,10 @@ if (!$HostPoolResourceGroupName) {
 	$HostPoolResourceGroupName = $ResourceGroupName
 }
 
-# Set the ExecutionPolicy
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
+# Set the ExecutionPolicy if not being ran in CloudShell as this command fails in CloudShell
+if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -ne 'CloudShell') {
+	Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force -Confirm:$false
+}
 
 # Import Az and AzureAD modules
 Import-Module Az.LogicApp
