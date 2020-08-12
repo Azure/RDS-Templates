@@ -1,0 +1,79 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Workspace name"
+      }
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-03-15-preview",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[parameters('workspaceName')]",
+      "location": "[resourceGroup().location]",
+      "resources": [
+        {
+          "apiVersion": "2015-11-01-preview",
+          "type": "datasources",
+          "name": "sampleWindowsEvent1",
+          "dependsOn": [
+            "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+          ],
+          "kind": "WindowsEvent",
+          "properties": {
+            "eventLogName": "Application",
+            "eventTypes": [
+              {
+                "eventType": "Error"
+              },
+              {
+                "eventType": "Warning"
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "2015-11-01-preview",
+          "type": "datasources",
+          "name": "sampleWindowsPerfCounter1",
+          "dependsOn": [
+            "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "Memory",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Available MBytes"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "workspaceName": {
+      "type": "string",
+      "value": "[parameters('workspaceName')]"
+    },
+    "provisioningState": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2015-11-01-preview').provisioningState]"
+    },
+    "source": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2015-11-01-preview').source]"
+    },
+    "customerId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2015-11-01-preview').customerId]"
+    },
+    "sku": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2015-11-01-preview').sku.name]"
+    }
+  }
+}
