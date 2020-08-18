@@ -56,18 +56,6 @@
             },
             "defaultValue": ""
         },
-        "administratorAccountUsername": {
-            "type": "string",
-            "metadata": {
-                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'user1@contoso.com'."
-            }
-        },
-        "administratorAccountPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The password that corresponds to the existing domain username."
-            }
-        },
         "createAvailabilitySet": {
             "type": "bool",
             "metadata": {
@@ -306,27 +294,12 @@
                 "description": "WVD api version"
             },
             "defaultValue": "2019-12-10-preview"
-        },
-        "ouPath": {
-            "type": "string",
-            "metadata": {
-                "description": "OUPath for the domain join"
-            },
-            "defaultValue": ""
-        },
-        "domain": {
-            "type": "string",
-            "metadata": {
-                "description": "Domain to join"
-            },
-            "defaultValue": ""
         }
     },
     "variables": {
         "rdshManagedDisks": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmUseManagedDisks'), bool('true'))]",
         "rdshPrefix": "[concat(parameters('vmNamePrefix'),'-')]",
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
-        "existingDomainUsername": "[first(split(parameters('administratorAccountUsername'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "hostpoolName": "[replace(parameters('hostpoolName'),'\"','')]",
@@ -450,10 +423,10 @@
                         "value": false
                     },
                     "administratorAccountUsername": {
-                        "value": "[parameters('administratorAccountUsername')]"
+                        "value": "not_used"
                     },
                     "administratorAccountPassword": {
-                        "value": "[parameters('administratorAccountPassword')]"
+                        "value": "not_used"
                     },
                     "subnet-id": {
                         "value": "[variables('subnet-id')]"
@@ -510,10 +483,10 @@
                         "value": "[parameters('hostpoolToken')]"
                     },
                     "domain": {
-                        "value": "[parameters('domain')]"
+                        "value": "not_used"
                     },
                     "ouPath": {
-                        "value": "[parameters('ouPath')]"
+                        "value": "not_used"
                     },
                     "_guidValue": {
                         "value": "[parameters('deploymentId')]"
