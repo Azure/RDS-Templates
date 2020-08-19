@@ -56,6 +56,18 @@
             },
             "defaultValue": ""
         },
+        "administratorAccountUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'user1@contoso.com'."
+            }
+        },
+        "administratorAccountPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password that corresponds to the existing domain username."
+            }
+        },
         "createAvailabilitySet": {
             "type": "bool",
             "metadata": {
@@ -300,6 +312,7 @@
         "rdshManagedDisks": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmUseManagedDisks'), bool('true'))]",
         "rdshPrefix": "[concat(parameters('vmNamePrefix'),'-')]",
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
+        "existingDomainUsername": "[first(split(parameters('administratorAccountUsername'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "hostpoolName": "[replace(parameters('hostpoolName'),'\"','')]",
@@ -423,10 +436,10 @@
                         "value": false
                     },
                     "administratorAccountUsername": {
-                        "value": "not_used"
+                        "value": "[parameters('administratorAccountUsername')]"
                     },
                     "administratorAccountPassword": {
-                        "value": "not_used"
+                        "value": "[parameters('administratorAccountPassword')]"
                     },
                     "subnet-id": {
                         "value": "[variables('subnet-id')]"
