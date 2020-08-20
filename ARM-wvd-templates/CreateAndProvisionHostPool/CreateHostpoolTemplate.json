@@ -16,18 +16,6 @@
       },
       "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
     },
-    "subscription": {
-      "type": "string",
-      "metadata": {
-        "description": "The subscription Id."
-      }
-    },
-    "resourceGroup": {
-      "type": "string",
-      "metadata": {
-        "description": "The resource group Name"
-      }
-    },
     "hostpoolName": {
       "type": "string",
       "metadata": {
@@ -456,7 +444,6 @@
     "existingDomainUsername": "[first(split(parameters('administratorAccountUsername'), '@'))]",
     "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
     "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
-    "resourceGroup": "[replace(parameters('resourceGroup'),'\"','')]",
     "hostpoolName": "[replace(parameters('hostpoolName'),'\"','')]",
     "hostpoolFriendlyName": "[parameters('hostpoolFriendlyName')]",
     "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('vmImageType'),' ', '')), 'vm')]",
@@ -474,7 +461,7 @@
     },
     "appGroupName": "[concat(variables('hostpoolName'),'-DAG')]",
     "appGroupResourceId": "[createArray(resourceId('Microsoft.DesktopVirtualization/applicationgroups/', variables('appGroupName')))]",
-    "workspaceResourceGroup": "[if(empty(parameters('workspaceResourceGroup')), parameters('resourceGroup'), parameters('workspaceResourceGroup'))]",
+    "workspaceResourceGroup": "[if(empty(parameters('workspaceResourceGroup')), resourceGroup().name, parameters('workspaceResourceGroup'))]",
     "applicationGroupReferencesArr": "[if(equals('',parameters('allApplicationGroupReferences')), variables('appGroupResourceId'), concat(split(parameters('allApplicationGroupReferences'),','), variables('appGroupResourceId')))]"
   },
   "resources": [
