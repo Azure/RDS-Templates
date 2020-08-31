@@ -23,41 +23,326 @@
       "name": "[parameters('workspaceName')]",
       "location": "[parameters('location')]",
       "resources": [
-        {
-          "apiVersion": "2015-11-01-preview",
-          "type": "datasources",
-          "name": "sampleWindowsEvent1",
-          "dependsOn": [
-            "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
-          ],
-          "kind": "WindowsEvent",
-          "properties": {
-            "eventLogName": "Application",
-            "eventTypes": [
-              {
-                "eventType": "Error"
-              },
-              {
-                "eventType": "Warning"
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "sampleWindowsEvent1",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsEvent",
+              "properties": {
+                      "eventLogName": "Application",
+                      "eventTypes": [
+                      {
+                              "eventType": "Error"
+                      },
+                      {
+                              "eventType": "Warning"
+                      }
+                      ]
               }
-            ]
-          }
-        },
-        {
-          "apiVersion": "2015-11-01-preview",
-          "type": "datasources",
-          "name": "sampleWindowsPerfCounter1",
-          "dependsOn": [
-            "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
-          ],
-          "kind": "WindowsPerformanceCounter",
-          "properties": {
-            "objectName": "Memory",
-            "instanceName": "*",
-            "intervalSeconds": 10,
-            "counterName": "Available MBytes"
-          }
-        }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Logical Disk",
+                      "instanceName": "C:",
+                      "intervalSeconds": 60,
+                      "counterName": "% Free Space"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Logical Disk",
+                      "instanceName": "C:",
+                      "intervalSeconds": 30,
+                      "counterName": "Avg. Disk Queue Length"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Logical Disk",
+                      "instanceName": "C:",
+                      "intervalSeconds": 60,
+                      "counterName": "Avg. Disk sec/Transfer"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Logical Disk",
+                      "instanceName": "C:",
+                      "intervalSeconds": 30,
+                      "counterName": "Current Disk Queue Length"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Memory",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Available Mbytes"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Memory",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Page Faults/sec"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Memory",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Pages/sec"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "PhysicalDisk",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Avg. Disk Queue Length"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "PhysicalDisk",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Avg. Disk sec/Read"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "PhysicalDisk",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Avg. Disk sec/Transfer"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "PhysicalDisk",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Avg. Disk sec/Write"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcouner0",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Process",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "% User Time"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcouner1",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Process",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Thread Count"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcouner2",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Process",
+                      "instanceName": "*",
+                      "intervalSeconds": 20,
+                      "counterName": "% Processor Time"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcouner3",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Processor Information",
+                      "instanceName": "_Total",
+                      "intervalSeconds": 30,
+                      "counterName": "% Processor Time"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcouner4",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Terminal Services",
+                      "instanceName": "*",
+                      "intervalSeconds": 60,
+                      "counterName": "Active Sessions"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcouner5",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Terminal Services",
+                      "instanceName": "*",
+                      "intervalSeconds": 60,
+                      "counterName": "Inactive Sessions"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcouner6",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Terminal Services",
+                      "instanceName": "*",
+                      "intervalSeconds": 60,
+                      "counterName": "Total Sessions"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcouner7",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "User Input Delay per Process",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Max Input Delay"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcouner8",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "User Input Delay per Session",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Max Input Delay"
+              }
+      }
       ]
     }
   ],
