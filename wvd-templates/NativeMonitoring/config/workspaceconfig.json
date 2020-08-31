@@ -46,7 +46,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner1",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -61,7 +61,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner2",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -76,7 +76,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner3",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -91,7 +91,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner4",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -106,7 +106,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner5",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -121,7 +121,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner6",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -136,7 +136,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner7",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -151,7 +151,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner8",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -166,7 +166,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner9",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -181,7 +181,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner10",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -196,7 +196,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "0",
+              "name": "perfcouner11",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -211,7 +211,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcouner0",
+              "name": "perfcouner12",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -226,7 +226,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcouner1",
+              "name": "perfcouner13",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -241,7 +241,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcouner2",
+              "name": "perfcouner14",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -256,7 +256,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcouner3",
+              "name": "perfcouner15",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -271,7 +271,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcouner4",
+              "name": "perfcouner16",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -286,7 +286,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcouner5",
+              "name": "perfcouner17",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -301,7 +301,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcouner6",
+              "name": "perfcouner18",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -316,7 +316,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcouner7",
+              "name": "perfcouner19",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -331,7 +331,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcouner8",
+              "name": "perfcouner20",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
