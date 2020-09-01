@@ -28,7 +28,7 @@
                 "resources": [
                 {
                         "apiVersion": "2018-10-01",
-                        "type": "extensions",
+                        "type": "Microsoft.Compute/virtualMachines/extensions",
                         "name": "[concat(parameters('virtualMachines')[copyIndex()],'/', 'OMSExtension')]",
                         "location": "[parameters('location')]",
                         "copy": {
