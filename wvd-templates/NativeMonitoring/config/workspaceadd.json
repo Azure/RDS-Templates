@@ -2,7 +2,7 @@
         "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
                 "contentVersion": "1.0.0.0",
                 "parameters": {
-                        "workspaceName": {
+                        "workspaceId": {
                                 "type": "string",
                                 "metadata": {
                                         "description": "Workspace name"
@@ -29,11 +29,8 @@
                 {
                         "apiVersion": "2018-10-01",
                         "type": "extensions",
-                        "name": "[concat(parameters('virtualMachines')[copyIndex()], 'OMSExtension')]",
+                        "name": "[concat(parameters('virtualMachines')[copyIndex()],'/', 'OMSExtension')]",
                         "location": "[parameters('location')]",
-                        "dependsOn": [
-                                "[concat('Microsoft.Compute/virtualMachines/',parameters('virtualMachines')[copyIndex()])]"
-                        ],
                         "copy": {
                                 "name": "vmextensioncopy",
                                 "count": "[length(parameters('virtualMachines'))]"
