@@ -69,14 +69,6 @@ configuration AddSessionHost
 
                 }
             }
-
-            Registry RDAgentAADJPrivateConfig {
-                DependsOn = "[Script]ExecuteRdAgentInstallServer"
-                Ensure    = 'Present'
-                Key       = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent\AADJPrivate'
-                ValueName = ''
-                Force     = $true
-            }
         }
         else
         {
@@ -113,14 +105,14 @@ configuration AddSessionHost
 
                 }
             }
+        }
 
-            Registry RDAgentAADJPrivateConfig {
-                DependsOn = "[Script]ExecuteRdAgentInstallClient"
-                Ensure    = 'Present'
-                Key       = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent\AADJPrivate'
-                ValueName = ''
-                Force     = $true
-            }
+        Registry RDAgentAADJPrivateConfig {
+            DependsOn = "[Script]ExecuteRdAgentInstall$(if ($rdshIsServer) { 'Server' } else { 'Client' })"
+            Ensure    = 'Present'
+            Key       = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent\AADJPrivate'
+            ValueName = ''
+            Force     = $true
         }
     }
 }
