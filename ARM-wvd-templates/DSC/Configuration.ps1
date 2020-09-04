@@ -69,6 +69,50 @@ configuration AddSessionHost
 
                 }
             }
+
+            Registry RDAgentAADJPrivateConfig {
+                DependsOn = "[Script]ExecuteRdAgentInstallServer"
+                Ensure    = 'Present'
+                Key       = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent\AADJPrivate'
+                ValueName = ''
+                Force     = $true
+            }
+
+            <#
+            Script AADJPrivateConfig
+            {
+                DependsOn = "[Script]ExecuteRdAgentInstallServer"
+                GetScript = {
+                    return @{'Result' = ''}
+                }
+                SetScript = {
+                    . (Join-Path $using:ScriptPath "Functions.ps1")
+
+                    try {
+                        New-Item path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent\AADJPrivate"
+                    }
+                    catch {
+                        $ErrMsg = $PSItem | Format-List -Force | Out-String
+                        Write-Log -Err $ErrMsg
+                        throw [System.Exception]::new("Some error occurred in DSC AADJPrivateConfig SetScript: $ErrMsg", $PSItem.Exception)
+                    }
+
+                }
+                TestScript = {
+                    . (Join-Path $using:ScriptPath "Functions.ps1")
+                    
+                    try {
+                        return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent\AADJPrivate")
+                    }
+                    catch {
+                        $ErrMsg = $PSItem | Format-List -Force | Out-String
+                        Write-Log -Err $ErrMsg
+                        throw [System.Exception]::new("Some error occurred in DSC AADJPrivateConfig TestScript: $ErrMsg", $PSItem.Exception)
+                    }
+
+                }
+            }
+            #>
         }
         else
         {
@@ -104,6 +148,14 @@ configuration AddSessionHost
                     }
 
                 }
+            }
+
+            Registry RDAgentAADJPrivateConfig {
+                DependsOn = "[Script]ExecuteRdAgentInstallClient"
+                Ensure    = 'Present'
+                Key       = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent\AADJPrivate'
+                ValueName = ''
+                Force     = $true
             }
         }
     }
