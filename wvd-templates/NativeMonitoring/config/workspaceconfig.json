@@ -342,7 +342,26 @@
                       "intervalSeconds": 30,
                       "counterName": "Max Input Delay"
               }
-      }
+      },
+        {
+          "type": "datasources",
+          "apiVersion": "2020-08-01",
+          "name": "WindowsEventsApplication",
+          "dependsOn": [
+            "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+          ],
+          "kind": "WindowsEvent",
+          "properties": {
+            "eventLogName": "Application",
+            "eventTypes": [
+              {
+                "eventType": "Error"
+              },
+              {
+                "eventType": "Warning"
+              }            ]
+          }
+        }
       ]
     }
   ],
