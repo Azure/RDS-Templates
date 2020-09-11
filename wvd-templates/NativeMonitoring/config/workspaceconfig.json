@@ -52,7 +52,7 @@
               ],
               "kind": "WindowsPerformanceCounter",
               "properties": {
-                      "objectName": "Logical Disk",
+                      "objectName": "LogicalDisk",
                       "instanceName": "C:",
                       "intervalSeconds": 60,
                       "counterName": "% Free Space"
@@ -67,7 +67,7 @@
               ],
               "kind": "WindowsPerformanceCounter",
               "properties": {
-                      "objectName": "Logical Disk",
+                      "objectName": "LogicalDisk",
                       "instanceName": "C:",
                       "intervalSeconds": 30,
                       "counterName": "Avg. Disk Queue Length"
@@ -82,7 +82,7 @@
               ],
               "kind": "WindowsPerformanceCounter",
               "properties": {
-                      "objectName": "Logical Disk",
+                      "objectName": "LogicalDisk",
                       "instanceName": "C:",
                       "intervalSeconds": 60,
                       "counterName": "Avg. Disk sec/Transfer"
@@ -97,7 +97,7 @@
               ],
               "kind": "WindowsPerformanceCounter",
               "properties": {
-                      "objectName": "Logical Disk",
+                      "objectName": "LogicalDisk",
                       "instanceName": "C:",
                       "intervalSeconds": 30,
                       "counterName": "Current Disk Queue Length"
