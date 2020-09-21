@@ -292,10 +292,10 @@
               ],
               "kind": "WindowsPerformanceCounter",
               "properties": {
-                      "objectName": "Processor Information",
-                      "instanceName": "_Total",
+                      "objectName": "Process",
+                      "instanceName": "*",
                       "intervalSeconds": 30,
-                      "counterName": "% Processor Time"
+                      "counterName": "IO Read Operations/sec"
               }
       },
       {
@@ -307,10 +307,10 @@
               ],
               "kind": "WindowsPerformanceCounter",
               "properties": {
-                      "objectName": "Terminal Services",
-                      "instanceName": "*",
-                      "intervalSeconds": 60,
-                      "counterName": "Active Sessions"
+                      "objectName": "Processor Information",
+                      "instanceName": "_Total",
+                      "intervalSeconds": 30,
+                      "counterName": "% Processor Time"
               }
       },
       {
@@ -325,7 +325,7 @@
                       "objectName": "Terminal Services",
                       "instanceName": "*",
                       "intervalSeconds": 60,
-                      "counterName": "Inactive Sessions"
+                      "counterName": "Active Sessions"
               }
       },
       {
@@ -340,13 +340,28 @@
                       "objectName": "Terminal Services",
                       "instanceName": "*",
                       "intervalSeconds": 60,
-                      "counterName": "Total Sessions"
+                      "counterName": "Inactive Sessions"
               }
       },
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
               "name": "perfcounter21",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Terminal Services",
+                      "instanceName": "*",
+                      "intervalSeconds": 60,
+                      "counterName": "Total Sessions"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcounter22",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -361,7 +376,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter22",
+              "name": "perfcounter23",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -376,7 +391,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter23",
+              "name": "perfcounter24",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -391,7 +406,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter24",
+              "name": "perfcounter25",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
