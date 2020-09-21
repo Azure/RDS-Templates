@@ -157,10 +157,10 @@
               ],
               "kind": "WindowsPerformanceCounter",
               "properties": {
-                      "objectName": "PhysicalDisk",
+                      "objectName": "Memory",
                       "instanceName": "*",
                       "intervalSeconds": 30,
-                      "counterName": "Avg. Disk Queue Length"
+                      "counterName": "% Committed Bytes In Use"
               }
       },
       {
@@ -175,7 +175,7 @@
                       "objectName": "PhysicalDisk",
                       "instanceName": "*",
                       "intervalSeconds": 30,
-                      "counterName": "Avg. Disk sec/Read"
+                      "counterName": "Avg. Disk Queue Length"
               }
       },
       {
@@ -190,7 +190,7 @@
                       "objectName": "PhysicalDisk",
                       "instanceName": "*",
                       "intervalSeconds": 30,
-                      "counterName": "Avg. Disk sec/Transfer"
+                      "counterName": "Avg. Disk sec/Read"
               }
       },
       {
@@ -205,7 +205,7 @@
                       "objectName": "PhysicalDisk",
                       "instanceName": "*",
                       "intervalSeconds": 30,
-                      "counterName": "Avg. Disk sec/Write"
+                      "counterName": "Avg. Disk sec/Transfer"
               }
       },
       {
@@ -217,10 +217,10 @@
               ],
               "kind": "WindowsPerformanceCounter",
               "properties": {
-                      "objectName": "Process",
+                      "objectName": "PhysicalDisk",
                       "instanceName": "*",
                       "intervalSeconds": 30,
-                      "counterName": "% User Time"
+                      "counterName": "Avg. Disk sec/Write"
               }
       },
       {
@@ -235,13 +235,28 @@
                       "objectName": "Process",
                       "instanceName": "*",
                       "intervalSeconds": 30,
-                      "counterName": "Thread Count"
+                      "counterName": "% User Time"
               }
       },
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
               "name": "perfcounter14",
+              "dependsOn": [
+                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
+              ],
+              "kind": "WindowsPerformanceCounter",
+              "properties": {
+                      "objectName": "Process",
+                      "instanceName": "*",
+                      "intervalSeconds": 30,
+                      "counterName": "Thread Count"
+              }
+      },
+      {
+              "apiVersion": "2015-11-01-preview",
+              "type": "datasources",
+              "name": "perfcounter15",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -256,7 +271,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter15",
+              "name": "perfcounter16",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -271,7 +286,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter16",
+              "name": "perfcounter17",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -286,7 +301,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter17",
+              "name": "perfcounter18",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -301,7 +316,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter18",
+              "name": "perfcounter19",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -316,7 +331,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter19",
+              "name": "perfcounter20",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -331,7 +346,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter20",
+              "name": "perfcounter21",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -346,7 +361,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter21",
+              "name": "perfcounter22",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -361,7 +376,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter22",
+              "name": "perfcounter23",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
@@ -376,7 +391,7 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "perfcounter23",
+              "name": "perfcounter24",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
               ],
