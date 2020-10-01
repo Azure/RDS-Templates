@@ -283,6 +283,7 @@ try {
 			try {
 				Write-Log "Force log off user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
 				if ($PSCmdlet.ShouldProcess($SessionID, 'Force log off user with session ID')) {
+					# Note: -SessionHostName param is case sensitive, so the command will fail if it's case is modified
 					Remove-AzWvdUserSession -ResourceGroupName $ResourceGroupName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -Id $SessionID -Force
 				}
 			}
@@ -713,6 +714,7 @@ try {
 			[array]$VM.UserSessions = @()
 			Write-Log "Get all user sessions from session host '$SessionHostName'"
 			try {
+				# Note: Get-AzWvdUserSession roundtrips the input param SessionHostName and its case, so if lower case is specified, command will return lower case as well
 				$VM.UserSessions = @(Get-AzWvdUserSession -ResourceGroupName $ResourceGroupName -HostPoolName $HostPoolName -SessionHostName $SessionHostName)
 			}
 			catch {
@@ -728,6 +730,7 @@ try {
 				try {
 					Write-Log "Send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
 					if ($PSCmdlet.ShouldProcess($SessionID, 'Send a log off message to user with session ID')) {
+						# Note: -SessionHostName param is case sensitive, so the command will fail if it's case is modified
 						Send-AzWvdUserSessionMessage -ResourceGroupName $ResourceGroupName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -UserSessionId $SessionID -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds"
 					}
 				}
