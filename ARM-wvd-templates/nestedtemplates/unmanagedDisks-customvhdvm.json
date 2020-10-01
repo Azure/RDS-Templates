@@ -385,7 +385,10 @@
                 "publisher": "Microsoft.Azure.ActiveDirectory",
                 "type": "AADLoginForWindows",
                 "typeHandlerVersion": "0.3",
-                "autoUpgradeMinorVersion": true
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "mdmId": "0000000a-0000-0000-c000-000000000000"
+                }
             }
         },
         {
