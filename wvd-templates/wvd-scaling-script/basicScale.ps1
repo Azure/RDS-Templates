@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.35
+	v0.1.37
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.35'
+	[version]$Version = '0.1.37'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -512,10 +512,10 @@ try {
 	# Number of user sessions reported by each session host that is running, is in desired state and allowing new sessions
 	[int]$nUserSessionsFromAllRunningVMs = 0
 
-	# Popoluate all session hosts objects
+	# Populate all session hosts objects
 	foreach ($SessionHost in $SessionHosts) {
-		[string]$SessionHostName = (Get-SessionHostName -SessionHost $SessionHost).ToLower()
-		$VMs.Add($SessionHostName.Split('.')[0], @{ 'SessionHostName' = $SessionHostName; 'SessionHost' = $SessionHost; 'Instance' = $null })
+		[string]$SessionHostName = Get-SessionHostName -SessionHost $SessionHost
+		$VMs.Add($SessionHostName.Split('.')[0].ToLower(), @{ 'SessionHostName' = $SessionHostName; 'SessionHost' = $SessionHost; 'Instance' = $null })
 	}
 	
 	Write-Log 'Get all VMs, check session host status and get usage info'
@@ -548,7 +548,9 @@ try {
 		if (!$VMSizeCores.ContainsKey($VMInstance.HardwareProfile.VmSize)) {
 			Write-Log "Get all VM sizes in location: $($VMInstance.Location)"
 			foreach ($VMSize in (Get-AzVMSize -Location $VMInstance.Location)) {
-				$VMSizeCores.Add($VMSize.Name, $VMSize.NumberOfCores)
+				if (!$VMSizeCores.ContainsKey($VMSize.Name)) {
+					$VMSizeCores.Add($VMSize.Name, $VMSize.NumberOfCores)
+				}
 			}
 		}
 
