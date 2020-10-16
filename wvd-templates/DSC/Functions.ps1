@@ -364,10 +364,10 @@ function RunMsiWithRetry {
     $ErrorActionPreference = "Stop"
 
     if ($msiLogVerboseOutput) {
-        $argumentList += "/l*vx $msiOutputLogPath" 
+        $argumentList += "/l*vx+ ""$msiOutputLogPath""" 
     }
     else {
-        $argumentList += "/l* $msiOutputLogPath"
+        $argumentList += "/l*+ ""$msiOutputLogPath"""
     }
 
     $retryTimeToSleepInSec = 30
@@ -444,27 +444,31 @@ function InstallRDAgents {
         throw "No registration token specified"
     }
 
-    RunMsiWithRetry -programDisplayName "RDAgentBootLoader" -isUninstall -argumentList @("/x {A38EE409-424D-4A0D-B5B6-5D66F20F62A5}", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentBootLoaderUnInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
-
-    while ($true) {
-        try {
-            $oldAgent = Get-Package -ProviderName msi -Name "Remote Desktop Services Infrastructure Agent"
-        }
-        catch {
-            #Ignore the error if it was due to no packages being found.
-            if ($PSItem.FullyQualifiedErrorId -eq "NoMatchFound,Microsoft.PowerShell.PackageManagement.Cmdlets.GetPackage") {
-                break
+    $msiNamesToUninstall = @(
+        @{ msiName = "Remote Desktop Services Infrastructure Agent"; displayName = "RD Infra Agent"; logPath = "C:\Users\AgentUninstall.txt"}, 
+        @{ msiName = "Remote Desktop Agent Boot Loader"; displayName = "RDAgentBootLoader"; logPath = "C:\Users\AgentBootLoaderUnInstall.txt"}
+    )
+    
+    foreach($u in $msiNamesToUninstall) {
+        while ($true) {
+            try {
+                $installedMsi = Get-Package -ProviderName msi -Name $u.msiName
             }
-
-            throw;
+            catch {
+                #Ignore the error if it was due to no packages being found.
+                if ($PSItem.FullyQualifiedErrorId -eq "NoMatchFound,Microsoft.PowerShell.PackageManagement.Cmdlets.GetPackage") {
+                    break
+                }
+    
+                throw;
+            }
+    
+            $oldVersion = $installedMsi.Version
+            $productCodeParameter = $installedMsi.FastPackageReference
+    
+            RunMsiWithRetry -programDisplayName "$($u.displayName) $oldVersion" -isUninstall -argumentList @("/x $productCodeParameter", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath $u.logPath -msiLogVerboseOutput:$EnableVerboseMsiLogging
         }
-
-        $oldVersion = $oldAgent.Version
-        $productCodeParameter = $oldAgent.FastPackageReference
-
-        RunMsiWithRetry -programDisplayName "RD Infra Agent $oldVersion" -isUninstall -argumentList @("/x $productCodeParameter", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentUninstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
     }
-
 
     Write-Log -Message "Installing RD Infra Agent on VM $AgentInstaller"
     RunMsiWithRetry -programDisplayName "RD Infra Agent" -argumentList @("/i $AgentInstaller", "/quiet", "/qn", "/norestart", "/passive", "REGISTRATIONTOKEN=$RegistrationToken") -msiOutputLogPath "C:\Users\AgentInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
