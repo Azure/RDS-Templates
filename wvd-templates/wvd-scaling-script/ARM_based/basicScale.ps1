@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.37'
+	[version]$Version = '0.1.38'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -46,6 +46,7 @@ try {
 	}
 
 	[string[]]$RequiredStrParams = @(
+		'AZEnvironment'
 		'ResourceGroupName'
 		'HostPoolName'
 		'TimeDifference'
@@ -63,6 +64,7 @@ try {
 		throw "Invalid values for the following $($InvalidParams.Count) params: $($InvalidParams -join ', ')"
 	}
 	
+	[string]$AZEnvironment = Get-PSObjectPropVal -Obj $RqtParams -Key 'AZEnvironment'
 	[string]$LogAnalyticsWorkspaceId = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsWorkspaceId'
 	[string]$LogAnalyticsPrimaryKey = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsPrimaryKey'
 	[string]$ConnectionAssetName = Get-PSObjectPropVal -Obj $RqtParams -Key 'ConnectionAssetName'
@@ -356,7 +358,7 @@ try {
 		# Azure auth
 		$AzContext = $null
 		try {
-			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -ServicePrincipal
+			$AzAuth = Connect-AzAccount -Environment $AZEnvironment -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -ServicePrincipal
 			if (!$AzAuth -or !$AzAuth.Context) {
 				throw $AzAuth
 			}
