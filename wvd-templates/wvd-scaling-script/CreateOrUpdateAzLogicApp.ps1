@@ -11,6 +11,10 @@ param(
 	
 	[Parameter(mandatory = $false)]
 	[string]$SubscriptionId,
+
+	# AZEnvironment is for defining a sovereign cloud such as Azure for US Government.
+	[Parameter(Mandatory = $false)]
+	[string]$AZEnvironment,
 	
 	[switch]$UseARMAPI,
 
@@ -115,6 +119,10 @@ if (!$AzContext) {
 	throw 'No Azure context found. Please authenticate to Azure using Login-AzAccount cmdlet and then run this script'
 }
 
+If (!$AZEnvironment) {
+	$AZEnvironment = $AzContext.Environment
+}
+
 if (!$AADTenantId) {
 	$AADTenantId = $AzContext.Tenant.Id
 }
@@ -200,6 +208,7 @@ elseif ($SessionHostsList.Count -le $MinimumNumberOfRDSH) {
 	"ConnectionAssetName"           = $ConnectionAssetName
 	"AADTenantId"                   = $AADTenantId 		# Note: only used by the basicScale.ps1 v0.1.32 and before, so this is added for backwards compatibility
 	"SubscriptionId"                = $SubscriptionId 	# Note: only used by the basicScale.ps1 v0.1.32 and before, so this is added for backwards compatibility
+	"AZEnvironment"					= $AZEnvironment    # Note: for use with sovereign clouds (i.e., Azure Germany, Azure China, US Gov, etc)
 	"UseARMAPI"                     = $UseARMAPI
 	"ResourceGroupName"             = $HostPoolResourceGroupName
 	"HostPoolName"                  = $HostPoolName

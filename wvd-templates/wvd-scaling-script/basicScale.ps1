@@ -51,6 +51,7 @@ try {
 		'TimeDifference'
 		'BeginPeakTime'
 		'EndPeakTime'
+		'AZEnvironment'
 	)
 	if (Get-PSObjectPropVal -Obj $RqtParams -Key 'LimitSecondsToForceLogOffUser') {
 		$RequiredStrParams += @('LogOffMessageTitle', 'LogOffMessageBody')
@@ -62,7 +63,7 @@ try {
 	if ($InvalidParams) {
 		throw "Invalid values for the following $($InvalidParams.Count) params: $($InvalidParams -join ', ')"
 	}
-	
+	[string]$AZEnvironment = Get-PSObjectPropVal -Obj $RqtParams -Key 'AZEnvironment'
 	[string]$LogAnalyticsWorkspaceId = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsWorkspaceId'
 	[string]$LogAnalyticsPrimaryKey = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsPrimaryKey'
 	[string]$ConnectionAssetName = Get-PSObjectPropVal -Obj $RqtParams -Key 'ConnectionAssetName'
@@ -361,7 +362,7 @@ try {
 		# Azure auth
 		$AzContext = $null
 		try {
-			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -ServicePrincipal
+			$AzAuth = Connect-AzAccount -Environment $AZEnvironment -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -ServicePrincipal
 			if (!$AzAuth -or !$AzAuth.Context) {
 				throw $AzAuth
 			}
