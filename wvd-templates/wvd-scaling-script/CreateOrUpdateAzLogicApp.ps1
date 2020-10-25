@@ -171,7 +171,7 @@ if ($UseRDSAPI) {
 	$HostPoolInfo = Get-RdsHostPool -Name $HostPoolName -TenantName $TenantName
 }
 else {
-	$HostPoolInfo = Get-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $HostPoolResourceGroupName
+	$HostPoolInfo = Get-AzWvdHostPool -Name $HostPoolName -ResourceGroupName $HostPoolResourceGroupName -SubscriptionId $SubscriptionId
 }
 
 if ($HostPoolInfo.LoadBalancerType -eq "Persistent") {
@@ -183,7 +183,7 @@ if ($UseRDSAPI) {
 	$SessionHostsList = Get-RdsSessionHost -HostPoolName $HostPoolName -TenantName $TenantName
 }
 else {
-	$SessionHostsList = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $HostPoolResourceGroupName
+	$SessionHostsList = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $HostPoolResourceGroupName -SubscriptionId $SubscriptionId
 }
 
 #Check if the hostpool have session hosts and compare count with minimum number of rdsh value
