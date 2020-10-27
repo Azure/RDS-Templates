@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to execute scaling script in Microsoft Azure Automation Account.
-	v0.1.6
+	v0.1.7
 	# //todo refactor stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
 param(
@@ -280,7 +280,7 @@ function Send-LogAnalyticsData ($customerId, $sharedKey, $body, $logType) {
 	$rfc1123date = [datetime]::UtcNow.ToString("r")
 	$contentLength = $body.Length
 	$signature = New-Signature -customerId $customerId -sharedKey $sharedKey -Date $rfc1123date -contentLength $contentLength -Method $method -ContentType $contentType -resource $resource
-	$uri = "https://" + $customerId + ".ods.opinsights.azure.com" + $resource + "?api-version=2016-04-01"
+	$uri = "https://$($customerId).ods.opinsights.azure.$(if ($AzContext.Environment.Name -eq 'AzureUSGovernment') { 'us' } else { 'com' })$($resource)?api-version=2016-04-01"
 
 	$headers = @{
 		"Authorization"        = $signature;
