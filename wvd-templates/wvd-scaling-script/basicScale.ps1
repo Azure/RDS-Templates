@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.37
+	v0.1.38
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.37'
+	[version]$Version = '0.1.38'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -66,6 +66,7 @@ try {
 	[string]$LogAnalyticsWorkspaceId = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsWorkspaceId'
 	[string]$LogAnalyticsPrimaryKey = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsPrimaryKey'
 	[string]$ConnectionAssetName = Get-PSObjectPropVal -Obj $RqtParams -Key 'ConnectionAssetName'
+	[string]$EnvironmentName = Get-PSObjectPropVal -Obj $RqtParams -Key 'EnvironmentName'
 	[string]$RDBrokerURL = Get-PSObjectPropVal -Obj $RqtParams -Key 'RDBrokerURL'
 	[string]$TenantGroupName = Get-PSObjectPropVal -Obj $RqtParams -Key 'TenantGroupName'
 	[string]$TenantName = $RqtParams.TenantName
@@ -86,6 +87,9 @@ try {
 
 	if ([string]::IsNullOrWhiteSpace($ConnectionAssetName)) {
 		$ConnectionAssetName = 'AzureRunAsConnection'
+	}
+	if ([string]::IsNullOrWhiteSpace($EnvironmentName)) {
+		$EnvironmentName = 'AzureCloud'
 	}
 	if ([string]::IsNullOrWhiteSpace($RDBrokerURL)) {
 		$RDBrokerURL = 'https://rdbroker.wvd.microsoft.com'
@@ -150,7 +154,7 @@ try {
 			}
 			$json_body = ConvertTo-Json -Compress $body_obj
 			
-			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body $json_body -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp'
+			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body $json_body -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp' -EnvironmentName $EnvironmentName
 			if ($PostResult -ine 'Accepted') {
 				throw "Error posting to OMS: $PostResult"
 			}
@@ -361,7 +365,7 @@ try {
 		# Azure auth
 		$AzContext = $null
 		try {
-			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -ServicePrincipal
+			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -EnvironmentName $EnvironmentName -ServicePrincipal
 			if (!$AzAuth -or !$AzAuth.Context) {
 				throw $AzAuth
 			}
