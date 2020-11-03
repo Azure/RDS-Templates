@@ -1,4 +1,4 @@
-﻿
+
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to execute scaling script in Microsoft Azure Automation Account.
@@ -27,6 +27,12 @@ param(
 	[string]$WorkspaceName,
 
 	[Parameter(mandatory = $false)]
+    	[string]$RunbookName = "WVDAutoScaleRunbook",
+
+	[Parameter(mandatory = $false)]
+    	[string]$WebhookName = "WVDAutoScaleWebhook",
+
+	[Parameter(mandatory = $false)]
 	[string]$ArtifactsURI = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/wvd-scaling-script'
 )
 
@@ -36,10 +42,6 @@ $UseRDSAPI = !$UseARMAPI
 
 # Setting ErrorActionPreference to stop script execution when error occurs
 $ErrorActionPreference = "Stop"
-
-# Initializing variables
-[string]$RunbookName = "WVDAutoScaleRunbook"
-[string]$WebhookName = "WVDAutoScaleWebhook"
 
 if (!$UseRDSAPI) {
 	$RunbookName += 'ARMBased'
