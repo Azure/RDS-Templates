@@ -7,14 +7,14 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/nestedtemplates/"
+            "defaultValue": "https://catalogartifact.azureedge.net/publicartifacts/Microsoft.Hostpool-ARM-1.0.16-preview/"
         },
         "artifactsLocation": {
             "type": "string",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
+            "defaultValue": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration.zip"
         },
         "hostpoolName": {
             "type": "string",
@@ -201,35 +201,6 @@
                 "description": "The resource group containing the existing virtual network."
             }
         },
-        "usePublicIP": {
-            "type": "bool",
-            "metadata": {
-                "description": "Whether to use a Public IP"
-            },
-            "defaultValue": false
-        },
-        "publicIpAddressSku": {
-            "type": "string",
-            "metadata": {
-                "description": "The sku name of the Public IP"
-            },
-            "allowedValues": [
-                "Basic",
-                "Standard"
-            ],
-            "defaultValue": "Basic"
-        },
-        "publicIpAddressType": {
-            "type": "string",
-            "metadata": {
-                "description": "The address type of the Public IP"
-            },
-            "allowedValues": [
-                "Dynamic",
-                "Static"
-            ],
-            "defaultValue": "Dynamic"
-        },
         "createNetworkSecurityGroup": {
             "type": "bool",
             "metadata": {
@@ -269,13 +240,6 @@
             "type": "object",
             "metadata": {
                 "description": "The tags to be assigned to the network security groups"
-            },
-            "defaultValue": {}
-        },
-        "publicIPAddressTags": {
-            "type": "object",
-            "metadata": {
-                "description": "The tags to be assigned to the public ip addresses"
             },
             "defaultValue": {}
         },
@@ -467,15 +431,6 @@
                     "location": {
                         "value": "[parameters('vmLocation')]"
                     },
-                    "usePublicIP": {
-                        "value": "[parameters('usePublicIP')]"
-                    },
-                    "publicIpAddressType": {
-                        "value": "[parameters('publicIpAddressType')]"
-                    },
-                    "publicIpAddressSku": {
-                        "value": "[parameters('publicIpAddressSku')]"
-                    },
                     "createNetworkSecurityGroup": {
                         "value": "[parameters('createNetworkSecurityGroup')]"
                     },
@@ -490,9 +445,6 @@
                     },
                     "networkSecurityGroupTags": {
                         "value": "[parameters('networkSecurityGroupTags')]"
-                    },
-                    "publicIPAddressTags": {
-                        "value": "[parameters('publicIPAddressTags')]"
                     },
                     "virtualMachineTags": {
                         "value": "[parameters('virtualMachineTags')]"
