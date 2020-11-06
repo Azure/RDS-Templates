@@ -114,29 +114,6 @@
                 "description": "Location for all resources to be created in."
             }
         },
-        "usePublicIP":{
-            "type": "bool",
-            "metadata": {
-                "description": "Whether to use a Public IP"
-            },
-            "defaultValue": false
-        },
-        "publicIpAddressType": {
-            "type": "string",
-            "metadata": {
-                "description": "The address type of the Public IP"
-            },
-            "allowedValues": ["Dynamic", "Static"],
-            "defaultValue": "Dynamic"
-        },
-        "publicIpAddressSku": {
-            "type": "string",
-            "metadata": {
-                "description": "The sku name of the Public IP"
-            },
-            "allowedValues": ["Basic", "Standard"],
-            "defaultValue": "Basic"
-        },
         "createNetworkSecurityGroup":{
             "type": "bool",
             "metadata":{
@@ -169,13 +146,6 @@
             "type": "object",
             "metadata": {
                 "description": "The tags to be assigned to the network security groups"
-            },
-            "defaultValue": {}
-        },
-        "publicIPAddressTags": {
-            "type": "object",
-            "metadata": {
-                "description": "The tags to be assigned to the public ip addresses"
             },
             "defaultValue": {}
         },
@@ -281,24 +251,6 @@
                     ]
                 }
             }
-        }, 
-        {
-            "copy": {
-                "name": "rdsh-pip-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
-            "condition": "[parameters('usePublicIP')]",
-            "type": "Microsoft.Network/publicIpAddresses",
-            "apiVersion": "2019-02-01",
-            "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-ip')]",
-            "location": "[parameters('location')]",
-            "tags": "[parameters('publicIPAddressTags')]",
-            "sku": {
-                "name": "[parameters('publicIpAddressSku')]"
-            },
-            "properties": {
-                "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
-            }
         },
         {
             "apiVersion": "2018-11-01",
@@ -318,8 +270,7 @@
                             "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
                                 "id": "[parameters('subnet-id')]"
-                            },
-                            "publicIpAddress": "[if(parameters('usePublicIP'), json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIpAddresses', concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-ip')), '\"}')), json('null'))]"
+                            }
                         }
                     }
                 ],
@@ -327,8 +278,7 @@
                 "networkSecurityGroup":"[if(empty(parameters('networkSecurityGroupId')), json('null'), json(concat('{\"id\": \"', variables('nsgId'), '\"}')))]"                     
             },
             "dependsOn": [
-                "NSG-linkedTemplate",
-                "rdsh-pip-loop"
+                "NSG-linkedTemplate"
             ]
         },
         {
