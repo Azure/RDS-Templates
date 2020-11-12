@@ -16,12 +16,6 @@
             },
             "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
         },
-        "subscription": {
-            "type": "string",
-            "metadata": {
-                "description": "The subscription Id."
-            }
-        },
         "hostpoolName": {
             "type": "string",
             "metadata": {

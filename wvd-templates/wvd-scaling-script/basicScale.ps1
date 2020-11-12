@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.35
+	v0.1.38
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.35'
+	[version]$Version = '0.1.38'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -66,6 +66,7 @@ try {
 	[string]$LogAnalyticsWorkspaceId = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsWorkspaceId'
 	[string]$LogAnalyticsPrimaryKey = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsPrimaryKey'
 	[string]$ConnectionAssetName = Get-PSObjectPropVal -Obj $RqtParams -Key 'ConnectionAssetName'
+	[string]$EnvironmentName = Get-PSObjectPropVal -Obj $RqtParams -Key 'EnvironmentName'
 	[string]$RDBrokerURL = Get-PSObjectPropVal -Obj $RqtParams -Key 'RDBrokerURL'
 	[string]$TenantGroupName = Get-PSObjectPropVal -Obj $RqtParams -Key 'TenantGroupName'
 	[string]$TenantName = $RqtParams.TenantName
@@ -86,6 +87,9 @@ try {
 
 	if ([string]::IsNullOrWhiteSpace($ConnectionAssetName)) {
 		$ConnectionAssetName = 'AzureRunAsConnection'
+	}
+	if ([string]::IsNullOrWhiteSpace($EnvironmentName)) {
+		$EnvironmentName = 'AzureCloud'
 	}
 	if ([string]::IsNullOrWhiteSpace($RDBrokerURL)) {
 		$RDBrokerURL = 'https://rdbroker.wvd.microsoft.com'
@@ -150,7 +154,7 @@ try {
 			}
 			$json_body = ConvertTo-Json -Compress $body_obj
 			
-			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body $json_body -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp'
+			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body $json_body -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp' -EnvironmentName $EnvironmentName
 			if ($PostResult -ine 'Accepted') {
 				throw "Error posting to OMS: $PostResult"
 			}
@@ -361,7 +365,7 @@ try {
 		# Azure auth
 		$AzContext = $null
 		try {
-			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -ServicePrincipal
+			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -EnvironmentName $EnvironmentName -ServicePrincipal
 			if (!$AzAuth -or !$AzAuth.Context) {
 				throw $AzAuth
 			}
@@ -512,10 +516,10 @@ try {
 	# Number of user sessions reported by each session host that is running, is in desired state and allowing new sessions
 	[int]$nUserSessionsFromAllRunningVMs = 0
 
-	# Popoluate all session hosts objects
+	# Populate all session hosts objects
 	foreach ($SessionHost in $SessionHosts) {
-		[string]$SessionHostName = (Get-SessionHostName -SessionHost $SessionHost).ToLower()
-		$VMs.Add($SessionHostName.Split('.')[0], @{ 'SessionHostName' = $SessionHostName; 'SessionHost' = $SessionHost; 'Instance' = $null })
+		[string]$SessionHostName = Get-SessionHostName -SessionHost $SessionHost
+		$VMs.Add($SessionHostName.Split('.')[0].ToLower(), @{ 'SessionHostName' = $SessionHostName; 'SessionHost' = $SessionHost; 'Instance' = $null })
 	}
 	
 	Write-Log 'Get all VMs, check session host status and get usage info'
@@ -548,7 +552,9 @@ try {
 		if (!$VMSizeCores.ContainsKey($VMInstance.HardwareProfile.VmSize)) {
 			Write-Log "Get all VM sizes in location: $($VMInstance.Location)"
 			foreach ($VMSize in (Get-AzVMSize -Location $VMInstance.Location)) {
-				$VMSizeCores.Add($VMSize.Name, $VMSize.NumberOfCores)
+				if (!$VMSizeCores.ContainsKey($VMSize.Name)) {
+					$VMSizeCores.Add($VMSize.Name, $VMSize.NumberOfCores)
+				}
 			}
 		}
 

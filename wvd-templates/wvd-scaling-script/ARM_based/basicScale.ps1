@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.35
+	v0.1.38
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.35'
+	[version]$Version = '0.1.38'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -66,6 +66,7 @@ try {
 	[string]$LogAnalyticsWorkspaceId = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsWorkspaceId'
 	[string]$LogAnalyticsPrimaryKey = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsPrimaryKey'
 	[string]$ConnectionAssetName = Get-PSObjectPropVal -Obj $RqtParams -Key 'ConnectionAssetName'
+	[string]$EnvironmentName = Get-PSObjectPropVal -Obj $RqtParams -Key 'EnvironmentName'
 	[string]$ResourceGroupName = $RqtParams.ResourceGroupName
 	[string]$HostPoolName = $RqtParams.HostPoolName
 	[string]$MaintenanceTagName = Get-PSObjectPropVal -Obj $RqtParams -Key 'MaintenanceTagName'
@@ -84,6 +85,9 @@ try {
 
 	if ([string]::IsNullOrWhiteSpace($ConnectionAssetName)) {
 		$ConnectionAssetName = 'AzureRunAsConnection'
+	}
+	if ([string]::IsNullOrWhiteSpace($EnvironmentName)) {
+		$EnvironmentName = 'AzureCloud'
 	}
 
 	[int]$StatusCheckTimeOut = Get-PSObjectPropVal -Obj $RqtParams -Key 'StatusCheckTimeOut' -Default (60 * 60) # 1 hr
@@ -142,7 +146,7 @@ try {
 			}
 			$json_body = ConvertTo-Json -Compress $body_obj
 			
-			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body $json_body -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp'
+			$PostResult = Send-OMSAPIIngestionFile -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body $json_body -logType 'WVDTenantScale_CL' -TimeStampField 'TimeStamp' -EnvironmentName $EnvironmentName
 			if ($PostResult -ine 'Accepted') {
 				throw "Error posting to OMS: $PostResult"
 			}
@@ -283,6 +287,7 @@ try {
 			try {
 				Write-Log "Force log off user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
 				if ($PSCmdlet.ShouldProcess($SessionID, 'Force log off user with session ID')) {
+					# Note: -SessionHostName param is case sensitive, so the command will fail if it's case is modified
 					Remove-AzWvdUserSession -ResourceGroupName $ResourceGroupName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -Id $SessionID -Force
 				}
 			}
@@ -355,7 +360,7 @@ try {
 		# Azure auth
 		$AzContext = $null
 		try {
-			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -ServicePrincipal
+			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -EnvironmentName $EnvironmentName -ServicePrincipal
 			if (!$AzAuth -or !$AzAuth.Context) {
 				throw $AzAuth
 			}
@@ -476,10 +481,10 @@ try {
 	# Number of user sessions reported by each session host that is running, is in desired state and allowing new sessions
 	[int]$nUserSessionsFromAllRunningVMs = 0
 
-	# Popoluate all session hosts objects
+	# Populate all session hosts objects
 	foreach ($SessionHost in $SessionHosts) {
-		[string]$SessionHostName = (Get-SessionHostName -SessionHost $SessionHost).ToLower()
-		$VMs.Add($SessionHostName.Split('.')[0], @{ 'SessionHostName' = $SessionHostName; 'SessionHost' = $SessionHost; 'Instance' = $null })
+		[string]$SessionHostName = Get-SessionHostName -SessionHost $SessionHost
+		$VMs.Add($SessionHostName.Split('.')[0].ToLower(), @{ 'SessionHostName' = $SessionHostName; 'SessionHost' = $SessionHost; 'Instance' = $null })
 	}
 	
 	Write-Log 'Get all VMs, check session host status and get usage info'
@@ -497,6 +502,10 @@ try {
 
 		$VM = $VMs[$VMName]
 		$SessionHost = $VM.SessionHost
+		if ((Get-PSObjectPropVal -Obj $SessionHost -Key 'VirtualMachineId') -and $VMInstance.VmId -ine $SessionHost.VirtualMachineId) {
+			# This VM is not a WVD session host
+			continue
+		}
 		if ($VM.Instance) {
 			throw "More than 1 VM found in Azure with same session host name '$($VM.SessionHostName)' (This is not supported): $($VMInstance | Format-List -Force | Out-String)$($VM.Instance | Format-List -Force | Out-String)"
 		}
@@ -508,7 +517,9 @@ try {
 		if (!$VMSizeCores.ContainsKey($VMInstance.HardwareProfile.VmSize)) {
 			Write-Log "Get all VM sizes in location: $($VMInstance.Location)"
 			foreach ($VMSize in (Get-AzVMSize -Location $VMInstance.Location)) {
-				$VMSizeCores.Add($VMSize.Name, $VMSize.NumberOfCores)
+				if (!$VMSizeCores.ContainsKey($VMSize.Name)) {
+					$VMSizeCores.Add($VMSize.Name, $VMSize.NumberOfCores)
+				}
 			}
 		}
 
@@ -711,6 +722,7 @@ try {
 			[array]$VM.UserSessions = @()
 			Write-Log "Get all user sessions from session host '$SessionHostName'"
 			try {
+				# Note: Get-AzWvdUserSession roundtrips the input param SessionHostName and its case, so if lower case is specified, command will return lower case as well
 				$VM.UserSessions = @(Get-AzWvdUserSession -ResourceGroupName $ResourceGroupName -HostPoolName $HostPoolName -SessionHostName $SessionHostName)
 			}
 			catch {
@@ -726,6 +738,7 @@ try {
 				try {
 					Write-Log "Send a log off message to user: '$($Session.ActiveDirectoryUserName)', session ID: $SessionID"
 					if ($PSCmdlet.ShouldProcess($SessionID, 'Send a log off message to user with session ID')) {
+						# Note: -SessionHostName param is case sensitive, so the command will fail if it's case is modified
 						Send-AzWvdUserSessionMessage -ResourceGroupName $ResourceGroupName -HostPoolName $HostPoolName -SessionHostName $SessionHostName -UserSessionId $SessionID -MessageTitle $LogOffMessageTitle -MessageBody "$LogOffMessageBody You will be logged off in $LimitSecondsToForceLogOffUser seconds"
 					}
 				}
