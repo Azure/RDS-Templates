@@ -236,7 +236,27 @@
         "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('administratorAccountUsername'), '@')), parameters('domain'))]",
         "storageAccountType": "[parameters('rdshVMDiskType')]",
         "newNsgName": "[concat(parameters('rdshPrefix'), 'nsg-', parameters('_guidValue'))]",
-        "nsgId": "[if(parameters('createNetworkSecurityGroup'), resourceId('Microsoft.Network/networkSecurityGroups', variables('newNsgName')), parameters('networkSecurityGroupId'))]"
+        "nsgId": "[if(parameters('createNetworkSecurityGroup'), resourceId('Microsoft.Network/networkSecurityGroups', variables('newNsgName')), parameters('networkSecurityGroupId'))]",
+        "nvidivaVMs": [
+            "Standard_NV6",
+            "Standard_NV12",
+            "Standard_NV24",
+            "Standard_NV6_Promo",
+            "Standard_NV12_Promo",
+            "Standard_NV24_Promo",
+            "Standard_NV6s_v2",
+            "Standard_NV12s_v2",
+            "Standard_NV24s_v2",
+            "Standard_NV12s_v3",
+            "Standard_NV24s_v3",
+            "Standard_NV48s_v3"
+        ],
+        "amdVMs": [
+            "Standard_NV4as_v4",
+            "Standard_NV8as_v4",
+            "Standard_NV16as_v4",
+            "Standard_NV32as_v4"
+        ]
     },
     "resources": [
         {
@@ -392,11 +412,55 @@
             }
         },
         {
+            "condition": "[contains(variables('nvidivaVMs'),parameters('rdshVmSize'))]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2018-10-01",
+            "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'NvidiaGpuDriverWindows')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "rdsh-domain-join-loop"
+            ],
+            "properties": {
+                "publisher": "Microsoft.HpcCompute",
+                "type": "NvidiaGpuDriverWindows",
+                "typeHandlerVersion": "1.2",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                }
+            },
+            "copy": {
+                "name": "rdsh-gpudrivers-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            }
+        },
+        {
+            "condition": "[contains(variables('amdVMs'),parameters('rdshVmSize'))]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2018-10-01",
+            "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'AmdGpuDriverWindows')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "rdsh-gpudrivers-loop"
+            ],
+            "properties": {
+                "publisher": "Microsoft.HpcCompute",
+                "type": "AmdGpuDriverWindows",
+                "typeHandlerVersion": "1.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                }
+            },
+            "copy": {
+                "name": "rdsh-amddrivers-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            }
+        },
+        {
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'dscextension')]",
             "location": "[parameters('location')]",
-            "dependsOn": ["rdsh-domain-join-loop"],
+            "dependsOn": ["rdsh-amddrivers-loop"],
             "copy": {
                 "name": "rdsh-dsc-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
