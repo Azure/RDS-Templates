@@ -76,13 +76,25 @@
             },
             "defaultValue": false
         },
-        "administratorAccountUsername": {
+        "vmAdministratorAccountUsername": {
             "type": "string",
             "metadata": {
-                "description": "The username for the admin."
+                "description": "The virtual machine admin user name"
             }
         },
-        "administratorAccountPassword": {
+        "vmAdministratorAccountPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The virtual machine admin password."
+            }
+        },
+        "adAdministratorAccountUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "The username for the domain admin."
+            }
+        },
+        "adAdministratorAccountPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
@@ -232,7 +244,6 @@
         }
     },
     "variables": {
-        "existingDomainUsername": "[first(split(parameters('administratorAccountUsername'), '@'))]",
         "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('administratorAccountUsername'), '@')), parameters('domain'))]",
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
         "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
@@ -336,8 +347,8 @@
                 },
                 "osProfile": {
                     "computerName": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
-                    "adminUsername": "[variables('existingDomainUsername')]",
-                    "adminPassword": "[parameters('administratorAccountPassword')]"
+                    "adminUsername": "[parameters('vmAdministratorAccountUsername')]",
+                    "adminPassword": "[parameters('vmAdministratorAccountPassword')]"
                 },
                 "storageProfile": {
                     "osDisk": {
@@ -386,12 +397,12 @@
                 "settings": {
                     "name": "[variables('domain')]",
                     "ouPath": "[parameters('ouPath')]",
-                    "user": "[parameters('administratorAccountUsername')]",
+                    "user": "[parameters('adAdministratorAccountUsername')]",
                     "restart": "true",
                     "options": "3"
                 },
                 "protectedSettings": {
-                    "password": "[parameters('administratorAccountPassword')]"
+                    "password": "[parameters('adAdministratorAccountPassword')]"
                 }
             }
         },

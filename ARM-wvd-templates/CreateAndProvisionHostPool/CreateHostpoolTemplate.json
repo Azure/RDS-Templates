@@ -76,14 +76,26 @@
         "description": "Whether to add applicationGroup to workspace."
       }
     },
-    "administratorAccountUsername": {
+    "vmAdministratorAccountUsername": {
       "type": "string",
       "metadata": {
-        "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'user1@contoso.com'."
+        "description": "A username to be used as the virtual machine administrator account."
+      }
+    },
+    "vmAdministratorAccountPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password associated with the virtual machine administrator account."
+      }
+    },
+    "adAdministratorAccountUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'vmjoiner@contoso.com'."
       },
       "defaultValue": ""
     },
-    "administratorAccountPassword": {
+    "adAdministratorAccountPassword": {
       "type": "securestring",
       "metadata": {
         "description": "The password that corresponds to the existing domain username."
@@ -441,7 +453,6 @@
     "rdshManagedDisks": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmUseManagedDisks'), bool('true'))]",
     "rdshPrefix": "[concat(parameters('vmNamePrefix'),'-')]",
     "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
-    "existingDomainUsername": "[first(split(parameters('administratorAccountUsername'), '@'))]",
     "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
     "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
     "hostpoolName": "[replace(parameters('hostpoolName'),'\"','')]",
@@ -616,11 +627,17 @@
           "enableAcceleratedNetworking": {
             "value": false
           },
-          "administratorAccountUsername": {
-            "value": "[parameters('administratorAccountUsername')]"
+          "vmAdministratorAccountUsername": {
+            "value": "[parameters('vmAdministratorAccountUsername')]"
+          },
+          "vmAdministratorAccountPassword": {
+            "value": "[parameters('vmAdministratorAccountPassword')]"
+          },
+          "adAdministratorAccountUsername": {
+            "value": "[parameters('adAdministratorAccountUsername')]"
           },
           "administratorAccountPassword": {
-            "value": "[parameters('administratorAccountPassword')]"
+            "value": "[parameters('adAdministratorAccountPassword')]"
           },
           "subnet-id": {
             "value": "[variables('subnet-id')]"
