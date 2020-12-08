@@ -56,29 +56,31 @@
             },
             "defaultValue": ""
         },
-        "vmAdministratorAccountUsername": {
-            "type": "string",
-            "metadata": {
-                "description": "A username to be used as the virtual machine administrator account."
-            }
-        },
-        "vmAdministratorAccountPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The password associated with the virtual machine administrator account."
-            }
-        },
-        "adAdministratorAccountUsername": {
+        "administratorAccountUsername": {
             "type": "string",
             "metadata": {
                 "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'vmjoiner@contoso.com'."
             }
         },
-        "adAdministratorAccountPassword": {
+        "administratorAccountPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
             }
+        },
+        "vmAdministratorAccountUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "A username to be used as the virtual machine administrator account. The domain administrator username will be used if this parameter is not provided."
+            },
+            "defaultValue": ""
+        },
+        "vmAdministratorAccountPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password associated with the virtual machine administrator account. The domain administrator password will be used if this parameter is not provided."
+            },
+            "defaultValue": ""
         },
         "createAvailabilitySet": {
             "type": "bool",
@@ -466,11 +468,11 @@
                     "vmAdministratorAccountPassword": {
                         "value": "[parameters('vmAdministratorAccountPassword')]"
                     },
-                    "adAdministratorAccountUsername": {
-                        "value": "[parameters('adAdministratorAccountUsername')]"
+                    "administratorAccountUsername": {
+                        "value": "[parameters('administratorAccountUsername')]"
                     },
-                    "adAdministratorAccountPassword": {
-                        "value": "[parameters('adAdministratorAccountPassword')]"
+                    "administratorAccountPassword": {
+                        "value": "[parameters('administratorAccountPassword')]"
                     },
                     "subnet-id": {
                         "value": "[variables('subnet-id')]"

@@ -76,29 +76,31 @@
             },
             "defaultValue": false
         },
-        "vmAdministratorAccountUsername": {
-            "type": "string",
-            "metadata": {
-                "description": "The virtual machine admin user name"
-            }
-        },
-        "vmAdministratorAccountPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The virtual machine admin password."
-            }
-        },
-        "adAdministratorAccountUsername": {
+        "administratorAccountUsername": {
             "type": "string",
             "metadata": {
                 "description": "The username for the domain admin."
             }
         },
-        "adAdministratorAccountPassword": {
+        "administratorAccountPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
             }
+        },
+        "vmAdministratorAccountUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "The virtual machine admin user name. The domain administrator username will be used if this parameter is not provided."
+            },
+            "defaultValue": ""
+        },
+        "vmAdministratorAccountPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The virtual machine admin password. The domain administrator password will be used if this parameter is not provided."
+            },
+            "defaultValue": ""
         },
         "vhds": {
             "type": "string",
@@ -248,7 +250,10 @@
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
         "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
         "newNsgName": "[concat(parameters('rdshPrefix'), 'nsg-', parameters('_guidValue'))]",
-        "nsgId": "[if(parameters('createNetworkSecurityGroup'), resourceId('Microsoft.Network/networkSecurityGroups', variables('newNsgName')), parameters('networkSecurityGroupId'))]"
+        "nsgId": "[if(parameters('createNetworkSecurityGroup'), resourceId('Microsoft.Network/networkSecurityGroups', variables('newNsgName')), parameters('networkSecurityGroupId'))]",
+        "isVMAdminAccountCredentialsProvided": "[and(not(equals(parameters('vmAdministratorAccountUsername'), '')), not(equals(parameters('vmAdministratorAccountPassword'), '')))]",
+        "vmAdministratorUsername": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountUsername'), first(split(parameters('administratorAccountUsername'), '@')))]",
+        "vmAdministratorPassword": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountPassword'), parameters('administratorAccountPassword'))]"
     },
     "resources": [
         {
@@ -347,8 +352,8 @@
                 },
                 "osProfile": {
                     "computerName": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
-                    "adminUsername": "[parameters('vmAdministratorAccountUsername')]",
-                    "adminPassword": "[parameters('vmAdministratorAccountPassword')]"
+                    "adminUsername": "[variables('vmAdministratorUsername')]",
+                    "adminPassword": "[variables('vmAdministratorPassword')]"
                 },
                 "storageProfile": {
                     "osDisk": {
@@ -397,12 +402,12 @@
                 "settings": {
                     "name": "[variables('domain')]",
                     "ouPath": "[parameters('ouPath')]",
-                    "user": "[parameters('adAdministratorAccountUsername')]",
+                    "user": "[parameters('administratorAccountUsername')]",
                     "restart": "true",
                     "options": "3"
                 },
                 "protectedSettings": {
-                    "password": "[parameters('adAdministratorAccountPassword')]"
+                    "password": "[parameters('administratorAccountPassword')]"
                 }
             }
         },
