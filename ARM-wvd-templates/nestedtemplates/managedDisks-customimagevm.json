@@ -370,29 +370,9 @@
         {
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'AADLoginForWindows')]",
-            "location": "[parameters('location')]",
-            "dependsOn": ["rdsh-vm-loop"],
-            "copy": {
-                "name": "rdsh-domain-join-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
-            "properties": {
-                "publisher": "Microsoft.Azure.ActiveDirectory",
-                "type": "AADLoginForWindows",
-                "typeHandlerVersion": "1.0",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "mdmId": "0000000a-0000-0000-c000-000000000000"
-                }
-            }
-        },
-        {
-            "apiVersion": "2018-10-01",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'dscextension')]",
             "location": "[parameters('location')]",
-            "dependsOn": ["rdsh-domain-join-loop"],
+            "dependsOn": ["rdsh-vm-loop"],
             "copy": {
                 "name": "rdsh-dsc-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
@@ -409,6 +389,26 @@
                         "hostPoolName": "[parameters('hostpoolName')]",
                         "registrationInfoToken": "[parameters('hostpoolToken')]"
                     }
+                }
+            }
+        },
+        {
+            "apiVersion": "2018-10-01",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'AADLoginForWindows')]",
+            "location": "[parameters('location')]",
+            "dependsOn": ["rdsh-dsc-loop"],
+            "copy": {
+                "name": "rdsh-domain-join-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "properties": {
+                "publisher": "Microsoft.Azure.ActiveDirectory",
+                "type": "AADLoginForWindows",
+                "typeHandlerVersion": "1.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "mdmId": "0000000a-0000-0000-c000-000000000000"
                 }
             }
         }
