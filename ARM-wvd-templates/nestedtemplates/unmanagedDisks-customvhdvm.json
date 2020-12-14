@@ -408,7 +408,7 @@
             "properties": {
                 "publisher": "Microsoft.Powershell",
                 "type": "DSC",
-                "typeHandlerVersion": "2.73",
+                "typeHandlerVersion": "2.75",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[parameters('artifactsLocation')]",
