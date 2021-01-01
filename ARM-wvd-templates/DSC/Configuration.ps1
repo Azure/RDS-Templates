@@ -8,6 +8,9 @@ configuration AddSessionHost
         [Parameter(Mandatory = $true)]
         [string]$RegistrationInfoToken,
 
+        [Parameter(Mandatory = $false)]
+        [bool]$AadJoin = $false,
+
         [Parameter(mandatory = $false)]
         [bool]$EnableVerboseMsiLogging = $false
     )
@@ -104,6 +107,16 @@ configuration AddSessionHost
                     }
 
                 }
+            }
+        }
+        
+        if ($true -eq $AadJoin) {
+            Registry RDAgentAADJPrivateConfig {
+                DependsOn = "[Script]ExecuteRdAgentInstall$(if ($rdshIsServer) { 'Server' } else { 'Client' })"
+                Ensure    = 'Present'
+                Key       = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent\AADJPrivate'
+                ValueName = ''
+                Force     = $true
             }
         }
     }

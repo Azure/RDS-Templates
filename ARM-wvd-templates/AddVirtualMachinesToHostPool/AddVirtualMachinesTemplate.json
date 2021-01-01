@@ -59,7 +59,7 @@
         "administratorAccountUsername": {
             "type": "string",
             "metadata": {
-                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'user1@contoso.com'."
+                "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'vmjoiner@contoso.com'."
             }
         },
         "administratorAccountPassword": {
@@ -67,6 +67,20 @@
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
             }
+        },
+        "vmAdministratorAccountUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "A username to be used as the virtual machine administrator account. The domain administrator username will be used if this parameter is not provided."
+            },
+            "defaultValue": ""
+        },
+        "vmAdministratorAccountPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password associated with the virtual machine administrator account. The domain administrator password will be used if this parameter is not provided."
+            },
+            "defaultValue": ""
         },
         "createAvailabilitySet": {
             "type": "bool",
@@ -284,13 +298,19 @@
                 "description": "Domain to join"
             },
             "defaultValue": ""
+        },
+        "aadJoin": {
+            "type": "bool",
+            "metadata": {
+                "description": "True if AAD Join, false if AD join"
+            },
+            "defaultValue": false
         }
     },
     "variables": {
         "rdshManagedDisks": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmUseManagedDisks'), bool('true'))]",
         "rdshPrefix": "[concat(parameters('vmNamePrefix'),'-')]",
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
-        "existingDomainUsername": "[first(split(parameters('administratorAccountUsername'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "hostpoolName": "[replace(parameters('hostpoolName'),'\"','')]",
@@ -413,6 +433,12 @@
                     "enableAcceleratedNetworking": {
                         "value": false
                     },
+                    "vmAdministratorAccountUsername": {
+                        "value": "[parameters('vmAdministratorAccountUsername')]"
+                    },
+                    "vmAdministratorAccountPassword": {
+                        "value": "[parameters('vmAdministratorAccountPassword')]"
+                    },
                     "administratorAccountUsername": {
                         "value": "[parameters('administratorAccountUsername')]"
                     },
@@ -466,6 +492,9 @@
                     },
                     "ouPath": {
                         "value": "[parameters('ouPath')]"
+                    },
+                    "aadJoin": {
+                        "value": "[parameters('aadJoin')]"
                     },
                     "_guidValue": {
                         "value": "[parameters('deploymentId')]"
