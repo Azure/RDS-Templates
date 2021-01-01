@@ -130,7 +130,12 @@
                 "description": "Select the image source for the session host vms. VMs from a Gallery image will be created with Managed Disks."
             },
             "defaultValue": "Gallery",
-            "allowedValues": ["CustomVHD", "CustomImage", "Gallery", "Disk"]
+            "allowedValues": [
+                "CustomVHD",
+                "CustomImage",
+                "Gallery",
+                "Disk"
+              ]
         },
         "vmGalleryImageOffer": {
             "type": "string",
@@ -169,7 +174,12 @@
         },
         "vmDiskType": {
             "type": "string",
-            "allowedValues": ["UltraSSD_LRS", "Premium_LRS", "StandardSSD_LRS", "Standard_LRS"],
+            "allowedValues": [
+                "UltraSSD_LRS",
+                "Premium_LRS",
+                "StandardSSD_LRS",
+                "Standard_LRS"
+              ],
             "metadata": {
                 "description": "The VM disk type for the VM: HDD or SSD."
             }
@@ -371,13 +381,17 @@
                     ]
                 }
             },
-            "dependsOn": ["[concat('UpdateHostPool-', parameters('deploymentId'))]"]
+            "dependsOn": [
+                "[concat('UpdateHostPool-', parameters('deploymentId'))]"
+            ]
         },
         {
             "apiVersion": "2018-05-01",
             "name": "[concat('vmCreation-linkedTemplate-', parameters('deploymentId'))]",
             "resourceGroup": "[parameters('vmResourceGroup')]",
-            "dependsOn": ["[concat('AVSet-linkedTemplate-', parameters('deploymentId'))]"],
+            "dependsOn": [
+                "[concat('AVSet-linkedTemplate-', parameters('deploymentId'))]"
+            ],
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",
