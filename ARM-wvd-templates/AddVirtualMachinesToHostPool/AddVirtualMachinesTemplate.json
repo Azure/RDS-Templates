@@ -135,7 +135,7 @@
                 "CustomImage",
                 "Gallery",
                 "Disk"
-              ]
+            ]
         },
         "vmGalleryImageOffer": {
             "type": "string",
@@ -179,7 +179,7 @@
                 "Premium_LRS",
                 "StandardSSD_LRS",
                 "Standard_LRS"
-              ],
+            ],
             "metadata": {
                 "description": "The VM disk type for the VM: HDD or SSD."
             }
