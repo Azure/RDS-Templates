@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.38
+	v0.1.39
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.38'
+	[version]$Version = '0.1.39'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -91,7 +91,6 @@ try {
 	}
 
 	[int]$StatusCheckTimeOut = Get-PSObjectPropVal -Obj $RqtParams -Key 'StatusCheckTimeOut' -Default (60 * 60) # 1 hr
-	# [int]$SessionHostStatusCheckSleepSecs = 30
 	[string[]]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
 	[string[]]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
@@ -341,6 +340,7 @@ try {
 	# Note: https://stackoverflow.com/questions/41674518/powershell-setting-security-protocol-to-tls-1-2
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+	Write-Log "Version: v$Version"
 	Write-Log "Request params: $($RqtParams | Format-List -Force | Out-String)"
 
 	if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey) {
@@ -476,6 +476,7 @@ try {
 	[int]$nRunningCores = 0
 	# Object that contains all session host objects, VM instance objects except the ones that are under maintenance
 	$VMs = @{ }
+	$VMsLookup = @{ }
 	# Object that contains the number of cores for each VM size SKU
 	$VMSizeCores = @{ }
 	# Number of user sessions reported by each session host that is running, is in desired state and allowing new sessions
@@ -483,16 +484,39 @@ try {
 
 	# Populate all session hosts objects
 	foreach ($SessionHost in $SessionHosts) {
-		[string]$SessionHostName = Get-SessionHostName -SessionHost $SessionHost
-		$VMs.Add($SessionHostName.Split('.')[0].ToLower(), @{ 'SessionHostName' = $SessionHostName; 'SessionHost' = $SessionHost; 'Instance' = $null })
+		$VM = @{
+			'SessionHostName' = Get-SessionHostName -SessionHost $SessionHost
+			'SessionHost'     = $SessionHost
+			'Instance'        = $null
+		}
+		
+		$VMs.Add($VM.SessionHostName.Split('.')[0].ToLower(), $VM)
+		if (Get-PSObjectPropVal -Obj $SessionHost -Key 'ResourceId') {
+			$VMsLookup.Add($SessionHost.ResourceId, $VM)
+		}
+		elseif (Get-PSObjectPropVal -Obj $SessionHost -Key 'VirtualMachineId') {
+			$VMsLookup.Add($SessionHost.VirtualMachineId, $VM)
+		}
 	}
 	
 	Write-Log 'Get all VMs, check session host status and get usage info'
 	foreach ($VMInstance in (Get-AzVM -Status)) {
-		if (!$VMs.ContainsKey($VMInstance.Name.ToLower())) {
+		$VM = $null
+
+		if ($VMsLookup.ContainsKey($VMInstance.Id)) {
+			$VM = $VMsLookup[$VMInstance.Id]
+		}
+		elseif ($VMsLookup.ContainsKey($VMInstance.VmId)) {
+			$VM = $VMsLookup[$VMInstance.VmId]
+		}
+		elseif ($VMs.ContainsKey($VMInstance.Name.ToLower())) {
+			$VM = $VMs[$VMInstance.Name.ToLower()]
+		}
+		else {
 			# This VM is not a WVD session host
 			continue
 		}
+
 		[string]$VMName = $VMInstance.Name.ToLower()
 		if ($VMInstance.Tags.Keys -contains $MaintenanceTagName) {
 			Write-Log "VM '$VMName' is in maintenance and will be ignored"
@@ -500,12 +524,8 @@ try {
 			continue
 		}
 
-		$VM = $VMs[$VMName]
 		$SessionHost = $VM.SessionHost
-		if ((Get-PSObjectPropVal -Obj $SessionHost -Key 'VirtualMachineId') -and $VMInstance.VmId -ine $SessionHost.VirtualMachineId) {
-			# This VM is not a WVD session host
-			continue
-		}
+
 		if ($VM.Instance) {
 			throw "More than 1 VM found in Azure with same session host name '$($VM.SessionHostName)' (This is not supported): $($VMInstance | Format-List -Force | Out-String)$($VM.Instance | Format-List -Force | Out-String)"
 		}
@@ -602,8 +622,6 @@ try {
 			return
 		}
 
-		# Object that contains names of session hosts that will be started
-		# $StartSessionHostFullNames = @{ }
 		# Array that contains jobs of starting the session hosts
 		[array]$StartVMjobs = @()
 
@@ -629,7 +647,6 @@ try {
 
 			Write-Log "Start session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Start session host as a background job')) {
-				# $StartSessionHostFullNames.Add($VM.SessionHost.Name, $null)
 				$StartVMjobs += ($VM.Instance | Start-AzVM -AsJob)
 			}
 
@@ -654,24 +671,6 @@ try {
 		Write-Log 'All jobs completed'
 		Write-Log 'End'
 		return
-
-		<#
-		# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were started
-		Write-Log "Wait for $($StartSessionHostFullNames.Count) session hosts to be available"
-		$StartTime = Get-Date
-		while ($true) {
-			if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
-				throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
-			}
-			$SessionHostsToCheck = @(Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName | Where-Object { $StartSessionHostFullNames.ContainsKey($_.Name) })
-			Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
-			if (!($SessionHostsToCheck | Where-Object { $_.Status -notin $DesiredRunningStates })) {
-				break
-			}
-			Start-Sleep -Seconds $SessionHostStatusCheckSleepSecs
-		}
-		return
-		#>
 	}
 
 	#endregion
@@ -685,8 +684,6 @@ try {
 		return
 	}
 
-	# Object that contains names of session hosts that will be stopped
-	# $StopSessionHostFullNames = @{ }
 	# Array that contains jobs of stopping the session hosts
 	[array]$StopVMjobs = @()
 	$VMsToStop = @{ }
@@ -751,7 +748,6 @@ try {
 		else {
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
-				# $StopSessionHostFullNames.Add($SessionHost.Name, $null)
 				$StopVMjobs += ($VM.StopJob = $VM.Instance | Stop-AzVM -Force -AsJob)
 				$VMsToStop.Add($SessionHostName, $VM)
 			}
@@ -778,7 +774,6 @@ try {
 			
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
-				# $StopSessionHostFullNames.Add($VM.SessionHost.Name, $null)
 				$StopVMjobs += ($VM.StopJob = $VM.Instance | Stop-AzVM -Force -AsJob)
 				$VMsToStop.Add($SessionHostName, $VM)
 			}
@@ -792,9 +787,11 @@ try {
 
 	# Wait for those jobs to stop the session hosts
 	Write-Log "Wait for $($StopVMjobs.Count) jobs"
+	[bool]$TimedOut = $false
 	$StartTime = Get-Date
 	while ($true) {
 		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
+			$TimedOut = $true
 			break
 		}
 		if (!($StopVMjobs | Where-Object { $_.State -ieq 'Running' })) {
@@ -818,7 +815,7 @@ try {
 
 	$VMsToStop.Values | TryResetSessionHostDrainModeAndUserSessions
 
-	if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
+	if ($TimedOut) {
 		throw "Jobs status check timed out. Taking more than $StatusCheckTimeOut seconds. $StopVMJobsStatusInfo"
 	}
 
@@ -829,28 +826,6 @@ try {
 
 	Write-Log 'All jobs completed'
 	Write-Log 'End'
-	return
-
-	<#
-	# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were stopped
-	Write-Log "Wait for $($StopSessionHostFullNames.Count) session hosts to be unavailable"
-	[array]$SessionHostsToCheck = @()
-	$StartTime = Get-Date
-	while ($true) {
-		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
-			throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
-		}
-		$SessionHostsToCheck = @(Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $ResourceGroupName | Where-Object { $StopSessionHostFullNames.ContainsKey($_.Name) })
-		Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
-		if (!($SessionHostsToCheck | Where-Object { $_.Status -in $DesiredRunningStates })) {
-			break
-		}
-		Start-Sleep -Seconds $SessionHostStatusCheckSleepSecs
-	}
-
-	# Make sure session hosts are allowing new user sessions & update them to allow if not
-	$SessionHostsToCheck | Update-SessionHostToAllowNewSession
-	#>
 
 	#endregion
 }
