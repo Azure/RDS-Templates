@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.38
+	v0.1.39
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.38'
+	[version]$Version = '0.1.39'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -99,7 +99,6 @@ try {
 	}
 
 	[int]$StatusCheckTimeOut = Get-PSObjectPropVal -Obj $RqtParams -Key 'StatusCheckTimeOut' -Default (60 * 60) # 1 hr
-	# [int]$SessionHostStatusCheckSleepSecs = 30
 	[string[]]$DesiredRunningStates = @('Available', 'NeedsAssistance')
 	# Note: time diff can be '#' or '#:#', so it is appended with ':0' in case its just '#' and so the result will have at least 2 items (hrs and min)
 	[string[]]$TimeDiffHrsMin = "$($TimeDifference):0".Split(':')
@@ -345,6 +344,7 @@ try {
 	# Note: https://stackoverflow.com/questions/41674518/powershell-setting-security-protocol-to-tls-1-2
 	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+	Write-Log "Version: v$Version"
 	Write-Log "Request params: $($RqtParams | Format-List -Force | Out-String)"
 
 	if ($LogAnalyticsWorkspaceId -and $LogAnalyticsPrimaryKey) {
@@ -427,7 +427,7 @@ try {
 
 
 	#region validate host pool, validate / update HostPool load balancer type, ensure there is at least 1 session host, get num of user sessions
-	
+
 	# Validate and get HostPool info
 	$HostPool = $null
 	try {
@@ -478,7 +478,7 @@ try {
 	$CurrentDateTime = Get-LocalDateTime
 	$BeginPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $BeginPeakTime)
 	$EndPeakDateTime = [datetime]::Parse($CurrentDateTime.ToShortDateString() + ' ' + $EndPeakTime)
-	
+
 	# Adjust peak times to make sure begin peak time is always before end peak time
 	if ($EndPeakDateTime -lt $BeginPeakDateTime) {
 		if ($CurrentDateTime -lt $EndPeakDateTime) {
@@ -488,7 +488,7 @@ try {
 			$EndPeakDateTime = $EndPeakDateTime.AddDays(1)
 		}
 	}
-	
+
 	Write-Log "Using current time: $($CurrentDateTime.ToString('yyyy-MM-dd HH:mm:ss')), begin peak time: $($BeginPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss')), end peak time: $($EndPeakDateTime.ToString('yyyy-MM-dd HH:mm:ss'))"
 
 	[bool]$InPeakHours = ($BeginPeakDateTime -le $CurrentDateTime -and $CurrentDateTime -le $EndPeakDateTime)
@@ -637,8 +637,6 @@ try {
 			return
 		}
 
-		# Object that contains names of session hosts that will be started
-		# $StartSessionHostNames = @{ }
 		# Array that contains jobs of starting the session hosts
 		[array]$StartVMjobs = @()
 
@@ -664,7 +662,6 @@ try {
 
 			Write-Log "Start session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Start session host as a background job')) {
-				# $StartSessionHostNames.Add($SessionHostName, $null)
 				$StartVMjobs += ($VM.Instance | Start-AzVM -AsJob)
 			}
 
@@ -689,24 +686,6 @@ try {
 		Write-Log 'All jobs completed'
 		Write-Log 'End'
 		return
-
-		<#
-		# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were started
-		Write-Log "Wait for $($StartSessionHostNames.Count) session hosts to be available"
-		$StartTime = Get-Date
-		while ($true) {
-			if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
-				throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
-			}
-			$SessionHostsToCheck = @(Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StartSessionHostNames.ContainsKey($_.SessionHostName) })
-			Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
-			if (!($SessionHostsToCheck | Where-Object { $_.Status -notin $DesiredRunningStates })) {
-				break
-			}
-			Start-Sleep -Seconds $SessionHostStatusCheckSleepSecs
-		}
-		return
-		#>
 	}
 
 	#endregion
@@ -720,8 +699,6 @@ try {
 		return
 	}
 
-	# Object that contains names of session hosts that will be stopped
-	# $StopSessionHostNames = @{ }
 	# Array that contains jobs of stopping the session hosts
 	[array]$StopVMjobs = @()
 	$VMsToStop = @{ }
@@ -783,7 +760,6 @@ try {
 		else {
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
-				# $StopSessionHostNames.Add($SessionHostName, $null)
 				$StopVMjobs += ($VM.StopJob = $VM.Instance | Stop-AzVM -Force -AsJob)
 				$VMsToStop.Add($SessionHostName, $VM)
 			}
@@ -810,7 +786,6 @@ try {
 			
 			Write-Log "Stop session host '$SessionHostName' as a background job"
 			if ($PSCmdlet.ShouldProcess($SessionHostName, 'Stop session host as a background job')) {
-				# $StopSessionHostNames.Add($SessionHostName, $null)
 				$StopVMjobs += ($VM.StopJob = $VM.Instance | Stop-AzVM -Force -AsJob)
 				$VMsToStop.Add($SessionHostName, $VM)
 			}
@@ -824,9 +799,11 @@ try {
 
 	# Wait for those jobs to stop the session hosts
 	Write-Log "Wait for $($StopVMjobs.Count) jobs"
+	[bool]$TimedOut = $false
 	$StartTime = Get-Date
 	while ($true) {
 		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
+			$TimedOut = $true
 			break
 		}
 		if (!($StopVMjobs | Where-Object { $_.State -ieq 'Running' })) {
@@ -850,7 +827,7 @@ try {
 
 	$VMsToStop.Values | TryResetSessionHostDrainModeAndUserSessions
 
-	if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
+	if ($TimedOut) {
 		throw "Jobs status check timed out. Taking more than $StatusCheckTimeOut seconds. $StopVMJobsStatusInfo"
 	}
 
@@ -861,34 +838,11 @@ try {
 
 	Write-Log 'All jobs completed'
 	Write-Log 'End'
-	return
-
-	<#
-	# //todo if not going to poll for status here, then no need to keep track of the list of session hosts that were stopped
-	Write-Log "Wait for $($StopSessionHostNames.Count) session hosts to be unavailable"
-	[array]$SessionHostsToCheck = @()
-	$StartTime = Get-Date
-	while ($true) {
-		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $StatusCheckTimeOut) {
-			throw "Status check timed out. Taking more than $StatusCheckTimeOut seconds"
-		}
-		$SessionHostsToCheck = @(Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName | Where-Object { $StopSessionHostNames.ContainsKey($_.SessionHostName) })
-		Write-Log "[Check session hosts status] Total: $($SessionHostsToCheck.Count), $(($SessionHostsToCheck | Group-Object Status | ForEach-Object { "$($_.Name): $($_.Count)" }) -join ', ')"
-		if (!($SessionHostsToCheck | Where-Object { $_.Status -in $DesiredRunningStates })) {
-			break
-		}
-		Start-Sleep -Seconds $SessionHostStatusCheckSleepSecs
-	}
-
-	# Make sure session hosts are allowing new user sessions & update them to allow if not
-	$SessionHostsToCheck | Update-SessionHostToAllowNewSession
-	#>
 
 	#endregion
 }
 catch {
 	$ErrContainer = $PSItem
-	# $ErrContainer = $_
 
 	[string]$ErrMsg = $ErrContainer | Format-List -Force | Out-String
 	$ErrMsg += "Version: $Version`n"
@@ -899,8 +853,6 @@ catch {
 	else {
 		Write-Error $ErrMsg -ErrorAction:Continue
 	}
-
-	# $ErrMsg += ($WebHookData | Format-List -Force | Out-String)
 
 	throw [System.Exception]::new($ErrMsg, $ErrContainer.Exception)
 }
