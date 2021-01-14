@@ -147,7 +147,7 @@
             "metadata": {
                 "description": "The rules to be given to the new network security group"
             },
-            "defaultValue": {}
+            "defaultValue": []
         },
         "networkInterfaceTags": {
             "type": "object",
