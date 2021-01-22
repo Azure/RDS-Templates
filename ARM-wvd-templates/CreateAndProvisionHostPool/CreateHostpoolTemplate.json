@@ -93,14 +93,14 @@
     "vmAdministratorAccountUsername": {
       "type": "string",
       "metadata": {
-        "description": "A username to be used as the virtual machine administrator account. The domain administrator username will be used if this parameter is not provided."
+        "description": "A username to be used as the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
       },
       "defaultValue": ""
     },
     "vmAdministratorAccountPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The password associated with the virtual machine administrator account. The domain administrator password will be used if this parameter is not provided."
+        "description": "The password associated with the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
       },
       "defaultValue": ""
     },
