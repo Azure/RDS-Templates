@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration.zip"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
         },
         "VmImageVhdUri": {
             "type": "string",
@@ -87,6 +87,20 @@
             "metadata": {
                 "description": "The password that corresponds to the existing domain username."
             }
+        },
+        "vmAdministratorAccountUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "A username to be used as the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
+            },
+            "defaultValue": ""
+        },
+        "vmAdministratorAccountPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password associated with the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
+            },
+            "defaultValue": ""
         },
         "vhds": {
             "type": "string",
@@ -202,12 +216,14 @@
         }
     },
     "variables": {
-        "existingDomainUsername": "[first(split(parameters('administratorAccountUsername'), '@'))]",
         "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('administratorAccountUsername'), '@')), parameters('domain'))]",
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
         "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
         "newNsgName": "[concat(parameters('rdshPrefix'), 'nsg-', parameters('_guidValue'))]",
-        "nsgId": "[if(parameters('createNetworkSecurityGroup'), resourceId('Microsoft.Network/networkSecurityGroups', variables('newNsgName')), parameters('networkSecurityGroupId'))]"
+        "nsgId": "[if(parameters('createNetworkSecurityGroup'), resourceId('Microsoft.Network/networkSecurityGroups', variables('newNsgName')), parameters('networkSecurityGroupId'))]",
+        "isVMAdminAccountCredentialsProvided": "[and(not(equals(parameters('vmAdministratorAccountUsername'), '')), not(equals(parameters('vmAdministratorAccountPassword'), '')))]",
+        "vmAdministratorUsername": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountUsername'), first(split(parameters('administratorAccountUsername'), '@')))]",
+        "vmAdministratorPassword": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountPassword'), parameters('administratorAccountPassword'))]"
     },
     "resources": [
         {
@@ -286,8 +302,8 @@
                 },
                 "osProfile": {
                     "computerName": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
-                    "adminUsername": "[variables('existingDomainUsername')]",
-                    "adminPassword": "[parameters('administratorAccountPassword')]"
+                    "adminUsername": "[variables('vmAdministratorUsername')]",
+                    "adminPassword": "[variables('vmAdministratorPassword')]"
                 },
                 "storageProfile": {
                     "osDisk": {

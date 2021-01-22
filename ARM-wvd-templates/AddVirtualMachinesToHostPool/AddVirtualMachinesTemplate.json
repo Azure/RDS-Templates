@@ -68,6 +68,20 @@
                 "description": "The password that corresponds to the existing domain username."
             }
         },
+        "vmAdministratorAccountUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "A username to be used as the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
+            },
+            "defaultValue": ""
+        },
+        "vmAdministratorAccountPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password associated with the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
+            },
+            "defaultValue": ""
+        },
         "createAvailabilitySet": {
             "type": "bool",
             "metadata": {
@@ -290,7 +304,6 @@
         "rdshManagedDisks": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmUseManagedDisks'), bool('true'))]",
         "rdshPrefix": "[concat(parameters('vmNamePrefix'),'-')]",
         "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
-        "existingDomainUsername": "[first(split(parameters('administratorAccountUsername'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
         "hostpoolName": "[replace(parameters('hostpoolName'),'\"','')]",
@@ -412,6 +425,12 @@
                     },
                     "enableAcceleratedNetworking": {
                         "value": false
+                    },
+                    "vmAdministratorAccountUsername": {
+                        "value":  "[parameters('vmAdministratorAccountUsername')]"
+                    },
+                    "vmAdministratorAccountPassword": {
+                        "value": "[parameters('vmAdministratorAccountPassword')]"
                     },
                     "administratorAccountUsername": {
                         "value": "[parameters('administratorAccountUsername')]"
