@@ -90,6 +90,20 @@
       },
       "defaultValue": ""
     },
+    "vmAdministratorAccountUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "A username to be used as the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
+      },
+      "defaultValue": ""
+    },
+    "vmAdministratorAccountPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password associated with the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
+      },
+      "defaultValue": ""
+    },
     "createAvailabilitySet": {
       "type": "bool",
       "metadata": {
@@ -226,35 +240,6 @@
       },
       "defaultValue": ""
     },
-    "usePublicIP": {
-      "type": "bool",
-      "metadata": {
-        "description": "Whether to use a Public IP"
-      },
-      "defaultValue": false
-    },
-    "publicIpAddressSku": {
-      "type": "string",
-      "metadata": {
-        "description": "The sku name of the Public IP"
-      },
-      "allowedValues": [
-        "Basic",
-        "Standard"
-      ],
-      "defaultValue": "Basic"
-    },
-    "publicIpAddressType": {
-      "type": "string",
-      "metadata": {
-        "description": "The address type of the Public IP"
-      },
-      "allowedValues": [
-        "Dynamic",
-        "Static"
-      ],
-      "defaultValue": "Dynamic"
-    },
     "createNetworkSecurityGroup": {
       "type": "bool",
       "metadata": {
@@ -372,13 +357,6 @@
       },
       "defaultValue": {}
     },
-    "publicIPAddressTags": {
-      "type": "object",
-      "metadata": {
-        "description": "The tags to be assigned to the public ip addresses"
-      },
-      "defaultValue": {}
-    },
     "virtualMachineTags": {
       "type": "object",
       "metadata": {
@@ -441,7 +419,6 @@
     "rdshManagedDisks": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmUseManagedDisks'), bool('true'))]",
     "rdshPrefix": "[concat(parameters('vmNamePrefix'),'-')]",
     "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
-    "existingDomainUsername": "[first(split(parameters('administratorAccountUsername'), '@'))]",
     "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
     "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
     "hostpoolName": "[replace(parameters('hostpoolName'),'\"','')]",
@@ -616,6 +593,12 @@
           "enableAcceleratedNetworking": {
             "value": false
           },
+          "vmAdministratorAccountUsername": {
+            "value": "[parameters('vmAdministratorAccountUsername')]"
+          },
+          "vmAdministratorAccountPassword": {
+            "value": "[parameters('vmAdministratorAccountPassword')]"
+          },
           "administratorAccountUsername": {
             "value": "[parameters('administratorAccountUsername')]"
           },
@@ -634,15 +617,6 @@
           "location": {
             "value": "[parameters('vmLocation')]"
           },
-          "usePublicIP": {
-            "value": "[parameters('usePublicIP')]"
-          },
-          "publicIpAddressType": {
-            "value": "[parameters('publicIpAddressType')]"
-          },
-          "publicIpAddressSku": {
-            "value": "[parameters('publicIpAddressSku')]"
-          },
           "createNetworkSecurityGroup": {
             "value": "[parameters('createNetworkSecurityGroup')]"
           },
@@ -657,9 +631,6 @@
           },
           "networkSecurityGroupTags": {
             "value": "[parameters('networkSecurityGroupTags')]"
-          },
-          "publicIPAddressTags": {
-            "value": "[parameters('publicIPAddressTags')]"
           },
           "virtualMachineTags": {
             "value": "[parameters('virtualMachineTags')]"
