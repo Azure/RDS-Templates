@@ -23,7 +23,7 @@
     },
     "resources": [
     {
-      "type": "Microsoft.DesktopVirtualization/workspace/providers/diagnosticSettings",
+      "type": "Microsoft.DesktopVirtualization/workspaces/providers/diagnosticSettings",
       "apiVersion": "2017-05-01-preview",
       "name": "[concat(parameters('workspaceName'),'/Microsoft.Insights/', parameters('settingName'))]",
       "properties": {
