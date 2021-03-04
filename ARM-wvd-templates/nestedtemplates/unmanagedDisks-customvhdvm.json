@@ -361,31 +361,31 @@
                 }
             }
         },
-        {
-            "apiVersion": "2018-10-01",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'dscextension')]",
-            "location": "[parameters('location')]",
-            "dependsOn": ["rdsh-domain-join-loop"],
-            "copy": {
-                "name": "rdsh-dsc-loop",
-                "count": "[parameters('rdshNumberOfInstances')]"
-            },
+      {
+        "apiVersion": "2018-10-01",
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'Microsoft.PowerShell.DSC')]",
+        "location": "[parameters('location')]",
+        "dependsOn": ["rdsh-domain-join-loop"],
+        "copy": {
+          "name": "rdsh-dsc-loop",
+          "count": "[parameters('rdshNumberOfInstances')]"
+        },
+        "properties": {
+          "publisher": "Microsoft.Powershell",
+          "type": "DSC",
+          "typeHandlerVersion": "2.73",
+          "autoUpgradeMinorVersion": true,
+          "settings": {
+            "modulesUrl": "[parameters('artifactsLocation')]",
+            "configurationFunction": "Configuration.ps1\\AddSessionHost",
             "properties": {
-                "publisher": "Microsoft.Powershell",
-                "type": "DSC",
-                "typeHandlerVersion": "2.73",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "modulesUrl": "[parameters('artifactsLocation')]",
-                    "configurationFunction": "Configuration.ps1\\AddSessionHost",
-                    "properties": {
-                        "hostPoolName": "[parameters('hostpoolName')]",
-                        "registrationInfoToken": "[parameters('hostpoolToken')]"
-                    }
-                }
+              "hostPoolName": "[parameters('hostpoolName')]",
+              "registrationInfoToken": "[parameters('hostpoolToken')]"
             }
+          }
         }
+      }
     ],
     "outputs": {}
 }
