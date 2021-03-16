@@ -2,13 +2,16 @@ configuration AddSessionHost
 {
     param
     (    
-        [Parameter(mandatory = $true)]
+        [Parameter(Mandatory = $true)]
         [string]$HostPoolName,
 
         [Parameter(Mandatory = $true)]
         [string]$RegistrationInfoToken,
 
-        [Parameter(mandatory = $false)]
+        [Parameter(Mandatory = $false)]
+        [bool]$AadJoin = $false,
+
+        [Parameter(Mandatory = $false)]
         [bool]$EnableVerboseMsiLogging = $false
     )
 
@@ -47,6 +50,12 @@ configuration AddSessionHost
 
                     try {
                         & "$using:ScriptPath\Script-AddRdshServer.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging)
+                        if ($using:AadJoin -eq $true) {
+                            # 6 Minute sleep to guarantee intune metadata logging
+                            Write-Log -Message ("Configuration.ps1 complete, sleeping for 6 minutes")
+                            Start-Sleep -Seconds 360
+                            Write-Log -Message ("Configuration.ps1 complete, waking up from 6 minute sleep")
+                        }
                     }
                     catch {
                         $ErrMsg = $PSItem | Format-List -Force | Out-String
@@ -83,6 +92,12 @@ configuration AddSessionHost
                     
                     try {
                         & "$using:ScriptPath\Script-AddRdshServer.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging)
+                        if ($using:AadJoin -eq $true) {
+                            # 6 Minute sleep to guarantee intune metadata logging
+                            Write-Log -Message ("Configuration.ps1 complete, sleeping for 6 minutes")
+                            Start-Sleep -Seconds 360
+                            Write-Log -Message ("Configuration.ps1 complete, waking up from 6 minute sleep")
+                        }
                     }
                     catch {
                         $ErrMsg = $PSItem | Format-List -Force | Out-String
