@@ -48,6 +48,10 @@
         {
           "category": "HostRegistration",
           "enabled": true
+        },
+        {
+          "category": "AgentHealthStatus",
+          "enabled": true
         }
         ]
       }
