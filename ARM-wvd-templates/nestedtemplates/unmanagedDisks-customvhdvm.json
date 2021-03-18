@@ -220,6 +220,7 @@
         "storageAccountName": "[split( split( parameters('VmImageVhdUri'), '/')[2], '.' )[0]]",
         "storageaccount": "[concat(resourceId(parameters('storageAccountResourceGroupName'),'Microsoft.Storage/storageAccounts',variables('storageAccountName')))]",
         "newNsgName": "[concat(parameters('rdshPrefix'), 'nsg-', parameters('_guidValue'))]",
+        "newNsgDeploymentName": "[concat('NSG-linkedTemplate-', parameters('_guidValue'))]"
         "nsgId": "[if(parameters('createNetworkSecurityGroup'), resourceId('Microsoft.Network/networkSecurityGroups', variables('newNsgName')), parameters('networkSecurityGroupId'))]",
         "isVMAdminAccountCredentialsProvided": "[and(not(equals(parameters('vmAdministratorAccountUsername'), '')), not(equals(parameters('vmAdministratorAccountPassword'), '')))]",
         "vmAdministratorUsername": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountUsername'), first(split(parameters('administratorAccountUsername'), '@')))]",
@@ -228,7 +229,7 @@
     "resources": [
         {
             "apiVersion": "2018-05-01",
-            "name": "[concat('NSG-linkedTemplate-', parameters('_guidValue'))]",
+            "name": "[variables('newNsgDeploymentName')]",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",
@@ -277,7 +278,7 @@
                 "networkSecurityGroup":"[if(empty(parameters('networkSecurityGroupId')), json('null'), json(concat('{\"id\": \"', variables('nsgId'), '\"}')))]"                     
             },
             "dependsOn": [
-                "NSG-linkedTemplate"
+                "[variables('newNsgDeploymentName')]"
             ]
         },
         {
