@@ -245,7 +245,7 @@
         },
         {
             "apiVersion": "2018-05-01",
-            "name": "NSG-linkedTemplate",
+            "name": "[concat('NSG-linkedTemplate-', parameters('_guidValue'))]",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",
