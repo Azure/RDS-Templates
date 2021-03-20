@@ -7,14 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/wvd-templates/"
-        },
-        "_createPidResource": {
-            "type": "bool",
-            "metadata": {
-                "description": "For internally use only, do not set a value for this parameter."
-            },
-            "defaultValue": true
+            "defaultValue": "[deployment().properties.templateLink.uri]"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
