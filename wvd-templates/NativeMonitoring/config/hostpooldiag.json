@@ -17,7 +17,7 @@
       "workspaceId": {
         "type": "string",
         "metadata": {
-          "description": "ResourceIDl of the Log Analytics workspace in which resource logs should be saved."
+          "description": "ResourceID of the Log Analytics workspace in which resource logs should be saved."
         }
       }
     },
@@ -47,6 +47,10 @@
         },
         {
           "category": "HostRegistration",
+          "enabled": true
+        },
+        {
+          "category": "AgentHealthStatus",
           "enabled": true
         }
         ]
