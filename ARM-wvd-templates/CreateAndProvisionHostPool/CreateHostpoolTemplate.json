@@ -1,5 +1,5 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "nestedTemplatesLocation": {
@@ -79,7 +79,7 @@
     "administratorAccountUsername": {
       "type": "string",
       "metadata": {
-        "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'user1@contoso.com'."
+        "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'vmjoiner@contoso.com'."
       },
       "defaultValue": ""
     },
@@ -104,12 +104,55 @@
       },
       "defaultValue": ""
     },
+    "availabilityOption": {
+      "type": "string",
+      "metadata": {
+        "description": "Select the availability options for the VMs."
+      },
+      "defaultValue": "None",
+      "allowedValues": [
+        "None",
+        "AvailabilitySet",
+        "AvailabilityZone"
+      ]
+    },
+    "availabilitySetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of avaiability set to be used when create the VMs."
+      },
+      "defaultValue": ""
+    },
     "createAvailabilitySet": {
       "type": "bool",
       "metadata": {
-        "description": "Whether to create a new availability set for the VMs"
+        "description": "Whether to create a new availability set for the VMs."
       },
       "defaultValue": false
+    },
+    "availabilitySetUpdateDomainCount": {
+      "type": "int",
+      "metadata": {
+        "description": "The platform update domain count of avaiability set to be created."
+      },
+      "defaultValue": 5,
+      "allowedValues": [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ]
+    },
+    "availabilitySetFaultDomainCount": {
+      "type": "int",
+      "metadata": {
+        "description": "The platform fault domain count of avaiability set to be created."
+      },
+      "defaultValue": 2,
+      "allowedValues": [ 1, 2, 3 ]
+    },
+    "availabilityZone": {
+      "type": "int",
+      "metadata": {
+        "description": "The number of availability zone to be used when create the VMs."
+      },
+      "defaultValue": 1,
+      "allowedValues": [ 1, 2, 3 ]
     },
     "vmResourceGroup": {
       "type": "string",
@@ -412,6 +455,20 @@
         "description": "Domain to join"
       },
       "defaultValue": ""
+    },
+    "aadJoin": {
+      "type": "bool",
+      "metadata": {
+        "description": "IMPORTANT: Please don't use this parameter as AAD Join is not supported yet. True if AAD Join, false if AD join"
+      },
+      "defaultValue": false
+    },
+    "intune": {
+      "type": "bool",
+      "metadata": {
+        "description": "IMPORTANT: Please don't use this parameter as intune enrollment is not supported yet. True if intune enrollment is selected.  False otherwise"
+      },
+      "defaultValue": false
     }
   },
   "variables": {
@@ -422,7 +479,6 @@
     "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
     "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
     "hostpoolName": "[replace(parameters('hostpoolName'),'\"','')]",
-    "hostpoolFriendlyName": "[parameters('hostpoolFriendlyName')]",
     "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('vmImageType'),' ', '')), 'vm')]",
     "vmTemplateUri": "[concat(parameters('nestedTemplatesLocation'), variables('vmTemplateName'),'.json')]",
     "rdshVmNamesOutput": {
@@ -439,7 +495,27 @@
     "appGroupName": "[concat(variables('hostpoolName'),'-DAG')]",
     "appGroupResourceId": "[createArray(resourceId('Microsoft.DesktopVirtualization/applicationgroups/', variables('appGroupName')))]",
     "workspaceResourceGroup": "[if(empty(parameters('workspaceResourceGroup')), resourceGroup().name, parameters('workspaceResourceGroup'))]",
-    "applicationGroupReferencesArr": "[if(equals('',parameters('allApplicationGroupReferences')), variables('appGroupResourceId'), concat(split(parameters('allApplicationGroupReferences'),','), variables('appGroupResourceId')))]"
+    "applicationGroupReferencesArr": "[if(equals('',parameters('allApplicationGroupReferences')), variables('appGroupResourceId'), concat(split(parameters('allApplicationGroupReferences'),','), variables('appGroupResourceId')))]",
+    "hostpoolRequiredProps": {
+      "friendlyName": "[parameters('hostpoolFriendlyName')]",
+      "description": "[parameters('hostpoolDescription')]",
+      "hostpoolType": "[parameters('hostpoolType')]",
+      "personalDesktopAssignmentType": "[parameters('personalDesktopAssignmentType')]",
+      "maxSessionLimit": "[parameters('maxSessionLimit')]",
+      "loadBalancerType": "[parameters('loadBalancerType')]",
+      "validationEnvironment": "[parameters('validationEnvironment')]",
+      "preferredAppGroupType": "[parameters('preferredAppGroupType')]",
+      "ring": null,
+      "registrationInfo": {
+        "expirationTime": "[parameters('tokenExpirationTime')]",
+        "token": null,
+        "registrationTokenOperation": "Update"
+      },
+      "vmTemplate": "[parameters('vmTemplate')]"
+    },
+    "hostpoolOptionalProps": {
+      "customRdpProperty": "[parameters('customRdpProperty')]"
+    }
   },
   "resources": [
     {
@@ -448,24 +524,7 @@
       "type": "Microsoft.DesktopVirtualization/hostpools",
       "location": "[parameters('location')]",
       "tags": "[parameters('hostpoolTags')]",
-      "properties": {
-        "friendlyName": "[parameters('hostpoolFriendlyName')]",
-        "description": "[parameters('hostpoolDescription')]",
-        "hostpoolType": "[parameters('hostpoolType')]",
-        "customRdpProperty": "[parameters('customRdpProperty')]",
-        "personalDesktopAssignmentType": "[parameters('personalDesktopAssignmentType')]",
-        "maxSessionLimit": "[parameters('maxSessionLimit')]",
-        "loadBalancerType": "[parameters('loadBalancerType')]",
-        "validationEnvironment": "[parameters('validationEnvironment')]",
-        "preferredAppGroupType": "[parameters('preferredAppGroupType')]",
-        "ring": null,
-        "registrationInfo": {
-          "expirationTime": "[parameters('tokenExpirationTime')]",
-          "token": null,
-          "registrationTokenOperation": "Update"
-        },
-        "vmTemplate": "[parameters('vmTemplate')]"
-      }
+      "properties": "[if(empty(parameters('customRdpProperty')), variables('hostpoolRequiredProps'), union(variables('hostpoolOptionalProps'), variables('hostpoolRequiredProps') ))]"
     },
     {
       "name": "[variables('appGroupName')]",
@@ -492,7 +551,7 @@
       "properties": {
         "mode": "Incremental",
         "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
           "resources": [
             {
@@ -516,22 +575,22 @@
       "name": "[concat('AVSet-linkedTemplate-', parameters('deploymentId'))]",
       "type": "Microsoft.Resources/deployments",
       "resourceGroup": "[parameters('vmResourceGroup')]",
-      "condition": "[parameters('createAvailabilitySet')]",
+      "condition": "[and(variables('createVMs'), equals(parameters('availabilityOption'), 'AvailabilitySet'), parameters('createAvailabilitySet'))]",
       "properties": {
         "mode": "Incremental",
         "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
           "resources": [
             {
               "apiVersion": "2018-10-01",
               "type": "Microsoft.Compute/availabilitySets",
-              "name": "[concat(variables('rdshPrefix'), 'availabilitySet-', parameters('vmLocation'))]",
+              "name": "[parameters('availabilitySetName')]",
               "location": "[parameters('vmLocation')]",
               "tags": "[parameters('availabilitySetTags')]",
               "properties": {
-                "platformUpdateDomainCount": 5,
-                "platformFaultDomainCount": 2
+                "platformUpdateDomainCount": "[parameters('availabilitySetUpdateDomainCount')]",
+                "platformFaultDomainCount": "[parameters('availabilitySetFaultDomainCount')]"
               },
               "sku": {
                 "name": "[variables('avSetSKU')]"
@@ -562,6 +621,15 @@
         "parameters": {
           "artifactsLocation": {
             "value": "[parameters('artifactsLocation')]"
+          },
+          "availabilityOption": {
+            "value": "[parameters('availabilityOption')]"
+          },
+          "availabilitySetName": {
+            "value": "[parameters('availabilitySetName')]"
+          },
+          "availabilityZone": {
+            "value": "[parameters('availabilityZone')]"
           },
           "vmImageVhdUri": {
             "value": "[parameters('vmImageVhdUri')]"
@@ -649,6 +717,12 @@
           },
           "ouPath": {
             "value": "[parameters('ouPath')]"
+          },
+          "aadJoin": {
+            "value": "[parameters('aadJoin')]"
+          },
+          "intune": {
+            "value": "[parameters('intune')]"
           },
           "_guidValue": {
             "value": "[parameters('deploymentId')]"
