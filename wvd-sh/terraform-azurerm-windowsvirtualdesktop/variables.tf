@@ -192,11 +192,11 @@ variable "vm_storage_os_disk_size" {
 }
 
 variable "managed_disk_sizes" {
-  description = "**OPTIONAL**: The sizes of the optional manged data disks"
+  description = "**OPTIONAL**: The sizes of the optional managed data disks"
   default     = [""]
 }
 
 variable "managed_disk_type" {
-  description = "**OPTIONAL**: If a manged disks are attached this allows for choosing the type. The dafault value is Standard_LRS"
+  description = "**OPTIONAL**: If a managed disks are attached this allows for choosing the type. The dafault value is Standard_LRS"
   default     = "Standard_LRS"
 }
