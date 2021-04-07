@@ -1,284 +1,263 @@
-﻿$subscriptionid = Get-AutomationVariable -Name 'subscriptionid'
+﻿#Initializing variables
+$SubscriptionId = Get-AutomationVariable -Name 'subscriptionid'
 $ResourceGroupName = Get-AutomationVariable -Name 'ResourceGroupName'
 $RDBrokerURL = Get-AutomationVariable -Name 'RDBrokerURL'
 $ResourceURL = Get-AutomationVariable -Name 'ResourceURL'
 $fileURI = Get-AutomationVariable -Name 'fileURI'
-$Username = Get-AutomationVariable -Name 'Username'
-$Password = Get-AutomationVariable -Name 'Password'
-$automationAccountName = Get-AutomationVariable -Name 'accountName'
+$AutomationAccountName = Get-AutomationVariable -Name 'accountName'
 $WebApp = Get-AutomationVariable -Name 'webApp'
 $ApiApp = Get-AutomationVariable -Name 'apiApp'
 
-Invoke-WebRequest -Uri $fileURI -OutFile "C:\msft-wvd-saas-offering.zip"
-New-Item -Path "C:\msft-wvd-saas-offering" -ItemType directory -Force -ErrorAction SilentlyContinue
-Expand-Archive "C:\msft-wvd-saas-offering.zip" -DestinationPath "C:\msft-wvd-saas-offering" -ErrorAction SilentlyContinue
-$AzureModulesPath = Get-ChildItem -Path "C:\msft-wvd-saas-offering\msft-wvd-saas-offering"| Where-Object {$_.FullName -match 'AzureModules.zip'}
-Expand-Archive $AzureModulesPath.fullname -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
+$FileNames = "msft-wvd-saas-api.zip,msft-wvd-saas-web.zip,AzureModules.zip"
+$SplitFilenames = $FileNames.split(",")
+foreach($Filename in $SplitFilenames){
+if($Filename -eq "AzureModules.zip"){
+Invoke-WebRequest -Uri $fileURI/scripts/$Filename -OutFile "C:\$Filename"
+}else{
+Invoke-WebRequest -Uri $fileURI/$Filename -OutFile "C:\$Filename"
+}
+}
+#New-Item -Path "C:\msft-wvd-saas-offering" -ItemType directory -Force -ErrorAction SilentlyContinue
+Expand-Archive "C:\AzureModules.zip" -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
 
-Import-Module AzureRM.Resources
-Import-Module AzureRM.Profile
-Import-Module AzureRM.Websites
-Import-Module Azure
-Import-Module AzureRM.Automation
-Import-Module AzureAD
+Import-Module Az.Accounts -Global
+Import-Module Az.Resources -Global
+Import-Module Az.Websites -Global
+Import-Module Az.Automation -Global
+Import-Module AzureAD -Global
 
-    Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
-    Get-ExecutionPolicy -List
-    #The name of the Automation Credential Asset this runbook will use to authenticate to Azure.
-    $CredentialAssetName = 'DefaultAzureCredential'
+Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope Process -Force -Confirm:$false
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
+Get-ExecutionPolicy -List
+#The name of the Automation Credential Asset this runbook will use to authenticate to Azure.
+$CredentialAssetName = 'ManagementUXDeploy'
 
-    #Get the credential with the above name from the Automation Asset store
-    $Cred = Get-AutomationPSCredential -Name $CredentialAssetName
-    Add-AzureRmAccount -Environment 'AzureCloud' -Credential $Cred
-    Select-AzureRmSubscription -SubscriptionId $subscriptionid
-    $CodeBitPath= "C:\msft-wvd-saas-offering\msft-wvd-saas-offering"
-    $WebAppDirectory = ".\msft-wvd-saas-web"
-    $WebAppExtractionPath = ".\msft-wvd-saas-web\msft-wvd-saas-web.zip"
-    $ApiAppDirectory = ".\msft-wvd-saas-api"
-    $ApiAppExtractionPath = ".\msft-wvd-saas-api\msft-wvd-saas-api.zip"
+#Authenticate Azure
+#Get the credential with the above name from the Automation Asset store
+$AzCredentials = Get-AutomationPSCredential -Name $CredentialAssetName
+Connect-AzAccount -Environment 'AzureCloud' -Credential $AzCredentials
+Select-AzSubscription -SubscriptionId $SubscriptionId
 
-	#Function to get PublishingProfileCredentials
-	function Get-PublishingProfileCredentials($resourceGroupName, $webAppName){
- 
-    $resourceType = "Microsoft.Web/sites/config"
-    $resourceName = "$webAppName/publishingcredentials"
- 
-    $publishingCredentials = Invoke-AzureRmResourceAction -ResourceGroupName $resourceGroupName -ResourceType $resourceType -ResourceName $resourceName -Action list -ApiVersion 2015-08-01 -Force
- 
-       return $publishingCredentials
-} 
- 
-	#Function to get KuduApiAuthorisationHeaderValue
-	function Get-KuduApiAuthorisationHeaderValue($resourceGroupName, $webAppName, $slotName = $null){
-    $publishingCredentials = Get-PublishingProfileCredentials $resourceGroupName $webAppName $slotName
-    return ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $publishingCredentials.Properties.PublishingUserName, $publishingCredentials.Properties.PublishingPassword))))
+New-Item -Path "C:\msft-wvd-saas-web" -ItemType directory -Force -ErrorAction SilentlyContinue
+$WebAppDirectory = "C:\msft-wvd-saas-web"
+
+#Function to get PublishingProfileCredentials
+function Get-PublishingProfileCredentials ($resourceGroupName,$webAppName) {
+
+	$resourceType = "Microsoft.Web/sites/config"
+	$resourceName = "$webAppName/publishingcredentials"
+
+	$publishingCredentials = Invoke-AzResourceAction -ResourceGroupName $resourceGroupName -ResourceType $resourceType -ResourceName $resourceName -Action list -ApiVersion 2015-08-01 -Force
+
+	return $publishingCredentials
 }
 
-	#Function to confirm files are uploaded or not in both azure app services
-	function RunCommand($dir,$command,$resourceGroupName, $webAppName, $slotName = $null){
-        $kuduApiAuthorisationToken = Get-KuduApiAuthorisationHeaderValue $resourceGroupName $webAppName $slotName
-        $kuduApiUrl="https://$webAppName.scm.azurewebsites.net/api/command"
-        $Body = 
-          @{
-          "command"=$command;
-           "dir"=$dir
-           } 
-        $bodyContent=@($Body) | ConvertTo-Json
-        #Write-output $bodyContent
-         Invoke-RestMethod -Uri $kuduApiUrl `
-                            -Headers @{"Authorization"=$kuduApiAuthorisationToken;"If-Match"="*"} `
-                            -Method POST -ContentType "application/json" -Body $bodyContent
-    }
+#Function to get KuduApiAuthorisationHeaderValue
+function Get-KuduApiAuthorisationHeaderValue ($resourceGroupName,$webAppName,$slotName = $null) {
+	$publishingCredentials = Get-PublishingProfileCredentials $resourceGroupName $webAppName $slotName
+	return ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $publishingCredentials.Properties.PublishingUserName,$publishingCredentials.Properties.PublishingPassword))))
+}
+
+#Function to confirm files are uploaded or not in both azure app services
+function RunCommand ($dir,$command,$resourceGroupName,$webAppName,$slotName = $null) {
+	$kuduApiAuthorisationToken = Get-KuduApiAuthorisationHeaderValue $resourceGroupName $webAppName $slotName
+	$kuduApiUrl = "https://$webAppName.scm.azurewebsites.net/api/command"
+	$Body =
+	@{
+		"command" = $command;
+		"dir" = $dir
+	}
+	$bodyContent = @($Body) | ConvertTo-Json
+	#Write-output $bodyContent
+	Invoke-RestMethod -Uri $kuduApiUrl `
+ 		-Headers @{ "Authorization" = $kuduApiAuthorisationToken; "If-Match" = "*" } `
+ 		-Method POST -ContentType "application/json" -Body $bodyContent
+}
 
 try
 {
-                # Get Url of Web-App
-                $GetWebApp = Get-AzureRmWebApp -Name $WebApp -ResourceGroupName $ResourceGroupName
-                $WebUrl = $GetWebApp.DefaultHostName
-                 
-                #$requiredAccessName=$ResourceURL.Split("/")[3]
-                $redirectURL="https://"+"$WebUrl"+"/"
-                
-                #Static value of wvdInfra web appname/appid
-                $wvdinfraWebAppId = "5a0aa725-4958-4b0c-80a9-34562e23f3b7"
-                $serviceIdinfo = Get-AzureRmADServicePrincipal -ErrorAction SilentlyContinue | Where-Object {$_.ApplicationId -eq $wvdinfraWebAppId}
-                
-                if(!$serviceIdinfo){
-                $wvdinfraWebApp = "Windows Virtual Desktop"
-                
-                $serviceIdinformation = Get-AzureRmADServicePrincipal -DisplayName $wvdinfraWebApp -ErrorAction SilentlyContinue
-                foreach($servicePName in $serviceIdinformation){
-                if($servicePName.ApplicationId -eq $wvdinfraWebAppId){
-                $serviceIdinfo = $servicePName
-                }                
-                }
-                }
-                	
-                $wvdInfraWebAppObjId = $serviceIdinfo.Id.Guid
-                #generate unique ID based on subscription ID
-                $unique_subscription_id = ($subscriptionid).Replace('-', '').substring(0, 19)
-                
+	# Get Url of Web-App
+	$GetWebApp = Get-AzWebApp -Name $WebApp -ResourceGroupName $ResourceGroupName
+	$WebUrl = $GetWebApp.DefaultHostName
 
-                #generate the display name for native app in AAD
-                $wvdSaaS_clientapp_display_name = "wvdSaaS" + $ResourceGroupName.ToLowerInvariant() + $unique_subscription_id.ToLowerInvariant()
-                #Creating ClientApp Ad application in azure Active Directory
-                Connect-AzureAD -Credential $Cred
-                $clientAdApp = New-AzureADApplication -DisplayName $wvdSaaS_clientapp_display_name -ReplyUrls $redirectURL -PublicClient $true -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
-                
-                #Collecting WVD Serviceprincipal Api Permission
-                $WVDServicePrincipal = Get-AzureADServicePrincipal -ObjectId $wvdInfraWebAppObjId #-SearchString $wvdInfraWebAppName | Where-Object {$_.DisplayName -eq $wvdInfraWebAppName}
-                $AzureAdResouceAcessObject = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
-                $AzureAdResouceAcessObject.ResourceAppId = $WVDServicePrincipal.AppId
-                foreach($permission in $WVDServicePrincipal.Oauth2Permissions){
-                $AzureAdResouceAcessObject.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
-                }
+	#$requiredAccessName=$ResourceURL.Split("/")[3]
+	$redirectURL = "https://" + "$WebUrl" + "/"
 
-                #Collecting AzureService Management Api permission
-                $AzureServMgmtApi = Get-AzureRmADServicePrincipal -ApplicationId "797f4846-ba00-4fd7-ba43-dac1f8f63013"
-                $AzureAdServMgmtApi = Get-AzureADServicePrincipal -ObjectId $AzureServMgmtApi.Id.Guid
-                $AzureServMgmtApiResouceAcessObject = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
-                $AzureServMgmtApiResouceAcessObject.ResourceAppId = $AzureAdServMgmtApi.AppId
-                foreach($SerVMgmtAPipermission in $AzureAdServMgmtApi.Oauth2Permissions){
-                $AzureServMgmtApiResouceAcessObject.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $SerVMgmtAPipermission.Id,"Scope"
-                }
+    #Get the credential with the above name from the Automation Asset store
+    $Credentials = Get-AutomationPSCredential -Name $CredentialAssetName
+    #Connect to AzureAD
+    Connect-AzureAD -Credential $Credentials
 
-                #Adding WVD Api Required Access and Azure Service Management Api required access Permissions to ClientAPP AD Application.
-				Set-AzureADApplication -ObjectId $clientAdApp.ObjectId -RequiredResourceAccess $AzureAdResouceAcessObject,$AzureServMgmtApiResouceAcessObject -ErrorAction Stop
-                }
-                
-        catch
-        {
-            Write-Output $_.Exception.Message
-            throw $_.Exception.Message
-        }
+	#Static value of wvdInfra web appname/appid
+	$wvdinfraWebAppId = "5a0aa725-4958-4b0c-80a9-34562e23f3b7"
+	$serviceIdinfo = Get-AzADServicePrincipal -ErrorAction SilentlyContinue | Where-Object { $_.ApplicationId -eq $wvdinfraWebAppId }
 
-        if($ApiApp)
-        {
-            try
-            {
-                ## PUBLISHING API-APP PACKAGE ##
-                
-                Set-Location $CodeBitPath
+	$wvdInfraWebAppObjId = $serviceIdinfo.Id
+	#generate unique ID based on subscription ID
+	$unique_subscription_id = ($SubscriptionId).Replace('-','').substring(0,19)
 
-                # Extract the Api-App ZIP file content.
-            
-                Write-Output "Extracting the Api-App Zip File"
-                Expand-Archive -Path $ApiAppExtractionPath -DestinationPath $ApiAppDirectory -Force 
-                $ApiAppExtractedPath = Get-ChildItem -Path $ApiAppDirectory | Where-Object {$_.FullName -notmatch '\\*.zip($|\\)'} | Resolve-Path -Verbose
-                
-                # Get publishing profile from Api-App
 
-                Write-Output "Getting the Publishing profile information from Api-App"
-                $ApiAppXML = (Get-AzureRmWebAppPublishingProfile -Name $ApiApp `
-                -ResourceGroupName $ResourceGroupName  `
-                -OutputFile null)
-                $ApiAppXML = [xml]$ApiAppXML
+	#generate the display name for native app in AAD
+	$wvdSaaS_clientapp_display_name = "wvdSaaS" + $ResourceGroupName.ToLowerInvariant() + $unique_subscription_id.ToLowerInvariant()
+	
+	#Creating ClientApp Ad application in azure Active Directory
+	$clientAdApp = New-AzureADApplication -DisplayName $wvdSaaS_clientapp_display_name -ReplyUrls $redirectURL -PublicClient $true -AvailableToOtherTenants $false -Verbose -ErrorAction Stop
 
-                # Extract connection information from publishing profile
+	#Collecting WVD Serviceprincipal Api Permission
+	$WVDServicePrincipal = Get-AzureADServicePrincipal -ObjectId $wvdInfraWebAppObjId #-SearchString $wvdInfraWebAppName | Where-Object {$_.DisplayName -eq $wvdInfraWebAppName}
+    
+	$AzureAdResouceAcessObject = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
+	$AzureAdResouceAcessObject.ResourceAppId = $WVDServicePrincipal.AppId
+	foreach ($permission in $WVDServicePrincipal.Oauth2Permissions) {
+		$AzureAdResouceAcessObject.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $permission.Id,"Scope"
+	}
 
-                Write-Output "Gathering the username, password and publishurl from the Web-App Publishing Profile"
-                $ApiAppUserName = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userName").value
-                $ApiAppPassword = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userPWD").value
-                $ApiAppURL = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@publishUrl").value
-                
-                # Publish Api-App Package files recursively
+	#Collecting AzureService Management Api permission
+	$AzureServMgmtApi = Get-AzADServicePrincipal -ApplicationId "797f4846-ba00-4fd7-ba43-dac1f8f63013"
+	$AzureAdServMgmtApi = Get-AzureADServicePrincipal -ObjectId $AzureServMgmtApi.Id
+	$AzureServMgmtApiResouceAcessObject = New-Object -TypeName "Microsoft.Open.AzureAD.Model.RequiredResourceAccess"
+	$AzureServMgmtApiResouceAcessObject.ResourceAppId = $AzureAdServMgmtApi.AppId
+	foreach ($SerVMgmtAPipermission in $AzureAdServMgmtApi.Oauth2Permissions) {
+		$AzureServMgmtApiResouceAcessObject.ResourceAccess += New-Object -TypeName "Microsoft.Open.AzureAD.Model.ResourceAccess" -ArgumentList $SerVMgmtAPipermission.Id,"Scope"
+	}
 
-                Write-Output "Uploading the Extracted files to Api-App"
-                Get-ChildItem $ApiAppExtractedPath  | Compress-Archive -update -DestinationPath 'c:\msft-wvd-saas-Api.zip' -Verbose 
-                test-path -path 'c:\msft-wvd-saas-Api.zip'
-                $filePath = 'C:\msft-wvd-saas-Api.zip'
-                $apiUrl = "https://$ApiAppURL/api/zipdeploy"
-                $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $ApiAppUserName, $ApiAppPassword)))
-                $userAgent = "powershell/1.0"
-                Invoke-RestMethod -Uri $apiUrl -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)} -UserAgent $userAgent -Method POST -InFile $filePath -ContentType "multipart/form-data"
-                
-                $ApplicationId=$clientAdApp.AppID
-                # Adding App Settings to Api-App
-                Write-Output "Adding App settings to Api-App"
-                $ApiAppSettings = @{"ApplicationId" = "$ApplicationId";
-                                    "RDBrokerUrl" = "$RDBrokerURL";
-                                    "ResourceUrl" = "$ResourceURL";
-                                    "RedirectURI" = "https://"+"$WebUrl"+"/";
-				}
-                Set-AzureRmWebApp -AppSettings $ApiAppSettings -Name $ApiApp -ResourceGroupName $ResourceGroupName
-				
-				#Checking Extracted files are uploaded or not
-				$returnvalue = RunCommand -dir "site\wwwroot\" -command "ls web.config"  -resourceGroupName $resourceGroupName -webAppName $ApiApp
-				if($returnvalue.output){
-				Write-Output "Uploading of Extracted files to Api-App is Successful"
-				write-output "Published files are uploaded successfully"
-				}
-				else{
-				Write-output "published files are not uploaded Error: $returnvalue.error"
-				throw $returnvalue.error
-				}
-            }
-            catch
-            {
-                Write-Output $_.Exception.Message
-                throw $_.Exception.Message
-            }
-        }
-        if($WebApp -and $ApiApp)
-        {
-            try
-            {
-                ## PUBLISHING WEB-APP PACKAGE ##
-                
-                Set-Location $CodeBitPath
+	#Adding WVD Api Required Access and Azure Service Management Api required access Permissions to ClientAPP AD Application.
+	Set-AzureADApplication -ObjectId $clientAdApp.ObjectId -RequiredResourceAccess $AzureAdResouceAcessObject,$AzureServMgmtApiResouceAcessObject -ErrorAction Stop
+	
+}
 
-                Write-Output "Extracting the Web-App Zip File"
- 
-                # Extract the Web-App ZIP file content.
+catch
+{
+	Write-Output $_.Exception.Message
+	throw $_.Exception.Message
+}
 
-                Expand-Archive -Path $WebAppExtractionPath -DestinationPath $WebAppDirectory -Force 
-                $WebAppExtractedPath = Get-ChildItem -Path $WebAppDirectory | Where-Object {$_.FullName -notmatch '\\*.zip($|\\)'} | Resolve-Path -Verbose
+if ($ApiApp)
+{
+	try
+	{
+	    # Get publishing profile from Api-App
 
-                # Get the main.bundle.js file Path 
+		Write-Output "Getting the Publishing profile information from Api-App"
+		$ApiAppXML = (Get-AzWebAppPublishingProfile -Name $ApiApp `
+ 				-ResourceGroupName $ResourceGroupName `
+ 				-OutputFile null)
+		$ApiAppXML = [xml]$ApiAppXML
 
-                $MainbundlePath = Get-ChildItem $WebAppExtractedPath -recurse | where {($_.FullName -match "main\.(\w+).bundle.js$")} | % {$_.FullName}
+		# Extract connection information from publishing profile
 
- 
-                # Get Url of Api-App 
+		Write-Output "Gathering the username, password and publishurl from the Web-App Publishing Profile"
+		$ApiAppUserName = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userName").value
+		$ApiAppPassword = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userPWD").value
+		$ApiAppURL = $ApiAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@publishUrl").value
 
-                $GetUrl = Get-AzureRmResource -ResourceName $ApiApp -ResourceGroupName $ResourceGroupName -ExpandProperties
-                $GetApiUrl = $GetUrl.Properties | select defaultHostName
-                $ApiUrl = $GetApiUrl.defaultHostName
+		# Publish Api-App Package files recursively
 
-                # Change the Url in the main.bundle.js file with the ApiURL
+		Write-Output "Uploading the Extracted files to Api-App"
+		#Get-ChildItem $ApiAppExtractedPath | Compress-Archive -update -DestinationPath 'c:\msft-wvd-saas-Api.zip' -Verbose
+		Test-Path -Path 'C:\msft-wvd-saas-Api.zip'
+		$filePath = 'C:\msft-wvd-saas-Api.zip'
+		$apiUrl = "https://$ApiAppURL/api/zipdeploy"
+		$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $ApiAppUserName,$ApiAppPassword)))
+		$userAgent = "powershell/1.0"
+		Invoke-RestMethod -Uri $apiUrl -Headers @{ Authorization = ("Basic {0}" -f $base64AuthInfo) } -UserAgent $userAgent -Method POST -InFile $filePath -ContentType "multipart/form-data"
 
-                Write-Output "Updating the Url in main.bundle.js file with Api-app Url"
-                (Get-Content $MainbundlePath).replace( "[api_url]", "https://"+$ApiUrl) | Set-Content $MainbundlePath
+		$ApplicationId = $clientAdApp.AppId
+		# Adding App Settings to Api-App
+		Write-Output "Adding App settings to Api-App"
+		$ApiAppSettings = @{ "ApplicationId" = "$ApplicationId";
+			"RDBrokerUrl" = "$RDBrokerURL";
+			"ResourceUrl" = "$ResourceURL";
+			"RedirectURI" = "https://" + "$WebUrl" + "/";
+		}
+		Set-AzWebApp -AppSettings $ApiAppSettings -Name $ApiApp -ResourceGroupName $ResourceGroupName
 
-                # Get publishing profile from web app
-                
-                Write-Output "Getting the Publishing profile information from Web-App"
-                $WebAppXML = (Get-AzureRmWebAppPublishingProfile -Name $WebApp `
-                -ResourceGroupName $ResourceGroupName  `
-                -OutputFile null)
+		#Checking Extracted files are uploaded or not
+		$returnvalue = RunCommand -dir "site\wwwroot\" -Command "ls web.config" -ResourceGroupName $resourceGroupName -webAppName $ApiApp
+		if ($returnvalue.output) {
+			Write-Output "Uploading of Extracted files to Api-App is Successful"
+			Write-Output "Published files are uploaded successfully"
+		}
+		else {
+			Write-Output "published files are not uploaded Error: $returnvalue.error"
+			throw $returnvalue.error
+		}
+	}
+	catch
+	{
+		Write-Output $_.Exception.Message
+		throw $_.Exception.Message
+	}
+}
+if ($WebApp -and $ApiApp)
+{
+	try
+	{
+		## PUBLISHING WEB-APP PACKAGE ##
+		Write-Output "Extracting the Web-App Zip File"
+		# Extract the Web-App ZIP file content.
+		Expand-Archive -Path "C:\msft-wvd-saas-web.zip" -DestinationPath $WebAppDirectory -Force
+																																  
 
-                $WebAppXML = [xml]$WebAppXML
+		# Get the main.bundle.js file Path 
+		$MainbundlePath = Get-ChildItem $WebAppDirectory -Recurse | Where-Object { ($_.FullName -match "main\.(\w+).bundle.js$") } | ForEach-Object { $_.FullName }
 
-                # Extract connection information from publishing profile
 
-                Write-Output "Gathering the username, password and publishurl from the Web-App Publishing Profile"
-                $WebAppUserName = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userName").value
-                $WebAppPassword = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userPWD").value
-                $WebAppURL = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@publishUrl").value
-             
-                # Publish Web-App Package files recursively
+		# Get Url of Api-App 
+		$GetUrl = Get-AzResource -ResourceName $ApiApp -ResourceGroupName $ResourceGroupName -ExpandProperties
+		$GetApiUrl = $GetUrl.Properties | Select-Object defaultHostName
+		$ApiUrl = $GetApiUrl.DefaultHostName
 
-                Write-Output "Uploading the Extracted files to Web-App"
-                Get-ChildItem $WebAppExtractedPath  | Compress-Archive -update  -DestinationPath 'c:\msft-wvd-saas-web.zip' -Verbose 
-                test-path -path 'c:\msft-wvd-saas-web.zip'
-                $filePath = 'C:\msft-wvd-saas-web.zip'
-                $apiUrl = "https://$WebAppUrl/api/zipdeploy"
-                $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $WebAppUserName, $WebApppassword)))
-                $userAgent = "powershell/1.0"
-                Invoke-RestMethod -Uri $apiUrl -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)} -UserAgent $userAgent -Method POST -InFile $filePath -ContentType "multipart/form-data"
-                
-				#Checking Extracted files are uploaded or not
-				$returnvalue = RunCommand -dir "site\wwwroot\" -command "ls web.config"  -resourceGroupName $resourceGroupName -webAppName $WebApp
-				if($returnvalue.output)
-				{
-				Write-Output "Uploading of Extracted files to Web-App is Successful"
-				Write-Output "Published files are uploaded successfully"
-				}
-				else{
-				Write-output "Extracted files are not uploaded Error: $returnvalue.error"
-				throw $returnvalue.error
-				}
-            }
-            catch
-            {
-                Write-Output $_.Exception.Message
-                throw $_.Exception.Message
-            }
+		# Change the Url in the main.bundle.js file with the ApiURL
+		Write-Output "Updating the Url in main.bundle.js file with Api-app Url"
+		(Get-Content $MainbundlePath).Replace("[api_url]","https://" + $ApiUrl) | Set-Content $MainbundlePath
 
-            Write-Output "Api URL : https://$ApiUrl"
-            Write-Output "Web URL : https://$WebUrl"
-        }
+		# Get publishing profile from web app
+		Write-Output "Getting the Publishing profile information from Web-App"
+		$WebAppXML = (Get-AzWebAppPublishingProfile -Name $WebApp `
+ 				-ResourceGroupName $ResourceGroupName `
+ 				-OutputFile null)
+
+		$WebAppXML = [xml]$WebAppXML
+
+		# Extract connection information from publishing profile
+
+		Write-Output "Gathering the username, password and publishurl from the Web-App Publishing Profile"
+		$WebAppUserName = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userName").value
+		$WebAppPassword = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@userPWD").value
+		$WebAppURL = $WebAppXML.SelectNodes("//publishProfile[@publishMethod=`"MSDeploy`"]/@publishUrl").value
+        Remove-Item "C:\msft-wvd-saas-web.zip" -Force
+		# Publish Web-App Package files recursively
+		Write-Output "Uploading the Extracted files to Web-App"
+		Get-ChildItem $WebAppDirectory | Compress-Archive -update -DestinationPath 'c:\msft-wvd-saas-web.zip' -Verbose
+		Test-Path -Path 'c:\msft-wvd-saas-web.zip'
+		$filePath = 'C:\msft-wvd-saas-web.zip'
+		$apiUrl = "https://$WebAppUrl/api/zipdeploy"
+		$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $WebAppUserName,$WebApppassword)))
+		$userAgent = "powershell/1.0"
+		Invoke-RestMethod -Uri $apiUrl -Headers @{ Authorization = ("Basic {0}" -f $base64AuthInfo) } -UserAgent $userAgent -Method POST -InFile $filePath -ContentType "multipart/form-data"
+
+		#Checking Extracted files are uploaded or not
+		$returnvalue = RunCommand -dir "site\wwwroot\" -Command "ls web.config" -ResourceGroupName $resourceGroupName -webAppName $WebApp
+		if ($returnvalue.output)
+		{
+			Write-Output "Uploading of Extracted files to Web-App is Successful"
+			Write-Output "Published files are uploaded successfully"
+		}
+		else {
+			Write-Output "Extracted files are not uploaded Error: $returnvalue.error"
+			throw $returnvalue.error
+		}
+	}
+	catch
+	{
+		Write-Output $_.Exception.Message
+		throw $_.Exception.Message
+	}
+
+	Write-Output "Api URL : https://$ApiUrl"
+	Write-Output "Web URL : https://$WebUrl"
+}
 
 
 
@@ -288,48 +267,55 @@ Param(
     [Parameter(Mandatory=`$True)]
     [string] `$SubscriptionId,
     [Parameter(Mandatory=`$True)]
-    [String] `$Username,
-    [Parameter(Mandatory=`$True)]
-    [string] `$Password,
-    [Parameter(Mandatory=`$True)]
     [string] `$ResourceGroupName,
     [Parameter(Mandatory=`$True)]
-    [string] `$automationAccountName
+    [string] `$AutomationAccountName,
+    [Parameter(Mandatory=`$True)]
+    [string] `$fileURI
  
 )
-Import-Module AzureRM.profile
-Import-Module AzureRM.Automation
-Import-Module AzureRM.Resources
-`$Securepass=ConvertTo-SecureString -String `$Password -AsPlainText -Force
-`$Azurecred=New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList(`$Username, `$Securepass)
-`$login=Login-AzureRmAccount -Credential `$Azurecred -SubscriptionId `$SubscriptionId
-`$AutomationAccount = Get-AzureRmAutomationAccount -ResourceGroupName `$ResourceGroupName -Name `$automationAccountName
+
+
+Invoke-WebRequest -Uri `$fileURI/scripts/AzureModules.zip -OutFile "C:\AzureModules.zip"
+
+Expand-Archive "C:\AzureModules.zip" -DestinationPath 'C:\Modules\Global' -ErrorAction SilentlyContinue
+
+Import-Module Az.profile
+Import-Module Az.Automation
+Import-Module Az.Resources
+#The name of the Automation Credential Asset this runbook will use to authenticate to Azure.
+`$CredentialAssetName = 'ManagementUXDeploy'
+#Get the credential with the above name from the Automation Asset store
+`$Credentials = Get-AutomationPSCredential -Name `$CredentialAssetName
+Add-AzAccount -Environment "AzureCloud" -Credential `$Credentials
+Select-AzSubscription -SubscriptionId `$SubscriptionId
+`$AutomationAccount = Get-AzAutomationAccount -ResourceGroupName `$ResourceGroupName -Name `$AutomationAccountName
 if(`$AutomationAccount){
-#Remove-AzureRmAutomationAccount -Name `$automationAccountName -ResourceGroupName `$ResourceGroupName -Force
-`$resourcedetails = Get-AzureRmResource -Name `$automationAccountName -ResourceGroupName `$ResourceGroupName
-Remove-AzureRmResource -ResourceId `$resourcedetails.ResourceId -Force
+#Remove-AzAutomationAccount -Name `$AutomationAccountName -ResourceGroupName `$ResourceGroupName -Force
+`$resourcedetails = Get-AzResource -Name `$AutomationAccountName -ResourceGroupName `$ResourceGroupName
+Remove-AzResource -ResourceId `$resourcedetails.ResourceId -Force
 }else{
 exit
 }
-"@| Out-File -FilePath RemoveAccount:\RemoveAccount.ps1 -Force
+"@ | Out-File -FilePath RemoveAccount:\RemoveAccount.ps1 -Force
 
-    $runbookName='removewvdsaasacctbook'
-    #Create a Run Book
-    New-AzureRmAutomationRunbook -Name $runbookName -Type PowerShell -ResourceGroupName $ResourceGroupName -AutomationAccountName $automationAccountName
+$runbookName = 'removewvdsaasacctbook'
+#Create a Run Book
+New-AzAutomationRunbook -Name $runbookName -Type PowerShell -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName
 
-    #Import modules to Automation Account
-    $modules="AzureRM.profile,Azurerm.compute,azurerm.resources"
-    $modulenames=$modules.Split(",")
-    foreach($modulename in $modulenames){
-    Set-AzureRmAutomationModule -Name $modulename -AutomationAccountName $automationAccountName -ResourceGroupName $ResourcegroupName
-    }
+#Import modules to Automation Account
+$modules = "Az.profile,Az.compute,Az.resources"
+$modulenames = $modules.Split(",")
+foreach ($modulename in $modulenames) {
+	Set-AzAutomationModule -Name $modulename -AutomationAccountName $AutomationAccountName -ResourceGroupName $ResourcegroupName
+}
 
-    #Importe powershell file to Runbooks
-    Import-AzureRmAutomationRunbook -Path "C:\RemoveAccount.ps1" -Name $runbookName -Type PowerShell -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName -Force
+#Importe powershell file to Runbooks
+Import-AzAutomationRunbook -Path "C:\RemoveAccount.ps1" -Name $runbookName -Type PowerShell -ResourceGroupName $ResourcegroupName -AutomationAccountName $AutomationAccountName -Force
 
-    #Publishing Runbook
-    Publish-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName
+#Publishing Runbook
+Publish-AzAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $AutomationAccountName
 
-    #Providing parameter values to powershell script file
-    $params=@{"UserName"=$UserName;"Password"=$Password;"ResourcegroupName"=$ResourcegroupName;"SubscriptionId"=$subscriptionid;"automationAccountName"=$automationAccountName}
-    Start-AzureRmAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $automationAccountName -Parameters $params | Out-Null
+#Providing parameter values to powershell script file
+$params = @{ "ResourcegroupName" = $ResourcegroupName; "SubscriptionId" = $SubscriptionId; "AutomationAccountName" = $AutomationAccountName; "fileURI" = $fileURI }
+Start-AzAutomationRunbook -Name $runbookName -ResourceGroupName $ResourcegroupName -AutomationAccountName $AutomationAccountName -Parameters $params | Out-Null

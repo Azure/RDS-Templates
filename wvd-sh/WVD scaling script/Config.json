@@ -43,11 +43,6 @@
 					"Value": "DepthFirst"
 				},
 				{
-					"_Comments": "Session Load Balancing Peak Hours",
-					"Name": "sessionLoadBalancingPeakHours",
-					"Value": "9:00-18:00"
-				},
-				{
 					"_Comments": "Name of the maintenance Tag",
 					"Name": "maintenanceTagName",
 					"Value": ""
@@ -73,7 +68,7 @@
 				},
 				{
 					"_Comments": "Accepted values True/False, True indicate service principal is being used to authenticate to WVD",
-					"Name": "isServicePrincipal",
+					"Name": "isWVDServicePrincipal",
 					"Value": "False"
 				}
 			]

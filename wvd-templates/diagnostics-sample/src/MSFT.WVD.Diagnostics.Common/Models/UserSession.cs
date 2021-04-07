@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace MSFT.WVD.Diagnostics.Common.Models
@@ -16,6 +17,7 @@ namespace MSFT.WVD.Diagnostics.Common.Models
         public string adUserName { get; set; }
         public bool IsSelected { get; set; }
         public ErrorDetails ErrorDetails { get; set; }
+        public HttpStatusCode httpStatus { get; set; }
     }
 
     public class SendMessageQuery
