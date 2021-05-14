@@ -4,7 +4,7 @@ param location string
 param networkSecurityGroupTags object
 param networkSecurityGroupRules array
 
-resource newNsgName_resource 'Microsoft.Network/networkSecurityGroups@2019-02-01' = if (createNetworkSecurityGroup) {
+resource newNsg 'Microsoft.Network/networkSecurityGroups@2019-02-01' = if (createNetworkSecurityGroup) {
   name: newNsgName
   location: location
   tags: networkSecurityGroupTags

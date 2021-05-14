@@ -127,6 +127,7 @@ param intune bool = false
 var emptyArray = []
 var domain_var = ((domain == '') ? last(split(administratorAccountUsername, '@')) : domain)
 var storageAccountType = rdshVMDiskType
+var imageName_var = '${rdshPrefix}image'
 var newNsgName = '${rdshPrefix}nsg-${guidValue}'
 var nsgId = (createNetworkSecurityGroup ? resourceId('Microsoft.Network/networkSecurityGroups', newNsgName) : networkSecurityGroupId)
 var isVMAdminAccountCredentialsProvided = ((!(vmAdministratorAccountUsername == '')) && (!(vmAdministratorAccountPassword == '')))
@@ -136,7 +137,23 @@ var vmAvailabilitySetResourceId = {
   id: resourceId('Microsoft.Compute/availabilitySets/', availabilitySetName)
 }
 
-module NSG_linkedTemplate './nested_NSG_linkedTemplate.bicep' = {
+resource imageName 'Microsoft.Compute/images@2018-10-01' = {
+  name: imageName_var
+  location: location
+  tags: imageTags
+  properties: {
+    storageProfile: {
+      osDisk: {
+        osType: 'Windows'
+        osState: 'Generalized'
+        blobUri: vmImageVhdUri
+        storageAccountType: storageAccountType
+      }
+    }
+  }
+}
+
+module NSG './NSG.bicep' = {
   name: 'NSG-linkedTemplate'
   params: {
     createNetworkSecurityGroup: createNetworkSecurityGroup
@@ -147,7 +164,7 @@ module NSG_linkedTemplate './nested_NSG_linkedTemplate.bicep' = {
   }
 }
 
-resource rdshPrefix_vmInitialNumber_nic 'Microsoft.Network/networkInterfaces@2018-11-01' = [for i in range(0, rdshNumberOfInstances): {
+resource nic 'Microsoft.Network/networkInterfaces@2018-11-01' = [for i in range(0, rdshNumberOfInstances): {
   name: '${rdshPrefix}${(i + vmInitialNumber)}-nic'
   location: location
   tags: networkInterfaceTags
@@ -167,11 +184,11 @@ resource rdshPrefix_vmInitialNumber_nic 'Microsoft.Network/networkInterfaces@201
     networkSecurityGroup: (empty(networkSecurityGroupId) ? json('null') : json('{"id": "${nsgId}"}'))
   }
   dependsOn: [
-    NSG_linkedTemplate
+    NSG
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber 'Microsoft.Compute/virtualMachines@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
+resource vm 'Microsoft.Compute/virtualMachines@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
   name: concat(rdshPrefix, (i + vmInitialNumber))
   location: location
   tags: virtualMachineTags
@@ -196,7 +213,7 @@ resource rdshPrefix_vmInitialNumber 'Microsoft.Compute/virtualMachines@2018-10-0
         }
       }
       imageReference: {
-        id: rdshImageSourceId
+        id: imageName.id
       }
     }
     networkProfile: {
@@ -215,11 +232,12 @@ resource rdshPrefix_vmInitialNumber 'Microsoft.Compute/virtualMachines@2018-10-0
   }
   zones: ((availabilityOption == 'AvailabilityZone') ? array(availabilityZone) : emptyArray)
   dependsOn: [
-    rdshPrefix_vmInitialNumber_nic //'Microsoft.Network/networkInterfaces/${rdshPrefix}${(i + vmInitialNumber)}-nic'
+    imageName
+    nic
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
+resource vm_DSC 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
   name: '${rdshPrefix}${(i + vmInitialNumber)}/Microsoft.PowerShell.DSC'
   location: location
   properties: {
@@ -238,11 +256,11 @@ resource rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC 'Microsoft.Compute/
     }
   }
   dependsOn: [
-    rdshPrefix_vmInitialNumber
+    vm
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber_AADLoginForWindows 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances):  if(aadJoin && !intune) {
+resource vm_AADLoginForWindows 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(aadJoin && !intune) {
   name: '${rdshPrefix}${(i + vmInitialNumber)}/AADLoginForWindows'
   location: location
   properties: {
@@ -252,11 +270,11 @@ resource rdshPrefix_vmInitialNumber_AADLoginForWindows 'Microsoft.Compute/virtua
     autoUpgradeMinorVersion: true
   }
   dependsOn: [
-    rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC
+    vm_DSC
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber_AADLoginForWindowsWithIntune 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(aadJoin && intune){
+resource vm_AADLoginForWindowsWithIntune 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(aadJoin && intune) {
   name: '${rdshPrefix}${(i + vmInitialNumber)}/AADLoginForWindowsWithIntune'
   location: location
   properties: {
@@ -269,11 +287,11 @@ resource rdshPrefix_vmInitialNumber_AADLoginForWindowsWithIntune 'Microsoft.Comp
     }
   }
   dependsOn: [
-    rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC
+    vm_DSC
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber_joindomain 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(!aadJoin) {
+resource vm_joindomain 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(!aadJoin) {
   name: '${rdshPrefix}${(i + vmInitialNumber)}/joindomain'
   location: location
   properties: {
@@ -293,6 +311,6 @@ resource rdshPrefix_vmInitialNumber_joindomain 'Microsoft.Compute/virtualMachine
     }
   }
   dependsOn: [
-    rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC
+    vm_DSC
   ]
 }]

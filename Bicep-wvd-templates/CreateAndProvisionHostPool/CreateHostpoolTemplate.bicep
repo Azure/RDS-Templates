@@ -1,7 +1,4 @@
 @description('The base URI where artifacts required by this template are located.')
-param nestedTemplatesLocation string = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/nestedtemplates/'
-
-@description('The base URI where artifacts required by this template are located.')
 param artifactsLocation string = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip'
 
 @description('The name of the Hostpool to be created.')
@@ -257,7 +254,6 @@ var avSetSKU = (rdshManagedDisks ? 'Aligned' : 'Classic')
 var vhds = 'vhds/${rdshPrefix}'
 var subnet_id = resourceId(virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', existingVnetName, existingSubnetName)
 var hostpoolName_var = replace(hostpoolName, '"', '')
-var vmTemplateName = '${(rdshManagedDisks ? 'managedDisks' : 'unmanagedDisks')}-${toLower(replace(vmImageType, ' ', ''))}vm'
 var rdshVmNamesOutput = [for j in range(0, (createVMs ? vmNumberOfInstances : 1)): {
   name: '${rdshPrefix}${j}'
 }]
@@ -288,7 +284,7 @@ var hostpoolOptionalProps = {
   customRdpProperty: customRdpProperty
 }
 
-resource hostpoolName_resource 'Microsoft.DesktopVirtualization/hostpools@2019-12-10-preview' = {
+resource hostpool 'Microsoft.DesktopVirtualization/hostpools@2019-12-10-preview' = {
   name: hostpoolName
   location: location
   tags: hostpoolTags
@@ -300,14 +296,14 @@ resource appGroupName 'Microsoft.DesktopVirtualization/applicationgroups@2019-12
   location: location
   tags: applicationGroupTags
   properties: {
-    hostPoolArmPath: hostpoolName_resource.id
+    hostPoolArmPath: hostpool.id
     friendlyName: 'Default Desktop'
     description: 'Desktop Application Group created through the Hostpool Wizard'
     applicationGroupType: 'Desktop'
   }
 }
 
-module Workspace_linkedTemplate_deploymentId './nestedtemplates/nested_Workspace_linkedTemplate_deploymentId.bicep' = if (addToWorkspace) {
+module workspace './modules/workspace.bicep' = if (addToWorkspace) {
   name: 'Workspace-linkedTemplate-${deploymentId}'
   scope: resourceGroup(workspaceResourceGroup_var)
   params: {
@@ -318,7 +314,7 @@ module Workspace_linkedTemplate_deploymentId './nestedtemplates/nested_Workspace
   }
 }
 
-module AVSet_linkedTemplate_deploymentId './nestedtemplates/nested_AVSet_linkedTemplate_deploymentId.bicep' = if (createVMs && (availabilityOption == 'AvailabilitySet') && createAvailabilitySet) {
+module AVSet './modules/AVSet.bicep' = if (createVMs && (availabilityOption == 'AvailabilitySet') && createAvailabilitySet) {
   name: 'AVSet-linkedTemplate-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
@@ -335,7 +331,7 @@ module AVSet_linkedTemplate_deploymentId './nestedtemplates/nested_AVSet_linkedT
 }
 
 // Deploy vmImageType = CustomVHD, managed disks
-module vmCreation_customVHD_managedDisks './nestedtemplates/managedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (vmUseManagedDisks)) {
+module vmCreation_customVHD_managedDisks './modules/managedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (vmUseManagedDisks)) {
   name: 'vmCreation-linkedTemplate-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
@@ -377,12 +373,12 @@ module vmCreation_customVHD_managedDisks './nestedtemplates/managedDisks-customv
     guidValue: deploymentId
   }
   dependsOn: [
-    AVSet_linkedTemplate_deploymentId
+    AVSet
   ]
 }
 
 // Deploy vmImageType = CustomVHD, unmanaged disks
-module vmCreation_customVHD_unmanagedDisks './nestedtemplates/unmanagedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (!vmUseManagedDisks)) {
+module vmCreation_customVHD_unmanagedDisks './modules/unmanagedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (!vmUseManagedDisks)) {
   name: 'vmCreation-linkedTemplate-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
@@ -424,12 +420,12 @@ module vmCreation_customVHD_unmanagedDisks './nestedtemplates/unmanagedDisks-cus
     guidValue: deploymentId
   }
   dependsOn: [
-    AVSet_linkedTemplate_deploymentId
+    AVSet
   ]
 }
 
 // Deploy vmImageType = CustomImage
-module vmCreation_customeImage './nestedtemplates/managedDisks-customimagevm.bicep' = if ((createVMs) && (vmImageType == 'CustomImage')) {
+module vmCreation_customeImage './modules/managedDisks-customimagevm.bicep' = if ((createVMs) && (vmImageType == 'CustomImage')) {
   name: 'vmCreation-linkedTemplate-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
@@ -471,12 +467,12 @@ module vmCreation_customeImage './nestedtemplates/managedDisks-customimagevm.bic
     guidValue: deploymentId
   }
   dependsOn: [
-    AVSet_linkedTemplate_deploymentId
+    AVSet
   ]
 }
 
 // Deploy vmImageType = CustomVHD, managed disks
-module vmCreation_Gallery './nestedtemplates/managedDisks-galleryvm.bicep' /*TODO: replace with correct path to [variables('vmTemplateUri')]*/ = if ((createVMs) && (vmImageType == 'Gallery') && (vmUseManagedDisks)) {
+module vmCreation_Gallery './modules/managedDisks-galleryvm.bicep' = if ((createVMs) && (vmImageType == 'Gallery') && (vmUseManagedDisks)) {
   name: 'vmCreation-linkedTemplate-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
@@ -518,7 +514,7 @@ module vmCreation_Gallery './nestedtemplates/managedDisks-galleryvm.bicep' /*TOD
     guidValue: deploymentId
   }
   dependsOn: [
-    AVSet_linkedTemplate_deploymentId
+    AVSet
   ]
 }
 

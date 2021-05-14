@@ -5,7 +5,7 @@ param availabilitySetUpdateDomainCount int
 param availabilitySetFaultDomainCount int
 param avSetSKU string
 
-resource availabilitySetName_resource 'Microsoft.Compute/availabilitySets@2018-10-01' = {
+resource availabilitySet 'Microsoft.Compute/availabilitySets@2018-10-01' = {
   name: availabilitySetName
   location: vmLocation
   tags: availabilitySetTags

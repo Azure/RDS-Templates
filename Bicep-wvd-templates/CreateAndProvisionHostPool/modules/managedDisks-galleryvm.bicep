@@ -1,5 +1,5 @@
 @description('The base URI where artifacts required by this template are located.')
-param artifactsLocation string = 'ttps://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip'
+param artifactsLocation string = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip'
 
 @allowed([
   'None'
@@ -126,8 +126,7 @@ param intune bool = false
 
 var emptyArray = []
 var domain_var = ((domain == '') ? last(split(administratorAccountUsername, '@')) : domain)
-var storageAccountName = split(split(vmImageVhdUri, '/')[2], '.')[0]
-var storageaccount = concat(resourceId(storageAccountResourceGroupName, 'Microsoft.Storage/storageAccounts', storageAccountName))
+var storageAccountType = rdshVMDiskType
 var newNsgName = '${rdshPrefix}nsg-${guidValue}'
 var nsgId = (createNetworkSecurityGroup ? resourceId('Microsoft.Network/networkSecurityGroups', newNsgName) : networkSecurityGroupId)
 var isVMAdminAccountCredentialsProvided = ((!(vmAdministratorAccountUsername == '')) && (!(vmAdministratorAccountPassword == '')))
@@ -137,7 +136,7 @@ var vmAvailabilitySetResourceId = {
   id: resourceId('Microsoft.Compute/availabilitySets/', availabilitySetName)
 }
 
-module NSG_linkedTemplate './nested_NSG_linkedTemplate.bicep' = {
+module NSG './NSG.bicep' = {
   name: 'NSG-linkedTemplate'
   params: {
     createNetworkSecurityGroup: createNetworkSecurityGroup
@@ -148,7 +147,7 @@ module NSG_linkedTemplate './nested_NSG_linkedTemplate.bicep' = {
   }
 }
 
-resource rdshPrefix_vmInitialNumber_nic 'Microsoft.Network/networkInterfaces@2018-11-01' = [for i in range(0, rdshNumberOfInstances): {
+resource nic 'Microsoft.Network/networkInterfaces@2018-11-01' = [for i in range(0, rdshNumberOfInstances): {
   name: '${rdshPrefix}${(i + vmInitialNumber)}-nic'
   location: location
   tags: networkInterfaceTags
@@ -168,11 +167,11 @@ resource rdshPrefix_vmInitialNumber_nic 'Microsoft.Network/networkInterfaces@201
     networkSecurityGroup: (empty(networkSecurityGroupId) ? json('null') : json('{"id": "${nsgId}"}'))
   }
   dependsOn: [
-    NSG_linkedTemplate
+    NSG
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber 'Microsoft.Compute/virtualMachines@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
+resource vm 'Microsoft.Compute/virtualMachines@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
   name: concat(rdshPrefix, (i + vmInitialNumber))
   location: location
   tags: virtualMachineTags
@@ -190,16 +189,16 @@ resource rdshPrefix_vmInitialNumber 'Microsoft.Compute/virtualMachines@2018-10-0
       adminPassword: vmAdministratorPassword
     }
     storageProfile: {
+      imageReference: {
+        publisher: vmGalleryImagePublisher
+        offer: vmGalleryImageOffer
+        sku: vmGalleryImageSKU
+        version: 'latest'
+      }
       osDisk: {
-        name: '${rdshPrefix}${(i + vmInitialNumber)}-osDisk'
-        osType: 'Windows'
-        caching: 'ReadWrite'
         createOption: 'FromImage'
-        image: {
-          uri: vmImageVhdUri
-        }
-        vhd: {
-          uri: '${reference(storageaccount, '2018-11-01').primaryEndpoints.blob}${vhds}${(i + vmInitialNumber)}-osdisk.vhd'
+        managedDisk: {
+          storageAccountType: storageAccountType
         }
       }
     }
@@ -219,11 +218,11 @@ resource rdshPrefix_vmInitialNumber 'Microsoft.Compute/virtualMachines@2018-10-0
   }
   zones: ((availabilityOption == 'AvailabilityZone') ? array(availabilityZone) : emptyArray)
   dependsOn: [
-    rdshPrefix_vmInitialNumber_nic
+    nic
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
+resource vm_DSC 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
   name: '${rdshPrefix}${(i + vmInitialNumber)}/Microsoft.PowerShell.DSC'
   location: location
   properties: {
@@ -242,11 +241,11 @@ resource rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC 'Microsoft.Compute/
     }
   }
   dependsOn: [
-    rdshPrefix_vmInitialNumber
+    vm
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber_AADLoginForWindows 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(aadJoin && !intune) {
+resource vm_AADLoginForWindows 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances):  if(aadJoin && !intune) {
   name: '${rdshPrefix}${(i + vmInitialNumber)}/AADLoginForWindows'
   location: location
   properties: {
@@ -256,11 +255,11 @@ resource rdshPrefix_vmInitialNumber_AADLoginForWindows 'Microsoft.Compute/virtua
     autoUpgradeMinorVersion: true
   }
   dependsOn: [
-    rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC
+    vm_DSC
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber_AADLoginForWindowsWithIntune 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(aadJoin && intune) {
+resource vm_AADLoginForWindowsWithIntune 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(aadJoin && intune) {
   name: '${rdshPrefix}${(i + vmInitialNumber)}/AADLoginForWindowsWithIntune'
   location: location
   properties: {
@@ -273,11 +272,11 @@ resource rdshPrefix_vmInitialNumber_AADLoginForWindowsWithIntune 'Microsoft.Comp
     }
   }
   dependsOn: [
-    rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC
+    vm_DSC
   ]
 }]
 
-resource rdshPrefix_vmInitialNumber_joindomain 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(!aadJoin) {
+resource vm_joindomain 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): if(!aadJoin) {
   name: '${rdshPrefix}${(i + vmInitialNumber)}/joindomain'
   location: location
   properties: {
@@ -297,6 +296,6 @@ resource rdshPrefix_vmInitialNumber_joindomain 'Microsoft.Compute/virtualMachine
     }
   }
   dependsOn: [
-    rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC
+    vm_DSC
   ]
 }]
