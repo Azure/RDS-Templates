@@ -28,7 +28,7 @@ param allApplicationGroupReferences string = ''
 @description('Whether to add applicationGroup to workspace.')
 param addToWorkspace bool
 
-@description('A username in the domain that has privileges to join the session hosts to the domain. For example, \'vmjoiner@contoso.com\'.')
+@description('A username in the domain that has privileges to join the session hosts to the domain. For example, "vmjoiner@contoso.com".')
 param administratorAccountUsername string = ''
 
 @description('The password that corresponds to the existing domain username.')
@@ -315,7 +315,7 @@ module workspace './modules/workspace.bicep' = if (addToWorkspace) {
 }
 
 module AVSet './modules/AVSet.bicep' = if (createVMs && (availabilityOption == 'AvailabilitySet') && createAvailabilitySet) {
-  name: 'AVSet-linkedTemplate-${deploymentId}'
+  name: 'AVSet-deployment' //'AVSet-linkedTemplate-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
     availabilitySetName: availabilitySetName
@@ -332,7 +332,7 @@ module AVSet './modules/AVSet.bicep' = if (createVMs && (availabilityOption == '
 
 // Deploy vmImageType = CustomVHD, managed disks
 module vmCreation_customVHD_managedDisks './modules/managedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (vmUseManagedDisks)) {
-  name: 'vmCreation-linkedTemplate-${deploymentId}'
+  name: 'vmCreation-linkedTemplate-${deploymentId}-managedDisks-customvhdvm'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -379,7 +379,7 @@ module vmCreation_customVHD_managedDisks './modules/managedDisks-customvhdvm.bic
 
 // Deploy vmImageType = CustomVHD, unmanaged disks
 module vmCreation_customVHD_unmanagedDisks './modules/unmanagedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (!vmUseManagedDisks)) {
-  name: 'vmCreation-linkedTemplate-${deploymentId}'
+  name: 'vmCreation-linkedTemplate-${deploymentId}-unmanagedDisks-customvhdvm'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -426,7 +426,7 @@ module vmCreation_customVHD_unmanagedDisks './modules/unmanagedDisks-customvhdvm
 
 // Deploy vmImageType = CustomImage
 module vmCreation_customeImage './modules/managedDisks-customimagevm.bicep' = if ((createVMs) && (vmImageType == 'CustomImage')) {
-  name: 'vmCreation-linkedTemplate-${deploymentId}'
+  name: 'vmCreation-linkedTemplate-${deploymentId}-managedDisks-customimagevm'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -473,7 +473,7 @@ module vmCreation_customeImage './modules/managedDisks-customimagevm.bicep' = if
 
 // Deploy vmImageType = CustomVHD, managed disks
 module vmCreation_Gallery './modules/managedDisks-galleryvm.bicep' = if ((createVMs) && (vmImageType == 'Gallery') && (vmUseManagedDisks)) {
-  name: 'vmCreation-linkedTemplate-${deploymentId}'
+  name: 'vmCreation-linkedTemplate-${deploymentId}-managedDisks-galleryvm'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
