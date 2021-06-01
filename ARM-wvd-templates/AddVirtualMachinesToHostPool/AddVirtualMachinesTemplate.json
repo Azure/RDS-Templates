@@ -7,14 +7,14 @@
       "metadata": {
         "description": "The base URI where artifacts required by this template are located."
       },
-      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/nestedtemplates/"
+      "defaultValue": "https://catalogartifact.azureedge.net/publicartifacts/Microsoft.Hostpool-ARM-1.4.0/"
     },
     "artifactsLocation": {
       "type": "string",
       "metadata": {
         "description": "The base URI where artifacts required by this template are located."
       },
-      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
+      "defaultValue": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_3-10-2021.zip"
     },
     "hostpoolName": {
       "type": "string",
@@ -358,6 +358,22 @@
         "description": "IMPORTANT: Please don't use this parameter as intune enrollment is not supported yet. True if intune enrollment is selected.  False otherwise"
       },
       "defaultValue": false
+    },
+    "bootDiagnostics": {
+      "type": "object",
+      "metadata": {
+        "description": "Boot diagnostics object taken as body of Diagnostics Profile in VM creation"
+      },
+      "defaultValue": {
+        "enabled": false
+      }
+    },
+    "userAssignedIdentity": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of user assigned identity that will assigned to the VMs. This is an optional parameter."
+      },
+      "defaultValue": ""
     }
   },
   "variables": {
@@ -560,8 +576,14 @@
           "intune": {
             "value": "[parameters('intune')]"
           },
+          "bootDiagnostics": {
+            "value": "[parameters('bootDiagnostics')]"
+          },
           "_guidValue": {
             "value": "[parameters('deploymentId')]"
+          },
+          "userAssignedIdentity": {
+            "value": "[parameters('userAssignedIdentity')]"
           }
         }
       }
