@@ -62,6 +62,13 @@
       },
       "defaultValue": ""
     },
+    "vmGalleryImageHasPlan": {
+      "type": "bool",
+      "metadata": {
+        "description": "Whether the VM image has a plan or not"
+      },
+      "defaultValue": false
+    },
     "vmGalleryImageSKU": {
       "type": "string",
       "metadata": {
@@ -289,7 +296,7 @@
       "publisher": "[parameters('vmGalleryImagePublisher')]",
       "product": "[parameters('vmGalleryImageOffer')]"
     },
-    "vmPlan": "[if(or(variables('planInfoEmpty'), equals(toLower(parameters('vmGalleryImagePublisher')), 'microsoftwindowsdesktop')), json('null'), variables('marketplacePlan'))]",
+    "vmPlan": "[if(or(variables('planInfoEmpty'), not(parameters('vmGalleryImageHasPlan'))), json('null'), variables('marketplacePlan'))]",
     "vmIdentityType": "[if(parameters('aadJoin'), if(not(empty(parameters('userAssignedIdentity'))), 'SystemAssigned, UserAssigned', 'SystemAssigned'), if(not(empty(parameters('userAssignedIdentity'))), 'UserAssigned', 'None'))]",
     "vmIdentityTypeProperty": {
       "type": "[variables('vmIdentityType')]"

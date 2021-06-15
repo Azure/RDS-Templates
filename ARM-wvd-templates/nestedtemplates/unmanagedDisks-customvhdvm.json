@@ -62,6 +62,13 @@
       },
       "defaultValue": ""
     },
+    "vmGalleryImageHasPlan": {
+      "type": "bool",
+      "metadata": {
+        "description": "Whether the VM image has a plan or not"
+      },
+      "defaultValue": false
+    },
     "vmGalleryImageSKU": {
       "type": "string",
       "metadata": {
@@ -498,3 +505,4 @@
   ],
   "outputs": {}
 }
+

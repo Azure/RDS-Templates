@@ -68,7 +68,13 @@ configuration AddSessionHost
                     . (Join-Path $using:ScriptPath "Functions.ps1")
                     
                     try {
-                        return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
+                        if (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent") {
+                            $regTokenProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "RegistrationToken"
+                            $isRegisteredProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "IsRegistered"
+                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1)
+                        } else {
+                            return $false;
+                        }
                     }
                     catch {
                         $ErrMsg = $PSItem | Format-List -Force | Out-String
@@ -110,7 +116,16 @@ configuration AddSessionHost
                     . (Join-Path $using:ScriptPath "Functions.ps1")
                     
                     try {
-                        return (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent")
+                        if (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent") {
+                            $regTokenProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "RegistrationToken"
+                            $isRegisteredProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "IsRegistered"
+                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1)
+                        } else {
+                            return $false;
+                        }
+                    }
+                    catch [Microsoft.PowerShell.Commands.ServiceCommandException] {
+                        return true;
                     }
                     catch {
                         $ErrMsg = $PSItem | Format-List -Force | Out-String
