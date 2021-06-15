@@ -215,6 +215,13 @@
       },
       "defaultValue": ""
     },
+    "vmGalleryImageHasPlan": {
+      "type": "bool",
+      "metadata": {
+        "description": "Whether the VM has plan or not"
+      },
+      "defaultValue": false
+    },
     "vmGalleryImageSKU": {
       "type": "string",
       "metadata": {
@@ -658,6 +665,9 @@
           },
           "vmGalleryImagePublisher": {
             "value": "[parameters('vmGalleryImagePublisher')]"
+          },
+          "vmGalleryImageHasPlan": {
+            "value": "[parameters('vmGalleryImageHasPlan')]"
           },
           "vmGalleryImageSKU": {
             "value": "[parameters('vmGalleryImageSKU')]"
