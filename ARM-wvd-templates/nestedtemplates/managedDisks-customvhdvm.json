@@ -62,6 +62,13 @@
       },
       "defaultValue": ""
     },
+    "vmGalleryImageHasPlan": {
+      "type": "bool",
+      "metadata": {
+        "description": "Whether the VM image has a plan or not"
+      },
+      "defaultValue": false
+    },
     "vmGalleryImageSKU": {
       "type": "string",
       "metadata": {
@@ -254,6 +261,22 @@
         "description": "IMPORTANT: Please don't use this parameter as intune enrollment is not supported yet. True if intune enrollment is selected.  False otherwise"
       },
       "defaultValue": false
+    },
+    "bootDiagnostics": {
+      "type": "object",
+      "metadata": {
+        "description": "Boot diagnostics object taken as body of Diagnostics Profile in VM creation"
+      },
+      "defaultValue": {
+        "enabled": false
+      }
+    },
+    "userAssignedIdentity": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of user assigned identity that will assigned to the VMs. This is an optional parameter."
+      },
+      "defaultValue": ""
     }
   },
   "variables": {
@@ -262,11 +285,29 @@
     "storageAccountType": "[parameters('rdshVMDiskType')]",
     "imageName": "[concat(parameters('rdshPrefix'), 'image')]",
     "newNsgName": "[concat(parameters('rdshPrefix'), 'nsg-', parameters('_guidValue'))]",
+    "newNsgDeploymentName": "[concat('NSG-linkedTemplate-', parameters('_guidValue'))]",
     "nsgId": "[if(parameters('createNetworkSecurityGroup'), resourceId('Microsoft.Network/networkSecurityGroups', variables('newNsgName')), parameters('networkSecurityGroupId'))]",
     "isVMAdminAccountCredentialsProvided": "[and(not(equals(parameters('vmAdministratorAccountUsername'), '')), not(equals(parameters('vmAdministratorAccountPassword'), '')))]",
     "vmAdministratorUsername": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountUsername'), first(split(parameters('administratorAccountUsername'), '@')))]",
     "vmAdministratorPassword": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountPassword'), parameters('administratorAccountPassword'))]",
-    "vmAvailabilitySetResourceId": { "id": "[resourceId('Microsoft.Compute/availabilitySets/', parameters('availabilitySetName'))]" }
+    "vmAvailabilitySetResourceId": { "id": "[resourceId('Microsoft.Compute/availabilitySets/', parameters('availabilitySetName'))]" },
+    "planInfoEmpty": "[or(empty(parameters('vmGalleryImageSKU')), empty(parameters('vmGalleryImagePublisher')), empty(parameters('vmGalleryImageOffer')))]",
+    "marketplacePlan": {
+      "name": "[parameters('vmGalleryImageSKU')]",
+      "publisher": "[parameters('vmGalleryImagePublisher')]",
+      "product": "[parameters('vmGalleryImageOffer')]"
+    },
+    "vmPlan": "[if(or(variables('planInfoEmpty'), not(parameters('vmGalleryImageHasPlan'))), json('null'), variables('marketplacePlan'))]",
+    "vmIdentityType": "[if(parameters('aadJoin'), if(not(empty(parameters('userAssignedIdentity'))), 'SystemAssigned, UserAssigned', 'SystemAssigned'), if(not(empty(parameters('userAssignedIdentity'))), 'UserAssigned', 'None'))]",
+    "vmIdentityTypeProperty": {
+      "type": "[variables('vmIdentityType')]"
+    },
+    "vmUserAssignedIdentityProperty": {
+      "userAssignedIdentities": {
+        "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentity'))]": {}
+      }
+    },
+    "vmIdentity": "[if(not(empty(parameters('userAssignedIdentity'))), union(variables('vmIdentityTypeProperty'), variables('vmUserAssignedIdentityProperty')), variables('vmIdentityTypeProperty'))]"
   },
   "resources": [
     {
@@ -288,7 +329,7 @@
     },
     {
       "apiVersion": "2018-05-01",
-      "name": "NSG-linkedTemplate",
+      "name": "[variables('newNsgDeploymentName')]",
       "type": "Microsoft.Resources/deployments",
       "properties": {
         "mode": "Incremental",
@@ -337,15 +378,16 @@
         "networkSecurityGroup": "[if(empty(parameters('networkSecurityGroupId')), json('null'), json(concat('{\"id\": \"', variables('nsgId'), '\"}')))]"
       },
       "dependsOn": [
-        "NSG-linkedTemplate"
+        "[variables('newNsgDeploymentName')]"
       ]
     },
     {
-      "apiVersion": "2018-10-01",
+      "apiVersion": "2020-06-01",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
       "location": "[parameters('location')]",
       "tags": "[parameters('virtualMachineTags')]",
+      "plan": "[variables('vmPlan')]",
       "copy": {
         "name": "rdsh-vm-loop",
         "count": "[parameters('rdshNumberOfInstances')]"
@@ -354,9 +396,7 @@
         "[variables('imageName')]",
         "[concat('Microsoft.Network/networkInterfaces/', parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic')]"
       ],
-      "identity": {
-        "type": "[if(parameters('aadJoin'), 'systemAssigned', 'none')]"
-      },
+      "identity": "[variables('vmIdentity')]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('rdshVmSize')]"
@@ -386,9 +426,7 @@
           ]
         },
         "diagnosticsProfile": {
-          "bootDiagnostics": {
-            "enabled": false
-          }
+          "bootDiagnostics": "[parameters('bootDiagnostics')]"
         },
         "licenseType": "Windows_Client"
       },

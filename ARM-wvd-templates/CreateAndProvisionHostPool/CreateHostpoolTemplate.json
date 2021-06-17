@@ -215,6 +215,13 @@
       },
       "defaultValue": ""
     },
+    "vmGalleryImageHasPlan": {
+      "type": "bool",
+      "metadata": {
+        "description": "Whether the VM has plan or not"
+      },
+      "defaultValue": false
+    },
     "vmGalleryImageSKU": {
       "type": "string",
       "metadata": {
@@ -469,6 +476,22 @@
         "description": "IMPORTANT: Please don't use this parameter as intune enrollment is not supported yet. True if intune enrollment is selected.  False otherwise"
       },
       "defaultValue": false
+    },
+    "bootDiagnostics": {
+      "type": "object",
+      "metadata": {
+        "description": "Boot diagnostics object taken as body of Diagnostics Profile in VM creation"
+      },
+      "defaultValue": {
+        "enabled": false
+      }
+    },
+    "userAssignedIdentity": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of user assigned identity that will assigned to the VMs. This is an optional parameter."
+      },
+      "defaultValue": ""
     }
   },
   "variables": {
@@ -643,6 +666,9 @@
           "vmGalleryImagePublisher": {
             "value": "[parameters('vmGalleryImagePublisher')]"
           },
+          "vmGalleryImageHasPlan": {
+            "value": "[parameters('vmGalleryImageHasPlan')]"
+          },
           "vmGalleryImageSKU": {
             "value": "[parameters('vmGalleryImageSKU')]"
           },
@@ -724,8 +750,14 @@
           "intune": {
             "value": "[parameters('intune')]"
           },
+          "bootDiagnostics": {
+            "value": "[parameters('bootDiagnostics')]"
+          },
           "_guidValue": {
             "value": "[parameters('deploymentId')]"
+          },
+          "userAssignedIdentity": {
+            "value": "[parameters('userAssignedIdentity')]"
           }
         }
       }
