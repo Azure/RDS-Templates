@@ -1,3 +1,9 @@
+
+provider "azurerm" {
+  version = "~>2.0"
+  features {}
+}
+
 resource "random_string" "wvd-local-password" {
   count            = "${var.rdsh_count}"
   length           = 16
@@ -11,7 +17,6 @@ resource "azurerm_network_interface" "rdsh" {
   name                      = "${var.vm_prefix}-${count.index +1}-nic"
   location                  = "${var.region}"
   resource_group_name       = "${var.resource_group_name}"
-  network_security_group_id = "${length(var.nsg_id) > 0 ? var.nsg_id : ""}"
 
   ip_configuration {
     name                          = "${var.vm_prefix}-${count.index +1}-nic-01"
@@ -19,7 +24,7 @@ resource "azurerm_network_interface" "rdsh" {
     private_ip_address_allocation = "dynamic"
   }
 
-  tags {
+  tags = {
     BUC             = "${var.tagBUC}"
     SupportGroup    = "${var.tagSupportGroup}"
     AppGroupEmail   = "${var.tagAppGroupEmail}"
@@ -68,7 +73,7 @@ resource "azurerm_virtual_machine" "main" {
     timezone                  = "${var.vm_timezone}"
   }
 
-  tags {
+  tags = {
     BUC               = "${var.tagBUC}"
     SupportGroup      = "${var.tagSupportGroup}"
     AppGroupEmail     = "${var.tagAppGroupEmail}"
@@ -91,7 +96,7 @@ resource "azurerm_managed_disk" "managed_disk" {
   create_option        = "Empty"
   disk_size_gb         = "${var.managed_disk_sizes[count.index % length(var.managed_disk_sizes)]}"
 
-  tags {
+  tags = {
     BUC             = "${var.tagBUC}"
     SupportGroup    = "${var.tagSupportGroup}"
     AppGroupEmail   = "${var.tagAppGroupEmail}"
