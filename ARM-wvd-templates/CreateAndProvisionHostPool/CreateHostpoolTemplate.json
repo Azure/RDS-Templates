@@ -473,7 +473,7 @@
     "intune": {
       "type": "bool",
       "metadata": {
-        "description": "IMPORTANT: Please don't use this parameter as intune enrollment is not supported yet. True if intune enrollment is selected.  False otherwise"
+        "description": "IMPORTANT: You can use this parameter for the test purpose only as AAD Join is public preview. True if AAD Join, false if AD join"
       },
       "defaultValue": false
     },
