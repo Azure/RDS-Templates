@@ -355,7 +355,7 @@
     "aadJoin": {
       "type": "bool",
       "metadata": {
-        "description": "IMPORTANT: Please don't use this parameter as AAD Join is not supported yet. True if AAD Join, false if AD join"
+        "description": "IMPORTANT: You can use this parameter for the test purpose only as AAD Join is public preview. True if AAD Join, false if AD join"
       },
       "defaultValue": false
     },
