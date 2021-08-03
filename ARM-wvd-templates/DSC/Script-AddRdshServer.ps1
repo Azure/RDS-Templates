@@ -38,8 +38,11 @@ Write-Log -Message "Changing current folder to Deployagent folder: $DeployAgentL
 Set-Location "$DeployAgentLocation"
 
 # Checking if RDInfragent is registered or not in rdsh vm
-$CheckRegistry = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent" -ErrorAction SilentlyContinue
-
+if (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent") {
+    $regTokenProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "RegistrationToken" -ErrorAction SilentlyContinue
+    $isRegisteredProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "IsRegistered" -ErrorAction SilentlyContinue
+    $CheckRegistry = ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1)
+}
 Write-Log -Message "Checking whether VM was Registered with RDInfraAgent"
 
 if ($CheckRegistry)
