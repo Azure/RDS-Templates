@@ -277,6 +277,20 @@
         "description": "The name of user assigned identity that will assigned to the VMs. This is an optional parameter."
       },
       "defaultValue": ""
+    },
+    "customConfigurationTemplateUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "ARM template that contains custom configurations to be run after the virtual machines are created."
+      },
+      "defaultValue": ""
+    },
+    "customConfigurationParameterUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Url to the ARM template parameter file for the customConfigurationTemplateUrl parameter. This input will be used when the template is ran after the VMs have been deployed."
+      },
+      "defaultValue": ""
     }
   },
   "variables": {
@@ -306,8 +320,20 @@
         "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentity'))]": {}
       }
     },
-    "vmIdentity": "[if(not(empty(parameters('userAssignedIdentity'))), union(variables('vmIdentityTypeProperty'), variables('vmUserAssignedIdentityProperty')), variables('vmIdentityTypeProperty'))]"
-
+    "vmIdentity": "[if(not(empty(parameters('userAssignedIdentity'))), union(variables('vmIdentityTypeProperty'), variables('vmUserAssignedIdentityProperty')), variables('vmIdentityTypeProperty'))]",
+    "postDeploymentCustomConfigurationTemplateProperty": {
+      "mode": "Incremental",
+      "templateLink": {
+        "uri": "[parameters('customConfigurationTemplateUrl')]",
+        "contentVersion": "1.0.0.0"
+      }
+    },
+    "postDeploymentCustomConfigurationParameterProperty": {
+      "parametersLink": {
+        "uri": "[parameters('customConfigurationParameterUrl')]"
+      }
+    },
+    "customConfigurationParameter": "[if(empty(parameters('customConfigurationParameterUrl')), variables('postDeploymentCustomConfigurationTemplateProperty'), union(variables('postDeploymentCustomConfigurationTemplateProperty'), variables('postDeploymentCustomConfigurationParameterProperty')))]"
   },
   "resources": [
     {
@@ -441,7 +467,7 @@
       }
     },
     {
-      "condition": "[and(parameters('aadJoin'),not(parameters('intune')))]",
+      "condition": "[parameters('aadJoin')]",
       "apiVersion": "2018-10-01",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'AADLoginForWindows')]",
@@ -455,28 +481,8 @@
         "publisher": "Microsoft.Azure.ActiveDirectory",
         "type": "AADLoginForWindows",
         "typeHandlerVersion": "1.0",
-        "autoUpgradeMinorVersion": true
-      }
-    },
-    {
-      "condition": "[and(parameters('aadJoin'),parameters('intune'))]",
-      "apiVersion": "2018-10-01",
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'AADLoginForWindowsWithIntune')]",
-      "location": "[parameters('location')]",
-      "dependsOn": [ "rdsh-dsc-loop" ],
-      "copy": {
-        "name": "rdsh-aad-join-intune-loop",
-        "count": "[parameters('rdshNumberOfInstances')]"
-      },
-      "properties": {
-        "publisher": "Microsoft.Azure.ActiveDirectory",
-        "type": "AADLoginForWindows",
-        "typeHandlerVersion": "1.0",
         "autoUpgradeMinorVersion": true,
-        "settings": {
-          "mdmId": "0000000a-0000-0000-c000-000000000000"
-        }
+        "settings": "[if(parameters('intune'), createObject('mdmId','0000000a-0000-0000-c000-000000000000'), json('null'))]"
       }
     },
     {
@@ -506,6 +512,18 @@
           "password": "[parameters('administratorAccountPassword')]"
         }
       }
+    },
+    {
+      "condition": "[not(empty(parameters('customConfigurationTemplateUrl')))]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "post-deployment-custom-configurations",
+      "dependsOn": [
+        "rdsh-dsc-loop",
+        "rdsh-aad-join-loop",
+        "rdsh-domain-join-loop"
+      ],
+      "properties": "[variables('customConfigurationParameter')]"
     }
   ],
   "outputs": {}
