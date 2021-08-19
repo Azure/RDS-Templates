@@ -92,7 +92,6 @@ configuration AddSessionHost
                         Write-Log -Err $ErrMsg
                         throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallServer TestScript: $ErrMsg", $PSItem.Exception)
                     }
-
                 }
             }
         }
@@ -151,7 +150,6 @@ configuration AddSessionHost
                         Write-Log -Err $ErrMsg
                         throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallClient TestScript: $ErrMsg", $PSItem.Exception)
                     }
-
                 }
             }
         }
