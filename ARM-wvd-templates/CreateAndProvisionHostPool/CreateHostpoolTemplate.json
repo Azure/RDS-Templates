@@ -36,6 +36,71 @@
       },
       "defaultValue": ""
     },
+    "hostpoolDiagnosticSettingsStorageAccount": {
+      "type": "string",
+      "metadata": {
+        "description": "The storage uri to put the diagnostic logs"
+      },
+      "defaultValue": ""
+    },
+    "hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId": {
+      "type": "string",
+      "metadata": {
+        "description": "The description of the Hostpool to be created."
+      },
+      "defaultValue": ""
+    },
+    "hostpoolDiagnosticSettingsEventHubName": {
+      "type": "string",
+      "metadata": {
+        "description": "The event hub name to send logs to"
+      },
+      "defaultValue": ""
+    },
+    "hostpoolDiagnosticSettingsEventHubAuthorizationId": {
+      "type": "string",
+      "metadata": {
+        "description": "The event hub policy to use"
+      },
+      "defaultValue": ""
+    },
+    "hostpoolDiagnosticSettingsLogCategories": {
+      "type": "array",
+      "metadata": {
+        "description": "Categories of logs to be created for hostpools"
+      },
+      "defaultValue": [    
+        "Checkpoint",
+        "Error",
+        "Management",
+        "Connection",
+        "HostRegistration",
+        "AgentHealthStatus"
+      ]
+    },
+    "appGroupDiagnosticSettingsLogCategories": {
+      "type": "array",
+      "metadata": {
+        "description": "Categories of logs to be created for app groups"
+      },
+      "defaultValue": [    
+        "Checkpoint",
+        "Error",
+        "Management"
+      ]
+    },
+    "workspaceDiagnosticSettingsLogCategories": {
+      "type": "array",
+      "metadata": {
+        "description": "Categories of logs to be created for workspaces"
+      },
+      "defaultValue": [    
+        "Checkpoint",
+        "Error",
+        "Management",
+        "Feed"
+      ]
+    },
     "location": {
       "type": "string",
       "metadata": {
@@ -62,6 +127,13 @@
         "description": "The workspace resource group Name."
       },
       "defaultValue": ""
+    },
+    "isNewWorkspace": {
+      "type": "bool",
+      "metadata": {
+        "description": "True if the workspace is new. False if there is no workspace added or adding to an existing workspace."
+      },
+      "defaultValue": false
     },
     "allApplicationGroupReferences": {
       "type": "string",
@@ -492,6 +564,20 @@
         "description": "The name of user assigned identity that will assigned to the VMs. This is an optional parameter."
       },
       "defaultValue": ""
+    },
+    "customConfigurationTemplateUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Arm template that contains custom configurations to be run after the Virtual Machines are created."
+      },
+      "defaultValue": ""
+    },
+    "customConfigurationParameterUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Url to the Arm template parameter file for the customConfigurationTemplateUrl parameter. This input will be used when the template is ran after the VMs have been deployed."
+      },
+      "defaultValue": ""
     }
   },
   "variables": {
@@ -538,7 +624,49 @@
     },
     "hostpoolOptionalProps": {
       "customRdpProperty": "[parameters('customRdpProperty')]"
-    }
+    },
+    "sendLogsToStorageAccount": "[not(empty(parameters('hostpoolDiagnosticSettingsStorageAccount')))]",
+    "sendLogsToLogAnalytics": "[not(empty(parameters('hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId')))]",
+    "sendLogsToEventHub": "[not(empty(parameters('hostpoolDiagnosticSettingsEventHubName')))]",
+    "storageAccountIdProperty": "[if(variables('sendLogsToStorageAccount'), parameters('hostpoolDiagnosticSettingsStorageAccount'), null())]",
+    "copy": [
+      {
+        "name": "hostpoolDiagnosticSettingsLogProperties",
+        "count": "[length(parameters('hostpoolDiagnosticSettingsLogCategories'))]",
+        "input": {
+          "category": "[parameters('hostpoolDiagnosticSettingsLogCategories')[copyIndex('hostpoolDiagnosticSettingsLogProperties')]]",
+          "enabled": true,
+          "retentionPolicy": {
+            "enabled": true,
+            "days": 30
+          }
+        }
+      },
+      {
+        "name": "appGroupDiagnosticSettingsLogProperties",
+        "count": "[length(parameters('appGroupDiagnosticSettingsLogCategories'))]",
+        "input": {
+          "category": "[parameters('appGroupDiagnosticSettingsLogCategories')[copyIndex('appGroupDiagnosticSettingsLogProperties')]]",
+          "enabled": true,
+          "retentionPolicy": {
+            "enabled": true,
+            "days": 30
+          }
+        }
+      },
+      {
+        "name": "workspaceDiagnosticSettingsLogProperties",
+        "count": "[length(parameters('workspaceDiagnosticSettingsLogCategories'))]",
+        "input": {
+          "category": "[parameters('workspaceDiagnosticSettingsLogCategories')[copyIndex('workspaceDiagnosticSettingsLogProperties')]]",
+          "enabled": true,
+          "retentionPolicy": {
+            "enabled": true,
+            "days": 30
+          }
+        }
+      }
+    ]
   },
   "resources": [
     {
@@ -758,9 +886,66 @@
           },
           "userAssignedIdentity": {
             "value": "[parameters('userAssignedIdentity')]"
+          },
+          "customConfigurationTemplateUrl": {
+            "value": "[parameters('customConfigurationTemplateUrl')]"
+          },
+          "customConfigurationParameterUrl": {
+            "value": "[parameters('customConfigurationParameterUrl')]"
           }
         }
       }
+    },
+    {
+      "type": "Microsoft.DesktopVirtualization/hostpools/providers/diagnosticSettings",
+      "apiVersion": "2017-05-01-preview",
+      "condition": "[or(variables('sendLogsToEventHub'),variables('sendLogsToLogAnalytics'), variables('sendLogsToStorageAccount'))]",
+      "location": "[parameters('location')]",
+      "name": "[concat(parameters('hostpoolName'), '/Microsoft.Insights/', 'diagnosticSetting')]",
+      "properties": {
+        "storageAccountId": "[if(variables('sendLogsToStorageAccount'), variables('storageAccountIdProperty'), null())]",
+        "eventHubAuthorizationRuleId": "[if(variables('sendLogsToEventHub'), parameters('hostpoolDiagnosticSettingsEventHubAuthorizationId'), null())]",
+        "eventHubName": "[if(variables('sendLogsToEventHub'), parameters('hostpoolDiagnosticSettingsEventHubName'), null())]",
+        "workspaceId": "[if(variables('sendLogsToLogAnalytics'), parameters('hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId'), null())]",
+        "logs": "[variables('hostpoolDiagnosticSettingsLogProperties')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DesktopVirtualization/hostpools/', parameters('hostpoolName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DesktopVirtualization/applicationgroups/providers/diagnosticSettings",
+      "apiVersion": "2017-05-01-preview",
+      "condition": "[or(variables('sendLogsToEventHub'),variables('sendLogsToLogAnalytics'), variables('sendLogsToStorageAccount'))]",
+      "location": "[parameters('location')]",
+      "name": "[concat(variables('appGroupName'), '/Microsoft.Insights/', 'diagnosticSetting')]",
+      "properties": {
+        "storageAccountId": "[if(variables('sendLogsToStorageAccount'), variables('storageAccountIdProperty'), null())]",
+        "eventHubAuthorizationRuleId": "[if(variables('sendLogsToEventHub'), parameters('hostpoolDiagnosticSettingsEventHubAuthorizationId'), null())]",
+        "eventHubName": "[if(variables('sendLogsToEventHub'), parameters('hostpoolDiagnosticSettingsEventHubName'), null())]",
+        "workspaceId": "[if(variables('sendLogsToLogAnalytics'), parameters('hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId'), null())]",
+        "logs": "[variables('appGroupDiagnosticSettingsLogProperties')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DesktopVirtualization/applicationgroups/', variables('appGroupName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DesktopVirtualization/workspaces/providers/diagnosticSettings",
+      "apiVersion": "2017-05-01-preview",
+      "condition": "[and(parameters('isNewWorkspace'),or(variables('sendLogsToEventHub'),variables('sendLogsToLogAnalytics'), variables('sendLogsToStorageAccount')))]",
+      "location": "[parameters('location')]",
+      "name": "[concat(if(parameters('isNewWorkspace'), parameters('workSpaceName'), 'placeholder'), '/Microsoft.Insights/', 'diagnosticSetting')]",
+      "properties": {
+        "storageAccountId": "[if(variables('sendLogsToStorageAccount'), variables('storageAccountIdProperty'), null())]",
+        "eventHubAuthorizationRuleId": "[if(variables('sendLogsToEventHub'), parameters('hostpoolDiagnosticSettingsEventHubAuthorizationId'), null())]",
+        "eventHubName": "[if(variables('sendLogsToEventHub'), parameters('hostpoolDiagnosticSettingsEventHubName'), null())]",
+        "workspaceId": "[if(variables('sendLogsToLogAnalytics'), parameters('hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId'), null())]",
+        "logs": "[variables('workspaceDiagnosticSettingsLogProperties')]"
+      },
+      "dependsOn": [
+        "[concat('Workspace-linkedTemplate-', parameters('deploymentId'))]"
+      ]
     }
   ],
   "outputs": {

@@ -381,6 +381,20 @@
         "description": "The name of user assigned identity that will assigned to the VMs. This is an optional parameter."
       },
       "defaultValue": ""
+    },
+    "customConfigurationTemplateUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "ARM template that contains custom configurations to be run after the virtual machines are created."
+      },
+      "defaultValue": ""
+    },
+    "customConfigurationParameterUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Url to the ARM template parameter file for the customConfigurationTemplateUrl parameter. This input will be used when the template is ran after the VMs have been deployed."
+      },
+      "defaultValue": ""
     }
   },
   "variables": {
@@ -594,6 +608,12 @@
           },
           "userAssignedIdentity": {
             "value": "[parameters('userAssignedIdentity')]"
+          },
+          "customConfigurationTemplateUrl": {
+            "value": "[parameters('customConfigurationTemplateUrl')]"
+          },
+          "customConfigurationParameterUrl": {
+            "value": "[parameters('customConfigurationParameterUrl')]"
           }
         }
       }
