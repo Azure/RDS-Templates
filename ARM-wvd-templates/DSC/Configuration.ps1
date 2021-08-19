@@ -12,6 +12,9 @@ configuration AddSessionHost
         [bool]$AadJoin = $false,
 
         [Parameter(Mandatory = $false)]
+        [string]$SessionHostConfigurationLastUpdateTime = "",
+
+        [Parameter(Mandatory = $false)]
         [bool]$EnableVerboseMsiLogging = $false
     )
 
@@ -62,16 +65,24 @@ configuration AddSessionHost
                         Write-Log -Err $ErrMsg
                         throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallServer SetScript: $ErrMsg", $PSItem.Exception)
                     }
-
+                    
+                    $rdInfraAgentRegistryPath = "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent"
+                    If (Test-path $rdInfraAgentRegistryPath) {
+                        Write-Log -Message ("Write SessionHostConfigurationLastUpdateTime '$using:SessionHostConfigurationLastUpdateTime' to $rdInfraAgentRegistryPath")
+                        Set-ItemProperty -Path $rdInfraAgentRegistryPath -Name "SessionHostConfigurationLastUpdateTime" -Value $using:SessionHostConfigurationLastUpdateTime
+                    }
                 }
                 TestScript = {
                     . (Join-Path $using:ScriptPath "Functions.ps1")
                     
                     try {
-                        if (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent") {
-                            $regTokenProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "RegistrationToken"
-                            $isRegisteredProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "IsRegistered"
-                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1)
+                        $rdInfraAgentRegistryPath = "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent"
+                        
+                        if (Test-path $rdInfraAgentRegistryPath) {
+                            $regTokenProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "RegistrationToken"
+                            $isRegisteredProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "IsRegistered"
+                            $sessionHostConfigurationProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "SessionHostConfigurationLastUpdateTime"
+                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1) -and ($sessionHostConfigurationProperties.SessionHostConfigurationLastUpdateTime -eq $using:SessionHostConfigurationLastUpdateTime)
                         } else {
                             return $false;
                         }
@@ -111,15 +122,23 @@ configuration AddSessionHost
                         throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallClient SetScript: $ErrMsg", $PSItem.Exception)
                     }
 
+                    $rdInfraAgentRegistryPath = "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent"
+                    If (Test-path $rdInfraAgentRegistryPath) {
+                        Write-Log -Message ("Write SessionHostConfigurationLastUpdateTime '$using:SessionHostConfigurationLastUpdateTime' to $rdInfraAgentRegistryPath")
+                        Set-ItemProperty -Path $rdInfraAgentRegistryPath -Name "SessionHostConfigurationLastUpdateTime" -Value $using:SessionHostConfigurationLastUpdateTime
+                    }
                 }
                 TestScript = {
                     . (Join-Path $using:ScriptPath "Functions.ps1")
                     
                     try {
-                        if (Test-path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent") {
-                            $regTokenProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "RegistrationToken"
-                            $isRegisteredProperties = Get-ItemProperty -Path hklm:SOFTWARE\Microsoft\RDInfraAgent -Name "IsRegistered"
-                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1)
+                        $rdInfraAgentRegistryPath = "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent"
+                        
+                        if (Test-path $rdInfraAgentRegistryPath) {
+                            $regTokenProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "RegistrationToken"
+                            $isRegisteredProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "IsRegistered"
+                            $sessionHostConfigurationProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "SessionHostConfigurationLastUpdateTime"
+                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1) -and ($sessionHostConfigurationProperties.SessionHostConfigurationLastUpdateTime -eq $using:SessionHostConfigurationLastUpdateTime)
                         } else {
                             return $false;
                         }
