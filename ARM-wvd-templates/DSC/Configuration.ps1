@@ -81,8 +81,7 @@ configuration AddSessionHost
                         if (Test-path $rdInfraAgentRegistryPath) {
                             $regTokenProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "RegistrationToken"
                             $isRegisteredProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "IsRegistered"
-                            $sessionHostConfigurationProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "SessionHostConfigurationLastUpdateTime"
-                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1) -and ($sessionHostConfigurationProperties.SessionHostConfigurationLastUpdateTime -eq $using:SessionHostConfigurationLastUpdateTime)
+                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1)
                         } else {
                             return $false;
                         }
@@ -92,6 +91,7 @@ configuration AddSessionHost
                         Write-Log -Err $ErrMsg
                         throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallServer TestScript: $ErrMsg", $PSItem.Exception)
                     }
+
                 }
             }
         }
@@ -136,8 +136,7 @@ configuration AddSessionHost
                         if (Test-path $rdInfraAgentRegistryPath) {
                             $regTokenProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "RegistrationToken"
                             $isRegisteredProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "IsRegistered"
-                            $sessionHostConfigurationProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "SessionHostConfigurationLastUpdateTime"
-                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1) -and ($sessionHostConfigurationProperties.SessionHostConfigurationLastUpdateTime -eq $using:SessionHostConfigurationLastUpdateTime)
+                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1)
                         } else {
                             return $false;
                         }
@@ -150,6 +149,7 @@ configuration AddSessionHost
                         Write-Log -Err $ErrMsg
                         throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallClient TestScript: $ErrMsg", $PSItem.Exception)
                     }
+
                 }
             }
         }
