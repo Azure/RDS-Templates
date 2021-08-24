@@ -76,6 +76,13 @@
       },
       "defaultValue": ""
     },
+    "vmGalleryImageVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "(Required when vmImageType = Gallery) Gallery image version."
+      },
+      "defaultValue": ""
+    },
     "rdshPrefix": {
       "type": "string",
       "metadata": {
@@ -251,7 +258,7 @@
     "aadJoin": {
       "type": "bool",
       "metadata": {
-        "description": "IMPORTANT: You can use this parameter for the test purpose only as AAD Join is public preview. True if AAD Join, false if AD join"
+        "description": "IMPORTANT: Please don't use this parameter as AAD Join is not supported yet. True if AAD Join, false if AD join"
       },
       "defaultValue": false
     },
@@ -289,6 +296,13 @@
       "type": "string",
       "metadata": {
         "description": "Url to the ARM template parameter file for the customConfigurationTemplateUrl parameter. This input will be used when the template is ran after the VMs have been deployed."
+      },
+      "defaultValue": ""
+    },
+    "SessionHostConfigurationVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "Session host configuration version of the host pool."
       },
       "defaultValue": ""
     }
@@ -457,7 +471,8 @@
           "properties": {
             "hostPoolName": "[parameters('hostpoolName')]",
             "registrationInfoToken": "[parameters('hostpoolToken')]",
-            "aadJoin": "[parameters('aadJoin')]"
+            "aadJoin": "[parameters('aadJoin')]",
+            "sessionHostConfigurationLastUpdateTime": "[parameters('SessionHostConfigurationVersion')]"
           }
         }
       }

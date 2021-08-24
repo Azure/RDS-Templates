@@ -204,6 +204,13 @@
       },
       "defaultValue": ""
     },
+    "vmGalleryImageVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "(Required when vmImageType = Gallery) Gallery image version."
+      },
+      "defaultValue": ""
+    },
     "vmGalleryImageHasPlan": {
       "type": "bool",
       "metadata": {
@@ -355,7 +362,7 @@
     "aadJoin": {
       "type": "bool",
       "metadata": {
-        "description": "IMPORTANT: You can use this parameter for the test purpose only as AAD Join is public preview. True if AAD Join, false if AD join"
+        "description": "IMPORTANT: Please don't use this parameter as AAD Join is not supported yet. True if AAD Join, false if AD join"
       },
       "defaultValue": false
     },
@@ -395,6 +402,13 @@
         "description": "Url to the ARM template parameter file for the customConfigurationTemplateUrl parameter. This input will be used when the template is ran after the VMs have been deployed."
       },
       "defaultValue": ""
+    },
+    "systemData": {
+      "type": "object",
+      "metadata": {
+        "description": "System data is used for internal purposes, such as support preview features."
+      },
+      "defaultValue": {}
     }
   },
   "variables": {
@@ -442,7 +456,7 @@
       }
     },
     {
-      "apiVersion": "2018-05-01",
+      "apiVersion": "2018-05-01",      
       "name": "[concat('AVSet-linkedTemplate-', parameters('deploymentId'))]",
       "type": "Microsoft.Resources/deployments",
       "resourceGroup": "[parameters('vmResourceGroup')]",
@@ -518,6 +532,9 @@
           },
           "vmGalleryImageSKU": {
             "value": "[parameters('vmGalleryImageSKU')]"
+          },
+          "vmGalleryImageVersion": {
+            "value": "[parameters('vmGalleryImageVersion')]"
           },
           "rdshPrefix": {
             "value": "[variables('rdshPrefix')]"
@@ -614,6 +631,9 @@
           },
           "customConfigurationParameterUrl": {
             "value": "[parameters('customConfigurationParameterUrl')]"
+          },
+          "SessionHostConfigurationVersion": {
+            "value": "[if(contains(parameters('systemData'), 'hostpoolUpdate'), parameters('systemData').sessionHostConfigurationVersion, '')]"
           }
         }
       }
