@@ -7,14 +7,14 @@
       "metadata": {
         "description": "The base URI where artifacts required by this template are located."
       },
-      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/nestedtemplates/"
+      "defaultValue": "https://catalogartifact.azureedge.net/publicartifacts/Microsoft.Hostpool-ARM-1.10.0/"
     },
     "artifactsLocation": {
       "type": "string",
       "metadata": {
         "description": "The base URI where artifacts required by this template are located."
       },
-      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
+      "defaultValue": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_8-16-2021.zip"
     },
     "hostpoolName": {
       "type": "string",
@@ -362,7 +362,7 @@
     "aadJoin": {
       "type": "bool",
       "metadata": {
-        "description": "IMPORTANT: Please don't use this parameter as AAD Join is not supported yet. True if AAD Join, false if AD join"
+        "description": "IMPORTANT: You can use this parameter for the test purpose only as AAD Join is public preview. True if AAD Join, false if AD join"
       },
       "defaultValue": false
     },
@@ -456,7 +456,7 @@
       }
     },
     {
-      "apiVersion": "2018-05-01",      
+      "apiVersion": "2018-05-01",
       "name": "[concat('AVSet-linkedTemplate-', parameters('deploymentId'))]",
       "type": "Microsoft.Resources/deployments",
       "resourceGroup": "[parameters('vmResourceGroup')]",
