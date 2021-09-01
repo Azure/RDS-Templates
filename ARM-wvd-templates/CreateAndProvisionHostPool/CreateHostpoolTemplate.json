@@ -301,6 +301,13 @@
       },
       "defaultValue": ""
     },
+    "vmGalleryImageVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "(Required when vmImageType = Gallery) Gallery image version."
+      },
+      "defaultValue": ""
+    },
     "vmImageVhdUri": {
       "type": "string",
       "metadata": {
@@ -578,10 +585,18 @@
         "description": "Url to the Arm template parameter file for the customConfigurationTemplateUrl parameter. This input will be used when the template is ran after the VMs have been deployed."
       },
       "defaultValue": ""
+    },
+    "systemData": {
+      "type": "object",
+      "metadata": {
+        "description": "System data is used for internal purposes, such as support preview features."
+      },
+      "defaultValue": {}
     }
   },
   "variables": {
     "createVMs": "[greater(parameters('vmNumberOfInstances'),0)]",
+    "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('administratorAccountUsername'), '@')), parameters('domain'))]",
     "rdshManagedDisks": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmUseManagedDisks'), bool('true'))]",
     "rdshPrefix": "[concat(parameters('vmNamePrefix'),'-')]",
     "avSetSKU": "[if(variables('rdshManagedDisks'), 'Aligned', 'Classic')]",
@@ -675,7 +690,40 @@
       "type": "Microsoft.DesktopVirtualization/hostpools",
       "location": "[parameters('location')]",
       "tags": "[parameters('hostpoolTags')]",
-      "properties": "[if(empty(parameters('customRdpProperty')), variables('hostpoolRequiredProps'), union(variables('hostpoolOptionalProps'), variables('hostpoolRequiredProps') ))]"
+      "properties": "[if(empty(parameters('customRdpProperty')), variables('hostpoolRequiredProps'), union(variables('hostpoolOptionalProps'), variables('hostpoolRequiredProps') ))]",
+      "resources": [
+        {
+          "condition": "[and(variables('createVMs'), contains(parameters('systemData'), 'hostpoolUpdateFeature'), parameters('systemData').hostpoolUpdateFeature)]",
+          "name": "default",
+          "apiVersion": "[parameters('apiVersion')]",
+          "type": "sessionHostConfigurations",
+          "dependsOn": [
+            "[resourceId('Microsoft.DesktopVirtualization/hostpools/', parameters('hostpoolName'))]"
+          ],
+          "properties": {
+            "vMSizeId": "[parameters('vmSize')]",
+            "diskType": "[parameters('vmDiskType')]",
+            "vmCustomConfigurationUri": "[if(empty(parameters('customConfigurationTemplateUrl')), '', parameters('customConfigurationTemplateUrl'))]",
+            "vmCustomConfigurationParameterUri": "[if(empty(parameters('customConfigurationParameterUrl')), '', parameters('customConfigurationParameterUrl'))]",
+            "imageInfo": {
+              "type": "[parameters('vmImageType')]",
+              "marketPlaceInfo": {
+                "publisher": "[if(equals(parameters('vmImageType'), 'Gallery'), parameters('vmGalleryImagePublisher'), '')]",
+                "offer": "[if(equals(parameters('vmImageType'), 'Gallery'), parameters('vmGalleryImageOffer'), '')]",
+                "sku": "[if(equals(parameters('vmImageType'), 'Gallery'), parameters('vmGalleryImageSKU'), '')]",
+                "exactVersion": "[if(equals(parameters('vmImageType'), 'Gallery'), parameters('vmGalleryImageVersion'), '')]"
+              },
+              "storageBlobUri": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmImageVhdUri'), '')]",
+              "customId": "[if(equals(parameters('vmImageType'), 'CustomImage'), parameters('vmCustomImageSourceId'), '')]"
+            },
+            "domainInfo": {
+              "name": "[variables('domain')]",
+              "joinType": "[if(parameters('aadJoin'), 'AzureActiveDirectory', 'ActiveDirectory')]",
+              "mdmProviderGuid": "[if(parameters('intune'), '0000000a-0000-0000-c000-000000000000', '')]"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "[variables('appGroupName')]",
@@ -800,6 +848,9 @@
           "vmGalleryImageSKU": {
             "value": "[parameters('vmGalleryImageSKU')]"
           },
+          "vmGalleryImageVersion": {
+            "value": "[parameters('vmGalleryImageVersion')]"
+          },
           "rdshPrefix": {
             "value": "[variables('rdshPrefix')]"
           },
@@ -892,6 +943,9 @@
           },
           "customConfigurationParameterUrl": {
             "value": "[parameters('customConfigurationParameterUrl')]"
+          },
+          "SessionHostConfigurationVersion": {
+            "value": "[if(and(contains(parameters('systemData'), 'hostpoolUpdateFeature'), parameters('systemData').hostpoolUpdateFeature), reference(resourceId('Microsoft.DesktopVirtualization/hostpools/sessionHostConfigurations', parameters('hostpoolName'), 'default')).version, '')]"
           }
         }
       }

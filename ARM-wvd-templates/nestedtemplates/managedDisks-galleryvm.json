@@ -76,6 +76,13 @@
       },
       "defaultValue": ""
     },
+    "vmGalleryImageVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "(Required when vmImageType = Gallery) Gallery image version."
+      },
+      "defaultValue": ""
+    },
     "rdshPrefix": {
       "type": "string",
       "metadata": {
@@ -291,6 +298,13 @@
         "description": "Url to the ARM template parameter file for the customConfigurationTemplateUrl parameter. This input will be used when the template is ran after the VMs have been deployed."
       },
       "defaultValue": ""
+    },
+    "SessionHostConfigurationVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "Session host configuration version of the host pool."
+      },
+      "defaultValue": ""
     }
   },
   "variables": {
@@ -420,7 +434,7 @@
             "publisher": "[parameters('vmGalleryImagePublisher')]",
             "offer": "[parameters('vmGalleryImageOffer')]",
             "sku": "[parameters('vmGalleryImageSKU')]",
-            "version": "latest"
+            "version": "[if(empty(parameters('vmGalleryImageVersion')), 'latest', parameters('vmGalleryImageVersion'))]"
           },
           "osDisk": {
             "createOption": "FromImage",
@@ -464,7 +478,8 @@
           "properties": {
             "hostPoolName": "[parameters('hostpoolName')]",
             "registrationInfoToken": "[parameters('hostpoolToken')]",
-            "aadJoin": "[parameters('aadJoin')]"
+            "aadJoin": "[parameters('aadJoin')]",
+            "sessionHostConfigurationLastUpdateTime": "[parameters('SessionHostConfigurationVersion')]"
           }
         }
       }
