@@ -1,0 +1,24 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "resources": [
+      {
+        "name": "Aut3-0/Microsoft.Compute.CustomScriptExtension",
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "location": "eastus",
+        "apiVersion": "2018-10-01",
+        "properties": {
+          "publisher": "Microsoft.Compute",
+          "type": "CustomScriptExtension",
+          "typeHandlerVersion": "1.10",
+          "autoUpgradeMinorVersion": true,
+          "protectedSettings": {
+            "fileUris": [
+              "https://avddeploymentscript.blob.core.windows.net/postdeploymentscripts/cse.ps1"
+            ],
+            "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File cse.ps1"
+          }
+        }
+      }
+    ]
+  }
