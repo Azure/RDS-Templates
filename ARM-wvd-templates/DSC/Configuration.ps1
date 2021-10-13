@@ -1,7 +1,7 @@
 configuration AddSessionHost
 {
     param
-    (    
+    (
         [Parameter(Mandatory = $true)]
         [string]$HostPoolName,
 
@@ -52,46 +52,25 @@ configuration AddSessionHost
                     . (Join-Path $using:ScriptPath "Functions.ps1")
 
                     try {
-                        & "$using:ScriptPath\Script-AddRdshServer.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging)
-                        if ($using:AadJoin -eq $true) {
-                            # 6 Minute sleep to guarantee intune metadata logging
-                            Write-Log -Message ("Configuration.ps1 complete, sleeping for 6 minutes")
-                            Start-Sleep -Seconds 360
-                            Write-Log -Message ("Configuration.ps1 complete, waking up from 6 minute sleep")
-                        }
+                        & "$using:ScriptPath\Script-SetupSessionHost.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken -AadJoin $using:AadJoin -SessionHostConfigurationLastUpdateTime $using:SessionHostConfigurationLastUpdateTime -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging)
                     }
                     catch {
                         $ErrMsg = $PSItem | Format-List -Force | Out-String
                         Write-Log -Err $ErrMsg
                         throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallServer SetScript: $ErrMsg", $PSItem.Exception)
                     }
-                    
-                    $rdInfraAgentRegistryPath = "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent"
-                    If (Test-path $rdInfraAgentRegistryPath) {
-                        Write-Log -Message ("Write SessionHostConfigurationLastUpdateTime '$using:SessionHostConfigurationLastUpdateTime' to $rdInfraAgentRegistryPath")
-                        Set-ItemProperty -Path $rdInfraAgentRegistryPath -Name "SessionHostConfigurationLastUpdateTime" -Value $using:SessionHostConfigurationLastUpdateTime
-                    }
                 }
                 TestScript = {
                     . (Join-Path $using:ScriptPath "Functions.ps1")
                     
                     try {
-                        $rdInfraAgentRegistryPath = "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent"
-                        
-                        if (Test-path $rdInfraAgentRegistryPath) {
-                            $regTokenProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "RegistrationToken"
-                            $isRegisteredProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "IsRegistered"
-                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1)
-                        } else {
-                            return $false;
-                        }
+                        return (& "$using:ScriptPath\Script-TestSetupSessionHost.ps1" -HostPoolName $using:HostPoolName)
                     }
                     catch {
                         $ErrMsg = $PSItem | Format-List -Force | Out-String
                         Write-Log -Err $ErrMsg
                         throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallServer TestScript: $ErrMsg", $PSItem.Exception)
                     }
-
                 }
             }
         }
@@ -107,42 +86,19 @@ configuration AddSessionHost
                     . (Join-Path $using:ScriptPath "Functions.ps1")
                     
                     try {
-                        & "$using:ScriptPath\Script-AddRdshServer.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging)
-                        if ($using:AadJoin -eq $true) {
-                            # 6 Minute sleep to guarantee intune metadata logging
-                            Write-Log -Message ("Configuration.ps1 complete, sleeping for 6 minutes")
-                            Start-Sleep -Seconds 360
-                            Write-Log -Message ("Configuration.ps1 complete, waking up from 6 minute sleep")
-                        }
+                        & "$using:ScriptPath\Script-SetupSessionHost.ps1" -HostPoolName $using:HostPoolName -RegistrationInfoToken $using:RegistrationInfoToken -AadJoin $using:AadJoin -SessionHostConfigurationLastUpdateTime $using:SessionHostConfigurationLastUpdateTime -EnableVerboseMsiLogging:($using:EnableVerboseMsiLogging)
                     }
                     catch {
                         $ErrMsg = $PSItem | Format-List -Force | Out-String
                         Write-Log -Err $ErrMsg
                         throw [System.Exception]::new("Some error occurred in DSC ExecuteRdAgentInstallClient SetScript: $ErrMsg", $PSItem.Exception)
                     }
-
-                    $rdInfraAgentRegistryPath = "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent"
-                    If (Test-path $rdInfraAgentRegistryPath) {
-                        Write-Log -Message ("Write SessionHostConfigurationLastUpdateTime '$using:SessionHostConfigurationLastUpdateTime' to $rdInfraAgentRegistryPath")
-                        Set-ItemProperty -Path $rdInfraAgentRegistryPath -Name "SessionHostConfigurationLastUpdateTime" -Value $using:SessionHostConfigurationLastUpdateTime
-                    }
                 }
                 TestScript = {
                     . (Join-Path $using:ScriptPath "Functions.ps1")
                     
                     try {
-                        $rdInfraAgentRegistryPath = "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\RDInfraAgent"
-                        
-                        if (Test-path $rdInfraAgentRegistryPath) {
-                            $regTokenProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "RegistrationToken"
-                            $isRegisteredProperties = Get-ItemProperty -Path $rdInfraAgentRegistryPath -Name "IsRegistered"
-                            return ($regTokenProperties.RegistrationToken -eq "") -and ($isRegisteredProperties.isRegistered -eq 1)
-                        } else {
-                            return $false;
-                        }
-                    }
-                    catch [Microsoft.PowerShell.Commands.ServiceCommandException] {
-                        return true;
+                        return (& "$using:ScriptPath\Script-TestSetupSessionHost.ps1" -HostPoolName $using:HostPoolName)
                     }
                     catch {
                         $ErrMsg = $PSItem | Format-List -Force | Out-String
