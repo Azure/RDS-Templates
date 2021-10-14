@@ -1,11 +1,15 @@
 <#
+
 .SYNOPSIS
 Creating Hostpool and add sessionhost servers to existing/new Hostpool.
+
 .DESCRIPTION
 This script add sessionhost servers to existing/new Hostpool
 The supported Operating Systems Windows Server 2016.
+
 .ROLE
 Readers
+
 #>
 param(
     [Parameter(mandatory = $true)]
