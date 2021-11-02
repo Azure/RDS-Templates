@@ -305,6 +305,27 @@
         "description": "Session host configuration version of the host pool."
       },
       "defaultValue": ""
+    },
+    "securityType": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the SecurityType of the virtual machine. It is set as TrustedLaunch to enable UefiSettings. Default: UefiSettings will not be enabled unless this property is set as TrustedLaunch."
+      },
+      "defaultValue": ""
+    },
+    "secureBoot": {
+      "type": "bool",
+      "metadata": {
+        "description": "Specifies whether secure boot should be enabled on the virtual machine."
+      },
+      "defaultValue": false
+    },
+    "vTPM": {
+      "type": "bool",
+      "metadata": {
+        "description": "Specifies whether vTPM (Virtual Trusted Platform Module) should be enabled on the virtual machine."
+      },
+      "defaultValue": false
     }
   },
   "variables": {
@@ -347,7 +368,14 @@
         "uri": "[parameters('customConfigurationParameterUrl')]"
       }
     },
-    "customConfigurationParameter": "[if(empty(parameters('customConfigurationParameterUrl')), variables('postDeploymentCustomConfigurationTemplateProperty'), union(variables('postDeploymentCustomConfigurationTemplateProperty'), variables('postDeploymentCustomConfigurationParameterProperty')))]"
+    "customConfigurationParameter": "[if(empty(parameters('customConfigurationParameterUrl')), variables('postDeploymentCustomConfigurationTemplateProperty'), union(variables('postDeploymentCustomConfigurationTemplateProperty'), variables('postDeploymentCustomConfigurationParameterProperty')))]",
+    "securityProfile": {
+      "uefiSettings": {
+        "secureBootEnabled": "[parameters('secureBoot')]",
+        "vTpmEnabled": "[parameters('vTPM')]"
+      },
+      "securityType": "[parameters('securityType')]"
+    }
   },
   "resources": [
     {
@@ -405,7 +433,7 @@
       ]
     },
     {
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2021-07-01",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
       "location": "[parameters('location')]",
@@ -429,6 +457,7 @@
           "adminUsername": "[variables('vmAdministratorUsername')]",
           "adminPassword": "[variables('vmAdministratorPassword')]"
         },
+        "securityProfile": "[if(equals(parameters('securityType'), 'TrustedLaunch'), variables('securityProfile'), json('null'))]",
         "storageProfile": {
           "imageReference": {
             "publisher": "[parameters('vmGalleryImagePublisher')]",
