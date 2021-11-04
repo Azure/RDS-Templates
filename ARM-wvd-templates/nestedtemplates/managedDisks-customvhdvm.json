@@ -305,6 +305,27 @@
         "description": "Session host configuration version of the host pool."
       },
       "defaultValue": ""
+    },
+    "securityType": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the SecurityType of the virtual machine. It is set as TrustedLaunch to enable UefiSettings. Default: UefiSettings will not be enabled unless this property is set as TrustedLaunch."
+      },
+      "defaultValue": ""
+    },
+    "secureBoot": {
+      "type": "bool",
+      "metadata": {
+        "description": "Specifies whether secure boot should be enabled on the virtual machine."
+      },
+      "defaultValue": false
+    },
+    "vTPM": {
+      "type": "bool",
+      "metadata": {
+        "description": "Specifies whether vTPM (Virtual Trusted Platform Module) should be enabled on the virtual machine."
+      },
+      "defaultValue": false
     }
   },
   "variables": {

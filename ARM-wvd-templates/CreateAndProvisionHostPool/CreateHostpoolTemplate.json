@@ -592,6 +592,27 @@
         "description": "System data is used for internal purposes, such as support preview features."
       },
       "defaultValue": {}
+    },
+    "securityType": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the SecurityType of the virtual machine. It is set as TrustedLaunch to enable UefiSettings. Default: UefiSettings will not be enabled unless this property is set as TrustedLaunch."
+      },
+      "defaultValue": ""
+    },
+    "secureBoot": {
+      "type": "bool",
+      "metadata": {
+        "description": "Specifies whether secure boot should be enabled on the virtual machine."
+      },
+      "defaultValue": false
+    },
+    "vTPM": {
+      "type": "bool",
+      "metadata": {
+        "description": "Specifies whether vTPM (Virtual Trusted Platform Module) should be enabled on the virtual machine."
+      },
+      "defaultValue": false
     }
   },
   "variables": {
@@ -947,6 +968,15 @@
           },
           "SessionHostConfigurationVersion": {
             "value": "[if(and(variables('createVMs'), contains(parameters('systemData'), 'hostpoolUpdateFeature'), parameters('systemData').hostpoolUpdateFeature), reference(resourceId('Microsoft.DesktopVirtualization/hostpools/sessionHostConfigurations', parameters('hostpoolName'), 'default')).version, '')]"
+          },
+          "securityType": {
+            "value": "[parameters('securityType')]"
+          },
+          "secureBoot": {
+            "value": "[parameters('secureBoot')]"
+          },
+          "vTPM": {
+            "value": "[parameters('vTPM')]"
           }
         }
       }
