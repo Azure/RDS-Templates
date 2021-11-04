@@ -1,4 +1,8 @@
 
+
+>[!NOTE] 
+> Autoscale (preview) for Azure Virtual Desktop available now. The built-in feature helps you to optimize costs of your deployment. [Learn more](https://docs.microsoft.com/azure/virtual-desktop/autoscale-scaling-plan).
+> 
 # Windows Virtual Desktop Scaling Tool
 
 ## For the ARM based WVD using the new 2020 Spring update
