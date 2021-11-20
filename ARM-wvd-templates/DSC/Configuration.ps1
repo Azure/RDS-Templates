@@ -42,9 +42,16 @@ configuration AddSessionHost
                 Name = "RDS-RD-Server"
             }
 
+            # Ensure no RDS Connection Broker installed, otherwise the AVD sessions might be denied (`ConnectionDeniedByServer` error in RDInfra Agent logs)
+            WindowsFeature RDS-Connection-Broker
+            {
+                Ensure = "Absent"
+                Name = "RDS-Connection-Broker"
+            }
+
             Script ExecuteRdAgentInstallServer
             {
-                DependsOn = "[WindowsFeature]RDS-RD-Server"
+                DependsOn = "[WindowsFeature]RDS-Connection-Broker"
                 GetScript = {
                     return @{'Result' = ''}
                 }
