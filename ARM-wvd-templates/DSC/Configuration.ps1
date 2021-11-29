@@ -51,7 +51,8 @@ configuration AddSessionHost
 
             Script ExecuteRdAgentInstallServer
             {
-                DependsOn = "[WindowsFeature]RDS-Connection-Broker"
+                DependsOn = "[WindowsFeature]RDS-RD-Server", "[WindowsFeature]RDS-Connection-Broker"
+
                 GetScript = {
                     return @{'Result' = ''}
                 }
