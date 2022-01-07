@@ -24,7 +24,7 @@
     "resources": [
     {
       "type": "Microsoft.DesktopVirtualization/hostpools/providers/diagnosticSettings",
-      "apiVersion": "2017-05-01-preview",
+      "apiVersion": "2021-05-01-preview",
       "name": "[concat(parameters('hostpoolName'),'/Microsoft.Insights/', parameters('settingName'))]",
       "properties": {
         "workspaceId": "[parameters('workspaceId')]",
