@@ -1,10 +1,10 @@
 ---
 page_type: sample
 languages:
-- JSON
-- PowerShell
+- json
+- powershell
 products:
-- azure virtual desktop
+- azure-virtual-desktop
 ---
 
 
