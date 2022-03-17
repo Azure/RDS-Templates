@@ -1,8 +1,8 @@
-# Azure Virtual Desktop - Post Update Custom Configuration solution
+# Azure Virtual Desktop - Custom Configuration solution
 
 ## Description
 
-This solution will deploy the Virtual Desktop Optimization Tool to an AVD session host using the Azure Portal with the Post Update Custom Configuration option.  The json and ps1 files must be saved to a publicly accessible storage location, like a public GitHub repository or a public Azure Blob Storage container.
+This solution will deploy the Virtual Desktop Optimization Tool to an AVD session host using the Azure Portal with the Custom Configuration option.  The json and ps1 files must be saved to a publicly accessible storage location, like a public GitHub repository or a public Azure Blob Storage container.
 
 ## Implementation
 
@@ -18,4 +18,4 @@ This solution will deploy the Virtual Desktop Optimization Tool to an AVD sessio
 1. Save and close the solution.parameters.json file.
 1. Upload the solution.json and solution.parameters.json files to your desired storage location.
 1. Capture the URL's for the json files in a text editor.
-1. When deploying AVD session hosts from the Azure Portal, input the URL's to the json files in the input fields for the Post Update Custom Configuration.
+1. When deploying AVD session hosts from the Azure Portal, input the URL's to the json files in the input fields for the Custom Configuration.
