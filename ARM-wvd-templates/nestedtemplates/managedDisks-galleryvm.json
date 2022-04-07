@@ -438,6 +438,7 @@
           },
           "osDisk": {
             "createOption": "FromImage",
+            "diskSizeGB": "256",
             "managedDisk": {
               "storageAccountType": "[variables('storageAccountType')]"
             }
