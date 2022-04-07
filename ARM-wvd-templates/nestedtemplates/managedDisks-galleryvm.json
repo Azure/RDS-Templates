@@ -7,7 +7,7 @@
       "metadata": {
         "description": "The base URI where artifacts required by this template are located."
       },
-      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
+      "defaultValue": "https://raw.githubusercontent.com/kevinjons/RDS-Templates/avd/ARM-wvd-templates/DSC/Configuration.zip"
     },
     "availabilityOption": {
       "type": "string",
@@ -438,6 +438,7 @@
           },
           "osDisk": {
             "createOption": "FromImage",
+            "diskSizeGB": "256",
             "managedDisk": {
               "storageAccountType": "[variables('storageAccountType')]"
             }
