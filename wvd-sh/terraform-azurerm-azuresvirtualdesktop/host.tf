@@ -13,7 +13,7 @@ resource "random_string" "AVD_local_password" {
 resource "azurerm_network_interface" "avd_vm_nic" {
   count               = var.rdsh_count
   name                = "${var.prefix}-${count.index + 1}-nic"
-  resource_group_name = var.rg_name
+  resource_group_name = azurerm_resource_group.rg.name
   location            = var.deploy_location
 
   ip_configuration {
@@ -30,7 +30,7 @@ resource "azurerm_network_interface" "avd_vm_nic" {
 resource "azurerm_windows_virtual_machine" "avd_vm" {
   count                 = var.rdsh_count
   name                  = "${var.prefix}-${count.index + 1}"
-  resource_group_name   = var.rg_name
+  resource_group_name   = azurerm_resource_group.rg.name
   location              = var.deploy_location
   size                  = var.vm_size
   network_interface_ids = ["${azurerm_network_interface.avd_vm_nic.*.id[count.index]}"]
