@@ -322,14 +322,13 @@ var vhds = 'vhds/${rdshPrefix}'
 var subnet_id = resourceId(virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', existingVnetName, existingSubnetName)
 var hostpoolName_var = replace(hostpoolName, '"', '')
 var vmTemplateName = '${(rdshManagedDisks ? 'managedDisks' : 'unmanagedDisks')}-${toLower(replace(vmImageType, ' ', ''))}vm'
-var vmTemplateUri = '${nestedTemplatesLocation}${vmTemplateName}.json'
-var rdshVmNamesOutput = {
-  rdshVmNamesCopy: [for j in range(0, (createVMs ? vmNumberOfInstances : 1)): {
-    name: concat(rdshPrefix, j)
+var rdshVmNamesOutput =  [for j in range(0, (createVMs ? vmNumberOfInstances : 1)): {
+    name: '${rdshPrefix}, ${j}'
   }]
-}
 var appGroupName_var = '${hostpoolName_var}-DAG'
-var appGroupResourceId = createArray(appGroupName.id)
+var appGroupResourceId = [
+  resourceId('Microsoft.DesktopVirtualization/applicationgroups/', appGroupName_var)
+]
 var workspaceResourceGroup_var = (empty(workspaceResourceGroup) ? resourceGroup().name : workspaceResourceGroup)
 var applicationGroupReferencesArr = (('' == allApplicationGroupReferences) ? appGroupResourceId : concat(split(allApplicationGroupReferences, ','), appGroupResourceId))
 var hostpoolRequiredProps = {
@@ -387,14 +386,15 @@ var workspaceDiagnosticSettingsLogProperties = [for item in workspaceDiagnosticS
   }
 }]
 
-resource hostpoolName_resource 'Microsoft.DesktopVirtualization/hostpools@[parameters(\'apiVersion\')]' = {
+//NOTE: Due to BICEP implementation, you are preventing from using a string interpolation as a apiVersion. You must currently harcode apiVersions, and these will need to be manually updated when we want to change apiVersions
+resource hostpoolName_resource 'Microsoft.DesktopVirtualization/hostpools@2019-12-10-preview' = {
   name: hostpoolName
   location: location
   tags: hostpoolTags
   properties: (empty(customRdpProperty) ? hostpoolRequiredProps : union(hostpoolOptionalProps, hostpoolRequiredProps))
 }
 
-resource hostpoolName_default 'Microsoft.DesktopVirtualization/hostpools/sessionHostConfigurations@[parameters(\'apiVersion\')]' = if (createVMs && contains(systemData, 'hostpoolUpdateFeature') && systemData.hostpoolUpdateFeature) {
+resource hostpoolName_default 'Microsoft.DesktopVirtualization/hostpools/sessionHostConfigurations@2019-12-10-preview' = if (createVMs && contains(systemData, 'hostpoolUpdateFeature') && systemData.hostpoolUpdateFeature) {
   name: '${hostpoolName}/default'
   properties: {
     vMSizeId: vmSize
@@ -418,34 +418,34 @@ resource hostpoolName_default 'Microsoft.DesktopVirtualization/hostpools/session
   ]
 }
 
-resource appGroupName 'Microsoft.DesktopVirtualization/applicationgroups@[parameters(\'apiVersion\')]' = {
+resource appGroupName 'Microsoft.DesktopVirtualization/applicationgroups@2019-12-10-preview' = {
   name: appGroupName_var
   location: location
   tags: applicationGroupTags
   properties: {
-    hostpoolarmpath: hostpoolName_resource.id
+    hostPoolArmPath: hostpoolName_resource.id
     friendlyName: 'Default Desktop'
     description: 'Desktop Application Group created through the Hostpool Wizard'
     applicationGroupType: 'Desktop'
   }
 }
 
-module Workspace_linkedTemplate_deploymentId './nested_Workspace_linkedTemplate_deploymentId.bicep' = if (addToWorkspace) {
+module Workspace_linkedTemplate_deploymentId './nestedtemplates/nested_Workspace_linkedTemplate_deploymentId.bicep' = if (addToWorkspace) {
   name: 'Workspace-linkedTemplate-${deploymentId}'
   scope: resourceGroup(workspaceResourceGroup_var)
   params: {
-    variables_applicationGroupReferencesArr: applicationGroupReferencesArr
-    apiVersion: apiVersion
+    applicationGroupReferencesArr: applicationGroupReferencesArr
+    //apiVersion: apiVersion
     workSpaceName: workSpaceName
     workspaceLocation: workspaceLocation
   }
 }
 
-module AVSet_linkedTemplate_deploymentId './nested_AVSet_linkedTemplate_deploymentId.bicep' = if (createVMs && (availabilityOption == 'AvailabilitySet') && createAvailabilitySet) {
+module AVSet_linkedTemplate_deploymentId './nestedtemplates/nested_AVSet_linkedTemplate_deploymentId.bicep' = if (createVMs && (availabilityOption == 'AvailabilitySet') && createAvailabilitySet) {
   name: 'AVSet-linkedTemplate-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
-    variables_avSetSKU: avSetSKU
+    avSetSKU: avSetSKU
     availabilitySetName: availabilitySetName
     vmLocation: vmLocation
     availabilitySetTags: availabilitySetTags
@@ -457,7 +457,8 @@ module AVSet_linkedTemplate_deploymentId './nested_AVSet_linkedTemplate_deployme
   ]
 }
 
-module vmCreation_linkedTemplate_deploymentId '?' /*TODO: replace with correct path to [variables('vmTemplateUri')]*/ = if (createVMs) {
+// Deploy vmImageType = CustomVHD, managed disks
+module vmCreation_customVHD_managedDisks './nestedtemplates/managedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (vmUseManagedDisks)) {
   name: 'vmCreation-linkedTemplate-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
@@ -469,9 +470,7 @@ module vmCreation_linkedTemplate_deploymentId '?' /*TODO: replace with correct p
     storageAccountResourceGroupName: storageAccountResourceGroupName
     vmGalleryImageOffer: vmGalleryImageOffer
     vmGalleryImagePublisher: vmGalleryImagePublisher
-    vmGalleryImageHasPlan: vmGalleryImageHasPlan
     vmGalleryImageSKU: vmGalleryImageSKU
-    vmGalleryImageVersion: vmGalleryImageVersion
     rdshPrefix: rdshPrefix
     rdshNumberOfInstances: vmNumberOfInstances
     rdshVMDiskType: vmDiskType
@@ -481,7 +480,7 @@ module vmCreation_linkedTemplate_deploymentId '?' /*TODO: replace with correct p
     vmAdministratorAccountPassword: vmAdministratorAccountPassword
     administratorAccountUsername: administratorAccountUsername
     administratorAccountPassword: administratorAccountPassword
-    'subnet-id': subnet_id
+    subnet_id: subnet_id
     vhds: vhds
     rdshImageSourceId: vmCustomImageSourceId
     location: vmLocation
@@ -492,18 +491,60 @@ module vmCreation_linkedTemplate_deploymentId '?' /*TODO: replace with correct p
     networkSecurityGroupTags: networkSecurityGroupTags
     virtualMachineTags: virtualMachineTags
     imageTags: imageTags
-    hostpoolToken: hostpoolName_resource.properties.registrationInfo.token
+    hostpoolToken: reference(hostpoolName).registrationInfo.token
     hostpoolName: hostpoolName
     domain: domain
     ouPath: ouPath
     aadJoin: aadJoin
     intune: intune
-    bootDiagnostics: bootDiagnostics
-    '_guidValue': deploymentId
-    userAssignedIdentity: userAssignedIdentity
-    customConfigurationTemplateUrl: customConfigurationTemplateUrl
-    customConfigurationParameterUrl: customConfigurationParameterUrl
-    SessionHostConfigurationVersion: ((createVMs && contains(systemData, 'hostpoolUpdateFeature') && systemData.hostpoolUpdateFeature) ? hostpoolName_default.properties.version : '')
+    guidValue: deploymentId
+  }
+  dependsOn: [
+    AVSet_linkedTemplate_deploymentId
+  ]
+}
+
+// Deploy vmImageType = CustomVHD, unmanaged disks
+module vmCreation_customVHD_unmanagedDisks './nestedtemplates/unmanagedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (!vmUseManagedDisks)) {
+  name: 'vmCreation-linkedTemplate-${deploymentId}'
+  scope: resourceGroup(vmResourceGroup)
+  params: {
+    artifactsLocation: artifactsLocation
+    availabilityOption: availabilityOption
+    availabilitySetName: availabilitySetName
+    availabilityZone: availabilityZone
+    vmImageVhdUri: vmImageVhdUri
+    storageAccountResourceGroupName: storageAccountResourceGroupName
+    vmGalleryImageOffer: vmGalleryImageOffer
+    vmGalleryImagePublisher: vmGalleryImagePublisher
+    vmGalleryImageSKU: vmGalleryImageSKU
+    rdshPrefix: rdshPrefix
+    rdshNumberOfInstances: vmNumberOfInstances
+    rdshVMDiskType: vmDiskType
+    rdshVmSize: vmSize
+    enableAcceleratedNetworking: false
+    vmAdministratorAccountUsername: vmAdministratorAccountUsername
+    vmAdministratorAccountPassword: vmAdministratorAccountPassword
+    administratorAccountUsername: administratorAccountUsername
+    administratorAccountPassword: administratorAccountPassword
+    subnet_id: subnet_id
+    vhds: vhds
+    rdshImageSourceId: vmCustomImageSourceId
+    location: vmLocation
+    createNetworkSecurityGroup: createNetworkSecurityGroup
+    networkSecurityGroupId: networkSecurityGroupId
+    networkSecurityGroupRules: networkSecurityGroupRules
+    networkInterfaceTags: networkInterfaceTags
+    networkSecurityGroupTags: networkSecurityGroupTags
+    virtualMachineTags: virtualMachineTags
+    imageTags: imageTags
+    hostpoolToken: reference(hostpoolName).registrationInfo.token
+    hostpoolName: hostpoolName
+    domain: domain
+    ouPath: ouPath
+    aadJoin: aadJoin
+    intune: intune
+    guidValue: deploymentId
   }
   dependsOn: [
     AVSet_linkedTemplate_deploymentId
@@ -555,4 +596,4 @@ resource isNewWorkspace_workSpaceName_placeholder_Microsoft_Insights_diagnosticS
   ]
 }
 
-output rdshVmNamesObject object = rdshVmNamesOutput
+output rdshVmNamesObject array = rdshVmNamesOutput
