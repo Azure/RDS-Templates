@@ -67,7 +67,18 @@ if (Test-path $rdInfraAgentRegistryPath) {
 }
 
 if ($AadJoin) {
-    # 6 Minute sleep to guarantee intune metadata logging
+    # Set Azure AD Join registry key
+    $KeyPath = "HKLM:\SOFTWARE\Microsoft\RDInfraAgent\AADJPrivate"
+
+    if (!(Get-Item -Path $KeyPath -ErrorAction SilentlyContinue)) {
+        Write-Log -Message ("Registry Key for AADJPrivate doesn't exist. Creating now...")
+        New-Item -Path $KeyPath -Force | Out-Null
+    }
+    else {
+        Write-Log -Message ("Registry Key for AADJPrivate exists.")
+    }
+
+    # 6 Minute sleep to guarantee Intune metadata logging
     Write-Log -Message ("Configuration.ps1 complete, sleeping for 6 minutes")
     Start-Sleep -Seconds 360
     Write-Log -Message ("Configuration.ps1 complete, waking up from 6 minute sleep")
