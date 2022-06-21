@@ -1,7 +1,4 @@
-@description('The base URI where artifacts required by this template are located.')
-param nestedTemplatesLocation string = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/nestedtemplates/'
-
-@description('The base URI where artifacts required by this template are located.')
+@description('The base URI where artifacts required by this template are located. TODO: Update to where bicep DSC is located in master')
 param artifactsLocation string = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip'
 
 @description('The name of the Hostpool to be created.')
@@ -12,43 +9,6 @@ param hostpoolFriendlyName string = ''
 
 @description('The description of the Hostpool to be created.')
 param hostpoolDescription string = ''
-
-@description('The storage uri to put the diagnostic logs')
-param hostpoolDiagnosticSettingsStorageAccount string = ''
-
-@description('The description of the Hostpool to be created.')
-param hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId string = ''
-
-@description('The event hub name to send logs to')
-param hostpoolDiagnosticSettingsEventHubName string = ''
-
-@description('The event hub policy to use')
-param hostpoolDiagnosticSettingsEventHubAuthorizationId string = ''
-
-@description('Categories of logs to be created for hostpools')
-param hostpoolDiagnosticSettingsLogCategories array = [
-  'Checkpoint'
-  'Error'
-  'Management'
-  'Connection'
-  'HostRegistration'
-  'AgentHealthStatus'
-]
-
-@description('Categories of logs to be created for app groups')
-param appGroupDiagnosticSettingsLogCategories array = [
-  'Checkpoint'
-  'Error'
-  'Management'
-]
-
-@description('Categories of logs to be created for workspaces')
-param workspaceDiagnosticSettingsLogCategories array = [
-  'Checkpoint'
-  'Error'
-  'Management'
-  'Feed'
-]
 
 @description('The location where the resources will be deployed.')
 param location string
@@ -61,9 +21,6 @@ param workspaceLocation string = ''
 
 @description('The workspace resource group Name.')
 param workspaceResourceGroup string = ''
-
-@description('True if the workspace is new. False if there is no workspace added or adding to an existing workspace.')
-param isNewWorkspace bool = false
 
 @description('The existing app groups references of the workspace selected.')
 param allApplicationGroupReferences string = ''
@@ -85,12 +42,12 @@ param vmAdministratorAccountUsername string = ''
 @secure()
 param vmAdministratorAccountPassword string = ''
 
-@description('Select the availability options for the VMs.')
 @allowed([
   'None'
   'AvailabilitySet'
   'AvailabilityZone'
 ])
+@description('Select the availability options for the VMs.')
 param availabilityOption string = 'None'
 
 @description('The name of avaiability set to be used when create the VMs.')
@@ -99,7 +56,6 @@ param availabilitySetName string = ''
 @description('Whether to create a new availability set for the VMs.')
 param createAvailabilitySet bool = false
 
-@description('The platform update domain count of avaiability set to be created.')
 @allowed([
   1
   2
@@ -122,22 +78,23 @@ param createAvailabilitySet bool = false
   19
   20
 ])
+@description('The platform update domain count of avaiability set to be created.')
 param availabilitySetUpdateDomainCount int = 5
 
-@description('The platform fault domain count of avaiability set to be created.')
 @allowed([
   1
   2
   3
 ])
+@description('The platform fault domain count of avaiability set to be created.')
 param availabilitySetFaultDomainCount int = 2
 
-@description('The number of availability zone to be used when create the VMs.')
 @allowed([
   1
   2
   3
 ])
+@description('The number of availability zone to be used when create the VMs.')
 param availabilityZone int = 1
 
 @description('The resource group of the session host VMs.')
@@ -155,12 +112,12 @@ param vmNumberOfInstances int = 0
 @description('This prefix will be used in combination with the VM number to create the VM name. If using \'rdsh\' as the prefix, VMs would be named \'rdsh-0\', \'rdsh-1\', etc. You should use a unique prefix to reduce name collisions in Active Directory.')
 param vmNamePrefix string = ''
 
-@description('Select the image source for the session host vms. VMs from a Gallery image will be created with Managed Disks.')
 @allowed([
   'CustomVHD'
   'CustomImage'
   'Gallery'
 ])
+@description('Select the image source for the session host vms. VMs from a Gallery image will be created with Managed Disks.')
 param vmImageType string = 'Gallery'
 
 @description('(Required when vmImageType = Gallery) Gallery image Offer.')
@@ -169,14 +126,8 @@ param vmGalleryImageOffer string = ''
 @description('(Required when vmImageType = Gallery) Gallery image Publisher.')
 param vmGalleryImagePublisher string = ''
 
-@description('Whether the VM has plan or not')
-param vmGalleryImageHasPlan bool = false
-
 @description('(Required when vmImageType = Gallery) Gallery image SKU.')
 param vmGalleryImageSKU string = ''
-
-@description('(Required when vmImageType = Gallery) Gallery image version.')
-param vmGalleryImageVersion string = ''
 
 @description('(Required when vmImageType = CustomVHD) URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd')
 param vmImageVhdUri string = ''
@@ -184,12 +135,12 @@ param vmImageVhdUri string = ''
 @description('(Required when vmImageType = CustomImage) Resource ID of the image')
 param vmCustomImageSourceId string = ''
 
-@description('The VM disk type for the VM: HDD or SSD.')
 @allowed([
   'Premium_LRS'
   'StandardSSD_LRS'
   'Standard_LRS'
 ])
+@description('The VM disk type for the VM: HDD or SSD.')
 param vmDiskType string = 'StandardSSD_LRS'
 
 @description('True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks.')
@@ -216,30 +167,30 @@ param networkSecurityGroupId string = ''
 @description('The rules to be given to the new network security group')
 param networkSecurityGroupRules array = []
 
-@description('Set this parameter to Personal if you would like to enable Persistent Desktop experience. Defaults to false.')
 @allowed([
   'Personal'
   'Pooled'
 ])
+@description('Set this parameter to Personal if you would like to enable Persistent Desktop experience. Defaults to false.')
 param hostpoolType string
 
-@description('Set the type of assignment for a Personal hostpool type')
 @allowed([
   'Automatic'
   'Direct'
   ''
 ])
+@description('Set the type of assignment for a Personal hostpool type')
 param personalDesktopAssignmentType string = ''
 
 @description('Maximum number of sessions.')
 param maxSessionLimit int = 99999
 
-@description('Type of load balancer algorithm.')
 @allowed([
   'BreadthFirst'
   'DepthFirst'
   'Persistent'
 ])
+@description('Type of load balancer algorithm.')
 param loadBalancerType string = 'BreadthFirst'
 
 @description('Hostpool rdp properties')
@@ -249,7 +200,7 @@ param customRdpProperty string = ''
 param vmTemplate string = ''
 
 @description('Hostpool token expiration time')
-param tokenExpirationTime string
+param tokenExpirationTime string = ''
 
 @description('The tags to be assigned to the hostpool')
 param hostpoolTags object = {}
@@ -272,11 +223,8 @@ param virtualMachineTags object = {}
 @description('The tags to be assigned to the images')
 param imageTags object = {}
 
-@description('WVD api version')
-param apiVersion string = '2019-12-10-preview'
-
 @description('GUID for the deployment')
-param deploymentId string = ''
+param deploymentId string = '1234'
 
 @description('Whether to use validation enviroment.')
 param validationEnvironment bool = false
@@ -290,31 +238,13 @@ param ouPath string = ''
 @description('Domain to join')
 param domain string = ''
 
-@description('True if AAD Join, false if AD join')
+@description('IMPORTANT: Please don\'t use this parameter as AAD Join is not supported yet. True if AAD Join, false if AD join')
 param aadJoin bool = false
 
-@description('True if intune enrollment is selected. False otherwise')
+@description('IMPORTANT: Please don\'t use this parameter as intune enrollment is not supported yet. True if intune enrollment is selected.  False otherwise')
 param intune bool = false
 
-@description('Boot diagnostics object taken as body of Diagnostics Profile in VM creation')
-param bootDiagnostics object = {
-  enabled: false
-}
-
-@description('The name of user assigned identity that will assigned to the VMs. This is an optional parameter.')
-param userAssignedIdentity string = ''
-
-@description('Arm template that contains custom configurations to be run after the Virtual Machines are created.')
-param customConfigurationTemplateUrl string = ''
-
-@description('Url to the Arm template parameter file for the customConfigurationTemplateUrl parameter. This input will be used when the template is ran after the VMs have been deployed.')
-param customConfigurationParameterUrl string = ''
-
-@description('System data is used for internal purposes, such as support preview features.')
-param systemData object = {}
-
 var createVMs = (vmNumberOfInstances > 0)
-var domain_var = ((domain == '') ? last(split(administratorAccountUsername, '@')) : domain)
 var rdshManagedDisks = ((vmImageType == 'CustomVHD') ? vmUseManagedDisks : bool('true'))
 var rdshPrefix = '${vmNamePrefix}-'
 var avSetSKU = (rdshManagedDisks ? 'Aligned' : 'Classic')
@@ -322,9 +252,9 @@ var vhds = 'vhds/${rdshPrefix}'
 var subnet_id = resourceId(virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', existingVnetName, existingSubnetName)
 var hostpoolName_var = replace(hostpoolName, '"', '')
 var vmTemplateName = '${(rdshManagedDisks ? 'managedDisks' : 'unmanagedDisks')}-${toLower(replace(vmImageType, ' ', ''))}vm'
-var rdshVmNamesOutput =  [for j in range(0, (createVMs ? vmNumberOfInstances : 1)): {
-    name: '${rdshPrefix}, ${j}'
-  }]
+var rdshVmNamesOutput = [for j in range(0, (createVMs ? vmNumberOfInstances : 1)): {
+  name: '${rdshPrefix}${j}'
+}]
 var appGroupName_var = '${hostpoolName_var}-DAG'
 var appGroupResourceId = [
   resourceId('Microsoft.DesktopVirtualization/applicationgroups/', appGroupName_var)
@@ -351,71 +281,12 @@ var hostpoolRequiredProps = {
 var hostpoolOptionalProps = {
   customRdpProperty: customRdpProperty
 }
-var sessionHostConfigurationImageMarketPlaceInfoProps = {
-  publisher: vmGalleryImagePublisher
-  offer: vmGalleryImageOffer
-  sku: vmGalleryImageSKU
-  exactVersion: vmGalleryImageVersion
-}
-var sendLogsToStorageAccount = (!empty(hostpoolDiagnosticSettingsStorageAccount))
-var sendLogsToLogAnalytics = (!empty(hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId))
-var sendLogsToEventHub = (!empty(hostpoolDiagnosticSettingsEventHubName))
-var storageAccountIdProperty = (sendLogsToStorageAccount ? hostpoolDiagnosticSettingsStorageAccount : null)
-var hostpoolDiagnosticSettingsLogProperties = [for item in hostpoolDiagnosticSettingsLogCategories: {
-  category: item
-  enabled: true
-  retentionPolicy: {
-    enabled: true
-    days: 30
-  }
-}]
-var appGroupDiagnosticSettingsLogProperties = [for item in appGroupDiagnosticSettingsLogCategories: {
-  category: item
-  enabled: true
-  retentionPolicy: {
-    enabled: true
-    days: 30
-  }
-}]
-var workspaceDiagnosticSettingsLogProperties = [for item in workspaceDiagnosticSettingsLogCategories: {
-  category: item
-  enabled: true
-  retentionPolicy: {
-    enabled: true
-    days: 30
-  }
-}]
 
-//NOTE: Due to BICEP implementation, you are preventing from using a string interpolation as a apiVersion. You must currently harcode apiVersions, and these will need to be manually updated when we want to change apiVersions
 resource hostpoolName_resource 'Microsoft.DesktopVirtualization/hostpools@2019-12-10-preview' = {
   name: hostpoolName
   location: location
   tags: hostpoolTags
   properties: (empty(customRdpProperty) ? hostpoolRequiredProps : union(hostpoolOptionalProps, hostpoolRequiredProps))
-}
-
-resource hostpoolName_default 'Microsoft.DesktopVirtualization/hostpools/sessionHostConfigurations@2019-12-10-preview' = if (createVMs && contains(systemData, 'hostpoolUpdateFeature') && systemData.hostpoolUpdateFeature) {
-  name: '${hostpoolName}/default'
-  properties: {
-    vMSizeId: vmSize
-    diskType: vmDiskType
-    vmCustomConfigurationUri: (empty(customConfigurationTemplateUrl) ? null : customConfigurationTemplateUrl)
-    vmCustomConfigurationParameterUri: (empty(customConfigurationParameterUrl) ? null : customConfigurationParameterUrl)
-    imageInfo: {
-      type: ((vmImageType == 'CustomVHD') ? 'StorageBlob' : vmImageType)
-      marketPlaceInfo: ((vmImageType == 'Gallery') ? sessionHostConfigurationImageMarketPlaceInfoProps : null)
-      storageBlobUri: ((vmImageType == 'CustomVHD') ? vmImageVhdUri : null)
-      customId: ((vmImageType == 'CustomImage') ? vmCustomImageSourceId : null)
-    }
-    domainInfo: {
-      name: domain_var
-      joinType: (aadJoin ? 'AzureActiveDirectory' : 'ActiveDirectory')
-      mdmProviderGuid: (intune ? '0000000a-0000-0000-c000-000000000000' : null)
-    }
-  }
-  dependsOn: [
-    hostpoolName_resource
-  ]
 }
 
 resource appGroupName 'Microsoft.DesktopVirtualization/applicationgroups@2019-12-10-preview' = {
@@ -434,23 +305,22 @@ module Workspace_linkedTemplate_deploymentId './nestedtemplates/nested_Workspace
   name: 'Workspace-linkedTemplate-${deploymentId}'
   scope: resourceGroup(workspaceResourceGroup_var)
   params: {
-    applicationGroupReferencesArr: applicationGroupReferencesArr
-    //apiVersion: apiVersion
     workSpaceName: workSpaceName
     workspaceLocation: workspaceLocation
+    applicationGroupReferencesArr: applicationGroupReferencesArr
   }
 }
 
 module AVSet_linkedTemplate_deploymentId './nestedtemplates/nested_AVSet_linkedTemplate_deploymentId.bicep' = if (createVMs && (availabilityOption == 'AvailabilitySet') && createAvailabilitySet) {
-  name: 'AVSet-linkedTemplate-${deploymentId}'
+  name: 'AVSet_linkedTemplate_${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
-    avSetSKU: avSetSKU
     availabilitySetName: availabilitySetName
     vmLocation: vmLocation
     availabilitySetTags: availabilitySetTags
     availabilitySetUpdateDomainCount: availabilitySetUpdateDomainCount
     availabilitySetFaultDomainCount: availabilitySetFaultDomainCount
+    avSetSKU: avSetSKU
   }
   dependsOn: [
     appGroupName
@@ -459,7 +329,7 @@ module AVSet_linkedTemplate_deploymentId './nestedtemplates/nested_AVSet_linkedT
 
 // Deploy vmImageType = CustomVHD, managed disks
 module vmCreation_customVHD_managedDisks './nestedtemplates/managedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (vmUseManagedDisks)) {
-  name: 'vmCreation-linkedTemplate-${deploymentId}'
+  name: 'vmCreation-linkedTemplate-${deploymentId}-managed_customHD'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -499,14 +369,11 @@ module vmCreation_customVHD_managedDisks './nestedtemplates/managedDisks-customv
     intune: intune
     guidValue: deploymentId
   }
-  dependsOn: [
-    AVSet_linkedTemplate_deploymentId
-  ]
 }
 
 // Deploy vmImageType = CustomVHD, unmanaged disks
 module vmCreation_customVHD_unmanagedDisks './nestedtemplates/unmanagedDisks-customvhdvm.bicep' = if ((createVMs) && (vmImageType == 'CustomVHD') && (!vmUseManagedDisks)) {
-  name: 'vmCreation-linkedTemplate-${deploymentId}'
+  name: 'vmCreation-linkedTemplate-${deploymentId}-customVHD_unmanaged'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -546,54 +413,94 @@ module vmCreation_customVHD_unmanagedDisks './nestedtemplates/unmanagedDisks-cus
     intune: intune
     guidValue: deploymentId
   }
-  dependsOn: [
-    AVSet_linkedTemplate_deploymentId
-  ]
 }
 
-resource hostpoolName_Microsoft_Insights_diagnosticSetting 'Microsoft.DesktopVirtualization/hostpools/providers/diagnosticSettings@2017-05-01-preview' = if (sendLogsToEventHub || sendLogsToLogAnalytics || sendLogsToStorageAccount) {
-  location: location
-  name: '${hostpoolName}/Microsoft.Insights/diagnosticSetting'
-  properties: {
-    storageAccountId: (sendLogsToStorageAccount ? storageAccountIdProperty : null)
-    eventHubAuthorizationRuleId: (sendLogsToEventHub ? hostpoolDiagnosticSettingsEventHubAuthorizationId : null)
-    eventHubName: (sendLogsToEventHub ? hostpoolDiagnosticSettingsEventHubName : null)
-    workspaceId: (sendLogsToLogAnalytics ? hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId : null)
-    logs: hostpoolDiagnosticSettingsLogProperties
+// Deploy vmImageType = CustomImage
+module vmCreation_customeImage './nestedtemplates/managedDisks-customimagevm.bicep' = if ((createVMs) && (vmImageType == 'CustomImage')) {
+  name: 'vmCreation-linkedTemplate-${deploymentId}-managed_customImage'
+  scope: resourceGroup(vmResourceGroup)
+  params: {
+    artifactsLocation: artifactsLocation
+    availabilityOption: availabilityOption
+    availabilitySetName: availabilitySetName
+    availabilityZone: availabilityZone
+    vmImageVhdUri: vmImageVhdUri
+    storageAccountResourceGroupName: storageAccountResourceGroupName
+    vmGalleryImageOffer: vmGalleryImageOffer
+    vmGalleryImagePublisher: vmGalleryImagePublisher
+    vmGalleryImageSKU: vmGalleryImageSKU
+    rdshPrefix: rdshPrefix
+    rdshNumberOfInstances: vmNumberOfInstances
+    rdshVMDiskType: vmDiskType
+    rdshVmSize: vmSize
+    enableAcceleratedNetworking: false
+    vmAdministratorAccountUsername: vmAdministratorAccountUsername
+    vmAdministratorAccountPassword: vmAdministratorAccountPassword
+    administratorAccountUsername: administratorAccountUsername
+    administratorAccountPassword: administratorAccountPassword
+    subnet_id: subnet_id
+    vhds: vhds
+    rdshImageSourceId: vmCustomImageSourceId
+    location: vmLocation
+    createNetworkSecurityGroup: createNetworkSecurityGroup
+    networkSecurityGroupId: networkSecurityGroupId
+    networkSecurityGroupRules: networkSecurityGroupRules
+    networkInterfaceTags: networkInterfaceTags
+    networkSecurityGroupTags: networkSecurityGroupTags
+    virtualMachineTags: virtualMachineTags
+    imageTags: imageTags
+    hostpoolToken: reference(hostpoolName).registrationInfo.token
+    hostpoolName: hostpoolName
+    domain: domain
+    ouPath: ouPath
+    aadJoin: aadJoin
+    intune: intune
+    guidValue: deploymentId
   }
-  dependsOn: [
-    hostpoolName_resource
-  ]
 }
 
-resource appGroupName_Microsoft_Insights_diagnosticSetting 'Microsoft.DesktopVirtualization/applicationgroups/providers/diagnosticSettings@2017-05-01-preview' = if (sendLogsToEventHub || sendLogsToLogAnalytics || sendLogsToStorageAccount) {
-  location: location
-  name: '${appGroupName_var}/Microsoft.Insights/diagnosticSetting'
-  properties: {
-    storageAccountId: (sendLogsToStorageAccount ? storageAccountIdProperty : null)
-    eventHubAuthorizationRuleId: (sendLogsToEventHub ? hostpoolDiagnosticSettingsEventHubAuthorizationId : null)
-    eventHubName: (sendLogsToEventHub ? hostpoolDiagnosticSettingsEventHubName : null)
-    workspaceId: (sendLogsToLogAnalytics ? hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId : null)
-    logs: appGroupDiagnosticSettingsLogProperties
+// Deploy vmImageType = CustomVHD, managed disks
+module vmCreation_Gallery './nestedtemplates/managedDisks-galleryvm.bicep' /*TODO: replace with correct path to [variables('vmTemplateUri')]*/ = if ((createVMs) && (vmImageType == 'Gallery') && (vmUseManagedDisks)) {
+  name: 'vmCreation-linkedTemplate-${deploymentId}-managed_gallery'
+  scope: resourceGroup(vmResourceGroup)
+  params: {
+    artifactsLocation: artifactsLocation
+    availabilityOption: availabilityOption
+    availabilitySetName: availabilitySetName
+    availabilityZone: availabilityZone
+    vmImageVhdUri: vmImageVhdUri
+    storageAccountResourceGroupName: storageAccountResourceGroupName
+    vmGalleryImageOffer: vmGalleryImageOffer
+    vmGalleryImagePublisher: vmGalleryImagePublisher
+    vmGalleryImageSKU: vmGalleryImageSKU
+    rdshPrefix: rdshPrefix
+    rdshNumberOfInstances: vmNumberOfInstances
+    rdshVMDiskType: vmDiskType
+    rdshVmSize: vmSize
+    enableAcceleratedNetworking: false
+    vmAdministratorAccountUsername: vmAdministratorAccountUsername
+    vmAdministratorAccountPassword: vmAdministratorAccountPassword
+    administratorAccountUsername: administratorAccountUsername
+    administratorAccountPassword: administratorAccountPassword
+    subnet_id: subnet_id
+    vhds: vhds
+    rdshImageSourceId: vmCustomImageSourceId
+    location: vmLocation
+    createNetworkSecurityGroup: createNetworkSecurityGroup
+    networkSecurityGroupId: networkSecurityGroupId
+    networkSecurityGroupRules: networkSecurityGroupRules
+    networkInterfaceTags: networkInterfaceTags
+    networkSecurityGroupTags: networkSecurityGroupTags
+    virtualMachineTags: virtualMachineTags
+    imageTags: imageTags
+    hostpoolToken: reference(hostpoolName).registrationInfo.token
+    hostpoolName: hostpoolName
+    domain: domain
+    ouPath: ouPath
+    aadJoin: aadJoin
+    intune: intune
+    guidValue: deploymentId
   }
-  dependsOn: [
-    appGroupName
-  ]
-}
-
-resource isNewWorkspace_workSpaceName_placeholder_Microsoft_Insights_diagnosticSetting 'Microsoft.DesktopVirtualization/workspaces/providers/diagnosticSettings@2017-05-01-preview' = if (isNewWorkspace && (sendLogsToEventHub || sendLogsToLogAnalytics || sendLogsToStorageAccount)) {
-  location: location
-  name: '${(isNewWorkspace ? workSpaceName : 'placeholder')}/Microsoft.Insights/diagnosticSetting'
-  properties: {
-    storageAccountId: (sendLogsToStorageAccount ? storageAccountIdProperty : null)
-    eventHubAuthorizationRuleId: (sendLogsToEventHub ? hostpoolDiagnosticSettingsEventHubAuthorizationId : null)
-    eventHubName: (sendLogsToEventHub ? hostpoolDiagnosticSettingsEventHubName : null)
-    workspaceId: (sendLogsToLogAnalytics ? hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId : null)
-    logs: workspaceDiagnosticSettingsLogProperties
-  }
-  dependsOn: [
-    Workspace_linkedTemplate_deploymentId
-  ]
 }
 
 output rdshVmNamesObject array = rdshVmNamesOutput
