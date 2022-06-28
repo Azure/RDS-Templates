@@ -143,12 +143,11 @@ param vmCustomImageSourceId string = ''
 
 @description('The VM disk type for the VM: HDD or SSD.')
 @allowed([
-  'UltraSSD_LRS'
   'Premium_LRS'
   'StandardSSD_LRS'
   'Standard_LRS'
 ])
-param vmDiskType string
+param vmDiskType string = 'Standard_LRS'
 
 @description('True indicating you would like to use managed disks or false indicating you would like to use unmanaged disks.')
 param vmUseManagedDisks bool
@@ -234,7 +233,7 @@ var rdshManagedDisks = ((vmImageType == 'CustomVHD') ? vmUseManagedDisks : bool(
 var rdshPrefix = '${vmNamePrefix}-'
 var avSetSKU = (rdshManagedDisks ? 'Aligned' : 'Classic')
 var vhds = 'vhds/${rdshPrefix}'
-var subnet_id = resourceId(virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', existingVnetName, existingSubnetName)
+var var_subnet_id = resourceId(virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', existingVnetName, existingSubnetName)
 var vmTemplateName = '${(rdshManagedDisks ? 'managedDisks' : 'unmanagedDisks')}-${toLower(replace(vmImageType, ' ', ''))}vm'
 var vmTemplateUri = '${nestedTemplatesLocation}${vmTemplateName}.json'
 var rdshVmNamesCopyNamesArr = [for item in range(0, (vmNumberOfInstances)): {
@@ -268,9 +267,9 @@ module AVSet_linkedTemplate_deploymentId '../nestedtemplates/nested_AVSet_linked
     UpdateHostPool_deploymentId
   ]
 }
-/*TODO: replace with correct path to [variables('vmTemplateUri')] Bicep currently does not "support string interpolation in FilePaths." This is going to require some deeper refactoring, Either by using BICEP PUBLISH, or keeping local copy in the GitHub repo.*/
-module vmCreation_linkedTemplate_deploymentId '?' /*TODO: For now, can add json locally to my build and convert to bicep only for workaround, ask preference next meeting*/ = {
-  name: 'vmCreation-linkedTemplate-${deploymentId}'
+
+module vmCreation_managed_customvhdvm '../nestedtemplates/managedDisks-customvhdvm.bicep' = if (vmTemplateUri == 'managedDisks-customvhdvm.bicep') {
+  name: 'vmCreation_managed_customvhdvm-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -293,7 +292,7 @@ module vmCreation_linkedTemplate_deploymentId '?' /*TODO: For now, can add json 
     vmAdministratorAccountPassword: vmAdministratorAccountPassword
     administratorAccountUsername: administratorAccountUsername
     administratorAccountPassword: administratorAccountPassword
-    'subnet-id': subnet_id
+    subnet_id: var_subnet_id
     vhds: vhds
     rdshImageSourceId: vmCustomImageSourceId
     location: vmLocation
@@ -312,15 +311,114 @@ module vmCreation_linkedTemplate_deploymentId '?' /*TODO: For now, can add json 
     aadJoin: aadJoin
     intune: intune
     bootDiagnostics: bootDiagnostics
-    '_guidValue': deploymentId
+    guidValue: deploymentId
     userAssignedIdentity: userAssignedIdentity
     customConfigurationTemplateUrl: customConfigurationTemplateUrl
     customConfigurationParameterUrl: customConfigurationParameterUrl
     SessionHostConfigurationVersion: (contains(systemData, 'hostpoolUpdate') ? systemData.sessionHostConfigurationVersion : '')
   }
-  dependsOn: [
-    AVSet_linkedTemplate_deploymentId
-  ]
+}
+
+module vmCreation_managed_galleryvm '../nestedtemplates/managedDisks-galleryvm.bicep' = if (vmTemplateUri == 'managedDisks-galleryvm.bicep') {
+  name: 'vmCreation_managed_galleryvm-${deploymentId}'
+  scope: resourceGroup(vmResourceGroup)
+  params: {
+    artifactsLocation: artifactsLocation
+    availabilityOption: availabilityOption
+    availabilitySetName: availabilitySetName
+    availabilityZone: availabilityZone
+    vmImageVhdUri: vmImageVhdUri
+    storageAccountResourceGroupName: storageAccountResourceGroupName
+    vmGalleryImageOffer: vmGalleryImageOffer
+    vmGalleryImagePublisher: vmGalleryImagePublisher
+    vmGalleryImageHasPlan: vmGalleryImageHasPlan
+    vmGalleryImageSKU: vmGalleryImageSKU
+    vmGalleryImageVersion: vmGalleryImageVersion
+    rdshPrefix: rdshPrefix
+    rdshNumberOfInstances: vmNumberOfInstances
+    rdshVMDiskType: vmDiskType
+    rdshVmSize: vmSize
+    enableAcceleratedNetworking: false
+    vmAdministratorAccountUsername: vmAdministratorAccountUsername
+    vmAdministratorAccountPassword: vmAdministratorAccountPassword
+    administratorAccountUsername: administratorAccountUsername
+    administratorAccountPassword: administratorAccountPassword
+    subnet_id: var_subnet_id
+    vhds: vhds
+    rdshImageSourceId: vmCustomImageSourceId
+    location: vmLocation
+    createNetworkSecurityGroup: createNetworkSecurityGroup
+    networkSecurityGroupId: networkSecurityGroupId
+    networkSecurityGroupRules: networkSecurityGroupRules
+    networkInterfaceTags: networkInterfaceTags
+    networkSecurityGroupTags: networkSecurityGroupTags
+    virtualMachineTags: virtualMachineTags
+    imageTags: imageTags
+    vmInitialNumber: vmInitialNumber
+    hostpoolName: hostpoolName
+    hostpoolToken: hostpoolToken
+    domain: domain
+    ouPath: ouPath
+    aadJoin: aadJoin
+    intune: intune
+    bootDiagnostics: bootDiagnostics
+    guidValue: deploymentId
+    userAssignedIdentity: userAssignedIdentity
+    customConfigurationTemplateUrl: customConfigurationTemplateUrl
+    customConfigurationParameterUrl: customConfigurationParameterUrl
+    SessionHostConfigurationVersion: (contains(systemData, 'hostpoolUpdate') ? systemData.sessionHostConfigurationVersion : '')
+  }
+}
+
+module vmCreation_unmanaged_customvhd '../nestedtemplates/unmanagedDisks-customvhdvm.bicep' = if (vmTemplateUri == 'unmanagedDisks-customvhdvm.bicep') {
+  name: 'vmCreation_unmanaged_customvhd-${deploymentId}'
+  scope: resourceGroup(vmResourceGroup)
+  params: {
+    artifactsLocation: artifactsLocation
+    availabilityOption: availabilityOption
+    availabilitySetName: availabilitySetName
+    availabilityZone: availabilityZone
+    vmImageVhdUri: vmImageVhdUri
+    storageAccountResourceGroupName: storageAccountResourceGroupName
+    vmGalleryImageOffer: vmGalleryImageOffer
+    vmGalleryImagePublisher: vmGalleryImagePublisher
+    vmGalleryImageHasPlan: vmGalleryImageHasPlan
+    vmGalleryImageSKU: vmGalleryImageSKU
+    vmGalleryImageVersion: vmGalleryImageVersion
+    rdshPrefix: rdshPrefix
+    rdshNumberOfInstances: vmNumberOfInstances
+    rdshVMDiskType: vmDiskType
+    rdshVmSize: vmSize
+    enableAcceleratedNetworking: false
+    vmAdministratorAccountUsername: vmAdministratorAccountUsername
+    vmAdministratorAccountPassword: vmAdministratorAccountPassword
+    administratorAccountUsername: administratorAccountUsername
+    administratorAccountPassword: administratorAccountPassword
+    subnet_id: var_subnet_id
+    vhds: vhds
+    rdshImageSourceId: vmCustomImageSourceId
+    location: vmLocation
+    createNetworkSecurityGroup: createNetworkSecurityGroup
+    networkSecurityGroupId: networkSecurityGroupId
+    networkSecurityGroupRules: networkSecurityGroupRules
+    networkInterfaceTags: networkInterfaceTags
+    networkSecurityGroupTags: networkSecurityGroupTags
+    virtualMachineTags: virtualMachineTags
+    imageTags: imageTags
+    vmInitialNumber: vmInitialNumber
+    hostpoolName: hostpoolName
+    hostpoolToken: hostpoolToken
+    domain: domain
+    ouPath: ouPath
+    aadJoin: aadJoin
+    intune: intune
+    bootDiagnostics: bootDiagnostics
+    guidValue: deploymentId
+    userAssignedIdentity: userAssignedIdentity
+    customConfigurationTemplateUrl: customConfigurationTemplateUrl
+    customConfigurationParameterUrl: customConfigurationParameterUrl
+    SessionHostConfigurationVersion: (contains(systemData, 'hostpoolUpdate') ? systemData.sessionHostConfigurationVersion : '')
+  }
 }
 
 output rdshVmNamesObject object = rdshVmNamesOutput

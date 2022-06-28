@@ -333,7 +333,8 @@ resource rdshPrefix_vmInitialNumber_joindomain 'Microsoft.Compute/virtualMachine
   ]
 }]
 
-/*module post_deployment_custom_configuration '?' /*TODO: replace with correct path to What should this be = if (!empty(customConfigurationTemplateUrl)) {
+//TODO: Look into custom support
+/*module post_deployment_custom_configuration '?' = if (!empty(customConfigurationTemplateUrl)) {
   name: 'post-deployment-custom-configuration'
   params: {
   }

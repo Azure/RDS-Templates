@@ -273,9 +273,6 @@ resource rdshPrefix_vmInitialNumber 'Microsoft.Compute/virtualMachines@2020-06-0
     licenseType: 'Windows_Client'
   }
   zones: ((availabilityOption == 'AvailabilityZone') ? array(availabilityZone) : emptyArray)
-  dependsOn: [
-    'Microsoft.Network/networkInterfaces/${rdshPrefix}${(i + vmInitialNumber)}-nic'
-  ]
 }]
 
 resource rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
@@ -343,7 +340,7 @@ resource rdshPrefix_vmInitialNumber_joindomain 'Microsoft.Compute/virtualMachine
   ]
 }]
 
-module post_deployment_custom_configuration '?' /*TODO: replace with correct path to What should this be*/ = if (!empty(customConfigurationTemplateUrl)) {
+/*module post_deployment_custom_configuration '?' /*TODO: replace with correct path to What should this be = if (!empty(customConfigurationTemplateUrl)) {
   name: 'post-deployment-custom-configuration'
   params: {
   }
@@ -352,4 +349,4 @@ module post_deployment_custom_configuration '?' /*TODO: replace with correct pat
     rdshPrefix_vmInitialNumber_AADLoginForWindows
     rdshPrefix_vmInitialNumber_joindomain
   ]
-}
+}*/
