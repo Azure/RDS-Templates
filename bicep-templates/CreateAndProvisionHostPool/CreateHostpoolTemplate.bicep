@@ -1,5 +1,5 @@
 @description('The base URI where artifacts required by this template are located.')
-param nestedTemplatesLocation string = '..\nestedtemplates'
+param nestedTemplatesLocation string = '../nestedtemplates'
 
 @description('The base URI where artifacts required by this template are located.')
 param artifactsLocation string = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip'
@@ -330,7 +330,6 @@ var vhds = 'vhds/${rdshPrefix}'
 var var_subnet_id = resourceId(virtualNetworkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', existingVnetName, existingSubnetName)
 var hostpoolName_var = replace(hostpoolName, '"', '')
 var vmTemplateName = '${(rdshManagedDisks ? 'managedDisks' : 'unmanagedDisks')}-${toLower(replace(vmImageType, ' ', ''))}vm'
-var vmTemplateUri = '${nestedTemplatesLocation}${vmTemplateName}.bicep'
 var rdshVmNamesCopyNamesArr = [for item in range(0, (createVMs ? vmNumberOfInstances : 1)): {
   name: '${rdshPrefix}${item}'
 }]
@@ -404,7 +403,7 @@ resource hostpoolName_resource 'Microsoft.DesktopVirtualization/hostpools@2019-1
   tags: hostpoolTags
   properties: (empty(customRdpProperty) ? hostpoolRequiredProps : union(hostpoolOptionalProps, hostpoolRequiredProps))
 }
-/*TODO: Is this type valid? It doesn't exist in Microsoft.DesktopVirtualization, but it is also referenced in the ARM template*/
+
 resource hostpoolName_default 'Microsoft.DesktopVirtualization/hostpools/sessionHostConfigurations@2019-12-10-preview' = if (createVMs && contains(systemData, 'hostpoolUpdateFeature') && systemData.hostpoolUpdateFeature) {
   name: '${hostpoolName}/default'
   properties: {
@@ -441,7 +440,7 @@ resource appGroupName 'Microsoft.DesktopVirtualization/applicationgroups@2019-12
   }
 }
 
-module Workspace_linkedTemplate_deploymentId '..//nestedtemplates/nested_Workspace_linkedTemplate_deploymentId.bicep' = if (addToWorkspace) {
+module Workspace_linkedTemplate_deploymentId '../nestedtemplates/nested_Workspace_linkedTemplate_deploymentId.bicep' = if (addToWorkspace) {
   name: 'Workspace-linkedTemplate-${deploymentId}'
   scope: resourceGroup(workspaceResourceGroup_var)
   params: {
@@ -467,9 +466,9 @@ module AVSet_linkedTemplate_deploymentId '../nestedtemplates/nested_AVSet_linked
   ]
 }
 
-/* TODO: Uncomment
-module vmCreation_managed_customImagevm '../nestedtemplates/managedDisks-customimagevm.bicep' = if (createVMs && vmTemplateUri == 'managedDisks-customimagevm.bicep') {
-  name: 'mCreation_managed_customImagevm-${deploymentId}'
+
+module vmCreation_managed_customImagevm '../nestedtemplates/managedDisks-customimagevm.bicep' = if (createVMs && vmTemplateName == 'managedDisks-customimagevm') {
+  name: 'vmCreate_man_customImagevm-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -518,8 +517,8 @@ module vmCreation_managed_customImagevm '../nestedtemplates/managedDisks-customi
   }
 }
 
-module vmCreation_managed_customvhdvm '../nestedtemplates/managedDisks-customvhdvm.bicep' = if (createVMs && vmTemplateUri == 'managedDisks-customvhdvm.bicep') {
-  name: 'vmCreation_managed_customvhdvm-${deploymentId}'
+module vmCreation_managed_customvhdvm '../nestedtemplates/managedDisks-customvhdvm.bicep' = if (createVMs && vmTemplateName == 'managedDisks-customvhdvm') {
+  name: 'vmCreae_man_customvhdvm-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -568,8 +567,8 @@ module vmCreation_managed_customvhdvm '../nestedtemplates/managedDisks-customvhd
   }
 }
 
-module vmCreation_managed_galleryvm '../nestedtemplates/managedDisks-galleryvm.bicep' = if (createVMs && vmTemplateUri == 'managedDisks-galleryvm.bicep') {
-  name: 'vmCreation_managed_galleryvm-${deploymentId}'
+module vmCreation_managed_galleryvm '../nestedtemplates/managedDisks-galleryvm.bicep' = if (createVMs && vmTemplateName == 'managedDisks-galleryvm') {
+  name: 'vmCreate_man_galleryvm-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -618,58 +617,8 @@ module vmCreation_managed_galleryvm '../nestedtemplates/managedDisks-galleryvm.b
   }
 }
 
-module vmCreation_unmanaged_customvhdvm '../nestedtemplates/unmanagedDisks-customvhdvm.bicep' = if (createVMs && vmTemplateUri == 'unmanagedDisks-customvhdvm.bicep') {
-  name: 'vmCreation_unmanaged_customvhdvm-${deploymentId}'
-  scope: resourceGroup(vmResourceGroup)
-  params: {
-    artifactsLocation: artifactsLocation
-    availabilityOption: availabilityOption
-    availabilitySetName: availabilitySetName
-    availabilityZone: availabilityZone
-    vmImageVhdUri: vmImageVhdUri
-    storageAccountResourceGroupName: storageAccountResourceGroupName
-    vmGalleryImageOffer: vmGalleryImageOffer
-    vmGalleryImagePublisher: vmGalleryImagePublisher
-    vmGalleryImageHasPlan: vmGalleryImageHasPlan
-    vmGalleryImageSKU: vmGalleryImageSKU
-    vmGalleryImageVersion: vmGalleryImageVersion
-    rdshPrefix: rdshPrefix
-    rdshNumberOfInstances: vmNumberOfInstances
-    rdshVMDiskType: vmDiskType
-    rdshVmSize: vmSize
-    enableAcceleratedNetworking: false
-    vmAdministratorAccountUsername: vmAdministratorAccountUsername
-    vmAdministratorAccountPassword: vmAdministratorAccountPassword
-    administratorAccountUsername: administratorAccountUsername
-    administratorAccountPassword: administratorAccountPassword
-    subnet_id: var_subnet_id
-    vhds: vhds
-    rdshImageSourceId: vmCustomImageSourceId
-    location: vmLocation
-    createNetworkSecurityGroup: createNetworkSecurityGroup
-    networkSecurityGroupId: networkSecurityGroupId
-    networkSecurityGroupRules: networkSecurityGroupRules
-    networkInterfaceTags: networkInterfaceTags
-    networkSecurityGroupTags: networkSecurityGroupTags
-    virtualMachineTags: virtualMachineTags
-    imageTags: imageTags
-    hostpoolToken: hostpoolName_resource.properties.registrationInfo.token
-    hostpoolName: hostpoolName
-    domain: domain
-    ouPath: ouPath
-    aadJoin: aadJoin
-    intune: intune
-    bootDiagnostics: bootDiagnostics
-    guidValue: deploymentId
-    userAssignedIdentity: userAssignedIdentity
-    customConfigurationTemplateUrl: customConfigurationTemplateUrl
-    customConfigurationParameterUrl: customConfigurationParameterUrl
-    SessionHostConfigurationVersion: ((createVMs && contains(systemData, 'hostpoolUpdateFeature') && systemData.hostpoolUpdateFeature) ? hostpoolName_default.properties.version : '')
-  }
-} */
-
-module vmCreation_man_galleryvm '../nestedtemplates/managedDisks-galleryvm.bicep' = {
-  name: 'vmCreation_man_galleryvm-${deploymentId}'
+module vmCreation_unmanaged_customvhdvm '../nestedtemplates/unmanagedDisks-customvhdvm.bicep' = if (createVMs && vmTemplateName == 'unmanagedDisks-customvhdvm') {
+  name: 'vmCreate_unman_customvhdvm-${deploymentId}'
   scope: resourceGroup(vmResourceGroup)
   params: {
     artifactsLocation: artifactsLocation
@@ -717,7 +666,6 @@ module vmCreation_man_galleryvm '../nestedtemplates/managedDisks-galleryvm.bicep
     SessionHostConfigurationVersion: ((createVMs && contains(systemData, 'hostpoolUpdateFeature') && systemData.hostpoolUpdateFeature) ? hostpoolName_default.properties.version : '')
   }
 }
-
 
 resource hostpoolName_Microsoft_Insights_diagnosticSetting 'Microsoft.DesktopVirtualization/hostpools/providers/diagnosticSettings@2017-05-01-preview' = if (sendLogsToEventHub || sendLogsToLogAnalytics || sendLogsToStorageAccount) {
   location: location
@@ -765,3 +713,5 @@ resource isNewWorkspace_workSpaceName_placeholder_Microsoft_Insights_diagnosticS
 }
 
 output rdshVmNamesObject object = rdshVmNamesOutput
+output vmPath string = vmTemplateName
+output create bool = createVMs
