@@ -1,4 +1,4 @@
-# Scripts to Enable and Execute Backup Jobs for WVD
+# Create an Azure Firewall Policy for AVD required URLs
 
 ## FirewallPolicyForAVD-template.json
 
