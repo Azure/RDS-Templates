@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "firewallPolicies_AVD_DefaultPolicy_name": {
+            "value": "AVD-FirewallPolicy"
+        },
+        "location": {
+            "value": null
+        },
+        "firewall-policy-tier": {
+            "value": "standard"
+        },
+       "dns-server": {
+            "value": "10.0.0.6"
+        },
+        "avd-hostpool-subnet": {
+            "value": "10.3.0.0/16"
+        }
+    }
+}
+
+
+
