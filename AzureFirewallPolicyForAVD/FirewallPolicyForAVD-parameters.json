@@ -6,7 +6,7 @@
             "value": "AVD-FirewallPolicy"
         },
         "location": {
-            "value": null
+            "value": "westeurope"
         },
         "firewall-policy-tier": {
             "value": "standard"
