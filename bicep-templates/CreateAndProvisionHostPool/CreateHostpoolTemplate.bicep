@@ -1,7 +1,4 @@
 @description('The base URI where artifacts required by this template are located.')
-param nestedTemplatesLocation string = '../nestedtemplates'
-
-@description('The base URI where artifacts required by this template are located.')
 param artifactsLocation string = 'https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip'
 
 @description('The name of the Hostpool to be created.')
