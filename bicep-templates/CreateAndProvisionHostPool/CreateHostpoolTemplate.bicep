@@ -141,7 +141,7 @@ param availabilityZone int = 1
 param vmResourceGroup string = ''
 
 @description('The location of the session host VMs.')
-param vmLocation string = 'eastus'
+param vmLocation string = 'southcentralus'
 
 @description('The size of the session host VMs.')
 param vmSize string = 'Standard_D2s_v3'

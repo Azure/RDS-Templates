@@ -85,7 +85,7 @@ param subnet_id string
 param rdshImageSourceId string = ''
 
 @description('Location for all resources to be created in.')
-param location string = ''
+param location string = 'southcentralus'
 
 @description('Whether to create a new network security group or use an existing one')
 param createNetworkSecurityGroup bool = false
