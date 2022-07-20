@@ -246,7 +246,7 @@ param customRdpProperty string = ''
 param vmTemplate string = ''
 //TODO: Refactor to get datetime
 @description('Hostpool token expiration time')
-param tokenExpirationTime string = '2022-08-15T14:23:12+00:00'
+param tokenExpirationTime string = '2022-08-15T14:23:12Z'
 
 @description('The tags to be assigned to the hostpool')
 param hostpoolTags object = {
