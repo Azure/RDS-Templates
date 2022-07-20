@@ -48,13 +48,13 @@ param workspaceDiagnosticSettingsLogCategories array = [
 ]
 
 @description('The location where the resources will be deployed.')
-param location string = 'West US'
+param location string = 'westus2'
 
 @description('The name of the workspace to be attach to new Applicaiton Group.')
 param workSpaceName string = ''
 
 @description('The location of the workspace.')
-param workspaceLocation string = ''
+param workspaceLocation string = 'westus2'
 
 @description('The workspace resource group Name.')
 param workspaceResourceGroup string = ''
@@ -141,7 +141,7 @@ param availabilityZone int = 1
 param vmResourceGroup string = ''
 
 @description('The location of the session host VMs.')
-param vmLocation string = ''
+param vmLocation string = 'westus2'
 
 @description('The size of the session host VMs.')
 param vmSize string = ''
