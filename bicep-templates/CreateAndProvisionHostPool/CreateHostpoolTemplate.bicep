@@ -244,9 +244,9 @@ param customRdpProperty string = ''
 
 @description('The necessary information for adding more VMs to this Hostpool')
 param vmTemplate string = ''
-//TODO: Refactor to get datetime
-@description('Hostpool token expiration time')
-param tokenExpirationTime string = '2022-08-15T14:23:12Z'
+
+@description('A basetime that will be used to calculate tokenExpirationTime')
+param baseTime string = utcNow('u')
 
 @description('The tags to be assigned to the hostpool')
 param hostpoolTags object = {
@@ -275,9 +275,6 @@ param virtualMachineTags object = {
 @description('The tags to be assigned to the images')
 param imageTags object = {
 }
-
-@description('WVD api version')
-param apiVersion string = '2019-12-10-preview'
 
 @description('GUID for the deployment')
 param deploymentId string = ''
@@ -318,6 +315,8 @@ param customConfigurationParameterUrl string = ''
 param systemData object = {
 }
 
+
+var tokenExpirationTime = (dateTimeAdd(baseTime, 'P15D'))
 var createVMs = (vmNumberOfInstances > 0)
 var domain_var = ((domain == '') ? last(split(administratorAccountUsername, '@')) : domain)
 var rdshManagedDisks = ((vmImageType == 'CustomVHD') ? vmUseManagedDisks : bool('true'))
