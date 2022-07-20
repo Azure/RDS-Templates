@@ -66,7 +66,7 @@ param isNewWorkspace bool = false
 param allApplicationGroupReferences string = ''
 
 @description('Whether to add applicationGroup to workspace.')
-param addToWorkspace bool
+param addToWorkspace bool = false
 
 @description('A username in the domain that has privileges to join the session hosts to the domain. For example, \'vmjoiner@contoso.com\'.')
 param administratorAccountUsername string = ''
@@ -218,7 +218,7 @@ param networkSecurityGroupRules array = []
   'Personal'
   'Pooled'
 ])
-param hostpoolType string
+param hostpoolType string = 'Personal'
 
 @description('Set the type of assignment for a Personal hostpool type')
 @allowed([
