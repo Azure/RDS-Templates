@@ -141,10 +141,10 @@ param availabilityZone int = 1
 param vmResourceGroup string = ''
 
 @description('The location of the session host VMs.')
-param vmLocation string = 'westus2'
+param vmLocation string = 'eastus'
 
 @description('The size of the session host VMs.')
-param vmSize string = 'Standard_D2_v2'
+param vmSize string = 'Standard_D2s_v3'
 
 @description('Number of session hosts that will be created and added to the hostpool.')
 param vmNumberOfInstances int = 0

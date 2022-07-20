@@ -56,7 +56,7 @@ param rdshNumberOfInstances int
 param rdshVMDiskType string = 'Standard_LRS'
 
 @description('The size of the session host VMs.')
-param rdshVmSize string = 'Standard_D2_v2'
+param rdshVmSize string = 'Standard_D2s_v3'
 
 @description('Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs.')
 param enableAcceleratedNetworking bool = false
