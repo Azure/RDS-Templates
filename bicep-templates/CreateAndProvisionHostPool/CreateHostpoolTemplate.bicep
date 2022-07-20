@@ -159,21 +159,21 @@ param vmNamePrefix string = ''
   'Gallery'
 ])
 param vmImageType string = 'Gallery'
-
+//TODO: Add parameters to override these default values
 @description('(Required when vmImageType = Gallery) Gallery image Offer.')
-param vmGalleryImageOffer string = ''
+param vmGalleryImageOffer string = 'Windows-10'
 
 @description('(Required when vmImageType = Gallery) Gallery image Publisher.')
-param vmGalleryImagePublisher string = ''
+param vmGalleryImagePublisher string = 'MicrosoftWindowsDesktop'
 
 @description('Whether the VM has plan or not')
 param vmGalleryImageHasPlan bool = false
 
 @description('(Required when vmImageType = Gallery) Gallery image SKU.')
-param vmGalleryImageSKU string = ''
+param vmGalleryImageSKU string = '20h2-evd'
 
 @description('(Required when vmImageType = Gallery) Gallery image version.')
-param vmGalleryImageVersion string = ''
+param vmGalleryImageVersion string = 'latest'
 
 @description('(Required when vmImageType = CustomVHD) URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd')
 param vmImageVhdUri string = ''
