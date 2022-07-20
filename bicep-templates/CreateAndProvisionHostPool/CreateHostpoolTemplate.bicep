@@ -48,7 +48,7 @@ param workspaceDiagnosticSettingsLogCategories array = [
 ]
 
 @description('The location where the resources will be deployed.')
-param location string
+param location string = 'West US'
 
 @description('The name of the workspace to be attach to new Applicaiton Group.')
 param workSpaceName string = ''
@@ -244,9 +244,9 @@ param customRdpProperty string = ''
 
 @description('The necessary information for adding more VMs to this Hostpool')
 param vmTemplate string = ''
-
+//TODO: Refactor to get datetime
 @description('Hostpool token expiration time')
-param tokenExpirationTime string
+param tokenExpirationTime string = '2022-08-15T14:23:12+00:00'
 
 @description('The tags to be assigned to the hostpool')
 param hostpoolTags object = {
