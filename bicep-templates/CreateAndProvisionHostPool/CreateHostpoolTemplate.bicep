@@ -144,7 +144,7 @@ param vmResourceGroup string = ''
 param vmLocation string = 'westus2'
 
 @description('The size of the session host VMs.')
-param vmSize string = ''
+param vmSize string = 'Standard_D2_v2'
 
 @description('Number of session hosts that will be created and added to the hostpool.')
 param vmNumberOfInstances int = 0
