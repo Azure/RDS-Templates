@@ -202,7 +202,7 @@ param existingVnetName string = ''
 param existingSubnetName string = ''
 
 @description('The resource group containing the existing virtual network.')
-param virtualNetworkResourceGroupName string = ''
+param virtualNetworkResourceGroupName string = 'bicep-template-rg'
 
 @description('Whether to create a new network security group or use an existing one')
 param createNetworkSecurityGroup bool = false
