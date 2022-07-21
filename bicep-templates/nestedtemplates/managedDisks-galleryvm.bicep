@@ -273,6 +273,9 @@ resource rdshPrefix_vmInitialNumber 'Microsoft.Compute/virtualMachines@2020-06-0
     licenseType: 'Windows_Client'
   }
   zones: ((availabilityOption == 'AvailabilityZone') ? array(availabilityZone) : emptyArray)
+  dependsOn: [
+    rdshPrefix_vmInitialNumber_nic
+  ]
 }]
 
 resource rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC 'Microsoft.Compute/virtualMachines/extensions@2018-10-01' = [for i in range(0, rdshNumberOfInstances): {
