@@ -342,14 +342,3 @@ resource rdshPrefix_vmInitialNumber_joindomain 'Microsoft.Compute/virtualMachine
     rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC
   ]
 }]
-
-/*module post_deployment_custom_configuration '?' /*TODO: replace with correct path to What should this be = if (!empty(customConfigurationTemplateUrl)) {
-  name: 'post-deployment-custom-configuration'
-  params: {
-  }
-  dependsOn: [
-    rdshPrefix_vmInitialNumber_Microsoft_PowerShell_DSC
-    rdshPrefix_vmInitialNumber_AADLoginForWindows
-    rdshPrefix_vmInitialNumber_joindomain
-  ]
-}*/
