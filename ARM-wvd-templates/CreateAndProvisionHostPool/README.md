@@ -7,11 +7,11 @@ Click the button below to deploy:
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
 
-# ARM Template to Create and provision new Windows Virtual Desktop hostpool
+# ARM Template to Create and provision new Azure Virtual Desktop hostpool
 
-This ARM template only supports Azure Resource Manager Windows Virtual Desktop objects, and does not support Windows Virtual Desktop (classic). Information on ARM Templates for Windows Virtual Desktop (classic) is [here](https://docs.microsoft.com/en-us/azure/virtual-desktop/virtual-desktop-fall-2019/create-host-pools-arm-template).
+This ARM template only supports Azure Resource Manager Azure Virtual Desktop objects, and does not support Windows Virtual Desktop (classic). Information on ARM Templates for Windows Virtual Desktop (classic) is [here](https://docs.microsoft.com/en-us/azure/virtual-desktop/virtual-desktop-fall-2019/create-host-pools-arm-template).
 
-This template creates virtual machines and registers them as session hosts to a new or existing Windows Virtual Desktop host pool. There are multiple sets of parameters you must enter to successfully deploy the template:
+This template creates virtual machines and registers them as session hosts to a new or existing Azure Virtual Desktop host pool. There are multiple sets of parameters you must enter to successfully deploy the template:
 - VM image
 - VM configuration
 - Domain and network properties
@@ -88,7 +88,7 @@ Enter the following properties to connect the virtual machines to the appropriat
 - **Existing Subnet Name**
 - **Virtual Network Resource Group Name**
 
-## Windows Virtual Desktop host pool type
+## Azure Virtual Desktop host pool type
 The following property will change the default template behavior from setting up a non-persistent environment to persistent if changed to True.
 
 - **Enable Persistent Desktop**. Default value is False, change to True to create the host pool with persistent desktops.
