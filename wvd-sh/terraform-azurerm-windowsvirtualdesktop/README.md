@@ -49,7 +49,7 @@ Deploys a new hostpool or modifies an existing hostpool of Azure Virtual Desktop
 |extensions_custom_script_fileuris|File URIs to be consumed by the custom script extension|List (String)|-|If `extension_custom_script` is set to `true`|
 |extensions_custom_command|Command for the custom script extension to run|String|-|If `extension_custom_script` is set to `true`|
 |vm_storage_os_disk_size|The size of the OS disk|String|128|No|
-|managed_disk_sizes|The sizes of the optional manged data disks|List (String)|-|No|
+|managed_disk_sizes|The sizes of the optional managed data disks|List (String)|-|No|
 |managed_disk_type|The type of managed disk(s) to attach|String|Standard_LRS|No|
 
 ## Outputs
