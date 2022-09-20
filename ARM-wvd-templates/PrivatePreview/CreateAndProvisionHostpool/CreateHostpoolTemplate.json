@@ -14,7 +14,7 @@
         "metadata": {
           "description": "The base URI where artifacts required by this template are located."
         },
-        "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/PrivatePreview/DSC/Configuration.zip"
+        "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
       },
       "hostpoolName": {
         "type": "string",
