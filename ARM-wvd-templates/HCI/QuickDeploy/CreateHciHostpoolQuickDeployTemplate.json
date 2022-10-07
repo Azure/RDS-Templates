@@ -1,0 +1,298 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "hostPoolName": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of the Hostpool to be created."
+        }
+      },
+      "location": {
+        "type": "string",
+        "metadata": {
+          "description": "The location where the resources will be deployed."
+        }
+      },
+      "customLocationId": {
+        "type": "string",
+        "metadata": {
+          "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster."
+        }
+      },
+      "virtualProcessorCount": {
+        "type": "int",
+        "metadata": {
+          "description": "Virtual Processor Count."
+        },
+        "defaultValue": 4
+      },
+      "memoryGB": {
+        "type": "int",
+        "metadata": {
+          "description": "Memory in GB."
+        },
+        "defaultValue": 8
+      },
+      "workspaceName": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of the workspace to be attach to new Applicaiton Group."
+        }
+      },
+      "vmAdministratorAccountUsername": {
+        "type": "string",
+        "metadata": {
+          "description": "A username to be used as the virtual machine administrator account."
+        }
+      },
+      "vmAdministratorAccountPassword": {
+        "type": "securestring",
+        "metadata": {
+          "description": "The password associated with the virtual machine administrator account."
+        }
+      },
+      "oUPath": {
+        "type": "string",
+        "metadata": {
+          "description": "OU Path for the domain join"
+        },
+        "defaultValue": ""
+      },
+      "domain": {
+        "type": "string",
+        "metadata": {
+          "description": "Domain to join"
+        },
+        "defaultValue": ""
+      },
+      "domainAdministratorUsername": {
+        "type": "string",
+        "metadata": {
+          "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'vmjoiner@contoso.com'."
+        }
+      },
+      "domainAdministratorPassword": {
+        "type": "securestring",
+        "metadata": {
+          "description": "The password that corresponds to the existing domain username."
+        }
+      },
+      "vmNumberOfInstances": {
+        "type": "int",
+        "metadata": {
+          "description": "Number of session hosts that will be created and added to the hostpool."
+        },
+        "defaultValue": 1
+      },
+      "vmNamePrefix": {
+        "type": "string",
+        "metadata": {
+          "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
+        }
+      },
+      "imageId": {
+        "type": "string",
+        "metadata": {
+          "description": "Id of gallery image on the Azure Stack HCI cluster."
+        }
+      },
+      "virtualNetworkId": {
+        "type": "string",
+        "metadata": {
+          "description": "Resource Id of the subnet used for the VMs"
+        }
+      },
+      "tokenExpirationTime": {
+        "type": "string",
+        "metadata": {
+          "description": "Hostpool token expiration time"
+        },
+        "defaultValue": "[utcNow()]"
+      },
+      "tags": {
+        "type": "object",
+        "metadata": {
+          "description": "The tags to be assigned to the hostpool"
+        },
+        "defaultValue": {}
+      },
+      "deploymentId": {
+        "type": "string",
+        "metadata": {
+          "description": "GUID for the deployment"
+        },
+        "defaultValue": "[newGuid()]"
+      },
+      "validationEnvironment": {
+        "type": "bool",
+        "metadata": {
+          "description": "Whether to use validation enviroment."
+        },
+        "defaultValue": false
+      }
+    },
+    "variables": {
+      "azureStackHciTemplateUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/nestedtemplates/azurestackhci-vm.json",
+      "createVMs": "[greater(parameters('vmNumberOfInstances'),0)]",
+      "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('domainAdministratorUsername'), '@')), parameters('domain'))]",
+      "rdshPrefix": "[concat(parameters('vmNamePrefix'),'-')]",
+      "hostPoolName": "[replace(parameters('hostPoolName'),'\"','')]",
+      "rdshVmNamesOutput": {
+        "copy": [
+          {
+            "name": "rdshVmNamesCopy",
+            "count": "[if(variables('createVMs'), parameters('vmNumberOfInstances'), 1)]",
+            "input": {
+              "name": "[concat(variables('rdshPrefix'),copyIndex('rdshVmNamesCopy'))]"
+            }
+          }
+        ]
+      },
+      "tokenExpirationTime": "[dateTimeAdd(parameters('tokenExpirationTime'), 'PT2H')]",
+      "appGroupName": "[concat(variables('hostPoolName'),'-DAG')]",
+      "appGroupResourceId": "[createArray(resourceId('Microsoft.DesktopVirtualization/applicationgroups/', variables('appGroupName')))]",
+      "hostpoolRequiredProps": {
+        "hostpoolType": "Pooled",
+        "maxSessionLimit": "99999",
+        "loadBalancerType": "BreadthFirst",
+        "validationEnvironment": "[parameters('validationEnvironment')]",
+        "preferredAppGroupType": "Desktop",
+        "ring": null,
+        "registrationInfo": {
+          "expirationTime": "[variables('tokenExpirationTime')]",
+          "registrationTokenOperation": "Update"
+        }
+      }
+    },
+    "resources": [
+      {
+        "name": "[parameters('hostPoolName')]",
+        "apiVersion": "2019-12-10-preview",
+        "type": "Microsoft.DesktopVirtualization/hostpools",
+        "location": "[parameters('location')]",
+        "tags": "[parameters('tags')]",
+        "properties": "[variables('hostpoolRequiredProps')]"
+      },
+      {
+        "name": "[variables('appGroupName')]",
+        "apiVersion": "2019-12-10-preview",
+        "type": "Microsoft.DesktopVirtualization/applicationgroups",
+        "location": "[parameters('location')]",
+        "tags": "[parameters('tags')]",
+        "properties": {
+          "hostpoolarmpath": "[resourceId('Microsoft.DesktopVirtualization/hostpools/', parameters('hostPoolName'))]",
+          "friendlyName": "Default Desktop",
+          "description": "Desktop Application Group created through the Hostpool Wizard",
+          "applicationGroupType": "Desktop"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.DesktopVirtualization/hostpools/', parameters('hostPoolName'))]"
+        ]
+      },
+      {
+        "apiVersion": "2018-05-01",
+        "name": "[concat('Workspace-linkedTemplate-', parameters('deploymentId'))]",
+        "type": "Microsoft.Resources/deployments",
+        "properties": {
+          "mode": "Incremental",
+          "template": {
+            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+            "contentVersion": "1.0.0.0",
+            "resources": [
+              {
+                "apiVersion": "2019-12-10-preview",
+                "name": "[parameters('workspaceName')]",
+                "type": "Microsoft.DesktopVirtualization/workspaces",
+                "location": "[parameters('location')]",
+                "properties": {
+                  "applicationGroupReferences": "[variables('appGroupResourceId')]"
+                }
+              }
+            ]
+          }
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.DesktopVirtualization/applicationgroups/', variables('appGroupName'))]"
+        ]
+      },
+      {
+        "apiVersion": "2018-05-01",
+        "name": "[concat('hci-addVm-linkedTemplate-', parameters('deploymentId'))]",
+        "type": "Microsoft.Resources/deployments",
+        "condition": "[variables('createVMs')]",
+        "dependsOn": [
+          "[concat('Workspace-linkedTemplate-', parameters('deploymentId'))]"
+        ],
+        "properties": {
+          "mode": "Incremental",
+          "templateLink": {
+            "uri": "[variables('azureStackHciTemplateUri')]",
+            "contentVersion": "1.0.0.0"
+          },
+          "parameters": {
+            "rdshPrefix": {
+              "value": "[variables('rdshPrefix')]"
+            },
+            "rdshNumberOfInstances": {
+              "value": "[parameters('vmNumberOfInstances')]"
+            },
+            "vmAdministratorAccountUsername": {
+              "value": "[parameters('vmAdministratorAccountUsername')]"
+            },
+            "vmAdministratorAccountPassword": {
+              "value": "[parameters('vmAdministratorAccountPassword')]"
+            },
+            "domainAdministratorUsername": {
+              "value": "[parameters('domainAdministratorUsername')]"
+            },
+            "domainAdministratorPassword": {
+              "value": "[parameters('domainAdministratorPassword')]"
+            },
+            "customLocationId": {
+              "value": "[parameters('customLocationId')]"
+            },
+            "virtualProcessorCount": {
+              "value": "[parameters('virtualProcessorCount')]"
+            },
+            "memoryGB": {
+              "value": "[parameters('memoryGB')]"
+            },
+            "virtualNetworkId": {
+              "value": "[parameters('virtualNetworkId')]"
+            },
+            "imageId": {
+              "value": "[parameters('imageId')]"
+            },
+            "location": {
+              "value": "[parameters('location')]"
+            },
+            "networkInterfaceTags": {
+              "value": "[parameters('tags')]"
+            },
+            "virtualMachineTags": {
+              "value": "[parameters('tags')]"
+            },
+            "hostpoolToken": {
+              "value": "[reference(parameters('hostPoolName')).registrationInfo.token]"
+            },
+            "hostPoolName": {
+              "value": "[parameters('hostPoolName')]"
+            },
+            "domain": {
+              "value": "[parameters('domain')]"
+            },
+            "oUPath": {
+              "value": "[parameters('oUPath')]"
+            }
+          }
+        }
+      }
+    ],
+    "outputs": {
+      "rdshVmNamesObject": {
+        "value": "[variables('rdshVmNamesOutput')]",
+        "type": "object"
+      }
+    }
+  }
