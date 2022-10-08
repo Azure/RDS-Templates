@@ -94,13 +94,13 @@
       "imageId": {
         "type": "string",
         "metadata": {
-          "description": "Id of gallery image on the Azure Stack HCI cluster."
+          "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs."
         }
       },
       "virtualNetworkId": {
         "type": "string",
         "metadata": {
-          "description": "Resource Id of the subnet used for the VMs"
+          "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs."
         }
       },
       "tokenExpirationTime": {

@@ -85,8 +85,7 @@
         "type": "string",
         "metadata": {
           "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster."
-        },
-        "defaultValue": ""
+        }
       },
       "virtualProcessorCount": {
         "type": "int",
@@ -138,13 +137,13 @@
       "imageId": {
         "type": "string",
         "metadata": {
-          "description": "Id of gallery image on the Azure Stack HCI cluster."
+          "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs."
         }
       },
       "virtualNetworkId": {
         "type": "string",
         "metadata": {
-          "description": "Resource Id of the subnet used for the VMs"
+          "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs."
         }
       },
       "tags": {

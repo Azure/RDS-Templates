@@ -24,14 +24,14 @@
         "maximumMemoryGB": {
           "type": "int",
           "metadata": {
-            "description": "TODO: get description"
+            "description": "This paramater is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the maximum GB given to the VM."
           },
           "defaultValue": 0
         },
         "minimumMemoryGB": {
           "type": "int",
           "metadata": {
-            "description": "TODO: get description"
+            "description": "This paramater is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the minimum GB given to the VM."
           },
           "defaultValue": 0
         },
@@ -45,7 +45,7 @@
         "targetMemoryBuffer": {
           "type": "int",
           "metadata": {
-            "description": "TODO: get description"
+            "description": "This paramater is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the buffer of extra memory given to the VM."
           },
           "defaultValue": 0
         },
@@ -111,13 +111,13 @@
         "virtualNetworkId": {
           "type": "string",
           "metadata": {
-              "description": "Resource Id of the subnet used for the VMs"
+              "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs."
           }
         },
         "imageId": {
           "type": "string",
           "metadata": {
-              "description": "Id of gallery image on the Azure Stack HCI cluster."
+              "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs."
           }
         },
         "hostpoolName": {
