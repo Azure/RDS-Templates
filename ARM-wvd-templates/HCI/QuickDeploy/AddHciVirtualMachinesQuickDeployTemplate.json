@@ -101,20 +101,6 @@
         },
         "defaultValue": 8
       },
-      "maximumMemoryGB": {
-        "type": "int",
-        "metadata": {
-          "description": "TODO: Get description"
-        },
-        "defaultValue": 0
-      },
-      "minimumMemoryGB": {
-        "type": "int",
-        "metadata": {
-          "description": "TODO: Get description"
-        },
-        "defaultValue": 0
-      },
       "vmInitialNumber": {
         "type": "int",
         "metadata": {
