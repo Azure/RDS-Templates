@@ -1,4 +1,4 @@
-## Terraform for Azure Virtual Desktop
+# Terraform for Azure Virtual Desktop
 
 This repository contents have been archived as the Terraform for Azure Virtual Desktop environment code has been moved and maintain in another location.
 
