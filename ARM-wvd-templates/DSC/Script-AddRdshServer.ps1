@@ -1,4 +1,4 @@
-﻿<#
+<#
 
 .SYNOPSIS
 Creating Hostpool and add sessionhost servers to existing/new Hostpool.

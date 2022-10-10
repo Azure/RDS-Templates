@@ -26,26 +26,6 @@
       {
               "apiVersion": "2015-11-01-preview",
               "type": "datasources",
-              "name": "sampleWindowsEvent1",
-              "dependsOn": [
-                      "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
-              ],
-              "kind": "WindowsEvent",
-              "properties": {
-                      "eventLogName": "Application",
-                      "eventTypes": [
-                      {
-                              "eventType": "Error"
-                      },
-                      {
-                              "eventType": "Warning"
-                      }
-                      ]
-              }
-      },
-      {
-              "apiVersion": "2015-11-01-preview",
-              "type": "datasources",
               "name": "perfcounter1",
               "dependsOn": [
                       "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
@@ -345,27 +325,5 @@
       }
       ]
     }
-  ],
-  "outputs": {
-    "workspaceName": {
-      "type": "string",
-      "value": "[parameters('workspaceName')]"
-    },
-    "provisioningState": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2015-11-01-preview').provisioningState]"
-    },
-    "source": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2015-11-01-preview').source]"
-    },
-    "customerId": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2015-11-01-preview').customerId]"
-    },
-    "sku": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName')), '2015-11-01-preview').sku.name]"
-    }
-  }
+  ]
 }

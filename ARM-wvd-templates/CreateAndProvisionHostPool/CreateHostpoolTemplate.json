@@ -545,14 +545,14 @@
     "aadJoin": {
       "type": "bool",
       "metadata": {
-        "description": "IMPORTANT: You can use this parameter for the test purpose only as AAD Join is public preview. True if AAD Join, false if AD join"
+        "description": "True if AAD Join, false if AD join"
       },
       "defaultValue": false
     },
     "intune": {
       "type": "bool",
       "metadata": {
-        "description": "IMPORTANT: Please don't use this parameter as intune enrollment is not supported yet. True if intune enrollment is selected.  False otherwise"
+        "description": "True if intune enrollment is selected. False otherwise"
       },
       "defaultValue": false
     },
@@ -640,6 +640,12 @@
     "hostpoolOptionalProps": {
       "customRdpProperty": "[parameters('customRdpProperty')]"
     },
+    "sessionHostConfigurationImageMarketPlaceInfoProps":  {
+      "publisher": "[parameters('vmGalleryImagePublisher')]",
+      "offer": "[parameters('vmGalleryImageOffer')]",
+      "sku": "[parameters('vmGalleryImageSKU')]",
+      "exactVersion": "[parameters('vmGalleryImageVersion')]"
+    },
     "sendLogsToStorageAccount": "[not(empty(parameters('hostpoolDiagnosticSettingsStorageAccount')))]",
     "sendLogsToLogAnalytics": "[not(empty(parameters('hostpoolDiagnosticSettingsLogAnalyticsWorkspaceId')))]",
     "sendLogsToEventHub": "[not(empty(parameters('hostpoolDiagnosticSettingsEventHubName')))]",
@@ -703,23 +709,18 @@
           "properties": {
             "vMSizeId": "[parameters('vmSize')]",
             "diskType": "[parameters('vmDiskType')]",
-            "vmCustomConfigurationUri": "[if(empty(parameters('customConfigurationTemplateUrl')), '', parameters('customConfigurationTemplateUrl'))]",
-            "vmCustomConfigurationParameterUri": "[if(empty(parameters('customConfigurationParameterUrl')), '', parameters('customConfigurationParameterUrl'))]",
+            "vmCustomConfigurationUri": "[if(empty(parameters('customConfigurationTemplateUrl')), null(), parameters('customConfigurationTemplateUrl'))]",
+            "vmCustomConfigurationParameterUri": "[if(empty(parameters('customConfigurationParameterUrl')), null(), parameters('customConfigurationParameterUrl'))]",
             "imageInfo": {
-              "type": "[parameters('vmImageType')]",
-              "marketPlaceInfo": {
-                "publisher": "[if(equals(parameters('vmImageType'), 'Gallery'), parameters('vmGalleryImagePublisher'), '')]",
-                "offer": "[if(equals(parameters('vmImageType'), 'Gallery'), parameters('vmGalleryImageOffer'), '')]",
-                "sku": "[if(equals(parameters('vmImageType'), 'Gallery'), parameters('vmGalleryImageSKU'), '')]",
-                "exactVersion": "[if(equals(parameters('vmImageType'), 'Gallery'), parameters('vmGalleryImageVersion'), '')]"
-              },
-              "storageBlobUri": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmImageVhdUri'), '')]",
-              "customId": "[if(equals(parameters('vmImageType'), 'CustomImage'), parameters('vmCustomImageSourceId'), '')]"
+              "type": "[if(equals(parameters('vmImageType'), 'CustomVHD'), 'StorageBlob', parameters('vmImageType'))]",
+              "marketPlaceInfo": "[if(equals(parameters('vmImageType'), 'Gallery'), variables('sessionHostConfigurationImageMarketPlaceInfoProps'), null())]",
+              "storageBlobUri": "[if(equals(parameters('vmImageType'), 'CustomVHD'), parameters('vmImageVhdUri'), null())]",
+              "customId": "[if(equals(parameters('vmImageType'), 'CustomImage'), parameters('vmCustomImageSourceId'), null())]"
             },
             "domainInfo": {
               "name": "[variables('domain')]",
               "joinType": "[if(parameters('aadJoin'), 'AzureActiveDirectory', 'ActiveDirectory')]",
-              "mdmProviderGuid": "[if(parameters('intune'), '0000000a-0000-0000-c000-000000000000', '')]"
+              "mdmProviderGuid": "[if(parameters('intune'), '0000000a-0000-0000-c000-000000000000', null())]"
             }
           }
         }
@@ -945,7 +946,7 @@
             "value": "[parameters('customConfigurationParameterUrl')]"
           },
           "SessionHostConfigurationVersion": {
-            "value": "[if(and(contains(parameters('systemData'), 'hostpoolUpdateFeature'), parameters('systemData').hostpoolUpdateFeature), reference(resourceId('Microsoft.DesktopVirtualization/hostpools/sessionHostConfigurations', parameters('hostpoolName'), 'default')).version, '')]"
+            "value": "[if(and(variables('createVMs'), contains(parameters('systemData'), 'hostpoolUpdateFeature'), parameters('systemData').hostpoolUpdateFeature), reference(resourceId('Microsoft.DesktopVirtualization/hostpools/sessionHostConfigurations', parameters('hostpoolName'), 'default')).version, '')]"
           }
         }
       }

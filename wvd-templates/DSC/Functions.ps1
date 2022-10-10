@@ -103,6 +103,7 @@ function Is1809OrLater {
     return $rdshIs1809OrLaterBool
 }
 
+<# [CalledByARMTemplate] #>
 function ExtractDeploymentAgentZipFile {
     param
     (
@@ -310,6 +311,7 @@ function GetSessionHostDesiredStates {
     return ('Available', 'NeedsAssistance')
 }
 
+<# [CalledByARMTemplate] #>
 function IsRDAgentRegistryValidForRegistration {
     $ErrorActionPreference = "Stop"
 
