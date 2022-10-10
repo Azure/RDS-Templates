@@ -18,15 +18,13 @@
         "type": "string",
         "metadata": {
           "description": "The resource group of the host pool to be updated. Used when the host pool was created empty."
-        },
-        "defaultValue": ""
+        }
       },
       "hostpoolLocation": {
         "type": "string",
         "metadata": {
           "description": "The location of the host pool to be updated. Used when the host pool was created empty."
-        },
-        "defaultValue": ""
+        }
       },
       "hostpoolProperties": {
         "type": "object",
@@ -188,7 +186,7 @@
       },
       {
         "apiVersion": "2018-05-01",
-        "name": "[concat('hci-vmCreation-linkedTemplate-', parameters('deploymentId'))]",
+        "name": "[concat('hci-addVms-linkedTemplate-', parameters('deploymentId'))]",
         "type": "Microsoft.Resources/deployments",
         "resourceGroup": "[parameters('vmResourceGroup')]",
         "dependsOn": [
@@ -234,7 +232,7 @@
             "virtualNetworkId": {
               "value": "[parameters('virtualNetworkId')]"
             },
-            "rdshImageSourceId": {
+            "imageId": {
               "value": "[parameters('imageId')]"
             },
             "location": {
