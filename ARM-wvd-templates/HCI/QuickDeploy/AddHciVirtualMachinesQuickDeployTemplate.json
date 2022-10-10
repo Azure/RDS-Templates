@@ -207,6 +207,9 @@
             "rdshNumberOfInstances": {
               "value": "[parameters('vmNumberOfInstances')]"
             },
+            "vmInitialNumber": {
+              "value": "[parameters('vmInitialNumber')]"
+            },
             "vmAdministratorAccountUsername": {
               "value": "[parameters('vmAdministratorAccountUsername')]"
             },
