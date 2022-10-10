@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Location": {
+      "type": "string"
+    },
+    "NamePrefix": {
+      "type": "string"
+    },
+    "NumberOfVms": {
+      "type": "int"
+    },
+    "ScriptUri": {
+      "type": "string"
+    },
+    "Timestamp": {
+      "type": "string",
+      "defaultValue": "[utcNow('yyyyMMddhhmmss')]"
+    },
+    "VirtualMachineIndex": {
+      "type": "int"
+    }
+  },
+  "resources": [
+    {
+      "copy": {
+        "name": "customScriptExtension",
+        "count": "[length(range(parameters('VirtualMachineIndex'), parameters('NumberOfVms')))]"
+      },
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2021-03-01",
+      "name": "[format('{0}-{1}/CustomScriptExtension', parameters('NamePrefix'), range(parameters('VirtualMachineIndex'), parameters('NumberOfVms'))[copyIndex()])]",
+      "location": "[parameters('Location')]",
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.10",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File script.ps1",
+          "fileUris": [
+            "[parameters('ScriptUri')]"
+          ],
+          "timestamp": "[parameters('Timestamp')]"
+        },
+        "protectedSettings": {}
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to execute scaling script in Microsoft Azure Automation Account.
-	v0.1.7
+	v0.1.8
 	# //todo refactor stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
 param(
@@ -122,7 +122,7 @@ function Wait-ForModuleToBeImported {
 	)
 
 	$StartTime = Get-Date
-	$TimeOut = 30*60 # 30 min
+	$TimeOut = 30 * 60 # 30 min
 
 	while ($true) {
 		if ((Get-Date).Subtract($StartTime).TotalSeconds -ge $TimeOut) {
@@ -130,10 +130,10 @@ function Wait-ForModuleToBeImported {
 		}
 		$AutoModule = Get-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ErrorAction SilentlyContinue
 		if ($AutoModule.ProvisioningState -eq 'Succeeded') {
-			Write-Output "Successfully imported module '$ModuleName' into Automation Account Modules"
+			Write-Output "Successfully imported module '$ModuleName' into Automation Account modules"
 			break
 		}
-		Write-Output "Waiting for module '$ModuleName' to get imported into Automation Account Modules ..."
+		Write-Output "Waiting for module '$ModuleName' to get imported into Automation Account modules ..."
 		Start-Sleep -Seconds 30
 	}
 }
@@ -226,13 +226,16 @@ $WebhookURIAutoVarName = 'WebhookURI'
 if (!$UseRDSAPI) {
 	$WebhookURIAutoVarName += 'ARMBased'
 }
-$WebhookURI = Get-AzAutomationVariable -Name $WebhookURIAutoVarName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
-if (!$WebhookURI) {
+[string]$WebhookURI = $null
+
+$WebhookURIAutoVar = Get-AzAutomationVariable -Name $WebhookURIAutoVarName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
+if (!$WebhookURIAutoVar) {
 	$Webhook = New-AzAutomationWebhook -Name $WebhookName -RunbookName $RunbookName -IsEnabled $true -ExpiryTime (Get-Date).AddYears(5) -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Force -Verbose
-	Write-Output "Automation Account Webhook is created with name '$WebhookName'"
-	New-AzAutomationVariable -Name $WebhookURIAutoVarName -Encrypted $false -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Value $Webhook.WebhookURI
-	Write-Output "Webhook URI stored in Azure Automation Acccount variables"
-	$WebhookURI = Get-AzAutomationVariable -Name $WebhookURIAutoVarName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
+	Write-Output "Automation Account Webhook is created with name: $WebhookName"
+	$WebhookURI = $Webhook.WebhookURI
+	New-AzAutomationVariable -Name $WebhookURIAutoVarName -Encrypted $true -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Value $WebhookURI
+	Write-Output "Webhook URI (encrypted) stored in Automation Acccount variable with name: $WebhookURIAutoVarName"
+	$WebhookURIAutoVar = Get-AzAutomationVariable -Name $WebhookURIAutoVarName -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ErrorAction SilentlyContinue
 }
 
 # Required modules imported from Automation Account Modules gallery for Scale Script execution
@@ -240,65 +243,61 @@ foreach ($ModuleName in $RequiredModules) {
 	Add-ModuleToAutoAccount -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -ModuleName $ModuleName
 }
 
-if (!$WorkspaceName) {
-	Write-Output "Azure Automation Account Name: $AutomationAccountName"
-	Write-Output "Webhook URI: $($WebhookURI.value)"
-	return
-}
+if ($WorkspaceName) {
 
-# Check if the log analytic workspace exists
-$LAWorkspace = Get-AzOperationalInsightsWorkspace | Where-Object { $_.Name -eq $WorkspaceName }
-if (!$LAWorkspace) {
-	throw "Provided log analytic workspace doesn't exist in your Subscription."
-}
-
-$WorkSpace = Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $WorkspaceName -WarningAction Ignore
-$LogAnalyticsPrimaryKey = $Workspace.PrimarySharedKey
-$LogAnalyticsWorkspaceId = (Get-AzOperationalInsightsWorkspace -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $WorkspaceName).CustomerId.GUID
-
-# Create the function to create the authorization signature
-function New-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource) {
-	$xHeaders = "x-ms-date:" + $date
-	$stringToHash = $method + "`n" + $contentLength + "`n" + $contentType + "`n" + $xHeaders + "`n" + $resource
-
-	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
-	$keyBytes = [Convert]::FromBase64String($sharedKey)
-
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
-	$sha256.Key = $keyBytes
-	$calculatedHash = $sha256.ComputeHash($bytesToHash)
-	$encodedHash = [Convert]::ToBase64String($calculatedHash)
-	$authorization = 'SharedKey {0}:{1}' -f $customerId, $encodedHash
-	return $authorization
-}
-
-# Create the function to create and post the request
-function Send-LogAnalyticsData ($customerId, $sharedKey, $body, $logType) {
-	$method = "POST"
-	$contentType = "application/json"
-	$resource = "/api/logs"
-	$rfc1123date = [datetime]::UtcNow.ToString("r")
-	$contentLength = $body.Length
-	$signature = New-Signature -customerId $customerId -sharedKey $sharedKey -Date $rfc1123date -contentLength $contentLength -Method $method -ContentType $contentType -resource $resource
-	$uri = "https://$($customerId).ods.opinsights.azure.$(if ($AzContext.Environment.Name -eq 'AzureUSGovernment') { 'us' } else { 'com' })$($resource)?api-version=2016-04-01"
-
-	$headers = @{
-		"Authorization"        = $signature;
-		"Log-Type"             = $logType;
-		"x-ms-date"            = $rfc1123date;
-		"time-generated-field" = $TimeStampField;
+	# Check if the log analytic workspace exists
+	$LAWorkspace = Get-AzOperationalInsightsWorkspace | Where-Object { $_.Name -eq $WorkspaceName }
+	if (!$LAWorkspace) {
+		throw "Provided log analytic workspace doesn't exist in your Subscription."
 	}
 
-	$response = Invoke-WebRequest -Uri $uri -Method $method -ContentType $contentType -Headers $headers -Body $body -UseBasicParsing
-	return $response.StatusCode
-}
+	$WorkSpace = Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $WorkspaceName -WarningAction Ignore
+	$LogAnalyticsPrimaryKey = $Workspace.PrimarySharedKey
+	$LogAnalyticsWorkspaceId = (Get-AzOperationalInsightsWorkspace -ResourceGroupName $LAWorkspace.ResourceGroupName -Name $WorkspaceName).CustomerId.GUID
 
-# Specify the name of the record type that you'll be creating
-[string]$TenantScaleLogType = "WVDTenantScale_CL"
-# Specify a field with the created time for the records
-$TimeStampField = (Get-Date).GetDateTimeFormats(115)
-# Custom WVDTenantScale Table
-$CustomLogWVDTenantScale = @"
+	# Create the function to create the authorization signature
+	function New-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource) {
+		$xHeaders = "x-ms-date:" + $date
+		$stringToHash = $method + "`n" + $contentLength + "`n" + $contentType + "`n" + $xHeaders + "`n" + $resource
+
+		$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
+		$keyBytes = [Convert]::FromBase64String($sharedKey)
+
+		$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+		$sha256.Key = $keyBytes
+		$calculatedHash = $sha256.ComputeHash($bytesToHash)
+		$encodedHash = [Convert]::ToBase64String($calculatedHash)
+		$authorization = 'SharedKey {0}:{1}' -f $customerId, $encodedHash
+		return $authorization
+	}
+
+	# Create the function to create and post the request
+	function Send-LogAnalyticsData ($customerId, $sharedKey, $body, $logType) {
+		$method = "POST"
+		$contentType = "application/json"
+		$resource = "/api/logs"
+		$rfc1123date = [datetime]::UtcNow.ToString("r")
+		$contentLength = $body.Length
+		$signature = New-Signature -customerId $customerId -sharedKey $sharedKey -Date $rfc1123date -contentLength $contentLength -Method $method -ContentType $contentType -resource $resource
+		$uri = "https://$($customerId).ods.opinsights.azure.$(if ($AzContext.Environment.Name -eq 'AzureUSGovernment') { 'us' } else { 'com' })$($resource)?api-version=2016-04-01"
+
+		$headers = @{
+			"Authorization"        = $signature;
+			"Log-Type"             = $logType;
+			"x-ms-date"            = $rfc1123date;
+			"time-generated-field" = $TimeStampField;
+		}
+
+		$response = Invoke-WebRequest -Uri $uri -Method $method -ContentType $contentType -Headers $headers -Body $body -UseBasicParsing
+		return $response.StatusCode
+	}
+
+	# Specify the name of the record type that you'll be creating
+	[string]$TenantScaleLogType = "WVDTenantScale_CL"
+	# Specify a field with the created time for the records
+	$TimeStampField = (Get-Date).GetDateTimeFormats(115)
+	# Custom WVDTenantScale Table
+	$CustomLogWVDTenantScale = @"
 [
 	{
 		"hostpoolName":" ",
@@ -307,11 +306,19 @@ $CustomLogWVDTenantScale = @"
 ]
 "@
 
-# Submit the data to the API endpoint
-Send-LogAnalyticsData -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body ([System.Text.Encoding]::UTF8.GetBytes($CustomLogWVDTenantScale)) -logType $TenantScaleLogType
+	# Submit the data to the API endpoint
+	Send-LogAnalyticsData -customerId $LogAnalyticsWorkspaceId -sharedKey $LogAnalyticsPrimaryKey -Body ([System.Text.Encoding]::UTF8.GetBytes($CustomLogWVDTenantScale)) -logType $TenantScaleLogType
 
-Write-Output "Log Analytics Workspace ID: $LogAnalyticsWorkspaceId"
-Write-Output "Log Analytics Primary Key: $LogAnalyticsPrimaryKey"
+	Write-Output "Log Analytics Workspace ID: $LogAnalyticsWorkspaceId"
+	Write-Output "Log Analytics Primary Key: $LogAnalyticsPrimaryKey"
+}
 
-Write-Output "Azure Automation Account Name: $AutomationAccountName"
-Write-Output "Webhook URI: $($WebhookURI.value)"
+Write-Output "Webhook URI variable: $($WebhookURIAutoVar | Format-List -Force | Out-String)"
+
+if ($WebhookURI) {
+	Write-Warning "Make sure to keep a record of the following Webhook URI because you'll use it as a parameter when you set up the execution schedule for the Azure Logic App. The URI is also stored as encrypted in the above Automation Account variable. To retrieve the value, see https://docs.microsoft.com/en-us/azure/automation/shared-resources/variables?tabs=azure-powershell#powershell-cmdlets-to-access-variables"
+	Write-Output "Webhook URI: $WebhookURI"
+}
+else {
+	Write-Warning "A Webhook URI has already been generated for this Automation account. Please use the existing Webhook URI to setup the execution schedule for the Azure Logic App. The URI is also stored as encrypted in the above Automation Account variable. To retrieve the value, see https://docs.microsoft.com/en-us/azure/automation/shared-resources/variables?tabs=azure-powershell#powershell-cmdlets-to-access-variables"
+}
