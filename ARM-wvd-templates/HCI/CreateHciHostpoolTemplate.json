@@ -1,0 +1,490 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "hostPoolName": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of the Hostpool to be created."
+        }
+      },
+      "hostpoolFriendlyName": {
+        "type": "string",
+        "metadata": {
+          "description": "The friendly name of the Hostpool to be created."
+        },
+        "defaultValue": ""
+      },
+      "hostpoolDescription": {
+        "type": "string",
+        "metadata": {
+          "description": "The description of the Hostpool to be created."
+        },
+        "defaultValue": ""
+      },
+      "location": {
+        "type": "string",
+        "metadata": {
+          "description": "The location where the resources will be deployed."
+        }
+      },
+      "customLocationId": {
+        "type": "string",
+        "metadata": {
+          "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster."
+        }
+      },
+      "virtualProcessorCount": {
+        "type": "int",
+        "metadata": {
+          "description": "Virtual Processor Count."
+        },
+        "defaultValue": 4
+      },
+      "memoryGB": {
+        "type": "int",
+        "metadata": {
+          "description": "Memory in GB."
+        },
+        "defaultValue": 8
+      },
+      "maximumMemoryGB": {
+        "type": "int",
+        "metadata": {
+          "description": "This parameter is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the maximum GB given to the VM."
+        },
+        "defaultValue": 0
+      },
+      "minimumMemoryGB": {
+        "type": "int",
+        "metadata": {
+          "description": "This parameter is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the minimum GB given to the VM."
+        },
+        "defaultValue": 0
+      },
+      "dynamicMemoryConfig": {
+        "type": "bool",
+        "metadata": {
+          "description": "This parameter is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the buffer of extra memory given to the VM."
+        },
+        "defaultValue": false
+      },
+      "targetMemoryBuffer": {
+        "type": "int",
+        "metadata": {
+          "description": "This parameter is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the buffer of extra memory given to the VM."
+        },
+        "defaultValue": 0
+      },
+      "workSpaceName": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of the workspace to be attach to new Applicaiton Group."
+        },
+        "defaultValue": ""
+      },
+      "workspaceLocation": {
+        "type": "string",
+        "metadata": {
+          "description": "The location of the workspace."
+        },
+        "defaultValue": ""
+      },
+      "workspaceResourceGroup": {
+        "type": "string",
+        "metadata": {
+          "description": "The workspace resource group Name."
+        },
+        "defaultValue": ""
+      },
+      "isNewWorkspace": {
+        "type": "bool",
+        "metadata": {
+          "description": "True if the workspace is new. False if there is no workspace added or adding to an existing workspace."
+        },
+        "defaultValue": false
+      },
+      "allApplicationGroupReferences": {
+        "type": "string",
+        "metadata": {
+          "description": "The existing app groups references of the workspace selected."
+        },
+        "defaultValue": ""
+      },
+      "addToWorkspace": {
+        "type": "bool",
+        "metadata": {
+          "description": "Whether to add applicationGroup to workspace."
+        }
+      },
+      "vmAdministratorAccountUsername": {
+        "type": "string",
+        "metadata": {
+          "description": "A username to be used as the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and domainAdministratorPassword will be used."
+        },
+        "defaultValue": ""
+      },
+      "vmAdministratorAccountPassword": {
+        "type": "securestring",
+        "metadata": {
+          "description": "The password associated with the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by domainAdministratorUsername and domainAdministratorPassword will be used."
+        },
+        "defaultValue": ""
+      },
+      "oUPath": {
+        "type": "string",
+        "metadata": {
+          "description": "OU Path for the domain join"
+        },
+        "defaultValue": ""
+      },
+      "domain": {
+        "type": "string",
+        "metadata": {
+          "description": "Domain to join"
+        },
+        "defaultValue": ""
+      },
+      "domainAdministratorUsername": {
+        "type": "string",
+        "metadata": {
+          "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'vmjoiner@contoso.com'."
+        },
+        "defaultValue": ""
+      },
+      "domainAdministratorPassword": {
+        "type": "securestring",
+        "metadata": {
+          "description": "The password that corresponds to the existing domain username."
+        },
+        "defaultValue": ""
+      },
+      "vmResourceGroup": {
+        "type": "string",
+        "metadata": {
+          "description": "The resource group of the session host VMs."
+        },
+        "defaultValue": ""
+      },
+      "vmLocation": {
+        "type": "string",
+        "metadata": {
+          "description": "The location of the session host VMs."
+        },
+        "defaultValue": ""
+      },
+      "vmNumberOfInstances": {
+        "type": "int",
+        "metadata": {
+          "description": "Number of session hosts that will be created and added to the hostpool."
+        },
+        "defaultValue": 1
+      },
+      "vmNamePrefix": {
+        "type": "string",
+        "metadata": {
+          "description": "This prefix will be used in combination with the VM number to create the VM name. If using 'rdsh' as the prefix, VMs would be named 'rdsh-0', 'rdsh-1', etc. You should use a unique prefix to reduce name collisions in Active Directory."
+        },
+        "defaultValue": ""
+      },
+      "imageId": {
+        "type": "string",
+        "metadata": {
+          "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs."
+        }
+      },
+      "virtualNetworkId": {
+        "type": "string",
+        "metadata": {
+          "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs."
+        }
+      },
+      "hostpoolType": {
+        "type": "string",
+        "allowedValues": [
+          "Personal",
+          "Pooled"
+        ],
+        "metadata": {
+          "description": "Set this parameter to Personal if you would like to enable Persistent Desktop experience. Defaults to false."
+        }
+      },
+      "personalDesktopAssignmentType": {
+        "type": "string",
+        "allowedValues": [
+          "Automatic",
+          "Direct",
+          ""
+        ],
+        "metadata": {
+          "description": "Set the type of assignment for a Personal hostpool type"
+        },
+        "defaultValue": ""
+      },
+      "maxSessionLimit": {
+        "type": "int",
+        "metadata": {
+          "description": "Maximum number of sessions."
+        },
+        "defaultValue": 99999
+      },
+      "loadBalancerType": {
+        "type": "string",
+        "allowedValues": [
+          "BreadthFirst",
+          "DepthFirst",
+          "Persistent"
+        ],
+        "metadata": {
+          "description": "Type of load balancer algorithm."
+        },
+        "defaultValue": "BreadthFirst"
+      },
+      "tokenExpirationTime": {
+        "type": "string",
+        "metadata": {
+          "description": "Hostpool token expiration time"
+        },
+        "defaultValue": "[utcNow()]"
+      },
+      "hostpoolTags": {
+        "type": "object",
+        "metadata": {
+          "description": "The tags to be assigned to the hostpool"
+        },
+        "defaultValue": {}
+      },
+      "applicationGroupTags": {
+        "type": "object",
+        "metadata": {
+          "description": "The tags to be assigned to the application group"
+        },
+        "defaultValue": {}
+      },
+      "networkInterfaceTags": {
+        "type": "object",
+        "metadata": {
+          "description": "The tags to be assigned to the network interfaces"
+        },
+        "defaultValue": {}
+      },
+      "networkSecurityGroupTags": {
+        "type": "object",
+        "metadata": {
+          "description": "The tags to be assigned to the network security groups"
+        },
+        "defaultValue": {}
+      },
+      "virtualMachineTags": {
+        "type": "object",
+        "metadata": {
+          "description": "The tags to be assigned to the virtual machines"
+        },
+        "defaultValue": {}
+      },
+      "deploymentId": {
+        "type": "string",
+        "metadata": {
+          "description": "GUID for the deployment"
+        },
+        "defaultValue": "[newGuid()]"
+      },
+      "validationEnvironment": {
+        "type": "bool",
+        "metadata": {
+          "description": "Whether to use validation enviroment."
+        },
+        "defaultValue": false
+      },
+      "preferredAppGroupType": {
+        "type": "string",
+        "metadata": {
+          "description": "Preferred App Group type to display"
+        },
+        "defaultValue": "Desktop"
+      }
+    },
+    "variables": {
+      "azureStackHciTemplateUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/nestedtemplates/azurestackhci-vm.json",
+      "createVMs": "[greater(parameters('vmNumberOfInstances'),0)]",
+      "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('domainAdministratorUsername'), '@')), parameters('domain'))]",
+      "rdshPrefix": "[concat(parameters('vmNamePrefix'),'-')]",
+      "hostPoolName": "[replace(parameters('hostPoolName'),'\"','')]",
+      "rdshVmNamesOutput": {
+        "copy": [
+          {
+            "name": "rdshVmNamesCopy",
+            "count": "[if(variables('createVMs'), parameters('vmNumberOfInstances'), 1)]",
+            "input": {
+              "name": "[concat(variables('rdshPrefix'),copyIndex('rdshVmNamesCopy'))]"
+            }
+          }
+        ]
+      },
+      "tokenExpirationTime": "[dateTimeAdd(parameters('tokenExpirationTime'), 'PT2H')]",
+      "appGroupName": "[concat(variables('hostPoolName'),'-DAG')]",
+      "appGroupResourceId": "[createArray(resourceId('Microsoft.DesktopVirtualization/applicationgroups/', variables('appGroupName')))]",
+      "workspaceResourceGroup": "[if(empty(parameters('workspaceResourceGroup')), resourceGroup().name, parameters('workspaceResourceGroup'))]",
+      "applicationGroupReferencesArr": "[if(equals('',parameters('allApplicationGroupReferences')), variables('appGroupResourceId'), concat(split(parameters('allApplicationGroupReferences'),','), variables('appGroupResourceId')))]",
+      "hostpoolRequiredProps": {
+        "friendlyName": "[parameters('hostpoolFriendlyName')]",
+        "description": "[parameters('hostpoolDescription')]",
+        "hostpoolType": "[parameters('hostpoolType')]",
+        "personalDesktopAssignmentType": "[parameters('personalDesktopAssignmentType')]",
+        "maxSessionLimit": "[parameters('maxSessionLimit')]",
+        "loadBalancerType": "[parameters('loadBalancerType')]",
+        "validationEnvironment": "[parameters('validationEnvironment')]",
+        "preferredAppGroupType": "[parameters('preferredAppGroupType')]",
+        "ring": null,
+        "registrationInfo": {
+          "expirationTime": "[variables('tokenExpirationTime')]",
+          "registrationTokenOperation": "Update"
+        }
+      }
+    },
+    "resources": [
+      {
+        "name": "[parameters('hostPoolName')]",
+        "apiVersion": "2019-12-10-preview",
+        "type": "Microsoft.DesktopVirtualization/hostpools",
+        "location": "[parameters('location')]",
+        "tags": "[parameters('hostpoolTags')]",
+        "properties": "[variables('hostpoolRequiredProps')]"
+      },
+      {
+        "name": "[variables('appGroupName')]",
+        "apiVersion": "2019-12-10-preview",
+        "type": "Microsoft.DesktopVirtualization/applicationgroups",
+        "location": "[parameters('location')]",
+        "tags": "[parameters('applicationGroupTags')]",
+        "properties": {
+          "hostpoolarmpath": "[resourceId('Microsoft.DesktopVirtualization/hostpools/', parameters('hostPoolName'))]",
+          "friendlyName": "Default Desktop",
+          "description": "Desktop Application Group created through the Hostpool Wizard",
+          "applicationGroupType": "Desktop"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.DesktopVirtualization/hostpools/', parameters('hostPoolName'))]"
+        ]
+      },
+      {
+        "apiVersion": "2018-05-01",
+        "name": "[concat('Workspace-linkedTemplate-', parameters('deploymentId'))]",
+        "type": "Microsoft.Resources/deployments",
+        "resourceGroup": "[variables('workspaceResourceGroup')]",
+        "condition": "[parameters('addToWorkspace')]",
+        "properties": {
+          "mode": "Incremental",
+          "template": {
+            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+            "contentVersion": "1.0.0.0",
+            "resources": [
+              {
+                "apiVersion": "2019-12-10-preview",
+                "name": "[parameters('workSpaceName')]",
+                "type": "Microsoft.DesktopVirtualization/workspaces",
+                "location": "[parameters('workspaceLocation')]",
+                "properties": {
+                  "applicationGroupReferences": "[variables('applicationGroupReferencesArr')]"
+                }
+              }
+            ]
+          }
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.DesktopVirtualization/applicationgroups/', variables('appGroupName'))]"
+        ]
+      },
+      {
+        "apiVersion": "2018-05-01",
+        "name": "[concat('hci-addVm-linkedTemplate-', parameters('deploymentId'))]",
+        "type": "Microsoft.Resources/deployments",
+        "condition": "[variables('createVMs')]",
+        "resourceGroup": "[parameters('vmResourceGroup')]",
+        "dependsOn": [
+          "[concat('Workspace-linkedTemplate-', parameters('deploymentId'))]"
+        ],
+        "properties": {
+          "mode": "Incremental",
+          "templateLink": {
+            "uri": "[variables('azureStackHciTemplateUri')]",
+            "contentVersion": "1.0.0.0"
+          },
+          "parameters": {
+            "rdshPrefix": {
+              "value": "[variables('rdshPrefix')]"
+            },
+            "rdshNumberOfInstances": {
+              "value": "[parameters('vmNumberOfInstances')]"
+            },
+            "vmAdministratorAccountUsername": {
+              "value": "[parameters('vmAdministratorAccountUsername')]"
+            },
+            "vmAdministratorAccountPassword": {
+              "value": "[parameters('vmAdministratorAccountPassword')]"
+            },
+            "domainAdministratorUsername": {
+              "value": "[parameters('domainAdministratorUsername')]"
+            },
+            "domainAdministratorPassword": {
+              "value": "[parameters('domainAdministratorPassword')]"
+            },
+            "customLocationId": {
+              "value": "[parameters('customLocationId')]"
+            },
+            "virtualProcessorCount": {
+              "value": "[parameters('virtualProcessorCount')]"
+            },
+            "memoryGB": {
+              "value": "[parameters('memoryGB')]"
+            },
+            "maximumMemoryGB": {
+              "value": "[parameters('maximumMemoryGB')]"
+            },
+            "minimumMemoryGB": {
+              "value": "[parameters('minimumMemoryGB')]"
+            },
+            "dynamicMemoryConfig": {
+              "value": "[parameters('dynamicMemoryConfig')]"
+            },
+            "targetMemoryBuffer": {
+              "value": "[parameters('targetMemoryBuffer')]"
+            },
+            "virtualNetworkId": {
+              "value": "[parameters('virtualNetworkId')]"
+            },
+            "imageId": {
+              "value": "[parameters('imageId')]"
+            },
+            "location": {
+              "value": "[parameters('vmLocation')]"
+            },
+            "networkInterfaceTags": {
+              "value": "[parameters('networkInterfaceTags')]"
+            },
+            "virtualMachineTags": {
+              "value": "[parameters('virtualMachineTags')]"
+            },
+            "hostpoolToken": {
+              "value": "[reference(parameters('hostPoolName')).registrationInfo.token]"
+            },
+            "hostPoolName": {
+              "value": "[parameters('hostPoolName')]"
+            },
+            "domain": {
+              "value": "[parameters('domain')]"
+            },
+            "oUPath": {
+              "value": "[parameters('oUPath')]"
+            }
+          }
+        }
+      }
+    ],
+    "outputs": {
+      "rdshVmNamesObject": {
+        "value": "[variables('rdshVmNamesOutput')]",
+        "type": "object"
+      }
+    }
+  }
