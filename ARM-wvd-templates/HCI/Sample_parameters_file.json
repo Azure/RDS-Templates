@@ -1,0 +1,54 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "<eastus_or_westeurope>"
+        },
+        "customLocationId": {
+            "value": "/subscriptions/<your_subscription>/resourceGroups/<your_resource_group>/providers/Microsoft.ExtendedLocation/customLocations/<your_custom_location>"
+        },
+        "virtualProcessorCount": {
+            "value": 4
+        },
+        "memoryGB": {
+            "value": 8
+        },
+        "vmAdministratorAccountUsername": {
+            "value": "Admin"
+        },
+        "vmAdministratorAccountPassword": {
+            "value": null
+        },
+        "oUPath": {
+            "value": ""
+        },
+        "domain": {
+            "value": "contoso.com"
+        },
+        "domainAdministratorUsername": {
+            "value": "contoso\\conniewilson"
+        },
+        "domainAdministratorPassword": {
+            "value": null
+        },
+        "vmNumberOfInstances": {
+            "value": 1
+        },
+        "vmNamePrefix": {
+            "value": "AVD-SH"
+        },
+        "imageId": {
+            "value": "/subscriptions/<your_subscription>/resourceGroups/<your_resource_group>/providers/microsoft.azurestackhci/<marketplacegalleryimages_or_galleryimages>/<your_image_name>"
+        },
+        "virtualNetworkId": {
+            "value": "/subscriptions/<your_subscription>/resourceGroups/<your_resource_group>/providers/Microsoft.AzureStackHCI/virtualnetworks/<your_virtual_network>"
+        },
+        "tags": {
+            "value": {}
+        },
+        "validationEnvironment": {
+            "value": false
+        }
+    }
+}
