@@ -1,0 +1,334 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "rdshPrefix": {
+          "type": "string",
+          "metadata": {
+            "description": "This prefix will be used in combination with the VM number to create the VM name. This value includes the dash, so if using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
+          },
+          "defaultValue": "[take(toLower(resourceGroup().name),10)]"
+        },
+        "virtualProcessorCount": {
+          "type": "int",
+          "metadata": {
+            "description": "Virtual Processor Count"
+          }
+        },
+        "memoryGB": {
+          "type": "int",
+          "metadata": {
+            "description": "TODO: get description"
+          }
+        },
+        "maximumMemoryGB": {
+          "type": "int",
+          "metadata": {
+            "description": "This parameter is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the maximum GB given to the VM."
+          },
+          "defaultValue": 0
+        },
+        "minimumMemoryGB": {
+          "type": "int",
+          "metadata": {
+            "description": "This parameter is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the minimum GB given to the VM."
+          },
+          "defaultValue": 0
+        },
+        "dynamicMemoryConfig": {
+          "type": "bool",
+          "metadata": {
+            "description": "True if you want to use a dynamic memory config."
+          },
+          "defaultValue": false
+        },
+        "targetMemoryBuffer": {
+          "type": "int",
+          "metadata": {
+            "description": "This parameter is optional and only used if dynamicMemory = true. When using dynamic memory this setting is the buffer of extra memory given to the VM."
+          },
+          "defaultValue": 0
+        },
+        "vmInitialNumber": {
+          "type": "int",
+          "metadata": {
+            "description": "VM name prefix initial number."
+          },
+          "defaultValue": 0
+        },
+        "networkInterfaceTags": {
+          "type": "object",
+          "metadata": {
+            "description": "The tags to be assigned to the network interfaces"
+          },
+          "defaultValue": {}
+        },
+        "virtualMachineTags": {
+          "type": "object",
+          "metadata": {
+            "description": "The tags to be assigned to the virtual machines"
+          },
+          "defaultValue": {}
+        },
+        "location": {
+          "type": "string",
+          "metadata": {
+            "description": "The location where the resources will be deployed."
+          }
+        },
+        "customLocationId": {
+          "type": "string",
+          "metadata": {
+            "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster."
+          }
+        },
+        "domainAdministratorUsername": {
+          "type": "string",
+          "metadata": {
+            "description": "The username for the domain admin."
+          }
+        },
+        "domainAdministratorPassword": {
+            "type": "securestring",
+            "metadata": {
+              "description": "The password that corresponds to the existing domain username."
+            }
+        },
+        "vmAdministratorAccountUsername": {
+          "type": "string",
+          "metadata": {
+            "description": "A username to be used as the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by domainAdministratorUsername and domainAdministratorPassword will be used."
+          },
+          "defaultValue": ""
+        },
+        "vmAdministratorAccountPassword": {
+          "type": "securestring",
+          "metadata": {
+              "description": "The password associated with the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by domainAdministratorUsername and domainAdministratorPassword will be used."
+          },
+          "defaultValue": ""
+        },
+        "virtualNetworkId": {
+          "type": "string",
+          "metadata": {
+              "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs."
+          }
+        },
+        "imageId": {
+          "type": "string",
+          "metadata": {
+              "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs."
+          }
+        },
+        "hostpoolName": {
+          "type": "string",
+          "metadata": {
+            "description": "The name of the hostpool"
+          }
+        },
+        "hostpoolToken": {
+          "type": "string",
+          "metadata": {
+            "description": "The token for adding VMs to the hostpool"
+          }
+        },
+        "SessionHostConfigurationVersion": {
+          "type": "string",
+          "metadata": {
+            "description": "Session host configuration version of the host pool."
+          },
+          "defaultValue": ""
+        },
+        "rdshNumberOfInstances": {
+          "type": "int",
+          "metadata": {
+            "description": "Number of session hosts that will be created and added to the hostpool."
+          }
+        },
+        "oUPath": {
+          "type": "string",
+          "metadata": {
+            "description": "OU Path for the domain join"
+          },
+          "defaultValue": ""
+        },
+        "domain": {
+          "type": "string",
+          "metadata": {
+            "description": "Domain to join"
+          },
+          "defaultValue": ""
+        },
+        "fileUri": {
+          "type": "string",
+          "metadata": {
+            "description": "Uri to download file that is executed in the custom script extension"
+          },
+          "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/HCI/HciCustomScript.ps1"
+        },
+        "fileName": {
+          "type": "string",
+          "metadata": {
+            "description": "Uri to download file that is executed in the custom script extension"
+          },
+          "defaultValue": "HciCustomScript.ps1"
+        }
+    },
+    "variables": {
+      "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('domainAdministratorUsername'), '@')), parameters('domain'))]",
+        "hostPoolNameArgument": "[concat('-HostPoolName ', parameters('hostpoolName'))]",
+        "registrationTokenArgument": "[concat(' -RegistrationInfoToken  ', parameters('hostpoolToken'))]",
+        "sessionHostConfigurationLastUpdateTimeArgument": "[concat(' -SessionHostConfigurationLastUpdateTime ', parameters('SessionHostConfigurationVersion'))]",
+        "arguments": "[concat(variables('hostPoolNameArgument'), variables('registrationTokenArgument'))]",
+        "isVMAdminAccountCredentialsProvided": "[and(not(equals(parameters('vmAdministratorAccountUsername'), '')), not(equals(parameters('vmAdministratorAccountPassword'), '')))]",
+        "vmAdministratorUsername": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountUsername'), first(split(parameters('domainAdministratorUsername'), '@')))]",
+        "vmAdministratorPassword": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountPassword'), parameters('domainAdministratorPassword'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2021-09-01-preview",
+            "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic')]",
+            "type": "Microsoft.AzureStackHCI/networkinterfaces",
+            "location": "[parameters('location')]",
+            "tags": "[parameters('networkInterfaceTags')]",
+            "copy": {
+                "name": "rdsh-nic-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "extendedLocation": {
+                "type": "CustomLocation",
+                "name": "[parameters('customLocationId')]"
+            },
+            "properties": {
+                "resourceName": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic')]",
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic')]",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[parameters('virtualNetworkId')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2021-09-01-preview",
+            "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
+            "location": "[parameters('location')]",
+            "type": "Microsoft.AzureStackHCI/virtualmachines",
+            "tags": "[parameters('virtualMachineTags')]",
+            "copy": {
+                "name": "rdsh-vm-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "properties": {
+                "resourceName": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
+                "hardwareProfile": {
+                    "processors": "[parameters('virtualProcessorCount')]",
+                    "memoryGB": "[parameters('memoryGB')]",
+                    "dynamicMemoryConfig": "[if(parameters('dynamicMemoryConfig'), createObject('maximumMemoryGB', parameters('maximumMemoryGB'), 'minimumMemoryGB', parameters('minimumMemoryGB'), 'targetMemoryBuffer', parameters('targetMemoryBuffer')), json('null'))]"
+                },
+                "osProfile": {
+                    "adminUsername": "[variables('vmAdministratorUsername')]",
+                    "adminPassword": "[variables('vmAdministratorPassword')]",
+                    "osType": "Windows",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true
+                    },
+                    "computerName": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "name": "[parameters('imageId')]"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceid('Microsoft.AzureStackHCI/networkinterfaces', concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic'))]"
+                        }
+                    ]
+                }
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "extendedLocation": {
+                "type": "CustomLocation",
+                "name": "[parameters('customLocationId')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.AzureStackHCI/networkInterfaces/', parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic')]"
+            ]
+        },
+        {
+          "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')),'/CustomScriptExtension')]",
+          "type": "Microsoft.AzureStackHCI/virtualmachines/extensions",
+          "location": "[parameters('location')]",
+          "apiVersion": "2021-09-01-preview",
+          "dependsOn": [ "rdsh-vm-loop" ],
+            "copy": {
+              "name": "rdsh-cse-loop",
+              "count": "[parameters('rdshNumberOfInstances')]"
+            },
+          "properties": {
+              "publisher": "Microsoft.Compute",
+              "type": "CustomScriptExtension",
+              "autoUpgradeMinorVersion": true,
+              "settings": {
+                  "fileUris": ["[parameters('fileUri')]"]
+              },
+              "protectedSettings": {
+                  "commandToExecute": "[concat ('powershell -ExecutionPolicy Unrestricted -File ', parameters('fileName'), ' ', variables('arguments'))]"
+              }
+          }
+        },
+        {
+            "apiVersion": "2021-09-01-preview",
+            "type": "Microsoft.AzureStackHCI/virtualMachines/extensions",
+            "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'joindomain')]",
+            "location": "[parameters('location')]",
+            "copy": {
+                "name": "rdsh-domain-join-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "dependsOn": ["rdsh-cse-loop"],
+            "properties": {
+              "publisher": "Microsoft.Compute",
+              "type": "JsonADDomainExtension",
+              "typeHandlerVersion": "1.3",
+              "autoUpgradeMinorVersion": true,
+              "settings": {
+                "name": "[variables('domain')]",
+                "oUPath": "[parameters('oUPath')]",
+                "user": "[parameters('domainAdministratorUsername')]",
+                "restart": "true",
+                "options": "3"
+              },
+              "protectedSettings": {
+                "password": "[parameters('domainAdministratorPassword')]"
+              }
+            }
+        },
+        {
+          "type": "Microsoft.AzureStackHCI/virtualMachines/extensions",
+          "apiVersion": "2021-09-01-preview",
+          "name": "[format('{0}/azmonitor', concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber'))))]",
+          "location": "[parameters('location')]",
+          "copy": {
+            "name": "rdsh-monitor-agent-loop",
+            "count": "[parameters('rdshNumberOfInstances')]"
+          },
+          "dependsOn": ["rdsh-domain-join-loop"],
+          "properties": {
+            "publisher": "Microsoft.Azure.Monitor",
+            "type": "AzureMonitorWindowsAgent",
+            "typeHandlerVersion": "1.5",
+            "autoUpgradeMinorVersion": true
+          }
+        }
+    ]
+  }
