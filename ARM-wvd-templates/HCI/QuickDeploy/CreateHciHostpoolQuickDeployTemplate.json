@@ -11,7 +11,7 @@
       "location": {
         "type": "string",
         "metadata": {
-          "description": "Select a region where Hostpool, workspace, virtual machines will be created. The metadata for these objects will be stored in the geography associated with the region. Supported regions: eastus and westeurope."
+          "description": "Enter a region where Hostpool, workspace, virtual machines will be created. The metadata for these objects will be stored in the geography associated with the region. Supported regions: eastus and westeurope."
         }
       },
       "customLocationId": {
@@ -23,14 +23,14 @@
       "virtualProcessorCount": {
         "type": "int",
         "metadata": {
-          "description": "Virtual Processor Count. Default is 4 vCPU."
+          "description": "Virtual Processor Count. Default is 4."
         },
         "defaultValue": 4
       },
       "memoryGB": {
         "type": "int",
         "metadata": {
-          "description": "Memory in GB. Default is 8GB."
+          "description": "Memory in GB. Default is 8."
         },
         "defaultValue": 8
       },

@@ -88,14 +88,14 @@
       "virtualProcessorCount": {
         "type": "int",
         "metadata": {
-          "description": "Virtual Processor Count. Default is 4 vCPU."
+          "description": "Virtual Processor Count. Default is 4."
         },
         "defaultValue": 4
       },
       "memoryGB": {
         "type": "int",
         "metadata": {
-          "description": "Memory in GB. Default is 8GB."
+          "description": "Memory in GB. Default is 8."
         },
         "defaultValue": 8
       },
