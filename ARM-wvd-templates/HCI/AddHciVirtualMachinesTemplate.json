@@ -90,20 +90,20 @@
       "customLocationId": {
         "type": "string",
         "metadata": {
-          "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster."
+          "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster. E.g., /subscriptions/<subscriptionID>/resourcegroups/Contoso-rg/providers/microsoft.extendedlocation/customlocations/Contoso-CL."
         }
       },
       "virtualProcessorCount": {
         "type": "int",
         "metadata": {
-          "description": "Virtual Processor Count"
+          "description": "Virtual Processor Count. Default is 4."
         },
         "defaultValue": 4
       },
       "memoryGB": {
         "type": "int",
         "metadata": {
-          "description": "Memory in GB."
+          "description": "Memory in GB. Default is 8."
         },
         "defaultValue": 8
       },
@@ -144,7 +144,7 @@
       "vmNumberOfInstances": {
         "type": "int",
         "metadata": {
-          "description": "Number of session hosts that will be created and added to the hostpool."
+          "description": "Number of session hosts that will be created and added to the hostpool. Default is 1."
         },
         "defaultValue": 1
       },
@@ -157,13 +157,13 @@
       "imageId": {
         "type": "string",
         "metadata": {
-          "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs."
+          "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs. E.g., /subscriptions/<subscriptionID>/resourceGroups/Contoso-rg/providers/microsoft.azurestackhci/marketplacegalleryimages/Contoso-Win11image."
         }
       },
       "virtualNetworkId": {
         "type": "string",
         "metadata": {
-          "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs."
+          "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs. E.g., /subscriptions/<subscriptionID>/resourceGroups/Contoso-rg/providers/Microsoft.AzureStackHCI/virtualnetworks/Contoso-virtualnetwork."
         }
       },
       "virtualMachineTags": {

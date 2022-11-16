@@ -5,32 +5,32 @@
       "hostPoolName": {
         "type": "string",
         "metadata": {
-          "description": "The name of the Hostpool to be created."
+          "description": "Host pools are a collection of one or more identical virtual machines (VMs), also known as 'session hosts,' within Azure Virtual Desktop environments. "
         }
       },
       "location": {
         "type": "string",
         "metadata": {
-          "description": "The location where the resources will be deployed."
+          "description": "Enter a region where Hostpool, workspace, virtual machines will be created. The metadata for these objects will be stored in the geography associated with the region. Supported regions: eastus and westeurope."
         }
       },
       "customLocationId": {
         "type": "string",
         "metadata": {
-          "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster."
+          "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster. E.g., /subscriptions/<subscriptionID>/resourcegroups/Contoso-rg/providers/microsoft.extendedlocation/customlocations/Contoso-CL"
         }
       },
       "virtualProcessorCount": {
         "type": "int",
         "metadata": {
-          "description": "Virtual Processor Count."
+          "description": "Virtual Processor Count. Default is 4."
         },
         "defaultValue": 4
       },
       "memoryGB": {
         "type": "int",
         "metadata": {
-          "description": "Memory in GB."
+          "description": "Memory in GB. Default is 8."
         },
         "defaultValue": 8
       },
@@ -55,7 +55,7 @@
       "oUPath": {
         "type": "string",
         "metadata": {
-          "description": "OU Path for the domain join"
+          "description": "Enter the name of the organizational unit (OU) you would like the virtual machines to join. If you do not have a specific OU, leave this parameter empty. The OU should look like OU=unit1,DC=contoso,DC=com"
         },
         "defaultValue": ""
       },
@@ -81,7 +81,7 @@
       "vmNumberOfInstances": {
         "type": "int",
         "metadata": {
-          "description": "Number of session hosts that will be created and added to the hostpool."
+          "description": "Number of session hosts that will be created and added to the hostpool. Default is 1."
         },
         "defaultValue": 1
       },
@@ -94,13 +94,13 @@
       "imageId": {
         "type": "string",
         "metadata": {
-          "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs."
+          "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs. E.g., /subscriptions/<subscriptionID>/resourceGroups/Contoso-rg/providers/microsoft.azurestackhci/marketplacegalleryimages/Contoso-Win11image"
         }
       },
       "virtualNetworkId": {
         "type": "string",
         "metadata": {
-          "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs."
+          "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs. /subscriptions/<subscriptionID>/resourceGroups/Contoso-rg/providers/Microsoft.AzureStackHCI/virtualnetworks/Contoso-virtualnetwork"
         }
       },
       "tokenExpirationTime": {
@@ -127,7 +127,7 @@
       "validationEnvironment": {
         "type": "bool",
         "metadata": {
-          "description": "Whether to use validation enviroment."
+          "description": "Whether to use validation enviroment. Validation host pool allows you to test service changes before they are deployed to production. "
         },
         "defaultValue": false
       }
