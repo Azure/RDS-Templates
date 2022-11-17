@@ -1,17 +1,20 @@
-<#Author       : Akash Chawla
-# Usage        : Install and setup FSLogix
-#>
+<#Author       : Dean Cefola
+# Creation Date: 10-15-2020
+# Usage        : Setup FSLogix
 
-#######################################
-#     Install FSLogix                 #
-#######################################
+#********************************************************************************
+# Date                         Version      Changes
+#------------------------------------------------------------------------
+# 10/15/2020                     1.0        Intial Version
+#
+#
+#*********************************************************************************
+#
+#>
 
 Param (        
     [Parameter(Mandatory=$true)]
         [string]$ProfilePath,
-
-    [Parameter(Mandatory=$true)]
-        [string]$FSLogixInstaller,
 
     [Parameter(Mandatory=$false)]
         [string]$VHDSize
@@ -21,6 +24,7 @@ Param (
 #    WVD Variables   #
 ######################
 $LocalWVDpath            = "c:\temp\wvd\"
+$FSLogixURI              = 'https://aka.ms/fslogix_download'
 $FSInstaller             = 'FSLogixAppsSetup.zip'
 $templateFilePathFolder = "C:\AVDImage"
 
@@ -45,8 +49,8 @@ else {
 #################################
 #    Download WVD Componants    #
 #################################
-Write-Host "AVD AIB Customization - Install FSLogix : Downloading FSLogix from URI: $FSLogixInstaller"
-Invoke-WebRequest -Uri $FSLogixInstaller -OutFile "$LocalWVDpath$FSInstaller"
+Write-Host "AVD AIB Customization - Install FSLogix : Downloading FSLogix from URI: $FSLogixURI"
+Invoke-WebRequest -Uri $FSLogixURI -OutFile "$LocalWVDpath$FSInstaller"
 
 
 ##############################
@@ -69,7 +73,7 @@ Write-Host "AVD AIB Customization - Install FSLogix : UnZip of FSLogix complete"
 Write-Host "AVD AIB Customization - Install FSLogix : Starting to install FSLogix"
 $fslogix_deploy_status = Start-Process `
     -FilePath "$LocalWVDpath\FSLogix\x64\Release\FSLogixAppsSetup.exe" `
-    -ArgumentList "/install /quiet /norestart" `
+    -ArgumentList "/install /quiet" `
     -Wait `
     -Passthru
 
