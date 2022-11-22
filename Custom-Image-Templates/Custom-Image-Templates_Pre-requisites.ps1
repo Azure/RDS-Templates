@@ -43,7 +43,7 @@ $CITidentityName = "DesktopVirtualizationCustomImageTemplateIdentity"
 $CITRoleDefName = "Desktop Virtualization Custom Image Template Role"
 
 # Create the managed identity. This creates an AAD Enterprise application, the PrincipalID is the AAD Object ID.
-New-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $CITidentityName
+New-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $CITidentityName -Location $location
 
 # Store the identity resource and principal IDs in variables.
 $identityNameResourceId = (Get-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $CITidentityName).Id
