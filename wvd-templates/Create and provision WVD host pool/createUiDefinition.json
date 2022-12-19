@@ -420,7 +420,7 @@
 						"name": "rdshCustomImageSourceResourceGroup",
 						"type": "Microsoft.Common.TextBox",
 						"label": "Image resource group name",
-						"toolTip": "Enter the name of the existing resouce group that contains the Azure managed image.",
+						"toolTip": "Enter the name of the existing resource group that contains the Azure managed image.",
 						"constraints": {
 							"required": true,
 							"regex": "^[-\\w\\._\\(\\)]{0,89}[-\\w_\\(\\)]$",
