@@ -175,7 +175,7 @@
         }
     },
     "variables": {
-      "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('domainAdministratorUsername'), '@')), parameters('domain'))]",
+        "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('domainAdministratorUsername'), '@')), parameters('domain'))]",
         "hostPoolNameArgument": "[concat('-HostPoolName ', parameters('hostpoolName'))]",
         "registrationTokenArgument": "[concat(' -RegistrationInfoToken  ', parameters('hostpoolToken'))]",
         "sessionHostConfigurationLastUpdateTimeArgument": "[concat(' -SessionHostConfigurationLastUpdateTime ', parameters('SessionHostConfigurationVersion'))]",
