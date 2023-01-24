@@ -1,11 +1,12 @@
 ﻿### This list of PowerShell commands will set up a User assigned managed identity, a role definition and associate the required permissions. It also creates an Azure Compute gallery and a VM image definition. This allows you to then use AVD custom image templates to create an image version within that image definition from where you can create an AVD host pool.
-### Tom Hickling Senior Product Manager Microsoft - 18 October 2022
+### Tom Hickling Senior Product Manager Microsoft - 15 November 2022
 
 ## First check resource providers.
 # Check to ensure that you're registered for the providers and RegistrationState is set to 'Registered'
 Get-AzResourceProvider -ProviderNamespace Microsoft.VirtualMachineImages
 Get-AzResourceProvider -ProviderNamespace Microsoft.Storage 
 Get-AzResourceProvider -ProviderNamespace Microsoft.Compute
+Get-AzResourceProvider -ProviderNamespace Microsoft.network 
 Get-AzResourceProvider -ProviderNamespace Microsoft.KeyVault
 
 # If they don't show as 'Registered', run the following commented-out code
@@ -13,6 +14,7 @@ Get-AzResourceProvider -ProviderNamespace Microsoft.KeyVault
 ## Register-AzResourceProvider -ProviderNamespace Microsoft.VirtualMachineImages
 ## Register-AzResourceProvider -ProviderNamespace Microsoft.Storage
 ## Register-AzResourceProvider -ProviderNamespace Microsoft.Compute
+## Register-AzResourceProvider -ProviderNamespace Microsoft.network
 ## Register-AzResourceProvider -ProviderNamespace Microsoft.KeyVault 
 
 

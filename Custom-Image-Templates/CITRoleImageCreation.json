@@ -1,7 +1,7 @@
 {
     "Name": "Desktop Virtualization Custom Image Template Role",
     "IsCustom": true,
-    "Description": "Image Builder access to create resources for the image build, you should delete or split out as appropriate",
+    "Description": "Azure Image Builder access to create resources for the AVD Cutom Image Template image build",
     "Actions": [
         "Microsoft.Compute/galleries/read",
         "Microsoft.Compute/galleries/images/read",
