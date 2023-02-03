@@ -1,23 +1,25 @@
-# MSIX app attach preview
+# MSIX App Attach
 
-This repository contains samples to showcase APIs for implementing MSIX app attach.
+This repository contains sample scripts for implementing testing and troubleshooting MSIX app attach.
 
-Microsoft offers support for MSIX App Attach when managed through Azure. These demonstration scripts are commmunity supported only.
+It also contains the CimDiskImage PowerShell module used in the sample scripts. You can find the [Cim Disk Module documentation here](CimDiskImage-PoSh-Module\README.md).
 
-Please reference the [official documentation for MSIX App Atatch](https://learn.microsoft.com/azure/virtual-desktop/what-is-app-attach) before using these scripts.
+Microsoft offers support for MSIX App Attach when managed through Azure Virtual Desktop. These demonstration scripts are commmunity supported only.
+
+Please reference the [official documentation for MSIX App Attach](https://learn.microsoft.com/azure/virtual-desktop/what-is-app-attach) before using these scripts.
 
 For specific guidance on testing App Attach packages with PowerShell please refer to the [Create PowerShell scripts for App Attach documentation](https://learn.microsoft.com/azure/virtual-desktop/app-attach)
 
-Create an [MSIX package from a desktop installer](https://docs.microsoft.com/windows/msix/packaging-tool/create-app-package-msi-vm) MSI, EXE or App-V on a VM
+For help to create an [MSIX package from a desktop installer](https://docs.microsoft.com/windows/msix/packaging-tool/create-app-package-msi-vm) MSI, EXE or App-V on a VM
 
 ## Help
 
 | Script      | Description |
 | ----------- | ----------- |
-| [StagePackageDemo.ps1](/Help/StagePackageDemo.ps1.md)      | Stages an App Attach Package on the system       |
-| [RegisterPackageDemo.ps1](/Help/RegisterPackageDemo.ps1.md)      | Registers an App Attach Package for the user       |
-| [DeRegisterPackageDemo.ps1](/Help/DeRegisterPackageDemo.ps1.md)      | Registers an App Attach Package for the user       |
-| [DeStagePackageDemo.ps1](/Help/DeStagePackageDemo.ps1.md)      | Stages an App Attach Package on the system       |
+| [StagePackageDemo.ps1](Help/StagePackageDemo.ps1.md)      | Stages an App Attach Package on the system       |
+| [RegisterPackageDemo.ps1](Help/RegisterPackageDemo.ps1.md)      | Registers an App Attach Package for the user       |
+| [DeRegisterPackageDemo.ps1](Help/DeRegisterPackageDemo.ps1.md)      | Registers an App Attach Package for the user       |
+| [DeStagePackageDemo.ps1](Help/DeStagePackageDemo.ps1.md)      | Stages an App Attach Package on the system       |
 
 ## Additional materials
 
