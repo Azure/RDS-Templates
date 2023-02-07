@@ -1,0 +1,182 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "hostPoolName": {
+        "type": "string",
+        "metadata": {
+          "description": "Host pools are a collection of one or more identical virtual machines (VMs), also known as 'session hosts,' within Azure Virtual Desktop environments. "
+        }
+      },
+      "hostpoolToken": {
+        "type": "securestring",
+        "metadata": {
+          "description": "The token of the host pool where the session hosts will be added."
+        }
+      },
+      "domain": {
+        "type": "string",
+        "metadata": {
+          "description": "Domain to join"
+        },
+        "defaultValue": ""
+      },
+      "oUPath": {
+        "type": "string",
+        "metadata": {
+          "description": "OU Path for the domain join"
+        },
+        "defaultValue": ""
+      },
+      "domainAdministratorUsername": {
+        "type": "string",
+        "metadata": {
+          "description": "A username in the domain that has privileges to join the session hosts to the domain. For example, 'vmjoiner@contoso.com'."
+        },
+        "defaultValue": ""
+      },
+      "domainAdministratorPassword": {
+        "type": "securestring",
+        "metadata": {
+          "description": "The password that corresponds to the existing domain username."
+        },
+        "defaultValue": ""
+      },
+      "vmResourceIds": {
+        "type": "array",
+        "metadata": {
+          "description": "A list of Azure Stack HCI VMs which are Azure Arc enabled. Example, [“/subscriptions/<subscriptionID>/resourceGroups/Contoso-rg/providers/Microsoft.HybridCompute/machines/Contoso-VM1”,”/subscriptions/<subscriptionID>/resourceGroups/Contoso-rg/providers/Microsoft.HybridCompute/machines/Contoso-VM2”]"
+        }
+      },
+      "tags": {
+        "type": "object",
+        "metadata": {
+          "description": "The tags to be assigned to the virtual machines"
+        },
+        "defaultValue": {}
+      },
+      "deploymentId": {
+        "type": "string",
+        "metadata": {
+          "description": "GUID for the deployment"
+        },
+        "defaultValue": "[newGuid()]"
+      }
+    },
+    "variables": {
+      "azureStackHciTemplateUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/nestedtemplates/azurestackhci-vm.json",
+      "hostPoolNameArgument": "[concat('-HostPoolName ', parameters('hostpoolName'))]",
+      "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('domainAdministratorUsername'), '@')), parameters('domain'))]",
+      "numberOfVms": "[length(parameters('vmResourceIds'))]",
+      "fileUri": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/HCI/HciCustomScript.ps1",
+      "fileName": "HciCustomScript.ps1",
+      "copy": [
+        {
+          "name": "splitVmResourceIds",
+          "count": "[variables('numberOfVms')]",
+          "input": "[split(parameters('vmResourceIds')[copyIndex('splitVmResourceIds')], '/')]"
+        }
+      ]
+    },
+    "resources": [
+      {
+        "apiVersion": "2021-04-01",
+        "type": "Microsoft.Resources/deployments",
+        "name": "[concat(variables('splitVmResourceIds')[copyIndex()][8], '-', parameters('deploymentId'))]",
+        "subscriptionId": "[variables('splitVmResourceIds')[copyIndex()][2]]",
+        "resourceGroup": "[variables('splitVmResourceIds')[copyIndex()][4]]",
+        "copy": {
+          "name": "vmsetup-loop",
+          "count": "[variables('numberOfVms')]"
+        },
+        "properties": {
+          "mode": "Incremental",
+          "parameters": {
+            "index": {
+              "value": "[copyIndex()]"
+            }
+          },
+          "template": {
+            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+            "contentVersion": "1.0.0.0",
+            "parameters": {
+              "index": {
+                "type": "int",
+                "metadata": {
+                  "description": "Index of the vm resource id array that is being provisioned"
+                },
+                "defaultValue": 0
+              }
+            },
+            "resources": [
+              {
+                "name": "[concat(variables('splitVmResourceIds')[copyIndex()][8], '/CustomScriptExtension')]",
+                "type": "Microsoft.HybridCompute/machines/extensions",
+                "location": "[resourceGroup().location]",
+                "apiVersion": "2022-11-10",
+                "copy": {
+                  "name": "rdsh-cse-loop",
+                  "count": 1
+                },
+                "properties": {
+                    "publisher": "Microsoft.Compute",
+                    "type": "CustomScriptExtension",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {
+                        "fileUris": ["[variables('fileUri')]"]
+                    },
+                    "protectedSettings": {
+                        "commandToExecute": "[concat ('powershell -ExecutionPolicy Unrestricted -File ', variables('fileName'), ' ', concat(variables('hostPoolNameArgument'), concat(' -RegistrationInfoToken  ', parameters('hostpoolToken'))))]"
+                    }
+                }
+              },
+              {
+                  "apiVersion": "2022-11-10",
+                  "type": "Microsoft.HybridCompute/machines/extensions",
+                  "name": "[concat(variables('splitVmResourceIds')[copyIndex()][8], '/joindomain')]",
+                  "location": "[resourceGroup().location]",
+                  "copy": {
+                    "name": "rdsh-domain-join-loop",
+                    "count": 1
+                  },
+                  "dependsOn": [
+                    "rdsh-cse-loop"
+                  ],
+                  "properties": {
+                    "publisher": "Microsoft.Compute",
+                    "type": "JsonADDomainExtension",
+                    "typeHandlerVersion": "1.3",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {
+                      "name": "[variables('domain')]",
+                      "oUPath": "[parameters('oUPath')]",
+                      "user": "[parameters('domainAdministratorUsername')]",
+                      "restart": "true",
+                      "options": "3"
+                    },
+                    "protectedSettings": {
+                      "password": "[parameters('domainAdministratorPassword')]"
+                    }
+                  }
+              },
+              {
+                "type": "Microsoft.HybridCompute/machines/extensions",
+                "apiVersion": "2022-11-10",
+                "name": "[format('{0}/azmonitor', variables('splitVmResourceIds')[copyIndex()][8])]",
+                "location": "[resourceGroup().location]",
+                "dependsOn": [
+                  "rdsh-domain-join-loop"
+                ],
+                "properties": {
+                  "publisher": "Microsoft.Azure.Monitor",
+                  "type": "AzureMonitorWindowsAgent",
+                  "typeHandlerVersion": "1.5",
+                  "autoUpgradeMinorVersion": true
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
