@@ -2,7 +2,7 @@
 
 This repository contains sample scripts for implementing testing and troubleshooting MSIX app attach.
 
-It also contains the CimDiskImage PowerShell module used in the sample scripts. You can find the [Cim Disk Module documentation here](CimDiskImage-PoSh-Module\README.md).
+It also contains the CimDiskImage PowerShell module used in the sample scripts. You can find the [Cim Disk Module documentation here](CimDiskImage-PoSh-Module/README.md).
 
 Microsoft offers support for MSIX App Attach when managed through Azure Virtual Desktop. These demonstration scripts are commmunity supported only.
 
