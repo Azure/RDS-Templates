@@ -28,4 +28,3 @@ Please note that the assets below are community supported and best effort. They 
 * [Mounting Cim Disk Image Files PowerShell Module](https://youtube.com/watch?v=nfFNODPIntE&feature=shares) (Jim Moyle, Youtube.com )
 * [Azure Virtual Desktop | Quick Setup](https://youtube.com/watch?v=u99cY0MXZds&feature=shares) (Microsoft Mechanics, Youtube.com)
 * [Azure Virtual Desktop Tech Community](https://techcommunity.microsoft.com/t5/Windows-Virtual-Desktop/bd-p/WindowsVirtualDesktop)
-* [MSIX app attach will fundamentally change working with application landscapes on Windows Virtual Desktop!](https://blogs.msdn.microsoft.com/rds/2015/07/13/azure-resource-manager-template-for-rds-deployment) (blog series) [Freek Berson]
