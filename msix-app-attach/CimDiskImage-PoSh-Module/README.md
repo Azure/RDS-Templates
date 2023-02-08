@@ -14,9 +14,9 @@ This module uses the CimFS driver to mount and ummount the Cim image files.
 
 | Command      | Description |
 | ----------- | ----------- |
-| [Dismount-CimDiskImage](/Help/Dismount-CimDiskImage.md)      | Dismounts a cimfs disk image from your system.       |
-| [Get-CimDiskImage](/Help/Get-CimDiskImage.md)   | Gets information about mounted cimfs disk image(s) on your system.       |
-| [Mount-CimDiskImage](/Help/Mount-CimDiskImage.md)   | Mounts a cimfs disk image file to your system.       |
+| [Dismount-CimDiskImage](Help/Dismount-CimDiskImage.md)      | Dismounts a cimfs disk image from your system.       |
+| [Get-CimDiskImage](Help/Get-CimDiskImage.md)   | Gets information about mounted cimfs disk image(s) on your system.       |
+| [Mount-CimDiskImage](Help/Mount-CimDiskImage.md)   | Mounts a cimfs disk image file to your system.       |
 
 ## Recommended Content
 
