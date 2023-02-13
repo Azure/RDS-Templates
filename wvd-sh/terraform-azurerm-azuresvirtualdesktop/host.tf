@@ -1,5 +1,5 @@
 locals {
-  registration_token = azurerm_virtual_desktop_host_pool.hostpool.registration_info[0].token
+  registration_token = azurerm_virtual_desktop_host_pool_registration_info.registration_info.token
 }
 
 resource "random_string" "AVD_local_password" {
