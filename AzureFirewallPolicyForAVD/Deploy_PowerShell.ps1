@@ -6,7 +6,7 @@ $ResourceGroupName = "<<<Your Resource Group Name>>>"
 $Location = "<<<Your Azure Region>>>"
 
 # Run the deployment
-New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Location $Location -TemplateFile ".\FirewallPolicyForAVD-template.json" -TemplateParameterFile ".\FirewallPolicyForAVD-parameters-.json"
+New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Location $Location -TemplateFile ".\FirewallPolicyForAVD-template.json" -TemplateParameterFile ".\FirewallPolicyForAVD-parameters.json"
 
 # Once completed, review all the Policy settings and rules, then associate to an existing Firewall: #
 
