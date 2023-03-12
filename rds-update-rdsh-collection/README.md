@@ -1,17 +1,17 @@
-# Update Remote Desktop Sesson Collection to new template image
+# Update Remote Desktop Session Collection to the new template image
 
-This template updates RDSH servers in existing session host collection with new updated template image. The URI for the image is provided as a template parameter.
+This template updates RDSH servers in the existing session host collection with a new updated template image. The URI for the image is provided as a template parameter.
 
 This template deploys the following resources:
-+ `<numberOfRdshInstances`> new virtual machines as RDSH servers
+- `<numberOfRdshInstances>` new virtual machines as RDSH servers
 
-Template does the following:
-+ creates new RDSH instances from given template image  and  adds them to collection;
-+ puts old  RDSH servers in Drain mode to prevent new user connections;
-+ notifies any logged on RD users that their sessions will be soon terminated due to collection maintenance;
-+ logs off existing users from old RDSH instances after given timeout (`<userLogoffTimeoutInMinutes>` parameter).
+This template does the following:
+- Creates new RDSH instances from a given template image and adds them to the collection;
+- Puts old RDSH servers in Drain mode to prevent new user connections;
+- Notifies any logged on RD users that their sessions will soon be terminated due to collection maintenance;
+- Logs off existing users from old RDSH instances after a given timeout (`<userLogoffTimeoutInMinutes>` parameter).
 
-Note: Template does **not** delete or deallocate old RDSH instances, so you may still incur compute charges. These virtual machine instances may need to be deleted manually.
+**Note:** This template does **not** delete or deallocate old RDSH instances, so you may still incur compute charges. Any old virtual machine instances will have to be deleted manually.
 
 Click the button below to deploy:
 
