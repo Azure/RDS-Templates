@@ -1,1 +1,19 @@
-This folder contains the scripts for setting up Azure Virtual Desktop Custom Image Templates
+This folder contains the scripts for setting up Azure Virtual Desktop Custom Image Templates pre-reqs/ I.e. a managed identity and an RBAC that is assigned to a resource group - although you can also assign it to your subscription.
+
+To use Custom image template (CIT) you need to assign a Managed identity. This requirement comes from AIB, which needs this identity to create Azure objects in the process of creating an image, as well as distribute the completed image.
+The permissions that the Managed Identity requires are:
+       "Microsoft.Compute/galleries/read",
+        "Microsoft.Compute/galleries/images/read",
+        "Microsoft.Compute/galleries/images/versions/read",
+        "Microsoft.Compute/galleries/images/versions/write",
+
+        "Microsoft.Compute/images/write",
+        "Microsoft.Compute/images/read",
+        "Microsoft.Compute/images/delete"
+
+You must have the latest Azure PowerShell cmdlets installed. For more information, see Overview of Azure PowerShell.
+Open PowerShell as an Administrator and run all of the commands from Custom-Image-Templates_Pre-requisites.ps1 in the same PowerShell session to maintain your variables which will be used throughout.
+
+You need a number of Azure resource providers to be registered. Run the first set of commands to check they are correctly registered. If they are not set to “Registered” then remove the comments in the second section and run the relevant registration command.
+
+Then set up some variables for your environment, before creating a managed identity, followed by a role definition which is then assigned to the managed identity
