@@ -17,6 +17,35 @@
         [string]$TimeZoneID
 )
 
+function Get-RegionInfo($Name='*')
+{
+    $cultures = [System.Globalization.CultureInfo]::GetCultures('InstalledWin32Cultures')
+
+	foreach($culture in $cultures)
+	{
+   		try{
+            
+            if($culture.DisplayName -eq $Name) {
+                $languageTag = $culture.Name
+                break;
+            }
+   		}
+   		catch {
+         Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - Exception occurred while getting region information***"
+        Write-Host $PSItem.Exception
+      }
+      
+     }
+
+     if($null -eq $culture) {
+       return
+     } else {
+       $region = [System.Globalization.RegionInfo]$culture.Name
+       return @($languageTag, $region.GeoId)
+     }
+}
+
+
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 Write-Host "*** Starting AVD AIB CUSTOMIZER PHASE: Set default Language ***"
 
@@ -65,9 +94,16 @@ $LanguagesDictionary.Add("Turkish (Turkey)",	"tr-TR")
 $LanguagesDictionary.Add("Ukrainian (Ukraine)",	"uk-UA")
 $LanguagesDictionary.Add("English (Australia)",	"en-AU")
 
-$LanguageTag = $LanguagesDictionary.$Language 
-
 try {
+
+  $languageDetails = Get-RegionInfo -Name $Language
+
+  if($null -eq $languageDetails) {
+    $LanguageTag = $LanguagesDictionary.$Language 
+  } else {
+    $languageTag = $languageDetails[0]
+    $GeoID = $languageDetails[1]
+  }
 
   $foundLanguage = $false;
 
@@ -114,9 +150,18 @@ try {
   Set-WinUserLanguageList -LanguageList $LanguageTag -Force
   Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - $Language with $LanguageTag has been set as the default System Preferred UI Language***"
 
+  if($null -ne $GeoID) {
+    Set-WinHomeLocation -GeoID $GeoID
+    Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - $Language with $LanguageTag has been set as the default region***"
+  }
+
   if(($PSBoundParameters.ContainsKey('TimeZoneID'))) {
-      Set-TimeZone -Id $TimeZoneID -PassThru
-      Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - Timezone set to $TimeZoneID***"
+      $timezoneInfo = Get-Timezone -Id $TimeZoneID
+
+      if($null -ne $timezoneInfo) {
+        Set-TimeZone -InputObject $timezoneInfo -PassThru 
+        Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - Timezone set to $TimeZoneID***"
+      }
   }
 } 
 catch {

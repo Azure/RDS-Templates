@@ -59,7 +59,7 @@ function InstallAndEnableMMR($VCRedistributableLink, $EnableChrome, $EnableEdge)
                 $VCRedistExe = 'vc_redist.x64.exe'
                 $outputPath = $LocalPath + '\' + $VCRedistExe
                 Invoke-WebRequest -Uri $VCRedistributableLink -OutFile $outputPath
-                Start-Process -FilePath $outputPath -Args "/install /quiet /norestart /log vcdist.log" -Wait
+                Start-Process -FilePath $outputPath -Args "/install /quiet /norestart /log vcdist.log" -Wait -NoNewWindow
                 Write-host "AVD AIB Customization: MultiMedia Redirection - Finished the installation of provided Microsoft Visual C++ Redistributable"
 
                 #Install the host component
@@ -71,7 +71,9 @@ function InstallAndEnableMMR($VCRedistributableLink, $EnableChrome, $EnableEdge)
                     throw "MMR host failed to download -- Response $($mmrHostResponse.StatusCode) ($($mmrHostResponse.StatusDescription))"
                 }
 
-                msiexec.exe /i $mmrExePath /q
+                $arguments = "/i `"$mmrExePath`" /quiet"
+                Start-Process msiexec.exe -ArgumentList $arguments -Wait -NoNewWindow
+
                 Write-Host "AVD AIB Customization:  MultiMedia Redirection - Finished installing the mmr host agent"
 
                 #Enable Edge extension
@@ -104,7 +106,7 @@ function InstallAndEnableMMR($VCRedistributableLink, $EnableChrome, $EnableEdge)
                             throw "Google chrome failed to download -- Response $($chromeResponse.StatusCode) ($($chromeResponse.StatusDescription))"
                         }
 
-                        Start-Process -FilePath $chromeInstallerPath -Args "/silent /install" -Verb RunAs -Wait
+                        Start-Process -FilePath $chromeInstallerPath -Args "/silent /install" -Verb RunAs -Wait -NoNewWindow
                         Write-host "AVD AIB Customization:  MultiMedia Redirection - Finished installing Google Chrome"
                     }
 
@@ -127,9 +129,9 @@ function InstallAndEnableMMR($VCRedistributableLink, $EnableChrome, $EnableEdge)
                 Remove-Item -Path $templateFilePathFolder -Force -Recurse -ErrorAction Continue
             }
 
-            if ((Test-Path -Path $tempFolder -ErrorAction SilentlyContinue)) {
-                Remove-Item -Path $tempFolder -Force -Recurse -ErrorAction Continue
-            }
+           if ((Test-Path -Path $tempFolder -ErrorAction SilentlyContinue)) {
+               Remove-Item -Path $tempFolder -Force -Recurse -ErrorAction Continue
+           }
     
             $stopwatch.Stop()
             $elapsedTime = $stopwatch.Elapsed
