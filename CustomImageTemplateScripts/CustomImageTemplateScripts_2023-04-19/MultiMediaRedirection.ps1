@@ -106,7 +106,7 @@ function InstallAndEnableMMR($VCRedistributableLink, $EnableChrome, $EnableEdge)
                             throw "Google chrome failed to download -- Response $($chromeResponse.StatusCode) ($($chromeResponse.StatusDescription))"
                         }
 
-                        Start-Process -FilePath $chromeInstallerPath -Args "/silent /install" -Verb RunAs -Wait -NoNewWindow
+                        Start-Process -FilePath $chromeInstallerPath -Args "/silent /install" -Verb RunAs -Wait
                         Write-host "AVD AIB Customization:  MultiMedia Redirection - Finished installing Google Chrome"
                     }
 
