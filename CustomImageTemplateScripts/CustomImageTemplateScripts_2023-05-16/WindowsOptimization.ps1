@@ -86,7 +86,7 @@ PROCESS {
             If (Test-Path $ScheduledTasksFilePath)
             {
                 Write-Host "AVD AIB Customization : Windows Optimizations - [VDI Optimize] Disable Scheduled Tasks" 
-                $SchTasksList = (Get-Content $ScheduledTasksFilePath | AVD AIBConvertFrom-Json).Where( { $_.VDIState -eq 'Disabled' })
+                $SchTasksList = (Get-Content $ScheduledTasksFilePath | ConvertFrom-Json).Where( { $_.VDIState -eq 'Disabled' })
                 If ($SchTasksList.count -gt 0)
                 {
                     Foreach ($Item in $SchTasksList)
@@ -144,7 +144,7 @@ PROCESS {
             $DefaultUserSettingsUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2004/ConfigurationFiles/DefaultUserSettings.json"
         } 
         else {
-            $DefaultUserSettingsUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2009/ConfigurationFiles/ScheduledTasks.json"
+            $DefaultUserSettingsUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2009/ConfigurationFiles/DefaultUserSettings.json"
         }
 
         Invoke-WebRequest $DefaultUserSettingsUrl -OutFile $DefaultUserSettingsFilePath -UseBasicParsing
