@@ -102,7 +102,7 @@
                             },
                             {
                                 "ruleType": "NetworkRule",
-                                "name": "Agent Traffic",
+                                "name": "Agent Traffic (1)",
                                 "ipProtocols": [
                                     "TCP"
                                 ],
@@ -115,6 +115,25 @@
                                 ],
                                 "destinationIpGroups": [],
                                 "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "443"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Agent Traffic (2)",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('avd-hostpool-subnet')]"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [
+                                    "gcs.prod.monitoring.core.windows.net"
+                                ],
                                 "destinationPorts": [
                                     "443"
                                 ]
@@ -289,6 +308,25 @@
                                 "destinationPorts": [
                                     "80"
                                 ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Authentication to Microsoft Online Services",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('avd-hostpool-subnet')]"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [
+                                    "login.microsoftonline.com"
+                                ],
+                                "destinationPorts": [
+                                    "443"
+                                ]
                             }
                         ],
                         "name": "NetworkRules_WindowsVirtualDesktop",
@@ -332,25 +370,6 @@
                                 ],
                                 "destinationPorts": [
                                     "123"
-                                ]
-                            },
-                            {
-                                "ruleType": "NetworkRule",
-                                "name": "AuthToMSOL",
-                                "ipProtocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "[parameters('avd-hostpool-subnet')]"
-                                ],
-                                "sourceIpGroups": [],
-                                "destinationAddresses": [],
-                                "destinationIpGroups": [],
-                                "destinationFqdns": [
-                                    "login.microsoftonline.com"
-                                ],
-                                "destinationPorts": [
-                                    "443"
                                 ]
                             },
                             {
