@@ -10,7 +10,11 @@
     },
     "location": {
       "type": "string",
-      "metadata": {
+      "allowedValues": [
+        "eastus",
+        "westeurope"
+      ],
+    "metadata": {
         "description": "Enter a region where Host pool, workspace, application group will be created. The metadata for these objects will be stored in the geography associated with the region. Supported regions: eastus and westeurope."
       }
     },

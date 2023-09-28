@@ -9,6 +9,10 @@
         }
       },
       "location": {
+        "allowedValues": [
+          "eastus",
+          "westeurope"
+        ],
         "type": "string",
         "metadata": {
           "description": "Enter a region where Hostpool, workspace, virtual machines will be created. The metadata for these objects will be stored in the geography associated with the region. Supported regions: eastus and westeurope."
@@ -17,7 +21,7 @@
       "customLocationId": {
         "type": "string",
         "metadata": {
-          "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster. E.g., /subscriptions/<subscriptionID>/resourcegroups/Contoso-rg/providers/microsoft.extendedlocation/customlocations/Contoso-CL"
+         "description": "A deployment target created and customized by your organization for creating virtual machines. The custom location is associated to an Azure Stack HCI cluster. E.g., /subscriptions/<subscriptionID>/resourcegroups/Contoso-rg/providers/microsoft.extendedlocation/customlocations/Contoso-CL"
         }
       },
       "virtualProcessorCount": {
@@ -37,7 +41,7 @@
       "workspaceName": {
         "type": "string",
         "metadata": {
-          "description": "The name of the workspace to be attach to new Applicaiton Group."
+          "description": "The name of the workspace to be attach to new Application Group."
         }
       },
       "vmAdministratorAccountUsername": {
