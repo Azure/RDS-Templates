@@ -170,6 +170,13 @@
           "description": "Location for all resources to be created in."
         }
       },
+      "edgeZone": {
+        "type": "string",
+        "metadata": {
+          "description": "EdgeZone for resources to be created in."
+        },
+        "defaultValue": ""
+      },
       "createNetworkSecurityGroup": {
         "type": "bool",
         "metadata": {

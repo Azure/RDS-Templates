@@ -241,6 +241,13 @@
         },
         "defaultValue": ""
       },
+      "vmEdgeZone": {
+        "type": "string",
+        "metadata": {
+          "description": "The EdgeZone of the session host VMs."
+        },
+        "defaultValue": ""
+      },
       "vmSize": {
         "type": "string",
         "metadata": {
@@ -809,6 +816,10 @@
                 "type": "Microsoft.Compute/availabilitySets",
                 "name": "[parameters('availabilitySetName')]",
                 "location": "[parameters('vmLocation')]",
+                "extendedLocation": {
+                  "type": "EdgeZone",
+                  "name": "[parameters('vmEdgeZone')]"
+                },
                 "tags": "[parameters('availabilitySetTags')]",
                 "properties": {
                   "platformUpdateDomainCount": "[parameters('availabilitySetUpdateDomainCount')]",
@@ -912,6 +923,9 @@
             },
             "location": {
               "value": "[parameters('vmLocation')]"
+            },
+            "edgeZone": {
+              "value": "[parameters('vmEdgeZone')]"
             },
             "createNetworkSecurityGroup": {
               "value": "[parameters('createNetworkSecurityGroup')]"
