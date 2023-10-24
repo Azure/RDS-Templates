@@ -244,7 +244,7 @@
       "vmEdgeZone": {
         "type": "string",
         "metadata": {
-          "description": "The EdgeZone of the session host VMs."
+          "description": "The edge zone of the session host VMs."
         },
         "defaultValue": ""
       },
@@ -816,10 +816,6 @@
                 "type": "Microsoft.Compute/availabilitySets",
                 "name": "[parameters('availabilitySetName')]",
                 "location": "[parameters('vmLocation')]",
-                "extendedLocation": {
-                  "type": "EdgeZone",
-                  "name": "[parameters('vmEdgeZone')]"
-                },
                 "tags": "[parameters('availabilitySetTags')]",
                 "properties": {
                   "platformUpdateDomainCount": "[parameters('availabilitySetUpdateDomainCount')]",
