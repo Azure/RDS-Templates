@@ -208,8 +208,6 @@
       "registrationTokenArgument": "[concat(' -RegistrationInfoToken  ', parameters('hostpoolToken'))]",
       "sessionHostConfigurationLastUpdateTimeArgument": "[concat(' -SessionHostConfigurationLastUpdateTime ', parameters('SessionHostConfigurationVersion'))]",
       "artifactUriArgument": "[concat(' -ArtifactUri ', parameters('configurationZipUri'))]",
-      "customScriptParentFolder": "[split(parameters('fileUri'), '/')[4]]",
-      "customScriptFilePath": "[concat(variables('customScriptParentFolder'), '/', parameters('fileName'))]",
       "arguments": "[concat(variables('hostPoolNameArgument'), variables('registrationTokenArgument'), variables('artifactUriArgument'))]",
       "isVMAdminAccountCredentialsProvided": "[and(not(equals(parameters('vmAdministratorAccountUsername'), '')), not(equals(parameters('vmAdministratorAccountPassword'), '')))]",
       "vmAdministratorUsername": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountUsername'), first(split(parameters('domainAdministratorUsername'), '@')))]",
@@ -326,7 +324,7 @@
                 "fileUris": ["[parameters('fileUri')]"]
             },
             "protectedSettings": {
-                "commandToExecute": "[concat ('powershell -ExecutionPolicy Unrestricted -File ', variables('customScriptFilePath'), ' ', variables('arguments'))]"
+                "commandToExecute": "[concat ('powershell -ExecutionPolicy Unrestricted -File ', parameters('fileName'), ' ', variables('arguments'))]"
             }
         }
       },

@@ -205,7 +205,7 @@
         ]
       },
       {
-        "apiVersion": "2018-05-01",
+        "apiVersion": "2019-05-01",
         "name": "[concat('Workspace-linkedTemplate-', parameters('deploymentId'))]",
         "type": "Microsoft.Resources/deployments",
         "properties": {
@@ -231,7 +231,7 @@
         ]
       },
       {
-        "apiVersion": "2018-05-01",
+        "apiVersion": "2019-05-01",
         "name": "[concat('hci-addVm-linkedTemplate-', parameters('deploymentId'))]",
         "type": "Microsoft.Resources/deployments",
         "condition": "[variables('createVMs')]",
