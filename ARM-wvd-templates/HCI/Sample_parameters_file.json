@@ -2,6 +2,12 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "artifactsLocation": {
+            "value": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
+        },
+        "hciArtifactsLocation": {
+            "value": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/HCI/HciCustomScript.ps1"
+        },
         "location": {
             "value": "<eastus_or_westeurope>"
         },
@@ -41,8 +47,8 @@
         "imageId": {
             "value": "/subscriptions/<your_subscription>/resourceGroups/<your_resource_group>/providers/microsoft.azurestackhci/<marketplacegalleryimages_or_galleryimages>/<your_image_name>"
         },
-        "virtualNetworkId": {
-            "value": "/subscriptions/<your_subscription>/resourceGroups/<your_resource_group>/providers/Microsoft.AzureStackHCI/virtualnetworks/<your_virtual_network>"
+        "logicalNetworkId": {
+            "value": "/subscriptions/<your_subscription>/resourceGroups/<your_resource_group>/providers/Microsoft.AzureStackHCI/logicalnetworks/<your_logical_network>"
         },
         "tags": {
             "value": {}
