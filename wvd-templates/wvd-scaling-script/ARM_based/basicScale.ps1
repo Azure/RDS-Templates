@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.38
+	v0.1.39
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -46,6 +46,8 @@ try {
 	}
 
 	[string[]]$RequiredStrParams = @(
+		'AADTenantId'
+		'SubscriptionId'
 		'ResourceGroupName'
 		'HostPoolName'
 		'TimeDifference'
@@ -65,8 +67,9 @@ try {
 	
 	[string]$LogAnalyticsWorkspaceId = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsWorkspaceId'
 	[string]$LogAnalyticsPrimaryKey = Get-PSObjectPropVal -Obj $RqtParams -Key 'LogAnalyticsPrimaryKey'
-	[string]$ConnectionAssetName = Get-PSObjectPropVal -Obj $RqtParams -Key 'ConnectionAssetName'
 	[string]$EnvironmentName = Get-PSObjectPropVal -Obj $RqtParams -Key 'EnvironmentName'
+	[string]$AADTenantId = Get-PSObjectPropVal -Obj $RqtParams -Key 'AADTenantId'
+	[string]$SubscriptionId = Get-PSObjectPropVal -Obj $RqtParams -Key 'SubscriptionId'
 	[string]$ResourceGroupName = $RqtParams.ResourceGroupName
 	[string]$HostPoolName = $RqtParams.HostPoolName
 	[string]$MaintenanceTagName = Get-PSObjectPropVal -Obj $RqtParams -Key 'MaintenanceTagName'
@@ -83,9 +86,6 @@ try {
 	[bool]$SkipAuth = !!(Get-PSObjectPropVal -Obj $RqtParams -Key 'SkipAuth')
 	[bool]$SkipUpdateLoadBalancerType = !!(Get-PSObjectPropVal -Obj $RqtParams -Key 'SkipUpdateLoadBalancerType')
 
-	if ([string]::IsNullOrWhiteSpace($ConnectionAssetName)) {
-		$ConnectionAssetName = 'AzureRunAsConnection'
-	}
 	if ([string]::IsNullOrWhiteSpace($EnvironmentName)) {
 		$EnvironmentName = 'AzureCloud'
 	}
@@ -353,30 +353,26 @@ try {
 	#region azure auth, ctx
 
 	if (!$SkipAuth) {
-		# Collect the credentials from Azure Automation Account Assets
-		Write-Log "Get auto connection from asset: '$ConnectionAssetName'"
-		$ConnectionAsset = Get-AutomationConnection -Name $ConnectionAssetName
-		
 		# Azure auth
 		$AzContext = $null
 		try {
-			$AzAuth = Connect-AzAccount -ApplicationId $ConnectionAsset.ApplicationId -CertificateThumbprint $ConnectionAsset.CertificateThumbprint -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId -EnvironmentName $EnvironmentName -ServicePrincipal
+			$AzAuth = Connect-AzAccount -Identity -EnvironmentName $EnvironmentName
 			if (!$AzAuth -or !$AzAuth.Context) {
 				throw $AzAuth
 			}
 			$AzContext = $AzAuth.Context
 		}
 		catch {
-			throw [System.Exception]::new('Failed to authenticate Azure with application ID, tenant ID, subscription ID', $PSItem.Exception)
+			throw [System.Exception]::new('Failed to authenticate Azure using managed identity', $PSItem.Exception)
 		}
-		Write-Log "Successfully authenticated with Azure using service principal: $($AzContext | Format-List -Force | Out-String)"
+		Write-Log "Successfully authenticated with Azure using managed identity: $($AzContext | Format-List -Force | Out-String)"
 
 		# Set Azure context with subscription, tenant
-		if ($AzContext.Tenant.Id -ine $ConnectionAsset.TenantId -or $AzContext.Subscription.Id -ine $ConnectionAsset.SubscriptionId) {
-			if ($PSCmdlet.ShouldProcess((@($ConnectionAsset.TenantId, $ConnectionAsset.SubscriptionId) -join ', '), 'Set Azure context with tenant ID, subscription ID')) {
+		if ($AzContext.Tenant.Id -ine $AADTenantId -or $AzContext.Subscription.Id -ine $SubscriptionId) {
+			if ($PSCmdlet.ShouldProcess((@($TenantId, $SubscriptionId) -join ', '), 'Set Azure context with tenant ID, subscription ID')) {
 				try {
-					$AzContext = Set-AzContext -TenantId $ConnectionAsset.TenantId -SubscriptionId $ConnectionAsset.SubscriptionId
-					if (!$AzContext -or $AzContext.Tenant.Id -ine $ConnectionAsset.TenantId -or $AzContext.Subscription.Id -ine $ConnectionAsset.SubscriptionId) {
+					$AzContext = Set-AzContext -TenantId $AADTenantId -SubscriptionId $SubscriptionId
+					if (!$AzContext -or $AzContext.Tenant.Id -ine $AADTenantId -or $AzContext.Subscription.Id -ine $SubscriptionId) {
 						throw $AzContext
 					}
 				}
