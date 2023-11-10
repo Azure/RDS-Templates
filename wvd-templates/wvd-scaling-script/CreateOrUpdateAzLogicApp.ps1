@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
 	This is a sample script to deploy the required resources to schedule basic scale in Microsoft Azure.
-	v0.1.6
+	v0.1.7
 	# //todo refactor stuff from https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1
 #>
 param(
@@ -44,9 +44,6 @@ param(
 
 	[Parameter(mandatory = $false)]
 	[string]$LogAnalyticsPrimaryKey,
-
-	[Parameter(mandatory = $false)]
-	[string]$ConnectionAssetName = 'AzureRunAsConnection',
 
 	[Parameter(mandatory = $false)]
 	[int]$RecurrenceInterval = 15, # in minutes
@@ -197,9 +194,8 @@ elseif ($SessionHostsList.Count -le $MinimumNumberOfRDSH) {
 [PSCustomObject]$RequestBody = @{
 	"LogAnalyticsWorkspaceId"       = $LogAnalyticsWorkspaceId
 	"LogAnalyticsPrimaryKey"        = $LogAnalyticsPrimaryKey
-	"ConnectionAssetName"           = $ConnectionAssetName
-	"AADTenantId"                   = $AADTenantId 		# Note: only used by the basicScale.ps1 v0.1.32 and before, so this is added for backwards compatibility
-	"SubscriptionId"                = $SubscriptionId 	# Note: only used by the basicScale.ps1 v0.1.32 and before, so this is added for backwards compatibility
+	"AADTenantId"                   = $AADTenantId
+	"SubscriptionId"                = $SubscriptionId
 	"EnvironmentName"               = $AzContext.Environment.Name
 	"UseARMAPI"                     = $UseARMAPI
 	"ResourceGroupName"             = $HostPoolResourceGroupName
