@@ -369,7 +369,7 @@ try {
 
 		# Set Azure context with subscription, tenant
 		if ($AzContext.Tenant.Id -ine $AADTenantId -or $AzContext.Subscription.Id -ine $SubscriptionId) {
-			if ($PSCmdlet.ShouldProcess((@($TenantId, $SubscriptionId) -join ', '), 'Set Azure context with tenant ID, subscription ID')) {
+			if ($PSCmdlet.ShouldProcess((@($AADTenantId, $SubscriptionId) -join ', '), 'Set Azure context with tenant ID, subscription ID')) {
 				try {
 					$AzContext = Set-AzContext -TenantId $AADTenantId -SubscriptionId $SubscriptionId
 					if (!$AzContext -or $AzContext.Tenant.Id -ine $AADTenantId -or $AzContext.Subscription.Id -ine $SubscriptionId) {
