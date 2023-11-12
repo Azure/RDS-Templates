@@ -24,6 +24,10 @@
       },
       "location": {
         "type": "string",
+        "allowedValues": [
+          "eastus",
+          "westeurope"
+        ],
         "metadata": {
           "description": "Enter a region where Hostpool, workspace, virtual machines will be created. The metadata for these objects will be stored in the geography associated with the region. Supported regions: eastus and westeurope."
         }
@@ -76,10 +80,10 @@
         },
         "defaultValue": 0
       },
-      "workSpaceName": {
+      "workspaceName": {
         "type": "string",
         "metadata": {
-          "description": "The name of the workspace to be attach to new Applicaiton Group."
+          "description": "The name of the workspace to be attach to new Application Group."
         },
         "defaultValue": ""
       },
@@ -381,7 +385,7 @@
             "resources": [
               {
                 "apiVersion": "2019-12-10-preview",
-                "name": "[parameters('workSpaceName')]",
+                "name": "[parameters('workspaceName')]",
                 "type": "Microsoft.DesktopVirtualization/workspaces",
                 "location": "[parameters('workspaceLocation')]",
                 "properties": {

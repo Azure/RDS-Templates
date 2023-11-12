@@ -109,10 +109,10 @@
           "description": "The location where the resources will be deployed."
         }
       },
-      "workSpaceName": {
+      "workspaceName": {
         "type": "string",
         "metadata": {
-          "description": "The name of the workspace to be attach to new Applicaiton Group."
+          "description": "The name of the workspace to be attach to new Application Group."
         },
         "defaultValue": ""
       },
@@ -778,7 +778,7 @@
             "resources": [
               {
                 "apiVersion": "[parameters('apiVersion')]",
-                "name": "[parameters('workSpaceName')]",
+                "name": "[parameters('workspaceName')]",
                 "type": "Microsoft.DesktopVirtualization/workspaces",
                 "location": "[parameters('workspaceLocation')]",
                 "properties": {
@@ -1024,7 +1024,7 @@
         "apiVersion": "2017-05-01-preview",
         "condition": "[and(parameters('isNewWorkspace'),or(variables('sendLogsToEventHub'),variables('sendLogsToLogAnalytics'), variables('sendLogsToStorageAccount')))]",
         "location": "[parameters('location')]",
-        "name": "[concat(if(parameters('isNewWorkspace'), parameters('workSpaceName'), 'placeholder'), '/Microsoft.Insights/', 'diagnosticSetting')]",
+        "name": "[concat(if(parameters('isNewWorkspace'), parameters('workspaceName'), 'placeholder'), '/Microsoft.Insights/', 'diagnosticSetting')]",
         "properties": {
           "storageAccountId": "[if(variables('sendLogsToStorageAccount'), variables('storageAccountIdProperty'), null())]",
           "eventHubAuthorizationRuleId": "[if(variables('sendLogsToEventHub'), parameters('hostpoolDiagnosticSettingsEventHubAuthorizationId'), null())]",
