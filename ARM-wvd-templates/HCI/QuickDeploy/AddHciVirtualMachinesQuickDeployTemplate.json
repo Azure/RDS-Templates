@@ -2,6 +2,20 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+      "artifactsLocation": {
+        "type": "string",
+        "metadata": {
+          "description": "The base URI where the Azure artifacts required by this template are located."
+        },
+        "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
+      },
+      "hciArtifactsLocation": {
+        "type": "string",
+        "metadata": {
+          "description": "The base URI where the Azure Stack HCI artifacts required by this template are located."
+        },
+        "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/HCI/HciCustomScript.ps1"
+      },
       "hostPoolName": {
         "type": "string",
         "metadata": {
@@ -92,12 +106,12 @@
         },
         "defaultValue": 4
       },
-      "memoryGB": {
+      "memoryMB": {
         "type": "int",
         "metadata": {
-          "description": "Memory in GB. Default is 8."
+          "description": "Memory in MB. Default is 8192."
         },
-        "defaultValue": 8
+        "defaultValue": 8192
       },
       "vmInitialNumber": {
         "type": "int",
@@ -124,10 +138,10 @@
           "description": "Full ARM resource ID of the AzureStackHCI virtual machine image used for the VMs. /subscriptions/<subscriptionID>/resourceGroups/Contoso-rg/providers/microsoft.azurestackhci/marketplacegalleryimages/Contoso-Win11image."
         }
       },
-      "virtualNetworkId": {
+      "logicalNetworkId": {
         "type": "string",
         "metadata": {
-          "description": "Full ARM resource ID of the AzureStackHCI virtual network used for the VMs. /subscriptions/<subscriptionID>/resourceGroups/Contoso-rg/providers/Microsoft.AzureStackHCI/virtualnetworks/Contoso-virtualnetwork."
+          "description": "Full ARM resource ID of the AzureStackHCI logical network used for the VMs. /subscriptions/<subscriptionID>/resourceGroups/Contoso-rg/providers/Microsoft.AzureStackHCI/logicalnetworks/Contoso-logicalnetwork"
         }
       },
       "tags": {
@@ -226,11 +240,11 @@
             "virtualProcessorCount": {
               "value": "[parameters('virtualProcessorCount')]"
             },
-            "memoryGB": {
-              "value": "[parameters('memoryGB')]"
+            "memoryMB": {
+              "value": "[parameters('memoryMB')]"
             },
-            "virtualNetworkId": {
-              "value": "[parameters('virtualNetworkId')]"
+            "logicalNetworkId": {
+              "value": "[parameters('logicalNetworkId')]"
             },
             "imageId": {
               "value": "[parameters('imageId')]"
@@ -255,6 +269,12 @@
             },
             "oUPath": {
               "value": "[parameters('oUPath')]"
+            },
+            "fileUri": {
+              "value": "[parameters('hciArtifactsLocation')]"
+            },
+            "configurationZipUri": {
+              "value": "[parameters('artifactsLocation')]"
             }
           }
         }
