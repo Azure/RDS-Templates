@@ -241,6 +241,13 @@
         },
         "defaultValue": ""
       },
+      "vmEdgeZone": {
+        "type": "string",
+        "metadata": {
+          "description": "The edge zone of the session host VMs."
+        },
+        "defaultValue": ""
+      },
       "vmSize": {
         "type": "string",
         "metadata": {
@@ -912,6 +919,9 @@
             },
             "location": {
               "value": "[parameters('vmLocation')]"
+            },
+            "edgeZone": {
+              "value": "[parameters('vmEdgeZone')]"
             },
             "createNetworkSecurityGroup": {
               "value": "[parameters('createNetworkSecurityGroup')]"

@@ -170,6 +170,13 @@
           "description": "Location for all resources to be created in."
         }
       },
+      "edgeZone": {
+        "type": "string",
+        "metadata": {
+          "description": "EdgeZone for resources to be created in."
+        },
+        "defaultValue": ""
+      },
       "createNetworkSecurityGroup": {
         "type": "bool",
         "metadata": {
@@ -353,6 +360,10 @@
         "publisher": "[parameters('vmGalleryImagePublisher')]",
         "product": "[parameters('vmGalleryImageOffer')]"
       },
+      "extendedLocation": {
+          "type": "EdgeZone",
+          "name": "[parameters('edgeZone')]"
+        },
       "vmPlan": "[if(or(variables('planInfoEmpty'), not(parameters('vmGalleryImageHasPlan'))), json('null'), variables('marketplacePlan'))]",
       "vmIdentityType": "[if(parameters('aadJoin'), if(not(empty(parameters('userAssignedIdentity'))), 'SystemAssigned, UserAssigned', 'SystemAssigned'), if(not(empty(parameters('userAssignedIdentity'))), 'UserAssigned', 'None'))]",
       "vmIdentityTypeProperty": {
@@ -413,10 +424,11 @@
         }
       },
       {
-        "apiVersion": "2018-11-01",
+        "apiVersion": "2022-11-01",
         "type": "Microsoft.Network/networkInterfaces",
         "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic')]",
         "location": "[parameters('location')]",
+        "extendedLocation": "[if(empty(parameters('edgeZone')), null(), variables('extendedLocation'))]",
         "tags": "[parameters('networkInterfaceTags')]",
         "copy": {
           "name": "rdsh-nic-loop",
@@ -442,10 +454,11 @@
         ]
       },
       {
-        "apiVersion": "2021-07-01",
+        "apiVersion": "2023-07-01",
         "type": "Microsoft.Compute/virtualMachines",
         "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
         "location": "[parameters('location')]",
+        "extendedLocation": "[if(empty(parameters('edgeZone')), null(), variables('extendedLocation'))]",
         "tags": "[parameters('virtualMachineTags')]",
         "plan": "[variables('vmPlan')]",
         "copy": {
