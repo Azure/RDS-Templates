@@ -1,5 +1,5 @@
 ﻿### This list of PowerShell commands will set up a User assigned managed identity, a role definition and associate the required permissions. It also creates an Azure Compute gallery and a VM image definition. This allows you to then use AVD custom image templates to create an image version within that image definition from where you can create an AVD host pool.
-### Tom Hickling Senior Product Manager Microsoft - 15 November 2022
+### Tom Hickling Principal Product Manager Microsoft - 15 November 2022
 
 ## First check resource providers.
 # Check to ensure that you're registered for the providers and RegistrationState is set to 'Registered'
