@@ -176,7 +176,7 @@ function Add-ModuleToAutoAccount {
 
 	# Check if the required modules are imported
 	$ImportedModule = Get-AzAutomationModule -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName -Name $ModuleName -ErrorAction SilentlyContinue
-	if ($ImportedModule -and $ImportedModule.Version -ge $ModuleVersion) {
+	if ($ImportedModule -and  [version]$ImportedModule.Version -ge  [version]$ModuleVersion) {
 		return
 	}
 
