@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.39
+	v0.1.40
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.38'
+	[version]$Version = '0.1.40'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -252,9 +252,6 @@ try {
 		Begin { }
 		Process {
 			$SessionHost = $VM.SessionHost
-			if ($SessionHost.AllowNewSession -eq $AllowNewSession) {
-				return
-			}
 			
 			[string]$SessionHostName = $VM.SessionHostName
 			Write-Log "Update session host '$SessionHostName' to set allow new sessions to $AllowNewSession"
