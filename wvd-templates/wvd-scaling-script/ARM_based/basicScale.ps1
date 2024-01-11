@@ -1,7 +1,7 @@
 ﻿
 <#
 .SYNOPSIS
-	v0.1.39
+	v0.1.40
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -12,7 +12,7 @@ param (
 	[System.Nullable[int]]$OverrideNUserSessions
 )
 try {
-	[version]$Version = '0.1.38'
+	[version]$Version = '0.1.40'
 	#region set err action preference, extract & validate input rqt params
 
 	# Setting ErrorActionPreference to stop script execution when error occurs
@@ -252,9 +252,8 @@ try {
 		Begin { }
 		Process {
 			$SessionHost = $VM.SessionHost
-			if ($SessionHost.AllowNewSession -eq $AllowNewSession) {
-				return
-			}
+
+   			# Always force update the drain mode: This addresses issues when ARM times out to update drain mode even though backend succeeds after some time (~1 min) and script assumes that drain mode is not set. Because of this, script doesn't reset it after turning off VM.
 			
 			[string]$SessionHostName = $VM.SessionHostName
 			Write-Log "Update session host '$SessionHostName' to set allow new sessions to $AllowNewSession"
