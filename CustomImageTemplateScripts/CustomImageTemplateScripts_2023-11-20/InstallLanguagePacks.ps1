@@ -12,7 +12,7 @@
         [Parameter(
             Mandatory
         )]
-        [ValidateSet("Arabic (Saudi Arabia)","Bulgarian (Bulgaria)","Chinese (Simplified, China)","Chinese (Traditional, Taiwan)","Croatian (Croatia)","Czech (Czech Republic)","Danish (Denmark)","Dutch (Netherlands)", "English (United Kingdom)", "Estonian (Estonia)", "Finnish (Finland)", "French (Canada)", "French (France)", "German (Germany)", "Greek (Greece)", "Hebrew (Israel)", "Hungarian (Hungary)", "Italian (Italy)", "Japanese (Japan)", "Korean (Korea)", "Latvian (Latvia)", "Lithuanian (Lithuania)", "Norwegian, Bokmål (Norway)", "Polish (Poland)", "Portuguese (Brazil)", "Portuguese (Portugal)", "Romanian (Romania)", "Russian (Russia)", "Serbian (Latin, Serbia)", "Slovak (Slovakia)", "Slovenian (Slovenia)", "Spanish (Mexico)", "Spanish (Spain)", "Swedish (Sweden)", "Thai (Thailand)", "Turkish (Turkey)", "Ukrainian (Ukraine)", "English (Australia)", "English (United States)")]
+        [ValidateSet("Arabic (Saudi Arabia)","Bulgarian (Bulgaria)","Chinese (Simplified, China)","Chinese (Traditional, Taiwan)","Croatian (Croatia)","Czech (Czech Republic)","Danish (Denmark)","Dutch (Netherlands)", "English (United Kingdom)", "Estonian (Estonia)", "Finnish (Finland)", "French (Canada)", "French (France)", "German (Germany)", "Greek (Greece)", "Hebrew (Israel)", "Hungarian (Hungary)", "Italian (Italy)", "Japanese (Japan)", "Korean (Korea)", "Latvian (Latvia)", "Lithuanian (Lithuania)", "Norwegian, Bokmål (Norway)", "Polish (Poland)", "Portuguese (Brazil)", "Portuguese (Portugal)", "Romanian (Romania)", "Russian (Russia)", "Scottish Gaelic", "Serbian (Latin, Serbia)", "Slovak (Slovakia)", "Slovenian (Slovenia)", "Spanish (Mexico)", "Spanish (Spain)", "Swedish (Sweden)", "Thai (Thailand)", "Turkish (Turkey)", "Ukrainian (Ukraine)", "Welsh (Great Britain)", "English (Australia)", "English (United States)")]
         [System.String[]]$LanguageList
     )
 
@@ -62,6 +62,7 @@ function Install-LanguagePack {
          $LanguagesDictionary.Add("Portuguese (Portugal)",	"pt-PT")
          $LanguagesDictionary.Add("Romanian (Romania)",	"ro-RO")
          $LanguagesDictionary.Add("Russian (Russia)",	"ru-RU")
+         $LanguagesDictionary.Add("Scottish Gaelic",	"gd-GB")
          $LanguagesDictionary.Add("Serbian (Latin, Serbia)",	"sr-Latn-RS")
          $LanguagesDictionary.Add("Slovak (Slovakia)",	"sk-SK")
          $LanguagesDictionary.Add("Slovenian (Slovenia)",	"sl-SI")
@@ -71,6 +72,7 @@ function Install-LanguagePack {
          $LanguagesDictionary.Add("Thai (Thailand)",	"th-TH")
          $LanguagesDictionary.Add("Turkish (Turkey)",	"tr-TR")
          $LanguagesDictionary.Add("Ukrainian (Ukraine)",	"uk-UA")
+         $LanguagesDictionary.Add("Welsh (Great Britain)",	"cy-GB")
          $LanguagesDictionary.Add("English (Australia)",	"en-AU")
 
          # Disable LanguageComponentsInstaller while installing language packs
