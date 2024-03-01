@@ -68,7 +68,6 @@
 [CmdletBinding(DefaultParameterSetName= 'Default')]
 param(
     [Parameter(Mandatory, ValueFromPipeline, HelpMessage = "MSIX Package to migrate")]
-    [Microsoft.Azure.Powershell.Cmdlets.DesktopVirtualization.Models.Api20220901PrivatePreview.MsixPackage]
     $MsixPackage,
 
     [Parameter(ValueFromPipelineByPropertyName, HelpMessage = "Where to get permissions from for the new package, defaults to no permissions granted")]
