@@ -275,7 +275,7 @@
             "type": "string",
             "defaultValue": "[resourceGroup().location]",
             "metadata": {
-                "description": "(Required for Azure Marketplace.) Leave as is, unless you would like to not use a location that is different from the location of the resouce group."
+                "description": "(Required for Azure Marketplace.) Leave as is, unless you would like to not use a location that is different from the location of the resource group."
             }
         },
         "createAvailabilitySet": {
