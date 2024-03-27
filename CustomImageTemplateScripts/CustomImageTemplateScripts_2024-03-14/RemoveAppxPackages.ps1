@@ -15,7 +15,7 @@
         [System.String[]] $AppxPackages
  )
 
- function Remove-AppxPackage($AppxPackages) {
+ function Remove-ProvidedAppxPackages($AppxPackages) {
    
         Begin {
             $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -60,4 +60,4 @@
         }
  }
 
- Remove-AppxPackage -AppxPackages $AppxPackages
+ Remove-ProvidedAppxPackages -AppxPackages $AppxPackages
