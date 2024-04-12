@@ -274,7 +274,8 @@
                   "adminUsername": "[variables('vmAdministratorUsername')]",
                   "adminPassword": "[variables('vmAdministratorPassword')]",
                   "windowsConfiguration": {
-                      "provisionVMAgent": true
+                      "provisionVMAgent": true,
+                      "provisionVMConfigAgent": true
                   },
                   "computerName": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]"
               },
