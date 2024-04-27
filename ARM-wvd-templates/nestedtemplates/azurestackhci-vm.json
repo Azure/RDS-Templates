@@ -293,9 +293,6 @@
               }
           },
           "scope": "[concat('Microsoft.HybridCompute/machines', '/', concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber'))))]",
-          "identity": {
-              "type": "SystemAssigned"
-          },
           "extendedLocation": {
               "type": "CustomLocation",
               "name": "[parameters('customLocationId')]"
