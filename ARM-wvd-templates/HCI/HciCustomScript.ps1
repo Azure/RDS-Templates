@@ -14,10 +14,9 @@ param
 )
 
 # unzip dsc zip
-$dsc_dir = (Get-Item .).FullName
+$dir = (Get-Item .).FullName
 
-Invoke-WebRequest -Uri $ArtifactUri -outfile $dsc_dir\Configuration.zip -UseBasicParsing
-Get-ChildItem $dsc_dir\Configuration.zip | Expand-Archive -DestinationPath $dsc_dir
+Get-ChildItem $dir\Configuration.zip | Expand-Archive -DestinationPath $dir
 
 # pass parameters to configuration.ps1
-& $dsc_dir\Script-SetupSessionHost.ps1 -HostPoolName $HostPoolName -RegistrationInfoToken $RegistrationInfoToken -EnableVerboseMsiLogging:$EnableVerboseMsiLogging 
+& $dir\Script-SetupSessionHost.ps1 -HostPoolName $HostPoolName -RegistrationInfoToken $RegistrationInfoToken -EnableVerboseMsiLogging:$EnableVerboseMsiLogging 

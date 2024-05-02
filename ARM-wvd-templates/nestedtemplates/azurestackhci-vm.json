@@ -319,7 +319,10 @@
             "type": "CustomScriptExtension",
             "autoUpgradeMinorVersion": true,
             "settings": {
-                "fileUris": ["[parameters('fileUri')]"]
+                "fileUris": [
+                  "[parameters('fileUri')]",
+                  "[parameters('configurationZipUri')]"
+                ]
             },
             "protectedSettings": {
                 "commandToExecute": "[concat ('powershell -ExecutionPolicy Unrestricted -File ', parameters('fileName'), ' ', variables('arguments'))]"
