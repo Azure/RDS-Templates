@@ -16,7 +16,6 @@ param
 # unzip dsc zip
 $dir = (Get-Item .).FullName
 
-# Invoke-WebRequest -Uri $ArtifactUri -outfile $dir\Configuration.zip -UseBasicParsing
 Get-ChildItem $dir\Configuration.zip | Expand-Archive -DestinationPath $dir
 
 # pass parameters to configuration.ps1
