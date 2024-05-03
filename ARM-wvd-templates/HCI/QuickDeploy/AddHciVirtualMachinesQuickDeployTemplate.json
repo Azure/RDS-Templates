@@ -176,7 +176,7 @@
     },
     "resources": [
       {
-        "apiVersion": "2018-05-01",
+        "apiVersion": "2019-05-01",
         "name": "[concat('UpdateHostPool-', parameters('deploymentId'))]",
         "type": "Microsoft.Resources/deployments",
         "resourceGroup": "[parameters('hostpoolResourceGroup')]",
@@ -199,7 +199,7 @@
         }
       },
       {
-        "apiVersion": "2018-05-01",
+        "apiVersion": "2019-05-01",
         "name": "[concat('hci-addVms-linkedTemplate-', parameters('deploymentId'))]",
         "type": "Microsoft.Resources/deployments",
         "resourceGroup": "[parameters('vmResourceGroup')]",
