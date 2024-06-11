@@ -40,7 +40,7 @@
     },
     "variables": {
         "avd-core-base-priority": 10000,
-        "NetworkRules_WindowsVirtualDesktop-priority": "[add(variables('avd-core-base-priority'), 1000)]",
+        "NetworkRules_AzureVirtualDesktop-priority": "[add(variables('avd-core-base-priority'), 1000)]",
         "avd-optional-base-priority": 20000,
         "NetworkRules_AVD-Optional-priority": "[add(variables('avd-optional-base-priority'), 1000)]",
         "ApplicationRules_AVD-Optional-priority": "[add(variables('avd-optional-base-priority'), 2000)]"
@@ -69,6 +69,7 @@
             "apiVersion": "2020-11-01",
             "name": "[concat(parameters('firewallPolicies_AVD_DefaultPolicy_name'), '/AVD-Core')]",
             "location": "[parameters('location')]",
+
             "dependsOn": [
                 "[resourceId('Microsoft.Network/firewallPolicies', parameters('firewallPolicies_AVD_DefaultPolicy_name'))]"
             ],
@@ -235,44 +236,6 @@
                             },
                             {
                                 "ruleType": "NetworkRule",
-                                "name": "Azure Instance Metadata Service Endpoint",
-                                "ipProtocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "[parameters('avd-hostpool-subnet')]"
-                                ],
-                                "sourceIpGroups": [],
-                                "destinationAddresses": [
-                                    "169.254.169.254"
-                                ],
-                                "destinationIpGroups": [],
-                                "destinationFqdns": [],
-                                "destinationPorts": [
-                                    "80"
-                                ]
-                            },
-                            {
-                                "ruleType": "NetworkRule",
-                                "name": "Session Host Health Monitoring",
-                                "ipProtocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "[parameters('avd-hostpool-subnet')]"
-                                ],
-                                "sourceIpGroups": [],
-                                "destinationAddresses": [
-                                    "168.63.129.16"
-                                ],
-                                "destinationIpGroups": [],
-                                "destinationFqdns": [],
-                                "destinationPorts": [
-                                    "80"
-                                ]
-                            },
-                            {
-                                "ruleType": "NetworkRule",
                                 "name": "Certificate CRL OneOCSP",
                                 "ipProtocols": [
                                     "TCP"
@@ -329,8 +292,8 @@
                                 ]
                             }
                         ],
-                        "name": "NetworkRules_WindowsVirtualDesktop",
-                        "priority": "[variables('NetworkRules_WindowsVirtualDesktop-priority')]"
+                        "name": "NetworkRules_AVD-Core",
+                        "priority": "[variables('NetworkRules_AzureVirtualDesktop-priority')]"
                     }
                 ]
             }
@@ -341,7 +304,7 @@
             "name": "[concat(parameters('firewallPolicies_AVD_DefaultPolicy_name'), '/AVD-Optional')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/firewallPolicies', parameters('firewallPolicies_AVD_DefaultPolicy_name'))]"
+                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', parameters('firewallPolicies_AVD_DefaultPolicy_name'), 'AVD-Core')]"
             ],
             "properties": {
                 "priority": "[variables('avd-optional-base-priority')]",
@@ -544,6 +507,28 @@
                                 "targetFqdns": [
                                     "*.azure-dns.net"
                                 ],
+                                "targetUrls": [],
+                                "terminateTLS": false,
+                                "sourceAddresses": [
+                                    "[parameters('avd-hostpool-subnet')]"
+                                ],
+                                "destinationAddresses": [],
+                                "sourceIpGroups": []
+                            },
+                            {
+                                "ruleType": "ApplicationRule",
+                                "name": "WindowsDiagnostics",
+                                "protocols": [
+                                    {
+                                        "protocolType": "Https",
+                                        "port": 443
+                                    }
+                                ],
+                                "fqdnTags": [
+                                    "WindowsDiagnostics"
+                                ],
+                                "webCategories": [],
+                                "targetFqdns": [],
                                 "targetUrls": [],
                                 "terminateTLS": false,
                                 "sourceAddresses": [
