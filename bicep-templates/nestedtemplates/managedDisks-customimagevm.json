@@ -1,0 +1,510 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located."
+      },
+      "defaultValue": "https://raw.githubusercontent.com/Azure/RDS-Templates/master/ARM-wvd-templates/DSC/Configuration.zip"
+    },
+    "availabilityOption": {
+      "type": "string",
+      "metadata": {
+        "description": "The availability option for the VMs."
+      },
+      "defaultValue": "None",
+      "allowedValues": [
+        "None",
+        "AvailabilitySet",
+        "AvailabilityZone"
+      ]
+    },
+    "availabilitySetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of avaiability set to be used when create the VMs."
+      },
+      "defaultValue": ""
+    },
+    "availabilityZone": {
+      "type": "int",
+      "metadata": {
+        "description": "The number of availability zone to be used when create the VMs."
+      },
+      "defaultValue": 1,
+      "allowedValues": [ 1, 2, 3 ]
+    },
+    "vmImageVhdUri": {
+      "type": "string",
+      "metadata": {
+        "description": "URI of the sysprepped image vhd file to be used to create the session host VMs. For example, https://rdsstorage.blob.core.windows.net/vhds/sessionhostimage.vhd"
+      }
+    },
+    "storageAccountResourceGroupName": {
+      "type": "string",
+      "metadata": {
+        "description": "The storage account containing the custom VHD."
+      }
+    },
+    "vmGalleryImageOffer": {
+      "type": "string",
+      "metadata": {
+        "description": "(Required when vmImageType = Gallery) Gallery image Offer."
+      },
+      "defaultValue": ""
+    },
+    "vmGalleryImagePublisher": {
+      "type": "string",
+      "metadata": {
+        "description": "(Required when vmImageType = Gallery) Gallery image Publisher."
+      },
+      "defaultValue": ""
+    },
+    "vmGalleryImageSKU": {
+      "type": "string",
+      "metadata": {
+        "description": "(Required when vmImageType = Gallery) Gallery image SKU."
+      },
+      "defaultValue": ""
+    },
+    "rdshPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "This prefix will be used in combination with the VM number to create the VM name. This value includes the dash, so if using “rdsh” as the prefix, VMs would be named “rdsh-0”, “rdsh-1”, etc. You should use a unique prefix to reduce name collisions in Active Directory."
+      },
+      "defaultValue": "[take(toLower(resourceGroup().name),10)]"
+    },
+    "rdshNumberOfInstances": {
+      "type": "int",
+      "metadata": {
+        "description": "Number of session hosts that will be created and added to the hostpool."
+      }
+    },
+    "rdshVMDiskType": {
+      "type": "string",
+      "allowedValues": [ "Premium_LRS", "StandardSSD_LRS", "Standard_LRS" ],
+      "metadata": {
+        "description": "The VM disk type for the VM: HDD or SSD."
+      }
+    },
+    "rdshVmSize": {
+      "type": "string",
+      "metadata": {
+        "description": "The size of the session host VMs."
+      },
+      "defaultValue": "Standard_A2"
+    },
+    "enableAcceleratedNetworking": {
+      "type": "bool",
+      "metadata": {
+        "description": "Enables Accelerated Networking feature, notice that VM size must support it, this is supported in most of general purpose and compute-optimized instances with 2 or more vCPUs, on instances that supports hyperthreading it is required minimum of 4 vCPUs."
+      },
+      "defaultValue": false
+    },
+    "administratorAccountUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "The username for the domain admin."
+      }
+    },
+    "administratorAccountPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password that corresponds to the existing domain username."
+      }
+    },
+    "vmAdministratorAccountUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "A username to be used as the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
+      },
+      "defaultValue": ""
+    },
+    "vmAdministratorAccountPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password associated with the virtual machine administrator account. The vmAdministratorAccountUsername and  vmAdministratorAccountPassword parameters must both be provided. Otherwise, domain administrator credentials provided by administratorAccountUsername and administratorAccountPassword will be used."
+      },
+      "defaultValue": ""
+    },
+    "vhds": {
+      "type": "string",
+      "metadata": {
+        "description": "The URL to store unmanaged disks."
+      }
+    },
+    "subnet-id": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique id of the subnet for the nics."
+      }
+    },
+    "rdshImageSourceId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resource ID of the image."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Location for all resources to be created in."
+      }
+    },
+    "createNetworkSecurityGroup": {
+      "type": "bool",
+      "metadata": {
+        "description": "Whether to create a new network security group or use an existing one"
+      },
+      "defaultValue": false
+    },
+    "networkSecurityGroupId": {
+      "type": "string",
+      "metadata": {
+        "description": "The resource id of an existing network security group"
+      },
+      "defaultValue": ""
+    },
+    "networkSecurityGroupRules": {
+      "type": "array",
+      "metadata": {
+        "description": "The rules to be given to the new network security group"
+      },
+      "defaultValue": []
+    },
+    "networkInterfaceTags": {
+      "type": "object",
+      "metadata": {
+        "description": "The tags to be assigned to the network interfaces"
+      },
+      "defaultValue": {}
+    },
+    "networkSecurityGroupTags": {
+      "type": "object",
+      "metadata": {
+        "description": "The tags to be assigned to the network security groups"
+      },
+      "defaultValue": {}
+    },
+    "virtualMachineTags": {
+      "type": "object",
+      "metadata": {
+        "description": "The tags to be assigned to the virtual machines"
+      },
+      "defaultValue": {}
+    },
+    "imageTags": {
+      "type": "object",
+      "metadata": {
+        "description": "The tags to be assigned to the images"
+      },
+      "defaultValue": {}
+    },
+    "vmInitialNumber": {
+      "type": "int",
+      "metadata": {
+        "description": "VM name prefix initial number."
+      },
+      "defaultValue": 0
+    },
+    "_guidValue": {
+      "type": "string",
+      "defaultValue": "[newGuid()]"
+    },
+    "hostpoolToken": {
+      "type": "string",
+      "metadata": {
+        "description": "The token for adding VMs to the hostpool"
+      }
+    },
+    "hostpoolName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the hostpool"
+      }
+    },
+    "ouPath": {
+      "type": "string",
+      "metadata": {
+        "description": "OUPath for the domain join"
+      },
+      "defaultValue": ""
+    },
+    "domain": {
+      "type": "string",
+      "metadata": {
+        "description": "Domain to join"
+      },
+      "defaultValue": ""
+    },
+    "aadJoin": {
+      "type": "bool",
+      "metadata": {
+        "description": "IMPORTANT: Please don't use this parameter as AAD Join is not supported yet. True if AAD Join, false if AD join"
+      },
+      "defaultValue": false
+    },
+    "intune": {
+      "type": "bool",
+      "metadata": {
+        "description": "IMPORTANT: Please don't use this parameter as intune enrollment is not supported yet. True if intune enrollment is selected.  False otherwise"
+      },
+      "defaultValue": false
+    }
+  },
+  "variables": {
+    "emptyArray": [],
+    "domain": "[if(equals(parameters('domain'), ''), last(split(parameters('administratorAccountUsername'), '@')), parameters('domain'))]",
+    "storageAccountType": "[parameters('rdshVMDiskType')]",
+    "newNsgName": "[concat(parameters('rdshPrefix'), 'nsg-', parameters('_guidValue'))]",
+    "nsgId": "[if(parameters('createNetworkSecurityGroup'), resourceId('Microsoft.Network/networkSecurityGroups', variables('newNsgName')), parameters('networkSecurityGroupId'))]",
+    "isVMAdminAccountCredentialsProvided": "[and(not(equals(parameters('vmAdministratorAccountUsername'), '')), not(equals(parameters('vmAdministratorAccountPassword'), '')))]",
+    "vmAdministratorUsername": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountUsername'), first(split(parameters('administratorAccountUsername'), '@')))]",
+    "vmAdministratorPassword": "[if(variables('isVMAdminAccountCredentialsProvided'), parameters('vmAdministratorAccountPassword'), parameters('administratorAccountPassword'))]",
+    "vmAvailabilitySetResourceId": { "id": "[resourceId('Microsoft.Compute/availabilitySets/', parameters('availabilitySetName'))]" }
+  },
+  "resources": [
+    {
+      "apiVersion": "2018-05-01",
+      "name": "NSG-linkedTemplate",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "parameters": {
+          "createNetworkSecurityGroup": {
+              "value": "[parameters('createNetworkSecurityGroup')]"
+          },
+          "newNsgName": {
+              "value": "[variables('newNsgName')]"
+          },
+          "location": {
+              "value": "[parameters('location')]"
+          },
+          "networkSecurityGroupTags": {
+              "value": "[parameters('networkSecurityGroupTags')]"
+          },
+          "networkSecurityGroupRules": {
+              "value": "[parameters('networkSecurityGroupRules')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "createNetworkSecurityGroup": {
+              "type": "bool"
+            },
+            "newNsgName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "networkSecurityGroupTags": {
+              "type": "object"
+            },
+            "networkSecurityGroupRules": {
+              "type": "array"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[parameters('createNetworkSecurityGroup')]",
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2019-02-01",
+              "name": "[parameters('newNsgName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('networkSecurityGroupTags')]",
+              "properties": {
+                "securityRules": "[parameters('networkSecurityGroupRules')]"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "apiVersion": "2018-11-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('networkInterfaceTags')]",
+      "copy": {
+        "name": "rdsh-nic-loop",
+        "count": "[parameters('rdshNumberOfInstances')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[parameters('subnet-id')]"
+              }
+            }
+          }
+        ],
+        "enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]",
+        "networkSecurityGroup": "[if(empty(parameters('networkSecurityGroupId')), json('null'), json(concat('{\"id\": \"', variables('nsgId'), '\"}')))]"
+      },
+      "dependsOn": [
+        "NSG-linkedTemplate"
+      ]
+    },
+    {
+      "apiVersion": "2018-10-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('virtualMachineTags')]",
+      "copy": {
+        "name": "rdsh-vm-loop",
+        "count": "[parameters('rdshNumberOfInstances')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic')]"
+      ],
+      "identity": {
+        "type": "[if(parameters('aadJoin'), 'systemAssigned', 'none')]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('rdshVmSize')]"
+        },
+        "availabilitySet": "[if(equals(parameters('availabilityOption'), 'AvailabilitySet'), variables('vmAvailabilitySetResourceId'), json('null'))]",
+        "osProfile": {
+          "computerName": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')))]",
+          "adminUsername": "[variables('vmAdministratorUsername')]",
+          "adminPassword": "[variables('vmAdministratorPassword')]"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "[variables('storageAccountType')]"
+            }
+          },
+          "imageReference": {
+            "id": "[parameters('rdshImageSourceId')]"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '-nic'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": false
+          }
+        },
+        "licenseType": "Windows_Client"
+      },
+      "zones": "[if(equals(parameters('availabilityOption'), 'AvailabilityZone'), array(parameters('availabilityZone')), variables('emptyArray'))]"
+    },
+    {
+      "apiVersion": "2018-10-01",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'Microsoft.PowerShell.DSC')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [ "rdsh-vm-loop" ],
+      "copy": {
+        "name": "rdsh-dsc-loop",
+        "count": "[parameters('rdshNumberOfInstances')]"
+      },
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.73",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": "[parameters('artifactsLocation')]",
+          "configurationFunction": "Configuration.ps1\\AddSessionHost",
+          "properties": {
+            "hostPoolName": "[parameters('hostpoolName')]",
+            "registrationInfoToken": "[parameters('hostpoolToken')]",
+            "aadJoin": "[parameters('aadJoin')]"
+          }
+        }
+      }
+    },
+    {
+      //"condition": "[and(parameters('aadJoin'),not(parameters('intune')))]",
+      "apiVersion": "2018-10-01",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'AADLoginForWindows')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [ "rdsh-dsc-loop" ],
+      "copy": {
+        "name": "rdsh-aad-join-loop",
+        "count": "[parameters('rdshNumberOfInstances')]"
+      },
+      "properties": {
+        "publisher": "Microsoft.Azure.ActiveDirectory",
+        "type": "AADLoginForWindows",
+        "typeHandlerVersion": "1.0",
+        "autoUpgradeMinorVersion": true
+      }
+    },
+    {
+      //"condition": "[and(parameters('aadJoin'),parameters('intune'))]",
+      "apiVersion": "2018-10-01",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'AADLoginForWindowsWithIntune')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [ "rdsh-dsc-loop" ],
+      "copy": {
+        "name": "rdsh-aad-join-intune-loop",
+        "count": "[parameters('rdshNumberOfInstances')]"
+      },
+      "properties": {
+        "publisher": "Microsoft.Azure.ActiveDirectory",
+        "type": "AADLoginForWindows",
+        "typeHandlerVersion": "1.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "mdmId": "0000000a-0000-0000-c000-000000000000"
+        }
+      }
+    },
+    {
+      //"condition": "[not(parameters('aadJoin'))]",
+      "apiVersion": "2018-10-01",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'joindomain')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [ "rdsh-dsc-loop" ],
+      "copy": {
+        "name": "rdsh-domain-join-loop",
+        "count": "[parameters('rdshNumberOfInstances')]"
+      },
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "JsonADDomainExtension",
+        "typeHandlerVersion": "1.3",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "name": "[variables('domain')]",
+          "ouPath": "[parameters('ouPath')]",
+          "user": "[parameters('administratorAccountUsername')]",
+          "restart": "true",
+          "options": "3"
+        },
+        "protectedSettings": {
+          "password": "[parameters('administratorAccountPassword')]"
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
