@@ -48,7 +48,7 @@ if (Test-Path "HKLM:\SOFTWARE\Microsoft\RDAgentBootLoader") {
 
 Write-Output "Attempting to extract configuration zip"
 # unzip the file that starts wtih .\Configuration_*
-Expand-Archive -Path ".\Configuration_*" -DestinationPath "C:\Program Files\Microsoft RDInfra\ConfigurationZip" -Force
+Expand-Archive -Path ".\Configuration*" -DestinationPath "C:\Program Files\Microsoft RDInfra\ConfigurationZip" -Force
 
 Write-Output "Attempting to extract DeployAgent.zip"
 # unzip DeployAgent.zip located in C:\Program Files\Microsoft RDInfra\ConfigurationZip\DeployAgent.zip
