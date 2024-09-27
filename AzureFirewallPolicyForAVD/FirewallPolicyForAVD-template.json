@@ -372,6 +372,57 @@
                                 "destinationPorts": [
                                     "443"
                                 ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "RDP Shortpath Server Endpoint",
+                                "ipProtocols": [
+                                    "UDP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('avd-hostpool-subnet')]"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": ["*"],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "49152-65535"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "STUN/TURN UDP",
+                                "ipProtocols": [
+                                    "UDP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('avd-hostpool-subnet')]"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": ["20.202.0.0/16"],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "3478"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "STUN/TURN TCP",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('avd-hostpool-subnet')]"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": ["20.202.0.0/16"],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "443"
+                                ]
                             }
                         ],
                         "name": "NetworkRules_AVD-Optional",
