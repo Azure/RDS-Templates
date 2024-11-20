@@ -165,6 +165,7 @@ try {
 
   if($null -ne $GeoID) {
     Set-WinHomeLocation -GeoID $GeoID
+    Copy-UserInternationalSettingsToSystem -WelcomeScreen $True -NewUser $True -Verbose -ErrorAction Stop
     Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - $Language with $LanguageTag has been set as the default region***"
   }
 } 
