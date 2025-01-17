@@ -102,7 +102,7 @@ Set-ItemProperty `
     -Value "1"
 New-ItemProperty `
     -Path HKLM:\Software\FSLogix\Profiles `
-    -Name "CCDLocations" `
+    -Name "VHDLocations" `
     -Value "type=smb,connectionString=$ProfilePath" `
     -PropertyType MultiString `
     -Force
