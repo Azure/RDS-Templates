@@ -103,8 +103,8 @@ Set-ItemProperty `
 New-ItemProperty `
     -Path HKLM:\Software\FSLogix\Profiles `
     -Name "VHDLocations" `
-    -Value "type=smb,connectionString=$ProfilePath" `
-    -PropertyType MultiString `
+    -Value "$ProfilePath" `
+    -PropertyType String `
     -Force
 Set-ItemProperty `
     -Path HKLM:\Software\FSLogix\Profiles `
