@@ -214,7 +214,7 @@ function installOfficeUsingODT($Applications, $Version, $Type) {
         $ODTDownloadLinkRegex = '/officedeploymenttool[a-z0-9_-]*\.exe$'
         $guid = [guid]::NewGuid().Guid
         $tempFolder = (Join-Path -Path "C:\temp\" -ChildPath $guid)
-        $ODTDownloadUrl = 'https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117'
+        $ODTDownloadUrl = 'https://www.microsoft.com/en-us/download/details.aspx?id=49117'
         $templateFilePathFolder = "C:\AVDImage"
 
         if (!(Test-Path -Path $tempFolder)) {
