@@ -41,6 +41,50 @@ function Get-RegionInfo($Name='*')
   }
 }
 
+function UpdateUserLanguageList($languageTag)
+{
+  try {
+    # Enable language Keyboard for Windows.
+    $userLanguageList = New-WinUserLanguageList -Language $languageTag
+    $installedUserLanguagesList = Get-WinUserLanguageList
+
+    foreach($language in $installedUserLanguagesList)
+    {
+        $userLanguageList.Add($language.LanguageTag)
+    }
+
+    Set-WinUserLanguageList -LanguageList $userLanguageList -f
+  }
+  catch 
+  {
+    Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - UpdateUserLanguageList: Error occurred: [$($_.Exception.Message)]"
+  }
+}
+
+function UpdateRegionSettings($GeoID) 
+{
+  try {
+    try {
+      # try deleting reg key for deviceRegion for DMA compliance.
+      Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Try deleting reg key"
+      Remove-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion" -Name "DeviceRegion" -Force -ErrorAction Continue
+      Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Remove DeviceRegion registry key succeeded."
+    }
+    catch 
+    {
+      Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Try deleting reg key failed with error: [$($_.Exception.Message)]"
+    }
+
+    #Set Region in Default User Profile (applies to all new users)
+    New-ItemProperty -Path "HKU\.DEFAULT\Control Panel\International\Geo" -Name "Nation" -Value $GeoID -PropertyType String -Force
+    Set-WinHomeLocation -GeoId $GeoID
+    Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Region update completed."
+  }
+  catch {
+      Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - UpdateRegionSettings: Error occurred: [$($_.Exception.Message)]"
+      Exit 1
+  }
+}
 
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 Write-Host "*** Starting AVD AIB CUSTOMIZER PHASE: Set default Language ***"
@@ -91,8 +135,6 @@ $LanguagesDictionary.Add("Ukrainian (Ukraine)",	"uk-UA")
 $LanguagesDictionary.Add("English (Australia)",	"en-AU")
 
 try {
-
-  
   # Disable LanguageComponentsInstaller while installing language packs
   # See Bug 45044965: Installing language pack fails with error: ERROR_SHARING_VIOLATION for more details
   Disable-ScheduledTask -TaskName "\Microsoft\Windows\LanguageComponentsInstaller\Installation"
@@ -131,7 +173,7 @@ try {
         try {
             Write-Host "*** AVD AIB CUSTOMIZER PHASE : Set default language - Install language packs -  Attempt: $i ***"   
             Install-Language -Language $LanguageTag -ErrorAction Stop
-            Write-Host "*** AVD AIB CUSTOMIZER PHASE : Set default lanhguage - Install language packs -  Installed language $LanguageCode ***"   
+            Write-Host "*** AVD AIB CUSTOMIZER PHASE : Set default language - Install language packs -  Installed language $LanguageCode ***"   
             break
         }
         catch {
@@ -148,25 +190,14 @@ try {
   Set-systempreferreduilanguage -Language $LanguageTag
   Set-WinSystemLocale -SystemLocale $LanguageTag
   Set-Culture -CultureInfo $LanguageTag
-  Set-WinUILanguageOverride -Language $LanguageTag
   
   # Enable language Keyboard for Windows.
-  $userLanguageList = New-WinUserLanguageList -Language $languageCode
-  $installedUserLanguagesList = Get-WinUserLanguageList
-
-  foreach($language in $installedUserLanguagesList)
-  {
-       $userLanguageList.Add($language.LanguageTag)
-  }
-
-  Set-WinUserLanguageList -LanguageList $userLanguageList -Force
+  UpdateUserLanguageList -languageTag $LanguageTag
 
   Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - $Language with $LanguageTag has been set as the default System Preferred UI Language***"
 
-  if($null -ne $GeoID) {
-    Set-WinHomeLocation -GeoID $GeoID
-    Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - $Language with $LanguageTag has been set as the default region***"
-  }
+  $GeoID = (new-object System.Globalization.RegionInfo($languageTag.Split("-")[1])).GeoId
+  UpdateRegionSettings($GeoID)
 } 
 catch {
     Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - Exception occurred***"
