@@ -473,10 +473,10 @@ function InstallRDAgents {
     }
 
     Write-Log -Message "Installing RD Infra Agent on VM $AgentInstaller"
-    RunMsiWithRetry -programDisplayName "RD Infra Agent" -argumentList @("/i $AgentInstaller", "/quiet", "/qn", "/norestart", "/passive", "REGISTRATIONTOKEN=$RegistrationToken") -msiOutputLogPath "C:\Users\AgentInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+    RunMsiWithRetry -programDisplayName "RD Infra Agent" -argumentList @("/i '$AgentInstaller'", "/quiet", "/qn", "/norestart", "/passive", "REGISTRATIONTOKEN=$RegistrationToken") -msiOutputLogPath "C:\Users\AgentInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
 
     Write-Log -Message "Installing RDAgent BootLoader on VM $AgentBootServiceInstaller"
-    RunMsiWithRetry -programDisplayName "RDAgent BootLoader" -argumentList @("/i $AgentBootServiceInstaller", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentBootLoaderInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
+    RunMsiWithRetry -programDisplayName "RDAgent BootLoader" -argumentList @("/i '$AgentBootServiceInstaller'", "/quiet", "/qn", "/norestart", "/passive") -msiOutputLogPath "C:\Users\AgentBootLoaderInstall.txt" -msiLogVerboseOutput:$EnableVerboseMsiLogging
 
     $bootloaderServiceName = "RDAgentBootLoader"
     $startBootloaderRetryCount = 0
