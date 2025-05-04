@@ -554,11 +554,9 @@ process {
 
                 if ($roleAssignment.ObjectType -eq "User") {
                     $roleAssignment.SignInName
-                    Write-Log ("Granting user " + $roleAssignment.SignInName + "access to package $MsixName")
                 }
                 if ($roleAssignment.ObjectType -eq "Group") {
                     $roleAssignment.DisplayName
-                    Write-Log ("Granting group " + $roleAssignment.DisplayName + "access to package $MsixName")
                 }
 
             }
@@ -616,7 +614,8 @@ process {
     foreach ($item in $permissionsToAdd) {
         try {
             # check if it is an email address
-            if ($item -match $emailRegex) {
+            if ($item -like "*@*") {
+                Write-Log ("Granting user " + $item + "access to package $MsixName")
                 $role = Get-AzRoleAssignment -SignInName $item -RoleDefinitionName "Desktop Virtualization User" -Scope $appAttachPackage.Id
                 if ($null -eq $role) {
                     $null = New-AzRoleAssignment -SignInName $item -RoleDefinitionName "Desktop Virtualization User" -Scope $appAttachPackage.Id
@@ -636,6 +635,7 @@ process {
                         while ($retryCount -lt $retryMax -and (Get-Date) -lt $maximalWait) {
                             try {
                                 $retryCount++
+                                Write-Log ("Granting group " + $item + "access to package $MsixName")
                                 $role = Get-AzRoleAssignment -ObjectId $group.Id -RoleDefinitionName "Desktop Virtualization User" -Scope $appAttachPackage.Id
                                 if ($null -eq $role) {
                                     $null = New-AzRoleAssignment -ObjectId $group.Id -RoleDefinitionName "Desktop Virtualization User" -Scope $appAttachPackage.Id
@@ -707,7 +707,7 @@ process {
     }
     if ($setActiveAfterCreate) {
         try { 
-            Update-AzWvdAppAttachPackage -SubscriptionId $SubscriptionId -ResourceGroupName $newResourceGroup -Name $MsixName -IsActive -Location $newLocation -ErrorAction Stop
+            Update-AzWvdAppAttachPackage -SubscriptionId $SubscriptionId -ResourceGroupName $newResourceGroup -Name $MsixName -IsActive -ErrorAction Stop
             Write-Log "Package $MsixName activated"
         }
         catch {
