@@ -616,6 +616,7 @@ process {
     foreach ($item in $permissionsToAdd) {
         try {
             # check if it is an email address
+            $emailRegex = "^[a-zA-Z0-9_.±]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+" 
             if ($item -match $emailRegex) {
                 $role = Get-AzRoleAssignment -SignInName $item -RoleDefinitionName "Desktop Virtualization User" -Scope $appAttachPackage.Id
                 if ($null -eq $role) {
