@@ -707,7 +707,7 @@ process {
     }
     if ($setActiveAfterCreate) {
         try { 
-            Update-AzWvdAppAttachPackage -SubscriptionId $SubscriptionId -ResourceGroupName $newResourceGroup -Name $MsixName -IsActive -Location $newLocation -ErrorAction Stop
+            Update-AzWvdAppAttachPackage -SubscriptionId $SubscriptionId -ResourceGroupName $newResourceGroup -Name $MsixName -IsActive -ErrorAction Stop
             Write-Log "Package $MsixName activated"
         }
         catch {
