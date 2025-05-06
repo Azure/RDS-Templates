@@ -616,6 +616,7 @@ process {
     foreach ($item in $permissionsToAdd) {
         try {
             # check if it is an email address
+            $emailRegex = "^[a-zA-Z0-9_.±]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+" 
             if ($item -match $emailRegex) {
                 $role = Get-AzRoleAssignment -SignInName $item -RoleDefinitionName "Desktop Virtualization User" -Scope $appAttachPackage.Id
                 if ($null -eq $role) {
@@ -707,7 +708,7 @@ process {
     }
     if ($setActiveAfterCreate) {
         try { 
-            Update-AzWvdAppAttachPackage -SubscriptionId $SubscriptionId -ResourceGroupName $newResourceGroup -Name $MsixName -IsActive -Location $newLocation -ErrorAction Stop
+            Update-AzWvdAppAttachPackage -SubscriptionId $SubscriptionId -ResourceGroupName $newResourceGroup -Name $MsixName -IsActive -ErrorAction Stop
             Write-Log "Package $MsixName activated"
         }
         catch {
