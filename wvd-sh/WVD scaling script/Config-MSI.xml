@@ -3,18 +3,18 @@
 <RDMIScale>
   <Azure>
     <!--Settings required to authenticate to Azure subscription -->
-    <Variable Name="AADTenantId" Value="ad638926-c4fa-462d-8b20-1dd3f162028b"/>
-    <Variable Name="AADApplicationId" Value="4e3b45f2-1ed3-4e08-a3ed-3efefb814d6c"/>    
+    <Variable Name="AADTenantId" Value="__AAD_TENANT_ID"/>
+    <Variable Name="AADApplicationId" Value="__AAD_APPLICATION_ID"/>    
     <!-- use AADServicePrincipalSecret filed for testing only, set via New-StoredCredential -->
-    <Variable Name="AADServicePrincipalSecret" Value=""/>    
+    <Variable Name="AADServicePrincipalSecret" Value="__AAD_SERVICE_PRINCIPAL_SECRET"/>    
     <!--Azure subscription name -->
-    <Variable Name="currentAzureSubscriptionId" Value="c779fcf5-46e5-407b-ab0d-6c32c501782d"/>
+    <Variable Name="currentAzureSubscriptionId" Value="__CURRENT_AZURE_SUBSCRIPTION_ID"/>
     <!-- WVD tenant name -->
-    <Variable Name="tenantName" Value="RdsIsmTenant1"/>
+    <Variable Name="tenantName" Value="__TENANT_NAME"/>
     <!-- WVD tenant name -->
-    <Variable Name="tenantGroupName" Value="Default Tenant Group"/>
+    <Variable Name="tenantGroupName" Value="__TENANT_GROUP_NAME"/>
     <!-- WVD host pool name -->
-    <Variable Name="hostPoolName" Value="WS2016-p"/>
+    <Variable Name="hostPoolName" Value="__HOSTPOOL_NAME__"/>
     <!-- Hostpool session Load Balancing Type -->
     <Variable Name="PeakLoadBalancingType" Value="DepthFirst"/>
     <Variable Name="OffPeakLoadBalancingType" Value="BreadthFirst"/>
@@ -23,7 +23,7 @@
     <!-- session Load Balancing off Peak Hours -->
     <Variable Name="sessionLoadBalancingOffPeakHours" Value="18:00-22:00"/>
     <!-- Key Vault Name -->
-    <Variable Name="KeyVaultName" Value="wvdmsikeyvault"/>
+    <Variable Name="KeyVaultName" Value="__KEYVAULT_NAME__"/>
    
   </Azure>
   <Deployment>
@@ -31,7 +31,7 @@
     <!-- Is Service Principal Value is "False" then provide keyvault key name of the Password stored -->
 	<variable Name="KeyName" Value = "Keyvault key name of the Password stored"/>
 	<!-- Is Service Principal is "False" then provide username with fully qualified domain name -->
-	<Variable Name="Username" Value="74e98113-e2ca-48c8-963d-fe33ae70c756"/>
+	<Variable Name="Username" Value="__USERNAME__"/>
     <!-- use Password filed for testing only, set via keyvault secret -->
     <Variable Name="Password" Value=""/>
     <!-- accepted values True/False, True indicate service principal is being used to authenticate to WVD -->
