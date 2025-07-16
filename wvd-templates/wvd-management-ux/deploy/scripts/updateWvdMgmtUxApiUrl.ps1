@@ -71,7 +71,7 @@ $Subscription = Select-AzSubscription -SubscriptionId $SubscriptionId
 Set-AzContext -SubscriptionObject $Subscription.ExtendedProperties
 
 # Get the Role Assignment of the authenticated user
-$RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account
+$RoleAssignment = Get-AzRoleAssignment -SignInName $context.Account -ExpandPrincipalGroups
 
 # Validate whether the authenticated user having the Owner or Contributor role
 if ($RoleAssignment.RoleDefinitionName -eq "Owner" -or $RoleAssignment.RoleDefinitionName -eq "Contributor")
