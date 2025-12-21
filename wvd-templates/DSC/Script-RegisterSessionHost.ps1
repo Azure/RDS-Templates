@@ -81,8 +81,14 @@ if (!$HostPool) {
 Write-Log -Message "Hostpool exists inside tenant: $TenantName"
 
 # Getting fqdn (session host name) of rdsh vm
-$SessionHostName = GetCurrSessionHostName
+$SessionHostName = [System.Net.Dns]::GetHostByName(($env:computerName)).Hostname
 Write-Log -Message "Getting fully qualified domain name of RDSH VM: $SessionHostName"
+
+$VMID = $(Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri http://169.254.169.254/metadata/instance?api-version=2020-06-01).compute.vmId
+if (!$VMID) {
+    throw "RD Agent failed to register VM '$SessionHostName' to HostPool '$HostPoolName'"
+}
+Write-Log -Message "ID of VM: $VMID"
 
 # Obtaining Registration Info
 $Registered = New-RdsRegistrationInfo -TenantName $TenantName -HostPoolName $HostPoolName -ExpirationHours $Hours -ErrorAction SilentlyContinue
@@ -123,7 +129,14 @@ while ((!$SessionHost -or $SessionHost.Status -notin $DesiredStates) -and (get-d
     write-log "$(if (!$SessionHost) { "Session host record doesn't exist yet" } else { "Session host is in '$($SessionHost.Status)' state" }), continue waiting ($WaitTimeInSec sec)"
     Start-Sleep -Seconds $WaitTimeInSec
     
-    $SessionHost = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -Name $SessionHostName -ErrorAction SilentlyContinue
+    $allhosts = Get-RdsSessionHost -TenantName $TenantName -HostPoolName $HostPoolName -ErrorAction SilentlyContinue
+
+    $allhosts | ForEach-Object {
+        if($_.AzureVmId -eq $VMID) {
+            $SessionHost = $_
+            return
+        }
+    }
 }
 
 Write-Log -Message "RDSH object content: `n$($SessionHost | Out-String)"
