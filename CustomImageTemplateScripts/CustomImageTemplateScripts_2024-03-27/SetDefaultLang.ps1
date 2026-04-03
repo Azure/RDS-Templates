@@ -198,6 +198,11 @@ try {
 
   $GeoID = (new-object System.Globalization.RegionInfo($languageTag.Split("-")[1])).GeoId
   UpdateRegionSettings($GeoID)
+
+  # Copy user international settings to system for welcome screen and new users
+  Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - Copying user international settings to system ***"
+  Copy-UserInternationalSettingsToSystem -WelcomeScreen $true -NewUser $true
+  Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - Successfully copied settings to welcome screen and new user defaults ***"
 } 
 catch {
     Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - Exception occurred***"
