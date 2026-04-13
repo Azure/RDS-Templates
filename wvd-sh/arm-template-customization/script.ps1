@@ -10,6 +10,7 @@ Invoke-WebRequest -Uri $URL -OutFile $ZIP -ErrorAction 'Stop'
 
 # Extract VDOT from ZIP archive
 Expand-Archive -LiteralPath $ZIP -Force -ErrorAction 'Stop'
-    
+
 # Run VDOT
-& .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -AcceptEULA -Restart
+& .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Verbose -Optimizations All -AdvancedOptimizations All -AcceptEULA -Restart
+
