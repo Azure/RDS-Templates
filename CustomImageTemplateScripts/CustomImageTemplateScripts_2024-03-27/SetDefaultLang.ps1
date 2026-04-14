@@ -76,7 +76,7 @@ function UpdateRegionSettings($GeoID)
     }
 
     #Set Region in Default User Profile (applies to all new users)
-    New-ItemProperty -Path "HKU\.DEFAULT\Control Panel\International\Geo" -Name "Nation" -Value $GeoID -PropertyType String -Force
+    New-ItemProperty -Path "Registry::HKEY_USERS\.DEFAULT\Control Panel\International\Geo" -Name "Nation" -Value $GeoID -PropertyType String -Force
     Set-WinHomeLocation -GeoId $GeoID
     Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Region update completed."
   }
