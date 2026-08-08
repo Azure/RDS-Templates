@@ -313,7 +313,7 @@ if ($WorkspaceName) {
 	Write-Output "Log Analytics Primary Key: $LogAnalyticsPrimaryKey"
 }
 
-Write-Output "Webhook URI variable: $($WebhookURIAutoVar | Format-List -Force | Out-String)"
+Write-Output "Webhook URI variable (value will be blank): $($WebhookURIAutoVar | Format-List -Force | Out-String)"
 
 if ($WebhookURI) {
 	Write-Warning "Make sure to keep a record of the following Webhook URI because you'll use it as a parameter when you set up the execution schedule for the Azure Logic App. The URI is also stored as encrypted in the above Automation Account variable. To retrieve the value, see https://docs.microsoft.com/en-us/azure/automation/shared-resources/variables?tabs=azure-powershell#powershell-cmdlets-to-access-variables"
@@ -322,3 +322,5 @@ if ($WebhookURI) {
 else {
 	Write-Warning "A Webhook URI has already been generated for this Automation account. Please use the existing Webhook URI to setup the execution schedule for the Azure Logic App. The URI is also stored as encrypted in the above Automation Account variable. To retrieve the value, see https://docs.microsoft.com/en-us/azure/automation/shared-resources/variables?tabs=azure-powershell#powershell-cmdlets-to-access-variables"
 }
+
+return $WebhookURI
