@@ -511,7 +511,9 @@
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'Microsoft.PowerShell.DSC')]",
       "location": "[parameters('location')]",
-      "dependsOn": [ "rdsh-vm-loop" ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber'))))]"
+      ],
       "copy": {
         "name": "rdsh-dsc-loop",
         "count": "[parameters('rdshNumberOfInstances')]"
@@ -542,7 +544,9 @@
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'AADLoginForWindows')]",
       "location": "[parameters('location')]",
-      "dependsOn": [ "rdsh-dsc-loop" ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines/extensions', concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber'))), 'Microsoft.PowerShell.DSC')]"
+      ],
       "copy": {
         "name": "rdsh-aad-join-loop",
         "count": "[parameters('rdshNumberOfInstances')]"
@@ -561,7 +565,9 @@
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber')), '/', 'joindomain')]",
       "location": "[parameters('location')]",
-      "dependsOn": [ "rdsh-dsc-loop" ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines/extensions', concat(parameters('rdshPrefix'), add(copyindex(), parameters('vmInitialNumber'))), 'Microsoft.PowerShell.DSC')]"
+      ],
       "copy": {
         "name": "rdsh-domain-join-loop",
         "count": "[parameters('rdshNumberOfInstances')]"
