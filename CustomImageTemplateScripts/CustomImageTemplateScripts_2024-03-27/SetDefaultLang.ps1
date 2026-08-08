@@ -135,11 +135,10 @@ $LanguagesDictionary.Add("Ukrainian (Ukraine)",	"uk-UA")
 $LanguagesDictionary.Add("English (Australia)",	"en-AU")
 
 try {
-  # Disable LanguageComponentsInstaller while installing language packs
-  # See Bug 45044965: Installing language pack fails with error: ERROR_SHARING_VIOLATION for more details
-  Disable-ScheduledTask -TaskName "\Microsoft\Windows\LanguageComponentsInstaller\Installation"
-  Disable-ScheduledTask -TaskName "\Microsoft\Windows\LanguageComponentsInstaller\ReconcileLanguageResources"
+  $osBuild = [System.Environment]::OSVersion.Version.Build
+  Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - OS Build: $osBuild ***"
 
+  # Resolve language tag early so we can use it in the reconcile wait below.
   $languageDetails = Get-RegionInfo -Name $Language
 
   if($null -eq $languageDetails) {
@@ -148,6 +147,55 @@ try {
     $languageTag = $languageDetails[0]
     $GeoID = $languageDetails[1]
   }
+
+  # On Win11 23H2 (Build 22631), Install-Language no longer delivers LpCab synchronously.
+  # The LanguagePack is delivered asynchronously by ReconcileLanguageResources, which starts
+  # running during the WU+Restart window between InstallLanguagePacks and SetDefaultLang.
+  # Wait for reconcile to finish delivering LpCab before disabling the tasks.
+  # See https://portal.microsofticm.com/imp/v5/incidents/details/805982457/summary.
+  if ($osBuild -eq 22631) {
+    # Only wait if the language was already installed by InstallLanguagePacks.ps1 (typical CIT flow).
+    # If language is not installed yet, skip the wait -- Install-Language below will handle it.
+    $preCheck = $null
+    try { $preCheck = Get-InstalledLanguage | Where-Object { $_.LanguageId -eq $LanguageTag } } catch {}
+
+    if ($preCheck) {
+      Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - 23H2 detected, waiting for $LanguageTag LanguagePack reconciliation ***"
+      $maxWaitSeconds = 600  # 10 minutes
+      $waited = 0
+      $lpReady = $false
+      while ($waited -lt $maxWaitSeconds) {
+          try {
+              $lpCheck = Get-InstalledLanguage | Where-Object { $_.LanguageId -eq $LanguageTag }
+              $lpPacksValue = "$($lpCheck.LanguagePacks)"
+              Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - LanguagePacks value: [$lpPacksValue] ***"
+              if ($lpPacksValue -and $lpPacksValue -ne "" -and $lpPacksValue -ne "None") {
+                  $lpReady = $true
+                  Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - LanguagePack ready for $LanguageTag (waited ${waited}s) ***"
+                  break
+              }
+          }
+          catch {
+              # If Get-InstalledLanguage fails, skip the wait
+              $lpReady = $true
+              break
+          }
+          Start-Sleep -Seconds 15
+          $waited += 15
+          Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - Waiting for reconcile... (${waited}s / ${maxWaitSeconds}s) ***"
+      }
+      if (-not $lpReady) {
+          Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - WARNING: LanguagePack not delivered after ${maxWaitSeconds}s, proceeding anyway ***"
+      }
+    } else {
+      Write-Host "*** AVD AIB CUSTOMIZER PHASE: Set default Language - 23H2 detected but $LanguageTag not yet installed, skipping reconcile wait ***"
+    }
+  }
+
+  # Disable LanguageComponentsInstaller while installing language packs
+  # See Bug 45044965: Installing language pack fails with error: ERROR_SHARING_VIOLATION for more details
+  Disable-ScheduledTask -TaskName "\Microsoft\Windows\LanguageComponentsInstaller\Installation" -ErrorAction SilentlyContinue
+  Disable-ScheduledTask -TaskName "\Microsoft\Windows\LanguageComponentsInstaller\ReconcileLanguageResources" -ErrorAction SilentlyContinue
 
   $foundLanguage = $false;
 
@@ -186,7 +234,7 @@ try {
   else {
      Write-Host "*** AVD AIB CUSTOMIZER PHASE : Set default language - Language pack for $LanguageTag is installed already***"
   }
-  
+
   Set-systempreferreduilanguage -Language $LanguageTag
   Set-WinSystemLocale -SystemLocale $LanguageTag
   Set-Culture -CultureInfo $LanguageTag
