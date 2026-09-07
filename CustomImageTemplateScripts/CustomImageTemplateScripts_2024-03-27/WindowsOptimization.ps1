@@ -25,6 +25,7 @@ Begin {
             $WindowsVersion = (Get-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\").ReleaseId
             $WorkingLocation = (Join-Path $PSScriptRoot $WindowsVersion)
             $templateFilePathFolder = "C:\AVDImage"
+            $ConfigurationFilesUrl = "https://raw.githubusercontent.com/Azure/RDS-Templates/master/VDOT-ConfigurationFiles"
 
             if (!(Test-Path -Path $WorkingLocation)) {
                 New-Item -Path $WorkingLocation -ItemType Directory
@@ -73,7 +74,7 @@ PROCESS {
         try 
         {
             $ScheduledTasksFilePath = Join-Path -Path $WorkingLocation -ChildPath 'ScheduledTasks.json'
-            $ScheduledTaskUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2009/ConfigurationFiles/ScheduledTasks.json"
+            $ScheduledTaskUrl = "$ConfigurationFilesUrl/ScheduledTasks.json"
 
             Invoke-WebRequest $ScheduledTaskUrl -OutFile $ScheduledTasksFilePath -UseBasicParsing
 
@@ -133,7 +134,7 @@ PROCESS {
     If ($Optimizations -contains "DefaultUserSettings" -or $Optimizations -contains "All")
     {
         $DefaultUserSettingsFilePath = Join-Path -Path $WorkingLocation -ChildPath 'DefaultUserSettings.json'
-        $DefaultUserSettingsUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2009/ConfigurationFiles/DefaultUserSettings.json"
+        $DefaultUserSettingsUrl = "$ConfigurationFilesUrl/DefaultUserSettings.json"
 
         Invoke-WebRequest $DefaultUserSettingsUrl -OutFile $DefaultUserSettingsFilePath -UseBasicParsing
 
@@ -206,7 +207,7 @@ PROCESS {
      #region Disable Windows Traces
     If ($Optimizations -contains "AutoLoggers" -or $Optimizations -contains "All")
     {
-        $AutoLoggersUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2009/ConfigurationFiles/Autologgers.Json"
+        $AutoLoggersUrl = "$ConfigurationFilesUrl/Autologgers.json"
         $AutoLoggersFilePath = Join-Path -Path $WorkingLocation -ChildPath 'Autologgers.json'
         
         Invoke-WebRequest $AutoLoggersUrl -OutFile $AutoLoggersFilePath -UseBasicParsing
@@ -252,7 +253,7 @@ PROCESS {
     If ($Optimizations -contains "Services" -or $Optimizations -contains "All")
     {
 
-        $ServicesUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2009/ConfigurationFiles/Services.json"
+        $ServicesUrl = "$ConfigurationFilesUrl/Services.json"
         $ServicesFilePath = Join-Path -Path $WorkingLocation -ChildPath 'Services.json'
         
         Invoke-WebRequest $ServicesUrl -OutFile $ServicesFilePath -UseBasicParsing
@@ -300,7 +301,7 @@ PROCESS {
     # LanManWorkstation optimizations
     If ($Optimizations -contains "NetworkOptimizations" -or $Optimizations -contains "All")
     {
-        $NetworkOptimizationsUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2009/ConfigurationFiles/LanManWorkstation.json"
+        $NetworkOptimizationsUrl = "$ConfigurationFilesUrl/LanManWorkstation.json"
 
         $NetworkOptimizationsFilePath = Join-Path -Path $WorkingLocation -ChildPath 'LanManWorkstation.json'
         Invoke-WebRequest $NetworkOptimizationsUrl -OutFile $NetworkOptimizationsFilePath -UseBasicParsing
@@ -377,7 +378,7 @@ PROCESS {
     If ($Optimizations -contains "LGPO" -or $Optimizations -contains "All")
     {
         $LocalPolicyFilePath = Join-Path -Path $WorkingLocation -ChildPath 'PolicyRegSettings.json'
-        $LocalPolicyUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2009/ConfigurationFiles/PolicyRegSettings.json"
+        $LocalPolicyUrl = "$ConfigurationFilesUrl/PolicyRegSettings.json"
         Invoke-WebRequest $LocalPolicyUrl -OutFile $LocalPolicyFilePath -UseBasicParsing
 
         If (Test-Path $LocalPolicyFilePath)
@@ -437,7 +438,7 @@ PROCESS {
     If ($Optimizations -contains "Edge" -or $Optimizations -contains "All")
     {
         $EdgeFilePath = Join-Path -Path $WorkingLocation -ChildPath 'EdgeSettings.json'
-        $EdgeSettingsUrl = "https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/main/2009/ConfigurationFiles/EdgeSettings.json"
+        $EdgeSettingsUrl = "$ConfigurationFilesUrl/EdgeSettings.json"
         Invoke-WebRequest $EdgeSettingsUrl -OutFile $EdgeFilePath -UseBasicParsing
 
         If (Test-Path $EdgeFilePath)
@@ -453,7 +454,18 @@ PROCESS {
                     {
                         If ($key.RegItemValueName -eq 'DefaultAssociationsConfiguration')
                         {
-                            Copy-Item .\ConfigurationFiles\DefaultAssociationsConfiguration.xml $key.RegItemValue -Force
+                            $DefaultAssociationsFilePath = Join-Path -Path $WorkingLocation -ChildPath 'DefaultAssociationsConfiguration.xml'
+                            $DefaultAssociationsUrl = "$ConfigurationFilesUrl/DefaultAssociationsConfiguration.xml"
+                            Invoke-WebRequest $DefaultAssociationsUrl -OutFile $DefaultAssociationsFilePath -UseBasicParsing
+
+                            If (Test-Path $DefaultAssociationsFilePath)
+                            {
+                                Copy-Item $DefaultAssociationsFilePath $key.RegItemValue -Force
+                            }
+                            Else
+                            {
+                                Write-Warning "File not found: $DefaultAssociationsFilePath"
+                            }
                         }
                         If (Get-ItemProperty -Path $Key.RegItemPath -Name $Key.RegItemValueName -ErrorAction SilentlyContinue) 
                         { 
