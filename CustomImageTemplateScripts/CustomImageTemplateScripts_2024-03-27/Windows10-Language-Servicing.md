@@ -102,9 +102,9 @@ immutable, supported upstream or managed-artifact contract.
 The AVD UX default restart timeout is five minutes and is insufficient for the
 validated Windows 10 flow. Exporting a deployed template, editing the restart
 settings, deleting the original, and redeploying is an internal validation
-workaround only. It is pending Portal PM approval and is not final customer
-guidance. Production requires a conditional Windows 10-only timeout/check
-mechanism that does not slow or alter the Windows 11 path.
+workaround only. It is pending AVD Portal PM confirmation and is not final
+customer guidance. Production requires a conditional Windows 10-only
+timeout/check mechanism that does not slow or alter the Windows 11 path.
 
 ## Produced-image validation
 

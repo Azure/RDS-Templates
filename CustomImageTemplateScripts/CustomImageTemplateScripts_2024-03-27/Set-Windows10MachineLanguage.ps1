@@ -1454,15 +1454,6 @@ function Invoke-InitialPhase {
     Wait-ForServicingReady
     Assert-CoreHealth -CheckRdp:$RequireRdp
 
-    if ($initialParameterSetName -in @('WindowsUpdate', 'OnlineMultiLanguage')) {
-        $windowsUpdateSelection = Get-WindowsUpdateLcuSelection
-        if ($null -eq $windowsUpdateSelection.Update) {
-            throw ('Windows Update does not currently offer an applicable Windows 10 LCU. ' +
-                'No changes were made. Supply the organization-approved current LCU with -LcuPackagePath so DISM can reapply it after language installation.')
-        }
-        Write-Operation "Preflight found applicable Windows Update package '$($windowsUpdateSelection.Update.Title)'."
-    }
-
     New-Item -ItemType Directory -Path $WorkingDirectory -Force | Out-Null
     Remove-Item -LiteralPath $reportPath, $pendingActionPath -Force -ErrorAction SilentlyContinue
     Copy-FileUnlessSame -Source $PSCommandPath -Destination $installedScriptPath

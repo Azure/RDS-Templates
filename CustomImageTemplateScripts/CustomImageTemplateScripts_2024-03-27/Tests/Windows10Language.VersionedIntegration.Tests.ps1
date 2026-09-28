@@ -163,8 +163,20 @@ $stateLanguagePackPathAst = $orchestratorAst.Find({
     $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
     $node.Name -eq 'Get-StateLanguagePackPath'
 }, $true)
+$initialPhaseAst = $orchestratorAst.Find({
+    param($node)
+    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
+    $node.Name -eq 'Invoke-InitialPhase'
+}, $true)
+$installAndServicePhaseAst = $orchestratorAst.Find({
+    param($node)
+    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
+    $node.Name -eq 'Invoke-InstallAndServicePhase'
+}, $true)
 Assert-True ($null -ne $stateLanguageTagsAst) 'Get-StateLanguageTags is missing.'
 Assert-True ($null -ne $stateLanguagePackPathAst) 'Get-StateLanguagePackPath is missing.'
+Assert-True ($null -ne $initialPhaseAst) 'Invoke-InitialPhase is missing.'
+Assert-True ($null -ne $installAndServicePhaseAst) 'Invoke-InstallAndServicePhase is missing.'
 if ($null -ne $stateLanguageTagsAst -and $null -ne $stateLanguagePackPathAst) {
     . ([scriptblock]::Create($stateLanguageTagsAst.Extent.Text))
     . ([scriptblock]::Create($stateLanguagePackPathAst.Extent.Text))
@@ -192,6 +204,36 @@ if ($null -ne $stateLanguageTagsAst -and $null -ne $stateLanguagePackPathAst) {
         (Get-StateLanguagePackPath -State $persistedState -TargetLanguageTag 'fr-FR') -eq
         'C:\staged\fr-FR.cab'
     ) 'Persisted multi-language state does not resolve a staged CAB.'
+}
+
+if ($null -ne $initialPhaseAst) {
+    Assert-True (
+        $initialPhaseAst.Extent.Text -notmatch 'Get-WindowsUpdateLcuSelection'
+    ) 'The initial phase still queries Windows Update before language installation.'
+}
+if ($null -ne $installAndServicePhaseAst) {
+    $installAndServiceText = $installAndServicePhaseAst.Extent.Text
+    $installLanguageIndex = $installAndServiceText.IndexOf(
+        'Install-TargetLanguage',
+        [StringComparison]::Ordinal
+    )
+    $selectLcuIndex = $installAndServiceText.IndexOf(
+        'Get-WindowsUpdateLcuSelection',
+        [StringComparison]::Ordinal
+    )
+    $installLcuIndex = $installAndServiceText.IndexOf(
+        'Install-LcuFromWindowsUpdate',
+        [StringComparison]::Ordinal
+    )
+    Assert-True (
+        $installLanguageIndex -ge 0 -and
+        $selectLcuIndex -gt $installLanguageIndex -and
+        $installLcuIndex -gt $selectLcuIndex
+    ) 'Windows Update LCU selection/install does not occur after requested language installation.'
+    Assert-True (
+        $installAndServiceText -match
+        'if \(\$null -eq \$windowsUpdateSelection\.Update\) \{\s*throw \('
+    ) 'The post-language Windows Update path no longer fails closed when no LCU is offered.'
 }
 
 Assert-True ($orchestratorText -match 'AllowRecognizedNonServicingPendingFileRenames') 'The PFRO opt-in is missing.'
