@@ -6,10 +6,7 @@ Runs the Windows 10 language workflow as Azure Image Builder SYSTEM customizers.
 Invoke this script in three PowerShell customizers with an Azure Image Builder
 Windows Restart customizer after InstallAndService and ApplyMachineLanguage.
 The script delegates all servicing and validation to
-Set-Windows10MachineLanguage.ps1 and never initiates a restart itself. Before
-returning from a phase that requires restart, the orchestrator arms a local
-startup guard that keeps the AIB WinRM communicator unavailable until Windows
-servicing is continuously stable.
+Set-Windows10MachineLanguage.ps1 and never initiates a restart itself.
 
 .EXAMPLE
 .\Invoke-Windows10MachineLanguageAib.ps1 -Phase InstallAndService `
@@ -22,10 +19,6 @@ servicing is continuously stable.
     -LcuPackagePath "<lcu-path>" -RequireRdp
 
 .EXAMPLE
-.\Invoke-Windows10MachineLanguageAib.ps1 -Phase AdoptServicedLanguage `
-    -LanguageTag fr-FR -RequireRdp
-
-.EXAMPLE
 .\Invoke-Windows10MachineLanguageAib.ps1 -Phase ApplyMachineLanguage -LanguageTag fr-FR
 
 .EXAMPLE
@@ -35,7 +28,7 @@ servicing is continuously stable.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('InstallAndService', 'AdoptServicedLanguage', 'ApplyMachineLanguage', 'Validate')]
+    [ValidateSet('InstallAndService', 'ApplyMachineLanguage', 'Validate')]
     [string]$Phase,
 
     [Parameter(Mandatory = $true)]
@@ -68,6 +61,8 @@ param(
 
     [switch]$RequireRdp,
 
+    [switch]$AllowRecognizedNonServicingPendingFileRenames,
+
     [string]$WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguageAib'
 )
 
@@ -95,7 +90,7 @@ $sourceParametersSpecified = (
     $PSBoundParameters.ContainsKey('CopyNewUserSettingsScriptPath')
 )
 
-if ($Phase -in @('ApplyMachineLanguage', 'Validate')) {
+if ($Phase -ne 'InstallAndService') {
     if ($sourceParametersSpecified) {
         throw "AIB phase '$Phase' accepts only -LanguageTag and -WorkingDirectory."
     }
@@ -104,25 +99,6 @@ if ($Phase -in @('ApplyMachineLanguage', 'Validate')) {
         -Resume `
         -AibPhase $Phase `
         -ExpectedLanguageTag $LanguageTag `
-        -WorkingDirectory $WorkingDirectory
-    return
-}
-
-if ($Phase -eq 'AdoptServicedLanguage') {
-    if (
-        -not [string]::IsNullOrWhiteSpace($LanguagePackCabPath) -or
-        $DownloadLanguagePack -or
-        -not [string]::IsNullOrWhiteSpace($LcuPackagePath) -or
-        $UseWindowsUpdate
-    ) {
-        throw "AIB phase 'AdoptServicedLanguage' consumes only language and updates already completed by CIT built-in customizers."
-    }
-
-    & $orchestratorPath `
-        -AdoptServicedLanguage `
-        -LanguageTag $LanguageTag `
-        -CopyNewUserSettingsScriptPath $CopyNewUserSettingsScriptPath `
-        -RequireRdp:$RequireRdp `
         -WorkingDirectory $WorkingDirectory
     return
 }
@@ -168,12 +144,23 @@ if ($null -ne $existingState) {
     if ([bool]$existingState.RequireRdp -ne [bool]$RequireRdp) {
         throw "Existing RequireRdp value '$($existingState.RequireRdp)' does not match the retry request."
     }
+    $existingPendingRenamePolicy = (
+        $existingState.PSObject.Properties.Name -contains 'AllowRecognizedNonServicingPendingFileRenames' -and
+        [bool]$existingState.AllowRecognizedNonServicingPendingFileRenames
+    )
+    if ($existingPendingRenamePolicy -ne [bool]$AllowRecognizedNonServicingPendingFileRenames) {
+        throw (
+            "Existing AllowRecognizedNonServicingPendingFileRenames value '$existingPendingRenamePolicy' " +
+            "does not match the retry request."
+        )
+    }
 
     & $orchestratorPath `
         -Resume `
         -AibPhase InstallAndService `
         -ExpectedLanguageTag $LanguageTag `
-        -WorkingDirectory $WorkingDirectory
+        -WorkingDirectory $WorkingDirectory `
+        -AllowRecognizedNonServicingPendingFileRenames:$AllowRecognizedNonServicingPendingFileRenames
     return
 }
 
@@ -182,6 +169,7 @@ $arguments = @{
     LanguageTag                  = $LanguageTag
     CopyNewUserSettingsScriptPath = $CopyNewUserSettingsScriptPath
     RequireRdp                   = [bool]$RequireRdp
+    AllowRecognizedNonServicingPendingFileRenames = [bool]$AllowRecognizedNonServicingPendingFileRenames
     WorkingDirectory             = $WorkingDirectory
 }
 if ($LanguagePackCabPath) {

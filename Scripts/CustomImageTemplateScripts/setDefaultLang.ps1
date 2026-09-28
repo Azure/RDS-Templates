@@ -21,7 +21,7 @@ For the LCU, explicitly choose either -LcuPackagePath or -UseWindowsUpdate.
 Initial Windows 10 execution must be from an elevated, interactive, non-SYSTEM
 64-bit Windows PowerShell 5.1 session. Startup resumes run as SYSTEM. Azure
 Image Builder customizers running as SYSTEM must use
-Invoke-Windows10MachineLanguageAib.ps1 with three explicit AIB-managed Windows Restart
+Invoke-Windows10MachineLanguageAib.ps1 with two explicit Windows Restart
 customizers.
 
 .EXAMPLE

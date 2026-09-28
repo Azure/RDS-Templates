@@ -3,13 +3,13 @@
 Stages and runs the Windows 10 language package from AVD Custom Image Templates.
 
 .DESCRIPTION
-Use this script as the custom script URI for phased Azure Image Builder
+Use this script as the custom script URI for four Azure Image Builder
 PowerShell customizers. StageInputs downloads and verifies one release ZIP,
 safely extracts the exact package contract, optionally stages deterministic
-CAB/MSU media, and writes a durable manifest. Explicit ARM/Bicep AIB continues
-with InstallAndService. Standard CIT can instead use its built-in language and
-Windows Update customizers, then AdoptServicedLanguage. Later phases re-verify
-the same content, manifest, and orchestrator state before continuing.
+CAB/MSU media, and writes a durable manifest. After an AIB restart,
+InstallAndService re-verifies the immutable staged content and invokes the
+packaged AIB wrapper using only durable local paths. Later phases re-verify the
+same content, manifest, and orchestrator state before continuing.
 
 Private Azure Blob downloads can use the build VM managed identity. Public
 HTTPS and HTTPS SAS URIs are also accepted, but SAS values must be handled as
@@ -19,7 +19,7 @@ secrets by the deployment system and are never written to the staging manifest.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('StageInputs', 'InstallAndService', 'AdoptServicedLanguage', 'ApplyMachineLanguage', 'Validate')]
+    [ValidateSet('StageInputs', 'InstallAndService', 'ApplyMachineLanguage', 'Validate')]
     [string]$Phase,
 
     [Parameter(Mandatory = $true)]
@@ -62,11 +62,11 @@ param(
 
     [switch]$UseWindowsUpdate,
 
-    [switch]$UseBuiltInCitServicing,
-
     [switch]$UseManagedIdentityForDownloads,
 
     [switch]$RequireRdp,
+
+    [switch]$AllowRecognizedNonServicingPendingFileRenames,
 
     [ValidateRange(30, 7200)]
     [int]$DownloadTimeoutSeconds = 1800,
@@ -86,6 +86,7 @@ $WorkingDirectory = [IO.Path]::GetFullPath($WorkingDirectory)
 
 $expectedArchiveFiles = @(
     'Aib-Customizers.example.json',
+    'Aib-Customizers.TwoRestartCandidate.example.json',
     'Copy-UserInternationalSettingsToSystemCompat.ps1',
     'Invoke-Windows10MachineLanguageAib.ps1',
     'Invoke-Windows10MachineLanguageCit.ps1',
@@ -473,10 +474,7 @@ function Get-SourceIdentity {
 }
 
 function Get-RequestedStagingContract {
-    $languagePackMode = if ($UseBuiltInCitServicing) {
-        'BuiltInCIT'
-    }
-    elseif ($LanguagePackCabUri -or $LanguagePackCabPath) {
+    $languagePackMode = if ($LanguagePackCabUri -or $LanguagePackCabPath) {
         'Package'
     }
     elseif ($DownloadLanguagePack) {
@@ -485,10 +483,7 @@ function Get-RequestedStagingContract {
     else {
         'AlreadyInstalled'
     }
-    $lcuMode = if ($UseBuiltInCitServicing) {
-        'BuiltInCIT'
-    }
-    elseif ($LcuPackageUri -or $LcuPackagePath) {
+    $lcuMode = if ($LcuPackageUri -or $LcuPackagePath) {
         'Package'
     }
     else {
@@ -523,6 +518,7 @@ function Get-RequestedStagingContract {
         }
         UseManagedIdentityForDownloads = [bool]$UseManagedIdentityForDownloads
         RequireRdp = [bool]$RequireRdp
+        AllowRecognizedNonServicingPendingFileRenames = [bool]$AllowRecognizedNonServicingPendingFileRenames
         DownloadTimeoutSeconds = $DownloadTimeoutSeconds
     }
 }
@@ -567,6 +563,7 @@ function Assert-StagingContract {
         'LcuSha256',
         'UseManagedIdentityForDownloads',
         'RequireRdp',
+        'AllowRecognizedNonServicingPendingFileRenames',
         'DownloadTimeoutSeconds'
     )) {
         if ([string]$Actual.$propertyName -ne [string]$Expected[$propertyName]) {
@@ -601,7 +598,8 @@ function Read-AndVerifyStagingManifest {
         'LanguagePackSource',
         'LcuMode',
         'LcuSource',
-        'RequireRdp'
+        'RequireRdp',
+        'AllowRecognizedNonServicingPendingFileRenames'
     )) {
         if ([string]$manifest.$propertyName -ne [string]$contract.$propertyName) {
             throw "Staging manifest property '$propertyName' does not match the durable staging contract."
@@ -642,20 +640,6 @@ function Assert-InstallInputs {
         throw 'StageInputs and InstallAndService require -ReleasePackageUri and -ReleasePackageSha256.'
     }
 
-    if ($UseBuiltInCitServicing) {
-        if (
-            $LanguagePackCabUri -or
-            -not [string]::IsNullOrWhiteSpace($LanguagePackCabPath) -or
-            $DownloadLanguagePack -or
-            $LcuPackageUri -or
-            -not [string]::IsNullOrWhiteSpace($LcuPackagePath) -or
-            $UseWindowsUpdate
-        ) {
-            throw '-UseBuiltInCitServicing cannot be combined with workflow-owned language-pack or LCU sources.'
-        }
-        return
-    }
-
     $languageSources = @(
         @(
             [bool]$LanguagePackCabUri,
@@ -694,10 +678,7 @@ function Assert-RetryContract {
         throw 'The retry release ZIP SHA-256 does not match the durable staging manifest.'
     }
 
-    $requestedLanguagePackMode = if ($UseBuiltInCitServicing) {
-        'BuiltInCIT'
-    }
-    elseif ($LanguagePackCabUri -or $LanguagePackCabPath) {
+    $requestedLanguagePackMode = if ($LanguagePackCabUri -or $LanguagePackCabPath) {
         'Package'
     }
     elseif ($DownloadLanguagePack) {
@@ -710,10 +691,7 @@ function Assert-RetryContract {
         throw "The retry language-pack mode '$requestedLanguagePackMode' does not match the staged mode '$($Manifest.LanguagePackMode)'."
     }
 
-    $requestedLcuMode = if ($UseBuiltInCitServicing) {
-        'BuiltInCIT'
-    }
-    elseif ($LcuPackageUri -or $LcuPackagePath) {
+    $requestedLcuMode = if ($LcuPackageUri -or $LcuPackagePath) {
         'Package'
     }
     else {
@@ -724,6 +702,15 @@ function Assert-RetryContract {
     }
     if ([bool]$RequireRdp -ne [bool]$Manifest.RequireRdp) {
         throw "The retry RequireRdp value '$([bool]$RequireRdp)' does not match the staged value '$([bool]$Manifest.RequireRdp)'."
+    }
+    if (
+        [bool]$AllowRecognizedNonServicingPendingFileRenames -ne
+        [bool]$Manifest.AllowRecognizedNonServicingPendingFileRenames
+    ) {
+        throw (
+            'The retry AllowRecognizedNonServicingPendingFileRenames value does not match ' +
+            'the staged value.'
+        )
     }
 
     if ($requestedLanguagePackMode -eq 'Package') {
@@ -796,19 +783,19 @@ function Invoke-StageInputs {
     }
 
     $mediaFiles = @()
-    $languagePackMode = if ($UseBuiltInCitServicing) { 'BuiltInCIT' } else { 'AlreadyInstalled' }
-    if (-not $UseBuiltInCitServicing -and ($LanguagePackCabUri -or $LanguagePackCabPath)) {
+    $languagePackMode = 'AlreadyInstalled'
+    if ($LanguagePackCabUri -or $LanguagePackCabPath) {
         $languagePackMode = 'Package'
         $mediaFiles += Stage-VerifiedMedia -Description 'language-pack CAB' `
             -DestinationName 'LanguagePack.cab' -Uri $LanguagePackCabUri `
             -SourcePath $LanguagePackCabPath -ExpectedSha256 $LanguagePackCabSha256
     }
-    elseif (-not $UseBuiltInCitServicing -and $DownloadLanguagePack) {
+    elseif ($DownloadLanguagePack) {
         $languagePackMode = 'MicrosoftDownload'
     }
 
-    $lcuMode = if ($UseBuiltInCitServicing) { 'BuiltInCIT' } else { 'WindowsUpdate' }
-    if (-not $UseBuiltInCitServicing -and ($LcuPackageUri -or $LcuPackagePath)) {
+    $lcuMode = 'WindowsUpdate'
+    if ($LcuPackageUri -or $LcuPackagePath) {
         $lcuMode = 'Package'
         $lcuExtension = if ($LcuPackageUri) {
             [IO.Path]::GetExtension($LcuPackageUri.AbsolutePath)
@@ -846,6 +833,7 @@ function Invoke-StageInputs {
         LcuSource = Get-SourceIdentity -Uri $LcuPackageUri -Path $LcuPackagePath `
             -DefaultValue $lcuMode
         RequireRdp = [bool]$RequireRdp
+        AllowRecognizedNonServicingPendingFileRenames = [bool]$AllowRecognizedNonServicingPendingFileRenames
         PackageFiles = $packageFiles
         MediaFiles = $mediaFiles
     }
@@ -866,15 +854,14 @@ function Get-VerifiedStagingForInstall {
 function Get-StagedInstallArguments {
     param([Parameter(Mandatory = $true)]$Manifest)
 
-    if ([string]$Manifest.LcuMode -eq 'BuiltInCIT') {
-        throw "Built-in CIT servicing must continue with phase 'AdoptServicedLanguage', not 'InstallAndService'."
-    }
-
     $arguments = @{
         Phase = 'InstallAndService'
         LanguageTag = $LanguageTag
         WorkingDirectory = $WorkingDirectory
         RequireRdp = [bool]$Manifest.RequireRdp
+        AllowRecognizedNonServicingPendingFileRenames = (
+            [bool]$Manifest.AllowRecognizedNonServicingPendingFileRenames
+        )
     }
     if ([string]$Manifest.LanguagePackMode -eq 'Package') {
         $arguments.LanguagePackCabPath = Join-Path $packageRoot 'Media\LanguagePack.cab'
@@ -906,39 +893,22 @@ $stagingInputParameters = @(
     'LcuPackagePath',
     'LcuPackageSha256',
     'UseWindowsUpdate',
-    'UseBuiltInCitServicing',
     'UseManagedIdentityForDownloads',
     'RequireRdp',
+    'AllowRecognizedNonServicingPendingFileRenames',
     'DownloadTimeoutSeconds'
 )
 
-if ($Phase -in @('AdoptServicedLanguage', 'ApplyMachineLanguage', 'Validate')) {
+if ($Phase -in @('ApplyMachineLanguage', 'Validate')) {
     foreach ($parameterName in $stagingInputParameters) {
         if ($PSBoundParameters.ContainsKey($parameterName)) {
             throw "CIT phase '$Phase' does not accept staging parameter '-$parameterName'."
         }
     }
 
-    $requireState = $Phase -ne 'AdoptServicedLanguage'
-    $stagingManifest = Read-AndVerifyStagingManifest -RequireOrchestratorState:$requireState
-    if ($Phase -eq 'AdoptServicedLanguage') {
-        if (
-            [string]$stagingManifest.LanguagePackMode -ne 'BuiltInCIT' -or
-            [string]$stagingManifest.LcuMode -ne 'BuiltInCIT'
-        ) {
-            throw "CIT phase 'AdoptServicedLanguage' requires staging mode 'BuiltInCIT'."
-        }
-    }
+    $stagingManifest = Read-AndVerifyStagingManifest -RequireOrchestratorState
     $wrapperPath = Join-Path $packageRoot 'Invoke-Windows10MachineLanguageAib.ps1'
-    $continuationArguments = @{
-        Phase = $Phase
-        LanguageTag = $LanguageTag
-        WorkingDirectory = $WorkingDirectory
-    }
-    if ($Phase -eq 'AdoptServicedLanguage') {
-        $continuationArguments.RequireRdp = [bool]$stagingManifest.RequireRdp
-    }
-    & $wrapperPath @continuationArguments
+    & $wrapperPath -Phase $Phase -LanguageTag $LanguageTag -WorkingDirectory $WorkingDirectory
     return
 }
 

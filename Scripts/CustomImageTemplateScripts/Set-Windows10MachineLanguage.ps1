@@ -2,7 +2,6 @@
 param(
     [Parameter(Mandatory = $true, ParameterSetName = 'WindowsUpdate')]
     [Parameter(Mandatory = $true, ParameterSetName = 'Package')]
-    [Parameter(Mandatory = $true, ParameterSetName = 'AdoptServicedLanguage')]
     [ValidateScript({
         try {
             $culture = [Globalization.CultureInfo]::GetCultureInfo($_)
@@ -35,7 +34,6 @@ param(
 
     [Parameter(Mandatory = $true, ParameterSetName = 'WindowsUpdate')]
     [Parameter(Mandatory = $true, ParameterSetName = 'Package')]
-    [Parameter(Mandatory = $true, ParameterSetName = 'AdoptServicedLanguage')]
     [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf })]
     [string]$CopyNewUserSettingsScriptPath,
 
@@ -45,12 +43,6 @@ param(
 
     [Parameter(Mandatory = $true, ParameterSetName = 'Resume', DontShow = $true)]
     [switch]$Resume,
-
-    [Parameter(Mandatory = $true, ParameterSetName = 'AibBootStabilization', DontShow = $true)]
-    [switch]$AibBootStabilization,
-
-    [Parameter(Mandatory = $true, ParameterSetName = 'AdoptServicedLanguage', DontShow = $true)]
-    [switch]$AdoptServicedLanguage,
 
     [Parameter(ParameterSetName = 'WindowsUpdate', DontShow = $true)]
     [Parameter(ParameterSetName = 'Package', DontShow = $true)]
@@ -68,26 +60,25 @@ param(
     [uri]$LanguagePackIsoUri = 'https://software-download.microsoft.com/download/pr/19041.1.191206-1406.vb_release_CLIENTLANGPACKDVD_OEM_MULTI.iso',
 
     [Parameter(DontShow = $true)]
-    [long]$ExpectedLanguagePackIsoLength = 5950959616
+    [long]$ExpectedLanguagePackIsoLength = 5950959616,
+
+    [Parameter(DontShow = $true)]
+    [switch]$AllowRecognizedNonServicingPendingFileRenames
 )
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $taskName = 'Windows10MachineLanguage-Resume'
-$aibBootTaskName = 'Windows10MachineLanguage-AibBootStabilization'
 $statePath = Join-Path $WorkingDirectory 'state.json'
 $logPath = Join-Path $WorkingDirectory 'operation.log'
 $reportPath = Join-Path $WorkingDirectory 'result.json'
 $pendingActionPath = Join-Path $WorkingDirectory 'pending-action.json'
-$aibBootStatePath = Join-Path $WorkingDirectory 'aib-boot-stabilization.json'
-$aibBootReceiptPath = Join-Path $WorkingDirectory 'aib-boot-stabilization-complete.json'
-$aibUpdateIsolationPath = Join-Path $WorkingDirectory 'aib-update-isolation.json'
-$operationLockPath = Join-Path $WorkingDirectory 'operation.lock'
 $installedScriptPath = Join-Path $WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
 $installedHelperPath = Join-Path $WorkingDirectory 'Copy-UserInternationalSettingsToSystemCompat.ps1'
 $initialParameterSetName = $PSCmdlet.ParameterSetName
-$isAibExecution = -not [string]::IsNullOrWhiteSpace($AibPhase) -or $AdoptServicedLanguage
+$isAibExecution = -not [string]::IsNullOrWhiteSpace($AibPhase)
+$script:AllowRecognizedNonServicingPendingFileRenames = [bool]$AllowRecognizedNonServicingPendingFileRenames
 
 function Test-IsElevated {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -180,6 +171,72 @@ function Copy-FileUnlessSame {
     }
 }
 
+function ConvertFrom-PendingFileRenamePath {
+    param([AllowEmptyString()][string]$Path)
+
+    if ([string]::IsNullOrEmpty($Path)) {
+        return ''
+    }
+
+    return ($Path -replace '^\*\d+!?\\\?\?\\', '')
+}
+
+function Test-RecognizedNonServicingPendingFileRenamePair {
+    param(
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Source,
+        [AllowEmptyString()][string]$Destination
+    )
+
+    $sourcePath = ConvertFrom-PendingFileRenamePath -Path $Source
+    $destinationPath = ConvertFrom-PendingFileRenamePath -Path $Destination
+    if ([string]::IsNullOrWhiteSpace($sourcePath)) {
+        return $false
+    }
+
+    if (
+        $sourcePath -ieq 'C:\Windows\appcompat\Programs\Amcache.hve.tmp' -and
+        $destinationPath -ieq 'C:\Windows\appcompat\Programs\Amcache.hve'
+    ) {
+        return $true
+    }
+
+    if (-not [string]::IsNullOrEmpty($destinationPath)) {
+        return $false
+    }
+
+    return (
+        $sourcePath -imatch '^C:\\Windows\\SystemTemp\\MicrosoftEdgeUpdate(?:Setup_X86_[^\\]+\.exe|\.exe\.old)\{[0-9A-F-]+\}$' -or
+        $sourcePath -imatch '^C:\\Program Files \(x86\)\\Microsoft\\EdgeUpdate\\\d+(?:\.\d+)+$' -or
+        $sourcePath -imatch '^C:\\Program Files\\Microsoft OneDrive\\(?:Update|StandaloneUpdater)\\OneDriveSetup\.exe$' -or
+        $sourcePath -imatch '^C:\\Config\.Msi\\[0-9A-F]+\.rbf$' -or
+        $sourcePath -imatch '^C:\\Windows\\Temp\\DEL[0-9A-F]+\.tmp$' -or
+        $sourcePath -imatch '^C:\\Program Files\\Common Files\\microsoft shared\\ClickToRun\\Updates(?:\\.*)?$' -or
+        $sourcePath -imatch '^C:\\Windows\\fonts\\(?:OFFSYM(?:B|L|SB|SL|XL)?|flat_officeFontsPreview)\.ttf$' -or
+        $sourcePath -imatch '^C:\\Windows\\System32\\spool\\V4Dirs\\[0-9A-F-]+(?:\\[0-9A-F]+\.(?:BUD|gpd))?$'
+    )
+}
+
+function Test-PendingFileRenameOperationsBlocking {
+    param([AllowNull()][object[]]$Operations)
+
+    if (-not $script:AllowRecognizedNonServicingPendingFileRenames) {
+        return $true
+    }
+    if ($null -eq $Operations -or $Operations.Count -eq 0 -or ($Operations.Count % 2) -ne 0) {
+        return $true
+    }
+
+    for ($index = 0; $index -lt $Operations.Count; $index += 2) {
+        if (-not (Test-RecognizedNonServicingPendingFileRenamePair `
+            -Source ([string]$Operations[$index]) `
+            -Destination ([string]$Operations[$index + 1]))) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
 function Get-ServicingPendingReasons {
     $reasons = New-Object System.Collections.Generic.List[string]
     $registrySignals = @(
@@ -207,11 +264,22 @@ function Get-ServicingPendingReasons {
         }
     }
 
-    $pendingFileRenames = Get-ItemProperty `
+    $sessionManager = Get-ItemProperty `
         'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager' `
-        -Name PendingFileRenameOperations `
-        -ErrorAction SilentlyContinue
-    if ($null -ne $pendingFileRenames) {
+        -ErrorAction Stop
+    $pendingFileRenames = if (
+        $sessionManager.PSObject.Properties.Name -contains 'PendingFileRenameOperations'
+    ) {
+        @($sessionManager.PendingFileRenameOperations)
+    }
+    else {
+        $null
+    }
+    if (
+        $null -ne $pendingFileRenames -and
+        (Test-PendingFileRenameOperationsBlocking `
+            -Operations $pendingFileRenames)
+    ) {
         $reasons.Add('PendingFileRenameOperations')
     }
 
@@ -266,399 +334,6 @@ function Wait-ForServicingReady {
         "Windows servicing did not become ready within $TimeoutMinutes minutes. " +
         "Pending signal(s): $($lastReasons -join ', ')."
     )
-}
-
-function Wait-ForServicingStability {
-    param(
-        [int]$StableSeconds = 180,
-        [int]$TimeoutMinutes = 25
-    )
-
-    $deadline = (Get-Date).AddMinutes($TimeoutMinutes)
-    $stableSince = $null
-    $lastReasonSummary = $null
-    do {
-        $reasons = @(Get-ServicingPendingReasons)
-        $now = Get-Date
-        if ($reasons.Count -eq 0) {
-            if ($null -eq $stableSince) {
-                $stableSince = $now
-                Write-Operation "Windows servicing is currently clear; requiring $StableSeconds continuous stable seconds before releasing AIB."
-            }
-            elseif (($now - $stableSince).TotalSeconds -ge $StableSeconds) {
-                return
-            }
-        }
-        else {
-            $stableSince = $null
-            $reasonSummary = $reasons -join ', '
-            if ($reasonSummary -ne $lastReasonSummary) {
-                Write-Operation "Holding the AIB communicator for Windows servicing: $reasonSummary."
-                $lastReasonSummary = $reasonSummary
-            }
-        }
-
-        Start-Sleep -Seconds 30
-    } while ((Get-Date) -lt $deadline)
-
-    throw "Windows servicing did not remain clear for $StableSeconds continuous seconds within $TimeoutMinutes minutes."
-}
-
-function Wait-ForPostLanguageBootStability {
-    param(
-        [int]$StableSeconds = 60,
-        [int]$TimeoutMinutes = 5
-    )
-
-    $deadline = (Get-Date).AddMinutes($TimeoutMinutes)
-    $bootTime = Get-SystemBootTime
-    Write-Operation "Machine-language restart boot observed; requiring $StableSeconds seconds of continuous boot uptime before releasing AIB."
-    do {
-        $currentBootTime = Get-SystemBootTime
-        if ($currentBootTime -ne $bootTime) {
-            $bootTime = $currentBootTime
-            Write-Operation 'A later reboot was observed; restarting the machine-language boot stability window.'
-        }
-        if (((Get-Date).ToUniversalTime() - $bootTime).TotalSeconds -ge $StableSeconds) {
-            return
-        }
-        Start-Sleep -Seconds 15
-    } while ((Get-Date) -lt $deadline)
-
-    throw "The machine-language restart did not remain booted for $StableSeconds continuous seconds within $TimeoutMinutes minutes."
-}
-
-function Get-SystemBootTime {
-    $bootTime = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Stop).LastBootUpTime
-    if ($bootTime -is [datetime]) {
-        return $bootTime.ToUniversalTime()
-    }
-    return [Management.ManagementDateTimeConverter]::ToDateTime([string]$bootTime).ToUniversalTime()
-}
-
-function Enter-AibUpdateIsolation {
-    $windowsUpdateServicePath = 'HKLM:\SYSTEM\CurrentControlSet\Services\wuauserv'
-    $automaticUpdatePolicyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
-    if (-not (Test-Path -LiteralPath $aibUpdateIsolationPath -PathType Leaf)) {
-        $policy = Get-ItemProperty `
-            -LiteralPath $automaticUpdatePolicyPath `
-            -Name NoAutoUpdate `
-            -ErrorAction SilentlyContinue
-        [ordered]@{
-            SchemaVersion             = 1
-            WindowsUpdateServiceStart = [int](
-                Get-ItemProperty -LiteralPath $windowsUpdateServicePath -Name Start -ErrorAction Stop
-            ).Start
-            NoAutoUpdateExisted       = $null -ne $policy
-            NoAutoUpdateValue         = if ($null -ne $policy) { [int]$policy.NoAutoUpdate } else { $null }
-            CreatedUtc                = (Get-Date).ToUniversalTime().ToString('o')
-        } | ConvertTo-Json |
-            Set-Content -LiteralPath $aibUpdateIsolationPath -Encoding UTF8
-    }
-
-    New-Item -ItemType Directory -Path $automaticUpdatePolicyPath -Force | Out-Null
-    New-ItemProperty `
-        -LiteralPath $automaticUpdatePolicyPath `
-        -Name NoAutoUpdate `
-        -PropertyType DWord `
-        -Value 1 `
-        -Force | Out-Null
-    Stop-Service -Name wuauserv -Force -ErrorAction Stop
-    Set-Service -Name wuauserv -StartupType Disabled
-    $isolatedService = Get-ItemProperty -LiteralPath $windowsUpdateServicePath -Name Start
-    $isolatedPolicy = Get-ItemProperty -LiteralPath $automaticUpdatePolicyPath -Name NoAutoUpdate
-    if ([int]$isolatedService.Start -ne 4 -or [int]$isolatedPolicy.NoAutoUpdate -ne 1) {
-        throw 'Windows Update isolation could not be verified.'
-    }
-    Write-Operation 'Paused automatic Windows Update activity until the language workflow completes.'
-}
-
-function Exit-AibUpdateIsolation {
-    if (-not (Test-Path -LiteralPath $aibUpdateIsolationPath -PathType Leaf)) {
-        return
-    }
-
-    $isolation = Get-Content -LiteralPath $aibUpdateIsolationPath -Raw | ConvertFrom-Json
-    $windowsUpdateServicePath = 'HKLM:\SYSTEM\CurrentControlSet\Services\wuauserv'
-    $automaticUpdatePolicyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
-    Set-ItemProperty `
-        -LiteralPath $windowsUpdateServicePath `
-        -Name Start `
-        -Value ([int]$isolation.WindowsUpdateServiceStart)
-    if ([bool]$isolation.NoAutoUpdateExisted) {
-        Set-ItemProperty `
-            -LiteralPath $automaticUpdatePolicyPath `
-            -Name NoAutoUpdate `
-            -Value ([int]$isolation.NoAutoUpdateValue)
-    }
-    else {
-        Remove-ItemProperty `
-            -LiteralPath $automaticUpdatePolicyPath `
-            -Name NoAutoUpdate `
-            -ErrorAction SilentlyContinue
-    }
-    Remove-Item -LiteralPath $aibUpdateIsolationPath -Force
-    Write-Operation 'Restored the original Windows Update service and policy configuration.'
-}
-
-function Register-AibBootStabilization {
-    param([Parameter(Mandatory = $true)][string]$Phase)
-
-    if (-not $isAibExecution) {
-        return
-    }
-
-    $winRmServicePath = 'HKLM:\SYSTEM\CurrentControlSet\Services\WinRM'
-    $winRmConfiguration = Get-ItemProperty -LiteralPath $winRmServicePath -ErrorAction Stop
-    $winRmStart = [int]$winRmConfiguration.Start
-    if ($winRmStart -eq 4) {
-        throw 'WinRM is already disabled; AIB cannot install its reboot stabilization guard safely.'
-    }
-
-    $sourceBootTime = Get-SystemBootTime
-    [ordered]@{
-        SchemaVersion               = 1
-        Phase                       = $Phase
-        OriginalWinRmStart          = $winRmStart
-        OriginalWinRmDelayedExisted = $null -ne $winRmConfiguration.PSObject.Properties['DelayedAutoStart']
-        OriginalWinRmDelayedValue   = if ($null -ne $winRmConfiguration.PSObject.Properties['DelayedAutoStart']) {
-            [int]$winRmConfiguration.DelayedAutoStart
-        }
-        else {
-            $null
-        }
-        SourceBootUtc               = $sourceBootTime.ToString('o')
-        SecondaryRebootCount        = 0
-        CreatedUtc                  = (Get-Date).ToUniversalTime().ToString('o')
-    } | ConvertTo-Json |
-        Set-Content -LiteralPath $aibBootStatePath -Encoding UTF8
-    Remove-Item -LiteralPath $aibBootReceiptPath -Force -ErrorAction SilentlyContinue
-
-    if ($Phase -eq 'PostLanguageRestart') {
-        Write-Operation (
-            "Armed validation-time boot stabilization for '$Phase'; " +
-            'the standard AIB restart may use its unchanged WinRM readiness behavior.'
-        )
-        return
-    }
-
-    $arguments = '-NoProfile -ExecutionPolicy Bypass -File "{0}" -AibBootStabilization -WorkingDirectory "{1}"' -f `
-        $installedScriptPath, $WorkingDirectory
-    $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $arguments
-    $trigger = New-ScheduledTaskTrigger -AtStartup
-    $principal = New-ScheduledTaskPrincipal `
-        -UserId 'SYSTEM' `
-        -LogonType ServiceAccount `
-        -RunLevel Highest
-    $settings = New-ScheduledTaskSettingsSet `
-        -StartWhenAvailable `
-        -AllowStartIfOnBatteries `
-        -DontStopIfGoingOnBatteries `
-        -MultipleInstances IgnoreNew `
-        -RestartCount 5 `
-        -RestartInterval (New-TimeSpan -Minutes 1) `
-        -ExecutionTimeLimit (New-TimeSpan -Minutes 45)
-
-    Register-ScheduledTask `
-        -TaskName $aibBootTaskName `
-        -Action $action `
-        -Trigger $trigger `
-        -Principal $principal `
-        -Settings $settings `
-        -Force | Out-Null
-
-    Set-Service -Name WinRM -StartupType Disabled
-    Write-Operation "Armed AIB boot stabilization for '$Phase'; WinRM will remain unavailable until servicing is continuously stable."
-}
-
-function Try-RequestAibSecondaryServicingReboot {
-    param([Parameter(Mandatory = $true)]$GuardState)
-
-    if ([string]$GuardState.Phase -ne 'PostLcuRestart') {
-        return $false
-    }
-    $secondaryRebootCount = if ($null -ne $GuardState.PSObject.Properties['SecondaryRebootCount']) {
-        [int]$GuardState.SecondaryRebootCount
-    }
-    else {
-        0
-    }
-    if ($secondaryRebootCount -ge 1) {
-        return $false
-    }
-
-    $pendingReasons = @(Get-ServicingPendingReasons)
-    $activeServicingReasons = @(
-        $pendingReasons | Where-Object {
-            $_ -eq 'CBS RebootInProgress'
-        }
-    )
-    if ($pendingReasons.Count -eq 0 -or $activeServicingReasons.Count -gt 0) {
-        return $false
-    }
-
-    if ($null -eq $GuardState.PSObject.Properties['SecondaryRebootCount']) {
-        $GuardState | Add-Member -NotePropertyName SecondaryRebootCount -NotePropertyValue 1
-    }
-    else {
-        $GuardState.SecondaryRebootCount = 1
-    }
-    $GuardState | ConvertTo-Json -Depth 6 |
-        Set-Content -LiteralPath $aibBootStatePath -Encoding UTF8
-    Write-Operation (
-        "Servicing remained restart-pending without an in-progress CBS transaction; requesting one bounded secondary reboot. " +
-        "Pending signal(s): $($pendingReasons -join ', ')."
-    )
-    try {
-        $shutdownProcess = Start-Process `
-            -FilePath 'shutdown.exe' `
-            -ArgumentList @(
-                '/r',
-                '/t', '15',
-                '/f',
-                '/d', 'p:4:1'
-            ) `
-            -WindowStyle Hidden `
-            -Wait `
-            -PassThru
-        if ($shutdownProcess.ExitCode -ne 0) {
-            throw "shutdown.exe returned exit code $($shutdownProcess.ExitCode)."
-        }
-    }
-    catch {
-        $GuardState.SecondaryRebootCount = 0
-        $GuardState | ConvertTo-Json -Depth 6 |
-            Set-Content -LiteralPath $aibBootStatePath -Encoding UTF8
-        throw
-    }
-    return $true
-}
-
-function Invoke-AibBootStabilization {
-    if (-not (Test-Path -LiteralPath $aibBootStatePath -PathType Leaf)) {
-        throw "AIB boot stabilization state was not found at '$aibBootStatePath'."
-    }
-
-    $guardState = Get-Content -LiteralPath $aibBootStatePath -Raw | ConvertFrom-Json
-    Write-Operation "AIB boot stabilization resumed for '$($guardState.Phase)'."
-    $sourceBootTime = [datetime]$guardState.SourceBootUtc
-    $currentBootTime = Get-SystemBootTime
-    if ($currentBootTime -le $sourceBootTime) {
-        throw "AIB boot stabilization did not observe a reboot after '$($guardState.Phase)'."
-    }
-    if ([string]$guardState.Phase -eq 'PostLanguageRestart') {
-        Wait-ForPostLanguageBootStability
-    }
-    else {
-        try {
-            Wait-ForServicingStability -StableSeconds 180 -TimeoutMinutes 8
-        }
-        catch {
-            if ($_.Exception.Message -notmatch '^Windows servicing did not remain clear') {
-                throw
-            }
-            if (Try-RequestAibSecondaryServicingReboot -GuardState $guardState) {
-                return
-            }
-            Wait-ForServicingStability -StableSeconds 180 -TimeoutMinutes 17
-        }
-    }
-
-    if ([string]$guardState.Phase -eq 'PostLcuRestart') {
-        Enter-AibUpdateIsolation
-    }
-
-    $winRmServicePath = 'HKLM:\SYSTEM\CurrentControlSet\Services\WinRM'
-    $originalWinRmStart = [int]$guardState.OriginalWinRmStart
-    $originalWinRmStartupType = switch ($originalWinRmStart) {
-        2 { 'Automatic' }
-        3 { 'Manual' }
-        default {
-            throw "Unsupported original WinRM startup value '$originalWinRmStart'."
-        }
-    }
-    Set-Service -Name WinRM -StartupType $originalWinRmStartupType
-    if ([bool]$guardState.OriginalWinRmDelayedExisted) {
-        Set-ItemProperty `
-            -LiteralPath $winRmServicePath `
-            -Name DelayedAutoStart `
-            -Value ([int]$guardState.OriginalWinRmDelayedValue)
-    }
-    else {
-        Remove-ItemProperty `
-            -LiteralPath $winRmServicePath `
-            -Name DelayedAutoStart `
-            -ErrorAction SilentlyContinue
-    }
-    [ordered]@{
-        SchemaVersion = 1
-        Phase         = [string]$guardState.Phase
-        SourceBootUtc = $sourceBootTime.ToString('o')
-        StableBootUtc = $currentBootTime.ToString('o')
-        CompletedUtc  = (Get-Date).ToUniversalTime().ToString('o')
-    } | ConvertTo-Json |
-        Set-Content -LiteralPath $aibBootReceiptPath -Encoding UTF8
-    Start-Service -Name WinRM
-    Unregister-ScheduledTask -TaskName $aibBootTaskName -Confirm:$false -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $aibBootStatePath -Force
-    Write-Operation "Windows servicing is stable; restored WinRM and released AIB after '$($guardState.Phase)'."
-}
-
-function Assert-AibBootStabilizationCompleted {
-    param([Parameter(Mandatory = $true)][string]$Phase)
-
-    if (Test-Path -LiteralPath $aibBootStatePath -PathType Leaf) {
-        if ($Phase -ne 'PostLanguageRestart') {
-            throw "AIB boot stabilization for '$Phase' is still pending; refusing to start a reboot-sensitive phase."
-        }
-
-        $guardState = Get-Content -LiteralPath $aibBootStatePath -Raw | ConvertFrom-Json
-        if ([string]$guardState.Phase -ne $Phase) {
-            throw "AIB boot stabilization state is for '$($guardState.Phase)', not '$Phase'."
-        }
-        $sourceBootTime = [datetime]$guardState.SourceBootUtc
-        $currentBootTime = Get-SystemBootTime
-        if ($currentBootTime -le $sourceBootTime) {
-            throw "AIB boot stabilization did not observe a reboot after '$Phase'."
-        }
-        Wait-ForPostLanguageBootStability
-        $stableBootTime = Get-SystemBootTime
-        [ordered]@{
-            SchemaVersion = 1
-            Phase         = $Phase
-            SourceBootUtc = $sourceBootTime.ToString('o')
-            StableBootUtc = $stableBootTime.ToString('o')
-            CompletedUtc  = (Get-Date).ToUniversalTime().ToString('o')
-        } | ConvertTo-Json |
-            Set-Content -LiteralPath $aibBootReceiptPath -Encoding UTF8
-        Remove-Item -LiteralPath $aibBootStatePath -Force
-        Write-Operation "Validated the machine-language restart and released AIB after '$Phase'."
-    }
-    if (-not (Test-Path -LiteralPath $aibBootReceiptPath -PathType Leaf)) {
-        throw "AIB boot stabilization receipt for '$Phase' is missing."
-    }
-
-    $receipt = Get-Content -LiteralPath $aibBootReceiptPath -Raw | ConvertFrom-Json
-    if ([string]$receipt.Phase -ne $Phase) {
-        throw "AIB boot stabilization receipt is for '$($receipt.Phase)', not '$Phase'."
-    }
-    if ([datetime]$receipt.StableBootUtc -le [datetime]$receipt.SourceBootUtc) {
-        throw "AIB boot stabilization receipt for '$Phase' does not prove that a reboot occurred."
-    }
-}
-
-function Get-ExpectedStateForAibPhase {
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateSet('InstallAndService', 'ApplyMachineLanguage', 'Validate')]
-        [string]$Phase
-    )
-
-    switch ($Phase) {
-        'InstallAndService' { return 'InstallingLanguageAndLcu' }
-        'ApplyMachineLanguage' { return 'PostLcuRestart' }
-        'Validate' { return 'PostLanguageRestart' }
-    }
 }
 
 function Get-OsServicingInfo {
@@ -849,7 +524,6 @@ function Wait-ForLanguagePackage {
 function Assert-CoreHealth {
     param(
         [switch]$CheckRdp,
-        [switch]$CheckAibPlatform,
         [datetime]$EventsSince = (Get-Date).AddMinutes(-30),
         [int]$RuntimeTimeoutMinutes = 10
     )
@@ -857,11 +531,7 @@ function Assert-CoreHealth {
     $deadline = (Get-Date).AddMinutes($RuntimeTimeoutMinutes)
     do {
         $runtimeError = $null
-        $requiredServices = @('BFE', 'mpssvc')
-        if ($CheckAibPlatform) {
-            $requiredServices += @('WinDefend', 'WindowsAzureGuestAgent')
-        }
-        foreach ($serviceName in $requiredServices) {
+        foreach ($serviceName in @('BFE', 'mpssvc')) {
             $service = Get-CimInstance Win32_Service -Filter "Name='$serviceName'"
             if ($null -eq $service) {
                 $runtimeError = "Required service '$serviceName' was not found."
@@ -932,7 +602,7 @@ function Assert-CoreHealth {
         throw "Detected $($mpssvcFailures.Count) mpssvc Event 7024 failures and $($error1168.Count) error-1168 events since $EventsSince."
     }
 
-    Write-Operation 'Firewall, required services, event log, requested RDP, and AIB platform health checks passed.'
+    Write-Operation 'Firewall, required services, event log, and requested RDP health checks passed.'
 }
 
 function Install-TargetLanguage {
@@ -1584,9 +1254,6 @@ function Complete-Operation {
     $result | ConvertTo-Json -Depth 4 |
         Set-Content -LiteralPath $reportPath -Encoding UTF8
 
-    Exit-AibUpdateIsolation
-    Unregister-ScheduledTask -TaskName $aibBootTaskName -Confirm:$false -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $aibBootStatePath, $aibBootReceiptPath -Force -ErrorAction SilentlyContinue
     $State.Phase = 'Completed'
     Write-State -State $State
     Remove-Item -LiteralPath $pendingActionPath -Force -ErrorAction SilentlyContinue
@@ -1631,7 +1298,6 @@ function Invoke-InstallAndServicePhase {
     $State.PhaseStartedUtc = (Get-Date).ToUniversalTime().ToString('o')
     $State.Error = $null
     Write-State -State $State
-    Register-AibBootStabilization -Phase $State.Phase
     Register-ResumeTask
     Request-Restart -Reason 'Restarting to complete cumulative-update servicing.'
 }
@@ -1667,7 +1333,7 @@ function Invoke-InitialPhase {
         }
     }
     Wait-ForServicingReady
-    Assert-CoreHealth -CheckRdp:$RequireRdp -CheckAibPlatform:$isAibExecution
+    Assert-CoreHealth -CheckRdp:$RequireRdp
 
     if ($initialParameterSetName -eq 'WindowsUpdate') {
         $windowsUpdateSelection = Get-WindowsUpdateLcuSelection
@@ -1722,6 +1388,7 @@ function Invoke-InitialPhase {
         LanguagePackCabPath  = $stagedLanguagePackPath
         LanguagePackSource   = if ($LanguagePackCabPath) { 'LocalCab' } elseif ($DownloadLanguagePack) { 'MicrosoftDownload' } else { 'AlreadyInstalled' }
         RequireRdp           = [bool]$RequireRdp
+        AllowRecognizedNonServicingPendingFileRenames = [bool]$script:AllowRecognizedNonServicingPendingFileRenames
         RestartAutomatically = [bool]$RestartAutomatically
         FailureCount         = 0
         Error                = $null
@@ -1736,95 +1403,13 @@ function Invoke-InitialPhase {
     Invoke-InstallAndServicePhase -State $state
 }
 
-function Invoke-AdoptServicedLanguagePhase {
-    $os = Get-OsServicingInfo
-    if ($os.CurrentBuild -notin @(19044, 19045)) {
-        throw "This orchestrator requires Windows 10 21H2 or 22H2. Detected build $($os.CurrentBuild)."
-    }
-    if (Test-RebootPending) {
-        throw 'CIT built-in servicing still reports a pending restart; refusing machine-wide language activation.'
-    }
-    Wait-ForServicingReady
-    Assert-LanguageServicedToCurrentUbr -TargetLanguageTag $LanguageTag
-    Assert-CoreHealth -CheckRdp:$RequireRdp -CheckAibPlatform
-
-    $state = $null
-    if (Test-Path -LiteralPath $statePath -PathType Leaf) {
-        $existingState = Read-State
-        if (
-            [string]$existingState.Phase -eq 'Completed' -and
-            [string]$existingState.LanguageTag -eq $LanguageTag
-        ) {
-            Write-Operation "The adopted CIT language operation is already complete. Result: $reportPath"
-            return
-        }
-        if ([string]$existingState.Phase -ne 'AdoptingServicedLanguage') {
-            throw "A built-in CIT adoption cannot replace existing state '$($existingState.Phase)'."
-        }
-        if ([string]$existingState.LanguageTag -ne $LanguageTag) {
-            throw "Existing adoption language '$($existingState.LanguageTag)' does not match requested '$LanguageTag'."
-        }
-        if ([bool]$existingState.RequireRdp -ne [bool]$RequireRdp) {
-            throw "Existing adoption RequireRdp value '$($existingState.RequireRdp)' does not match requested '$RequireRdp'."
-        }
-        $state = $existingState
-    }
-
-    Copy-FileUnlessSame -Source $PSCommandPath -Destination $installedScriptPath
-    Copy-FileUnlessSame -Source $CopyNewUserSettingsScriptPath -Destination $installedHelperPath
-    if ($null -eq $state) {
-        $state = [pscustomobject][ordered]@{
-            Phase                 = 'AdoptingServicedLanguage'
-            LanguageTag           = $LanguageTag
-            LcuMode               = 'BuiltInCIT'
-            LanguagePackSource    = 'BuiltInCIT'
-            RequireRdp            = [bool]$RequireRdp
-            RestartAutomatically  = $false
-            FailureCount          = 0
-            Error                 = $null
-            DefaultUserHiveBackup = $null
-            StartedUtc            = (Get-Date).ToUniversalTime().ToString('o')
-            PhaseStartedUtc       = (Get-Date).ToUniversalTime().ToString('o')
-            UpdatedUtc            = $null
-        }
-        Write-State -State $state
-    }
-    $script:StateOwnedByCurrentInvocation = $true
-
-    Set-CurrentUserLanguage -TargetLanguageTag $LanguageTag
-    if ([string]::IsNullOrWhiteSpace([string]$state.DefaultUserHiveBackup)) {
-        $state.DefaultUserHiveBackup = Backup-DefaultUserHive
-        Write-State -State $state
-    }
-    Invoke-NewUserSettingsCopy -HelperPath $installedHelperPath
-    Assert-DefaultUserLanguage -TargetLanguageTag $LanguageTag
-
-    Import-Module LanguagePackManagement -ErrorAction Stop
-    Set-SystemPreferredUILanguage -Language $LanguageTag
-    Set-WinSystemLocale -SystemLocale $LanguageTag
-    if ([string](Get-SystemPreferredUILanguage) -ne $LanguageTag) {
-        throw 'Set-SystemPreferredUILanguage did not persist the requested language.'
-    }
-
-    $state.Phase = 'PostLanguageRestart'
-    $state.PhaseStartedUtc = (Get-Date).ToUniversalTime().ToString('o')
-    Write-State -State $state
-    Register-AibBootStabilization -Phase $state.Phase
-    Request-Restart -Reason "Restarting to activate CIT-serviced machine language '$LanguageTag'."
-}
-
 function Invoke-PostLcuRestartPhase {
     param([Parameter(Mandatory = $true)]$State)
 
-    if ($isAibExecution) {
-        Assert-AibBootStabilizationCompleted -Phase 'PostLcuRestart'
-    }
+    Start-Sleep -Seconds 60
     Wait-ForServicingReady
     Assert-LanguageServicedToCurrentUbr -TargetLanguageTag $State.LanguageTag
-    Assert-CoreHealth `
-        -CheckRdp:$State.RequireRdp `
-        -CheckAibPlatform:$isAibExecution `
-        -EventsSince ([datetime]$State.PhaseStartedUtc)
+    Assert-CoreHealth -CheckRdp:$State.RequireRdp -EventsSince ([datetime]$State.PhaseStartedUtc)
 
     Import-Module LanguagePackManagement -ErrorAction Stop
     Set-SystemPreferredUILanguage -Language $State.LanguageTag
@@ -1837,7 +1422,6 @@ function Invoke-PostLcuRestartPhase {
     $State.Phase = 'PostLanguageRestart'
     $State.PhaseStartedUtc = (Get-Date).ToUniversalTime().ToString('o')
     Write-State -State $State
-    Register-AibBootStabilization -Phase $State.Phase
     Register-ResumeTask
     Request-Restart -Reason "Restarting to activate machine-wide language '$($State.LanguageTag)'."
 }
@@ -1845,9 +1429,7 @@ function Invoke-PostLcuRestartPhase {
 function Invoke-PostLanguageRestartPhase {
     param([Parameter(Mandatory = $true)]$State)
 
-    if ($isAibExecution) {
-        Assert-AibBootStabilizationCompleted -Phase 'PostLanguageRestart'
-    }
+    Start-Sleep -Seconds 60
     Wait-ForServicingReady
     Assert-LanguageServicedToCurrentUbr -TargetLanguageTag $State.LanguageTag
 
@@ -1859,10 +1441,7 @@ function Invoke-PostLanguageRestartPhase {
     }
 
     Assert-DefaultUserLanguage -TargetLanguageTag $State.LanguageTag
-    Assert-CoreHealth `
-        -CheckRdp:$State.RequireRdp `
-        -CheckAibPlatform:$isAibExecution `
-        -EventsSince ([datetime]$State.PhaseStartedUtc)
+    Assert-CoreHealth -CheckRdp:$State.RequireRdp -EventsSince ([datetime]$State.PhaseStartedUtc)
     Complete-Operation -State $State
 }
 
@@ -1876,47 +1455,14 @@ if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProces
 if ($isAibExecution -and -not (Test-IsSystemAccount)) {
     throw 'Azure Image Builder mode must run as the local SYSTEM account.'
 }
-if (
-    -not [string]::IsNullOrWhiteSpace($AibPhase) -and
-    $AibPhase -ne 'InstallAndService' -and
-    -not $Resume
-) {
+if ($isAibExecution -and $AibPhase -ne 'InstallAndService' -and -not $Resume) {
     throw "AIB phase '$AibPhase' requires -Resume."
 }
 
 New-Item -ItemType Directory -Path $WorkingDirectory -Force | Out-Null
 $script:StateOwnedByCurrentInvocation = $false
-$script:operationLock = $null
 
 try {
-    $lockDeadline = (Get-Date).AddMinutes(2)
-    do {
-        try {
-            $script:operationLock = [IO.File]::Open(
-                $operationLockPath,
-                [IO.FileMode]::OpenOrCreate,
-                [IO.FileAccess]::ReadWrite,
-                [IO.FileShare]::None
-            )
-            break
-        }
-        catch {
-            if ((Get-Date) -ge $lockDeadline) {
-                throw "Another Windows 10 machine-language invocation is already using '$WorkingDirectory'."
-            }
-            Start-Sleep -Seconds 2
-        }
-    } while ($null -eq $script:operationLock)
-
-    if ($AibBootStabilization) {
-        Invoke-AibBootStabilization
-        return
-    }
-    if ($AdoptServicedLanguage) {
-        Invoke-AdoptServicedLanguagePhase
-        return
-    }
-
     if (-not $Resume) {
         Invoke-InitialPhase
         return
@@ -1925,6 +1471,10 @@ try {
     $state = Read-State
     $script:StateOwnedByCurrentInvocation = $true
     $script:RestartAutomatically = if ($isAibExecution) { $false } else { [bool]$state.RestartAutomatically }
+    $script:AllowRecognizedNonServicingPendingFileRenames = (
+        $state.PSObject.Properties.Name -contains 'AllowRecognizedNonServicingPendingFileRenames' -and
+        [bool]$state.AllowRecognizedNonServicingPendingFileRenames
+    )
     if (
         -not [string]::IsNullOrWhiteSpace($ExpectedLanguageTag) -and
         [string]$state.LanguageTag -ne $ExpectedLanguageTag
@@ -1932,7 +1482,18 @@ try {
         throw "State language '$($state.LanguageTag)' does not match requested language '$ExpectedLanguageTag'."
     }
     if ($isAibExecution) {
-        $expectedPhase = Get-ExpectedStateForAibPhase -Phase $AibPhase
+        $expectedPhase = if ($AibPhase -eq 'InstallAndService') {
+            'InstallingLanguageAndLcu'
+        }
+        elseif ($AibPhase -eq 'ApplyMachineLanguage') {
+            'PostLcuRestart'
+        }
+        elseif ($AibPhase -eq 'Validate') {
+            'PostLanguageRestart'
+        }
+        else {
+            throw "Unsupported AIB resume phase '$AibPhase'."
+        }
         if ([string]$state.Phase -ne $expectedPhase) {
             throw "AIB phase '$AibPhase' requires state '$expectedPhase', found '$($state.Phase)'."
         }
@@ -1996,10 +1557,4 @@ catch {
         Write-Operation "Could not persist failure state: $($_.Exception.Message)"
     }
     throw
-}
-finally {
-    if ($null -ne $script:operationLock) {
-        $script:operationLock.Dispose()
-        $script:operationLock = $null
-    }
 }
