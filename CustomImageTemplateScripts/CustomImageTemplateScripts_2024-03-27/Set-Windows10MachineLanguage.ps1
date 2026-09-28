@@ -16,6 +16,22 @@ param(
     })]
     [string]$LanguageTag,
 
+    [Parameter(Mandatory = $true, ParameterSetName = 'OnlineMultiLanguage')]
+    [ValidateNotNullOrEmpty()]
+    [ValidateScript({
+        try {
+            $culture = [Globalization.CultureInfo]::GetCultureInfo($_)
+        }
+        catch {
+            throw "'$_' is not a recognized Windows culture tag."
+        }
+        if ($culture.IsNeutralCulture -or [string]::IsNullOrWhiteSpace($culture.Name)) {
+            throw "'$_' is not a specific Windows culture tag."
+        }
+        $true
+    })]
+    [string[]]$LanguageTags,
+
     [Parameter(ParameterSetName = 'WindowsUpdate')]
     [Parameter(ParameterSetName = 'Package')]
     [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf })]
@@ -30,10 +46,12 @@ param(
     [string]$LcuPackagePath,
 
     [Parameter(Mandatory = $true, ParameterSetName = 'WindowsUpdate')]
+    [Parameter(Mandatory = $true, ParameterSetName = 'OnlineMultiLanguage')]
     [switch]$UseWindowsUpdate,
 
     [Parameter(Mandatory = $true, ParameterSetName = 'WindowsUpdate')]
     [Parameter(Mandatory = $true, ParameterSetName = 'Package')]
+    [Parameter(Mandatory = $true, ParameterSetName = 'OnlineMultiLanguage')]
     [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf })]
     [string]$CopyNewUserSettingsScriptPath,
 
@@ -46,6 +64,7 @@ param(
 
     [Parameter(ParameterSetName = 'WindowsUpdate', DontShow = $true)]
     [Parameter(ParameterSetName = 'Package', DontShow = $true)]
+    [Parameter(ParameterSetName = 'OnlineMultiLanguage', DontShow = $true)]
     [Parameter(ParameterSetName = 'Resume', DontShow = $true)]
     [ValidateSet('InstallAndService', 'ApplyMachineLanguage', 'Validate')]
     [string]$AibPhase,
@@ -387,9 +406,9 @@ function Test-ClientLanguagePackInstalled {
     }
 }
 
-function Get-LanguagePackFromMicrosoft {
+function Get-LanguagePacksFromMicrosoft {
     param(
-        [Parameter(Mandatory = $true)][string]$TargetLanguageTag,
+        [Parameter(Mandatory = $true)][string[]]$TargetLanguageTags,
         [Parameter(Mandatory = $true)][uri]$IsoUri,
         [Parameter(Mandatory = $true)][long]$ExpectedIsoLength
     )
@@ -409,10 +428,6 @@ function Get-LanguagePackFromMicrosoft {
     }
 
     $isoPath = Join-Path $WorkingDirectory 'Windows10-Client-Language-Pack.iso'
-    $cabPath = Join-Path $WorkingDirectory (
-        'Client-Language-Pack-{0}.cab' -f $TargetLanguageTag
-    )
-
     if (-not (Test-Path -LiteralPath $isoPath -PathType Leaf)) {
         Write-Operation "Downloading the official Windows 10 language-pack ISO from Microsoft. This download is approximately 6 GB."
         $downloaded = $false
@@ -453,24 +468,31 @@ function Get-LanguagePackFromMicrosoft {
             throw 'The mounted language-pack ISO did not expose a drive letter.'
         }
 
-        $expectedName = 'Microsoft-Windows-Client-Language-Pack_x64_{0}.cab' -f `
-            $TargetLanguageTag.ToLowerInvariant()
-        $sourceCab = Get-ChildItem `
-            -LiteralPath "$($volume.DriveLetter):\" `
-            -Filter $expectedName `
-            -File `
-            -Recurse `
-            -ErrorAction Stop |
-            Select-Object -First 1
-        if ($null -eq $sourceCab) {
-            throw "The official Microsoft ISO does not contain '$expectedName'."
-        }
+        $result = @{}
+        foreach ($targetLanguageTag in $TargetLanguageTags) {
+            $expectedName = 'Microsoft-Windows-Client-Language-Pack_x64_{0}.cab' -f `
+                $targetLanguageTag.ToLowerInvariant()
+            $sourceCab = Get-ChildItem `
+                -LiteralPath "$($volume.DriveLetter):\" `
+                -Filter $expectedName `
+                -File `
+                -Recurse `
+                -ErrorAction Stop |
+                Select-Object -First 1
+            if ($null -eq $sourceCab) {
+                throw "The official Microsoft ISO does not contain '$expectedName'."
+            }
 
-        Copy-Item -LiteralPath $sourceCab.FullName -Destination $cabPath -Force
-        if ((Get-Item -LiteralPath $cabPath).Length -lt 1MB) {
-            throw "The extracted language-pack CAB is unexpectedly small."
+            $cabPath = Join-Path $WorkingDirectory (
+                'Client-Language-Pack-{0}.cab' -f $targetLanguageTag
+            )
+            Copy-Item -LiteralPath $sourceCab.FullName -Destination $cabPath -Force
+            if ((Get-Item -LiteralPath $cabPath).Length -lt 1MB) {
+                throw "The extracted language-pack CAB for '$targetLanguageTag' is unexpectedly small."
+            }
+            $result[$targetLanguageTag] = $cabPath
+            Write-Operation "Extracted '$expectedName' from the official Microsoft ISO."
         }
-        Write-Operation "Extracted '$expectedName' from the official Microsoft ISO."
     }
     finally {
         if ($mounted) {
@@ -480,7 +502,21 @@ function Get-LanguagePackFromMicrosoft {
         Remove-Item -LiteralPath $isoPath -Force -ErrorAction SilentlyContinue
     }
 
-    return $cabPath
+    return $result
+}
+
+function Get-LanguagePackFromMicrosoft {
+    param(
+        [Parameter(Mandatory = $true)][string]$TargetLanguageTag,
+        [Parameter(Mandatory = $true)][uri]$IsoUri,
+        [Parameter(Mandatory = $true)][long]$ExpectedIsoLength
+    )
+
+    $languagePacks = Get-LanguagePacksFromMicrosoft `
+        -TargetLanguageTags @($TargetLanguageTag) `
+        -IsoUri $IsoUri `
+        -ExpectedIsoLength $ExpectedIsoLength
+    return [string]$languagePacks[$TargetLanguageTag]
 }
 
 function Assert-LanguageServicedToCurrentUbr {
@@ -1213,7 +1249,15 @@ function Request-Restart {
             'ApplyMachineLanguage'
         }
         elseif ([string]$state.Phase -eq 'PostLanguageRestart') {
-            'Validate'
+            if (
+                $state.PSObject.Properties.Name -contains 'DeferLanguageSelection' -and
+                [bool]$state.DeferLanguageSelection
+            ) {
+                $null
+            }
+            else {
+                'Validate'
+            }
         }
         else {
             throw "Unsupported AIB restart state '$($state.Phase)'."
@@ -1224,7 +1268,12 @@ function Request-Restart {
     $pendingResult | ConvertTo-Json |
         Set-Content -LiteralPath $reportPath -Encoding UTF8
     if ($isAibExecution) {
-        Write-Operation "Restart is required. Run an Azure Image Builder Windows Restart customizer, then invoke AIB phase '$($pendingResult.NextAibPhase)'."
+        if ([string]::IsNullOrWhiteSpace([string]$pendingResult.NextAibPhase)) {
+            Write-Operation 'The final portal-managed restart is required. Validate the produced image externally after it completes.'
+        }
+        else {
+            Write-Operation "Restart is required. Run an Azure Image Builder Windows Restart customizer, then invoke AIB phase '$($pendingResult.NextAibPhase)'."
+        }
         return
     }
 
@@ -1261,26 +1310,96 @@ function Complete-Operation {
     Write-Operation "Machine-wide language configuration completed successfully. Result: $reportPath"
 }
 
+function Get-StateLanguageTags {
+    param([Parameter(Mandatory = $true)]$State)
+
+    if ($State.PSObject.Properties.Name -contains 'LanguageTags') {
+        return @($State.LanguageTags)
+    }
+
+    return @([string]$State.LanguageTag)
+}
+
+function Get-StateLanguagePackPath {
+    param(
+        [Parameter(Mandatory = $true)]$State,
+        [Parameter(Mandatory = $true)][string]$TargetLanguageTag
+    )
+
+    if ($State.PSObject.Properties.Name -contains 'LanguagePackCabPaths') {
+        if ($State.LanguagePackCabPaths -is [Collections.IDictionary]) {
+            return [string]$State.LanguagePackCabPaths[$TargetLanguageTag]
+        }
+        $property = $State.LanguagePackCabPaths.PSObject.Properties[$TargetLanguageTag]
+        if ($null -ne $property) {
+            return [string]$property.Value
+        }
+        return $null
+    }
+
+    return [string]$State.LanguagePackCabPath
+}
+
+function Assert-PortalRestartCompleted {
+    param([Parameter(Mandatory = $true)]$State)
+
+    $bootTime = (Get-CimInstance Win32_OperatingSystem -ErrorAction Stop).LastBootUpTime
+    $phaseStarted = [datetime]$State.PhaseStartedUtc
+    if ($bootTime -le $phaseStarted) {
+        throw 'The required portal restart customizer did not run or did not complete after the preceding Windows 10 language phase.'
+    }
+}
+
 function Invoke-InstallAndServicePhase {
     param([Parameter(Mandatory = $true)]$State)
 
-    Install-TargetLanguage `
-        -TargetLanguageTag $State.LanguageTag `
-        -ClientLanguagePackPath $State.LanguagePackCabPath
-    Set-CurrentUserLanguage -TargetLanguageTag $State.LanguageTag
-    if ([string]::IsNullOrWhiteSpace([string]$State.DefaultUserHiveBackup)) {
-        $State.DefaultUserHiveBackup = Backup-DefaultUserHive
-        Write-State -State $State
+    $targetLanguageTags = @(Get-StateLanguageTags -State $State)
+    foreach ($targetLanguageTag in $targetLanguageTags) {
+        $languagePackPath = Get-StateLanguagePackPath `
+            -State $State `
+            -TargetLanguageTag $targetLanguageTag
+        Install-TargetLanguage `
+            -TargetLanguageTag $targetLanguageTag `
+            -ClientLanguagePackPath $languagePackPath
+        if (
+            -not [string]::IsNullOrWhiteSpace($languagePackPath) -and
+            [IO.Path]::GetFullPath($languagePackPath).StartsWith(
+                ([IO.Path]::GetFullPath($WorkingDirectory).TrimEnd('\') + '\'),
+                [StringComparison]::OrdinalIgnoreCase
+            )
+        ) {
+            Remove-Item -LiteralPath $languagePackPath -Force -ErrorAction Stop
+        }
     }
-    Invoke-NewUserSettingsCopy -HelperPath $installedHelperPath
-    Assert-DefaultUserLanguage -TargetLanguageTag $State.LanguageTag
+
+    $deferLanguageSelection = (
+        $State.PSObject.Properties.Name -contains 'DeferLanguageSelection' -and
+        [bool]$State.DeferLanguageSelection
+    )
+    if (-not $deferLanguageSelection) {
+        Set-CurrentUserLanguage -TargetLanguageTag $State.LanguageTag
+        if ([string]::IsNullOrWhiteSpace([string]$State.DefaultUserHiveBackup)) {
+            $State.DefaultUserHiveBackup = Backup-DefaultUserHive
+            Write-State -State $State
+        }
+        Invoke-NewUserSettingsCopy -HelperPath $installedHelperPath
+        Assert-DefaultUserLanguage -TargetLanguageTag $State.LanguageTag
+    }
 
     Wait-ForServicingReady -AllowPendingRestart
+    $requiresLcuReapplication = $false
     try {
-        Assert-LanguageServicedToCurrentUbr -TargetLanguageTag $State.LanguageTag
-        Write-Operation 'The installed language package already matches the Windows revision; no LCU reapplication is needed.'
+        foreach ($targetLanguageTag in $targetLanguageTags) {
+            Assert-LanguageServicedToCurrentUbr -TargetLanguageTag $targetLanguageTag
+        }
+        Write-Operation 'All installed language packages already match the Windows revision; no LCU reapplication is needed.'
     }
     catch {
+        Write-Operation "Language/UBR parity requires LCU reapplication: $($_.Exception.Message)"
+        $requiresLcuReapplication = $true
+    }
+
+    if ($requiresLcuReapplication) {
         if ([string]$State.LcuMode -eq 'Package') {
             Install-LcuFromPackage -PackagePath $State.LcuPackagePath
         }
@@ -1305,7 +1424,7 @@ function Invoke-InstallAndServicePhase {
 function Invoke-InitialPhase {
     if (-not $isAibExecution -and (Test-IsSystemAccount)) {
         throw ('The standalone workflow must be started from an elevated administrator user session so the requested ' +
-            'culture can be copied to Default User. For SYSTEM-based image automation, use Invoke-Windows10MachineLanguageAib.ps1.')
+            'culture can be copied to Default User. SYSTEM-based image automation must invoke an explicit AIB phase.')
     }
     if (-not $isAibExecution -and -not (Test-IsInteractiveUserSession)) {
         throw ('The standalone workflow must be started from an elevated interactive administrator session. ' +
@@ -1335,7 +1454,7 @@ function Invoke-InitialPhase {
     Wait-ForServicingReady
     Assert-CoreHealth -CheckRdp:$RequireRdp
 
-    if ($initialParameterSetName -eq 'WindowsUpdate') {
+    if ($initialParameterSetName -in @('WindowsUpdate', 'OnlineMultiLanguage')) {
         $windowsUpdateSelection = Get-WindowsUpdateLcuSelection
         if ($null -eq $windowsUpdateSelection.Update) {
             throw ('Windows Update does not currently offer an applicable Windows 10 LCU. ' +
@@ -1349,16 +1468,46 @@ function Invoke-InitialPhase {
     Copy-FileUnlessSame -Source $PSCommandPath -Destination $installedScriptPath
     Copy-FileUnlessSame -Source $CopyNewUserSettingsScriptPath -Destination $installedHelperPath
 
-    $stagedLanguagePackPath = $null
-    if (-not (Test-ClientLanguagePackInstalled -TargetLanguageTag $LanguageTag)) {
+    $requestedLanguageTags = if ($initialParameterSetName -eq 'OnlineMultiLanguage') {
+        @($LanguageTags | Select-Object -Unique)
+    }
+    else {
+        @($LanguageTag)
+    }
+    $stagedLanguagePackPaths = @{}
+    $missingLanguageTags = @(
+        foreach ($requestedLanguageTag in $requestedLanguageTags) {
+            if (Test-ClientLanguagePackInstalled -TargetLanguageTag $requestedLanguageTag) {
+                Write-Operation "The '$requestedLanguageTag' client language pack is already installed; no CAB source is required."
+                $stagedLanguagePackPaths[$requestedLanguageTag] = $null
+            }
+            else {
+                $requestedLanguageTag
+            }
+        }
+    )
+
+    if ($initialParameterSetName -eq 'OnlineMultiLanguage') {
+        if ($missingLanguageTags.Count -gt 0) {
+            $downloadedLanguagePacks = Get-LanguagePacksFromMicrosoft `
+                -TargetLanguageTags $missingLanguageTags `
+                -IsoUri $LanguagePackIsoUri `
+                -ExpectedIsoLength $ExpectedLanguagePackIsoLength
+            foreach ($missingLanguageTag in $missingLanguageTags) {
+                $stagedLanguagePackPaths[$missingLanguageTag] = [string]$downloadedLanguagePacks[$missingLanguageTag]
+            }
+        }
+    }
+    elseif ($missingLanguageTags.Count -gt 0) {
         if ($LanguagePackCabPath) {
             $stagedLanguagePackPath = Join-Path $WorkingDirectory (
                 'Client-Language-Pack-{0}{1}' -f $LanguageTag, [IO.Path]::GetExtension($LanguagePackCabPath)
             )
             Copy-FileUnlessSame -Source $LanguagePackCabPath -Destination $stagedLanguagePackPath
+            $stagedLanguagePackPaths[$LanguageTag] = $stagedLanguagePackPath
         }
         elseif ($DownloadLanguagePack) {
-            $stagedLanguagePackPath = Get-LanguagePackFromMicrosoft `
+            $stagedLanguagePackPaths[$LanguageTag] = Get-LanguagePackFromMicrosoft `
                 -TargetLanguageTag $LanguageTag `
                 -IsoUri $LanguagePackIsoUri `
                 -ExpectedIsoLength $ExpectedLanguagePackIsoLength
@@ -1367,9 +1516,6 @@ function Invoke-InitialPhase {
             throw ("The '$LanguageTag' client language pack is not installed. " +
                 'Specify -LanguagePackCabPath or -DownloadLanguagePack.')
         }
-    }
-    else {
-        Write-Operation "The '$LanguageTag' client language pack is already installed; no CAB source is required."
     }
 
     $stagedLcuPath = $null
@@ -1382,11 +1528,14 @@ function Invoke-InitialPhase {
 
     $state = [pscustomobject][ordered]@{
         Phase                = 'InstallingLanguageAndLcu'
-        LanguageTag          = $LanguageTag
+        LanguageTag          = if ($initialParameterSetName -eq 'OnlineMultiLanguage') { $null } else { $LanguageTag }
+        LanguageTags         = $requestedLanguageTags
         LcuMode              = $initialParameterSetName
         LcuPackagePath       = $stagedLcuPath
-        LanguagePackCabPath  = $stagedLanguagePackPath
-        LanguagePackSource   = if ($LanguagePackCabPath) { 'LocalCab' } elseif ($DownloadLanguagePack) { 'MicrosoftDownload' } else { 'AlreadyInstalled' }
+        LanguagePackCabPath  = if ($initialParameterSetName -eq 'OnlineMultiLanguage') { $null } else { [string]$stagedLanguagePackPaths[$LanguageTag] }
+        LanguagePackCabPaths = $stagedLanguagePackPaths
+        LanguagePackSource   = if ($initialParameterSetName -eq 'OnlineMultiLanguage') { 'MicrosoftDownload' } elseif ($LanguagePackCabPath) { 'LocalCab' } elseif ($DownloadLanguagePack) { 'MicrosoftDownload' } else { 'AlreadyInstalled' }
+        DeferLanguageSelection = ($initialParameterSetName -eq 'OnlineMultiLanguage')
         RequireRdp           = [bool]$RequireRdp
         AllowRecognizedNonServicingPendingFileRenames = [bool]$script:AllowRecognizedNonServicingPendingFileRenames
         RestartAutomatically = [bool]$RestartAutomatically
@@ -1406,10 +1555,35 @@ function Invoke-InitialPhase {
 function Invoke-PostLcuRestartPhase {
     param([Parameter(Mandatory = $true)]$State)
 
+    Assert-PortalRestartCompleted -State $State
     Start-Sleep -Seconds 60
     Wait-ForServicingReady
-    Assert-LanguageServicedToCurrentUbr -TargetLanguageTag $State.LanguageTag
+    $targetLanguageTags = @(Get-StateLanguageTags -State $State)
+    foreach ($targetLanguageTag in $targetLanguageTags) {
+        Assert-LanguageServicedToCurrentUbr -TargetLanguageTag $targetLanguageTag
+    }
     Assert-CoreHealth -CheckRdp:$State.RequireRdp -EventsSince ([datetime]$State.PhaseStartedUtc)
+
+    $deferLanguageSelection = (
+        $State.PSObject.Properties.Name -contains 'DeferLanguageSelection' -and
+        [bool]$State.DeferLanguageSelection
+    )
+    if ($deferLanguageSelection) {
+        if ([string]::IsNullOrWhiteSpace([string]$ExpectedLanguageTag)) {
+            throw 'The deferred Windows 10 language workflow requires the default language selected by SetDefaultLang.ps1.'
+        }
+        if ($targetLanguageTags -notcontains $ExpectedLanguageTag) {
+            throw "Requested default language '$ExpectedLanguageTag' was not installed by InstallLanguagePacks.ps1."
+        }
+        $State.LanguageTag = $ExpectedLanguageTag
+        Set-CurrentUserLanguage -TargetLanguageTag $State.LanguageTag
+        if ([string]::IsNullOrWhiteSpace([string]$State.DefaultUserHiveBackup)) {
+            $State.DefaultUserHiveBackup = Backup-DefaultUserHive
+            Write-State -State $State
+        }
+        Invoke-NewUserSettingsCopy -HelperPath $installedHelperPath
+        Assert-DefaultUserLanguage -TargetLanguageTag $State.LanguageTag
+    }
 
     Import-Module LanguagePackManagement -ErrorAction Stop
     Set-SystemPreferredUILanguage -Language $State.LanguageTag
@@ -1429,6 +1603,7 @@ function Invoke-PostLcuRestartPhase {
 function Invoke-PostLanguageRestartPhase {
     param([Parameter(Mandatory = $true)]$State)
 
+    Assert-PortalRestartCompleted -State $State
     Start-Sleep -Seconds 60
     Wait-ForServicingReady
     Assert-LanguageServicedToCurrentUbr -TargetLanguageTag $State.LanguageTag
@@ -1477,9 +1652,18 @@ try {
     )
     if (
         -not [string]::IsNullOrWhiteSpace($ExpectedLanguageTag) -and
-        [string]$state.LanguageTag -ne $ExpectedLanguageTag
+        (
+            (
+                $state.PSObject.Properties.Name -contains 'LanguageTags' -and
+                @($state.LanguageTags) -notcontains $ExpectedLanguageTag
+            ) -or
+            (
+                $state.PSObject.Properties.Name -notcontains 'LanguageTags' -and
+                [string]$state.LanguageTag -ne $ExpectedLanguageTag
+            )
+        )
     ) {
-        throw "State language '$($state.LanguageTag)' does not match requested language '$ExpectedLanguageTag'."
+        throw "Requested language '$ExpectedLanguageTag' was not recorded by InstallLanguagePacks.ps1."
     }
     if ($isAibExecution) {
         $expectedPhase = if ($AibPhase -eq 'InstallAndService') {
