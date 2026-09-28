@@ -139,6 +139,34 @@ Assert-True (
     $orchestratorText -match 'foreach \(\$targetLanguageTag in \$targetLanguageTags\) \{\s*Assert-LanguageServicedToCurrentUbr'
 ) 'Language/UBR parity is not checked for every requested language.'
 Assert-True (
+    $orchestratorText -match 'Get-DiskImage -ImagePath \$ImagePath[\s\S]+Get-Volume'
+) 'Language media discovery is not scoped to the exact mounted ISO association.'
+Assert-True (
+    $orchestratorText -match 'AddSeconds\(30\)[\s\S]+Start-Sleep -Seconds 1'
+) 'Language media discovery does not use bounded polling.'
+Assert-True (
+    $orchestratorText -match "\`$candidateDriveType -ne 'CD-ROM'" -and
+    $orchestratorText -match "\`$candidateFileSystem -notin @\('UDF', 'CDFS'\)"
+) 'Language media discovery does not require the expected optical filesystem.'
+Assert-True (
+    $orchestratorText -match 'Get-Volume -ErrorAction Stop[\s\S]+Get-PSDrive -PSProvider FileSystem'
+) 'Temporary drive-letter allocation does not exclude both volume and filesystem allocations.'
+Assert-True (
+    $orchestratorText -match "foreach \(\`$codePoint in \[int\]\[char\]'Z'\.\.\[int\]\[char\]'D'\)"
+) 'Temporary drive-letter allocation is not restricted to Z through D.'
+Assert-True (
+    $orchestratorText -match 'Add-PartitionAccessPath[\s\S]+Verified temporary access path'
+) 'Temporary ISO access-path assignment is not ownership-verified.'
+Assert-True (
+    $orchestratorText -match 'Remove-PartitionAccessPath[\s\S]+Dismount-DiskImage -ImagePath \$isoPath[\s\S]+Remove-Item -LiteralPath \$isoPath'
+) 'Temporary access path, exact dismount, and ISO deletion cleanup are incomplete.'
+Assert-True (
+    $orchestratorText -match 'Language-pack ISO processing failed:[\s\S]+Cleanup also failed:'
+) 'Primary and cleanup ISO failures are not preserved together.'
+Assert-True (
+    $orchestratorText -notmatch 'Set-StorageSetting|automount|mountvol'
+) 'Language media recovery changes global automount behavior.'
+Assert-True (
     $orchestratorText -match 'DeferLanguageSelection[\s\S]+Requested default language[\s\S]+Set-CurrentUserLanguage'
 ) 'Default language selection is not deferred to SetDefaultLang.'
 Assert-True (

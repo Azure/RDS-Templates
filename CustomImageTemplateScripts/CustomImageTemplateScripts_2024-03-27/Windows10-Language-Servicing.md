@@ -87,6 +87,18 @@ support code. Branch validation may use a fork URL only when the exact commit
 and every downloaded file hash are pinned. The final design must use an
 immutable, supported upstream or managed-artifact contract.
 
+The official language-pack ISO is discovered only through its exact
+`Get-DiskImage -ImagePath` association. Discovery is polled for a bounded
+30 seconds to allow storage enumeration and automatic drive-letter assignment
+to converge. The workflow requires one optical UDF/CDFS volume and uses its
+existing drive letter when present. If that exact volume remains unlettered,
+the workflow may add one temporary unused drive-letter access path from Z
+through D to its uniquely mapped partition, verify ownership, search only that
+root, and remove only the path created by that invocation. It never changes
+global automount policy or scans unrelated drives. Ambiguity, unexpected media,
+an occupied or concurrently claimed path, verification failure, or any cleanup
+failure remains fail-closed.
+
 ## Internal branch/AIB validation
 
 1. Pin the exact branch commit and record SHA-256 for every downloaded entry
@@ -136,14 +148,22 @@ hardcoded LCU, or suppress an unsupported servicing state.
   require the approved managed LCU URI/SHA contract.
 - **Unknown PFRO:** inspect every pair; do not broaden the allowlist or delete
   registry data.
+- **Language ISO has no drive letter:** retain the mount/volume/partition
+  diagnostics. The script polls the exact ISO association and performs only the
+  bounded temporary access-path recovery described above. Do not assign a
+  letter manually, enable global automount, or scan unrelated volumes.
 - **Restart timeout/stabilization:** use the validated 30-minute timeout and
   180-second post-WinRM stabilization for internal qualification.
 - **Unsupported OS build:** stop; only builds 19044 and 19045 are supported.
 
 ## Promotion checklist
 
-- [ ] Gen1 passes against the exact pull-request branch.
-- [ ] Gen2 passes against the exact pull-request branch.
+- [ ] Gen1 passes against the exact final pull-request commit. The latest
+      completed Gen1 evidence passed commit
+      `26494cd2509e39cbc08955f25299c129b0ec538e`.
+- [ ] Gen2 passes against the exact final pull-request commit. The latest
+      completed Gen2 evidence passed commit
+      `26494cd2509e39cbc08955f25299c129b0ec538e`.
 - [ ] Multi-Session passes against the exact pull-request branch.
 - [ ] The production LCU source/order contract is approved.
 - [ ] The Windows 10 restart-timeout/check mechanism is approved.

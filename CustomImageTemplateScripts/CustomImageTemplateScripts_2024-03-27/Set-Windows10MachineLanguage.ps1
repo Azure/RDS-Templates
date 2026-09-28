@@ -406,6 +406,57 @@ function Test-ClientLanguagePackInstalled {
     }
 }
 
+function Get-IsoVolumeIdentity {
+    param([Parameter(Mandatory = $true)]$Volume)
+
+    foreach ($propertyName in @('UniqueId', 'ObjectId', 'Path')) {
+        $property = $Volume.PSObject.Properties[$propertyName]
+        if ($null -eq $property) {
+            continue
+        }
+        $value = [string]$property.Value
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            return "$propertyName=$value"
+        }
+    }
+
+    throw 'The mounted language-pack ISO volume does not expose a stable identity.'
+}
+
+function Get-AssociatedIsoVolumes {
+    param([Parameter(Mandatory = $true)][string]$ImagePath)
+
+    return @(
+        Get-DiskImage -ImagePath $ImagePath -ErrorAction Stop |
+            Get-Volume -ErrorAction Stop
+    )
+}
+
+function Get-UnusedTemporaryDriveLetter {
+    $allocatedLetters = New-Object 'System.Collections.Generic.HashSet[string]' (
+        [StringComparer]::OrdinalIgnoreCase
+    )
+    foreach ($volume in @(Get-Volume -ErrorAction Stop)) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$volume.DriveLetter)) {
+            [void]$allocatedLetters.Add([string]$volume.DriveLetter)
+        }
+    }
+    foreach ($fileSystemDrive in @(Get-PSDrive -PSProvider FileSystem -ErrorAction Stop)) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$fileSystemDrive.Name)) {
+            [void]$allocatedLetters.Add([string]$fileSystemDrive.Name)
+        }
+    }
+
+    foreach ($codePoint in [int][char]'Z'..[int][char]'D') {
+        $candidate = [char]$codePoint
+        if (-not $allocatedLetters.Contains([string]$candidate)) {
+            return [string]$candidate
+        }
+    }
+
+    throw 'No unused drive letter from Z through D is available for the mounted language-pack ISO.'
+}
+
 function Get-LanguagePacksFromMicrosoft {
     param(
         [Parameter(Mandatory = $true)][string[]]$TargetLanguageTags,
@@ -460,20 +511,166 @@ function Get-LanguagePacksFromMicrosoft {
     }
 
     $mounted = $false
+    $temporaryAccessPath = $null
+    $temporaryPartition = $null
+    $primaryError = $null
+    $cleanupErrors = New-Object System.Collections.Generic.List[string]
+    $result = $null
     try {
-        $diskImage = Mount-DiskImage -ImagePath $isoPath -PassThru -ErrorAction Stop
+        $null = Mount-DiskImage -ImagePath $isoPath -PassThru -ErrorAction Stop
         $mounted = $true
-        $volume = $diskImage | Get-Volume | Where-Object DriveLetter | Select-Object -First 1
+
+        $volume = $null
+        $volumeIdentity = $null
+        $lastDiscoveryError = $null
+        $deadline = (Get-Date).AddSeconds(30)
+        do {
+            try {
+                $associatedVolumes = @(Get-AssociatedIsoVolumes -ImagePath $isoPath)
+                $lastDiscoveryError = $null
+            }
+            catch {
+                $lastDiscoveryError = $_
+                $associatedVolumes = @()
+                Write-Operation (
+                    "The exact ISO volume association is not ready: $($_.Exception.Message)"
+                )
+            }
+            if ($associatedVolumes.Count -gt 1) {
+                throw "The mounted language-pack ISO has $($associatedVolumes.Count) associated volumes; exactly one is required."
+            }
+            if ($associatedVolumes.Count -eq 1) {
+                $candidateVolume = $associatedVolumes[0]
+                $candidateFileSystem = [string]$candidateVolume.FileSystem
+                $candidateDriveType = [string]$candidateVolume.DriveType
+                if (
+                    $candidateDriveType -ne 'CD-ROM' -or
+                    $candidateFileSystem -notin @('UDF', 'CDFS')
+                ) {
+                    throw (
+                        "The mounted language-pack ISO volume is unexpected: DriveType='{0}', FileSystem='{1}'." -f
+                        $candidateDriveType, $candidateFileSystem
+                    )
+                }
+
+                $candidateIdentity = Get-IsoVolumeIdentity -Volume $candidateVolume
+                Write-Operation (
+                    "Observed mounted language-pack ISO volume '$candidateIdentity' " +
+                    "with FileSystem='$candidateFileSystem' and DriveLetter='$($candidateVolume.DriveLetter)'."
+                )
+                $volume = $candidateVolume
+                $volumeIdentity = $candidateIdentity
+                if (-not [string]::IsNullOrWhiteSpace([string]$volume.DriveLetter)) {
+                    break
+                }
+            }
+
+            if ((Get-Date) -lt $deadline) {
+                Start-Sleep -Seconds 1
+            }
+        } while ((Get-Date) -lt $deadline)
+
         if ($null -eq $volume) {
-            throw 'The mounted language-pack ISO did not expose a drive letter.'
+            $detail = if ($null -ne $lastDiscoveryError) {
+                " Last association error: $($lastDiscoveryError.Exception.Message)"
+            }
+            else {
+                ''
+            }
+            throw (
+                'The mounted language-pack ISO did not expose a uniquely associated optical volume ' +
+                "within 30 seconds.$detail"
+            )
         }
 
+        if ([string]::IsNullOrWhiteSpace([string]$volume.DriveLetter)) {
+            $associatedDisks = @(
+                Get-DiskImage -ImagePath $isoPath -ErrorAction Stop |
+                    Get-Disk -ErrorAction Stop
+            )
+            if ($associatedDisks.Count -ne 1) {
+                throw "The mounted language-pack ISO maps to $($associatedDisks.Count) disks; exactly one is required."
+            }
+
+            $matchingPartitions = @(
+                foreach ($partition in @(
+                    Get-Partition -DiskNumber $associatedDisks[0].Number -ErrorAction Stop
+                )) {
+                    $partitionVolumes = @($partition | Get-Volume -ErrorAction Stop)
+                    if ($partitionVolumes.Count -gt 1) {
+                        throw (
+                            "Partition $($partition.PartitionNumber) on the mounted ISO maps to " +
+                            "$($partitionVolumes.Count) volumes."
+                        )
+                    }
+                    if (
+                        $partitionVolumes.Count -eq 1 -and
+                        (Get-IsoVolumeIdentity -Volume $partitionVolumes[0]) -eq $volumeIdentity
+                    ) {
+                        $partition
+                    }
+                }
+            )
+            if ($matchingPartitions.Count -ne 1) {
+                throw (
+                    "The mounted language-pack ISO volume maps to $($matchingPartitions.Count) partitions; " +
+                    'exactly one is required.'
+                )
+            }
+
+            $temporaryDriveLetter = Get-UnusedTemporaryDriveLetter
+            # Recheck immediately before mutation to fail closed on a concurrent claim.
+            $recheckedDriveLetter = Get-UnusedTemporaryDriveLetter
+            if ($recheckedDriveLetter -ne $temporaryDriveLetter) {
+                throw (
+                    "Drive letter '$temporaryDriveLetter' was claimed concurrently before it could be assigned."
+                )
+            }
+
+            $temporaryPartition = $matchingPartitions[0]
+            $proposedAccessPath = "$temporaryDriveLetter`:\"
+            Add-PartitionAccessPath `
+                -DiskNumber $temporaryPartition.DiskNumber `
+                -PartitionNumber $temporaryPartition.PartitionNumber `
+                -AccessPath $proposedAccessPath `
+                -ErrorAction Stop
+            $temporaryAccessPath = $proposedAccessPath
+            Write-Operation (
+                "Added temporary access path '$temporaryAccessPath' to partition " +
+                "$($temporaryPartition.DiskNumber):$($temporaryPartition.PartitionNumber) " +
+                "for ISO volume '$volumeIdentity'."
+            )
+
+            $verifiedVolumes = @(Get-AssociatedIsoVolumes -ImagePath $isoPath)
+            if ($verifiedVolumes.Count -ne 1) {
+                throw (
+                    "The mounted language-pack ISO has $($verifiedVolumes.Count) associated volumes " +
+                    'after temporary access-path assignment.'
+                )
+            }
+            $verifiedVolume = $verifiedVolumes[0]
+            if (
+                (Get-IsoVolumeIdentity -Volume $verifiedVolume) -ne $volumeIdentity -or
+                [string]$verifiedVolume.DriveLetter -ne $temporaryDriveLetter
+            ) {
+                throw (
+                    "Temporary access path '$temporaryAccessPath' was not verified as owned by " +
+                    "the expected ISO volume '$volumeIdentity'."
+                )
+            }
+            $volume = $verifiedVolume
+            Write-Operation (
+                "Verified temporary access path '$temporaryAccessPath' belongs to ISO volume '$volumeIdentity'."
+            )
+        }
+
+        $searchRoot = "$($volume.DriveLetter):\"
         $result = @{}
         foreach ($targetLanguageTag in $TargetLanguageTags) {
             $expectedName = 'Microsoft-Windows-Client-Language-Pack_x64_{0}.cab' -f `
                 $targetLanguageTag.ToLowerInvariant()
             $sourceCab = Get-ChildItem `
-                -LiteralPath "$($volume.DriveLetter):\" `
+                -LiteralPath $searchRoot `
                 -Filter $expectedName `
                 -File `
                 -Recurse `
@@ -494,12 +691,58 @@ function Get-LanguagePacksFromMicrosoft {
             Write-Operation "Extracted '$expectedName' from the official Microsoft ISO."
         }
     }
+    catch {
+        $primaryError = $_
+    }
     finally {
-        if ($mounted) {
-            Dismount-DiskImage -ImagePath $isoPath -ErrorAction SilentlyContinue |
-                Out-Null
+        if ($null -ne $temporaryAccessPath) {
+            try {
+                Remove-PartitionAccessPath `
+                    -DiskNumber $temporaryPartition.DiskNumber `
+                    -PartitionNumber $temporaryPartition.PartitionNumber `
+                    -AccessPath $temporaryAccessPath `
+                    -ErrorAction Stop
+                Write-Operation "Removed temporary ISO access path '$temporaryAccessPath'."
+            }
+            catch {
+                $cleanupErrors.Add(
+                    "Failed to remove temporary ISO access path '$temporaryAccessPath': $($_.Exception.Message)"
+                )
+            }
         }
-        Remove-Item -LiteralPath $isoPath -Force -ErrorAction SilentlyContinue
+        if ($mounted) {
+            try {
+                Dismount-DiskImage -ImagePath $isoPath -ErrorAction Stop | Out-Null
+                Write-Operation "Dismounted the exact language-pack ISO '$isoPath'."
+            }
+            catch {
+                $cleanupErrors.Add(
+                    "Failed to dismount the exact language-pack ISO '$isoPath': $($_.Exception.Message)"
+                )
+            }
+        }
+        try {
+            Remove-Item -LiteralPath $isoPath -Force -ErrorAction Stop
+            Write-Operation "Deleted the downloaded language-pack ISO '$isoPath'."
+        }
+        catch {
+            $cleanupErrors.Add(
+                "Failed to delete the downloaded language-pack ISO '$isoPath': $($_.Exception.Message)"
+            )
+        }
+    }
+
+    if ($null -ne $primaryError) {
+        if ($cleanupErrors.Count -gt 0) {
+            throw (
+                "Language-pack ISO processing failed: $($primaryError.Exception.Message) " +
+                "Cleanup also failed: $($cleanupErrors -join ' | ')"
+            )
+        }
+        throw $primaryError
+    }
+    if ($cleanupErrors.Count -gt 0) {
+        throw "Language-pack ISO cleanup failed: $($cleanupErrors -join ' | ')"
     }
 
     return $result
