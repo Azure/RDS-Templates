@@ -1,22 +1,80 @@
 # Windows 10 language servicing
 
-Windows 10 21H2/22H2 support is integrated through the existing portal entry
-points without adding AVD UX parameters or routes:
+> [!IMPORTANT]
+> This support is under validation in [Azure/RDS-Templates#840](https://github.com/Azure/RDS-Templates/pull/840).
+> The pull request must remain draft until the LCU and restart-timeout contracts
+> are approved and Gen1, Gen2, and Multi-Session validation passes.
 
-1. `InstallLanguagePacks.ps1` maps every requested `LanguageList` value,
-   installs each language deterministically, reapplies the latest applicable
-   non-preview Windows 10 cumulative update offered by Windows Update, records
-   durable state, and returns for the portal's existing restart.
-2. `SetDefaultLang.ps1` selects the requested default language from that
-   installed set, applies current-user, Default User, system preferred UI, and
-   system locale settings, and returns for the portal's existing second
-   restart.
-3. Produced-image validation runs externally after the final restart. There is
-   no production `Validate` customizer.
-
-Both entry scripts dispatch only on client builds 19044 and 19045 and return
-before their pre-existing Windows 11 bodies. The Windows 11 parameter contracts
+This integration supports Windows 10 client builds 19044 and 19045 through the
+existing portal entry points. The pre-existing Windows 11 parameter contracts
 and execution bodies remain unchanged.
+
+The intended portal sequence is:
+
+1. Run `InstallLanguagePacks.ps1`, then use the existing first restart.
+2. Run `SetDefaultLang.ps1`, then use the existing second restart and Sysprep.
+3. Qualify the produced image externally after the final restart.
+
+There is no production `Validate` customizer and no additional visible AVD UX
+parameter or route.
+
+## Servicing contract
+
+Adding Windows 10 language content can leave a language package at an older
+revision than the operating system. The workflow must therefore install the
+requested language content, apply an applicable current non-preview Windows 10
+cumulative update, and fail closed unless every installed language package
+revision matches the OS UBR.
+
+An isolated Gen2 diagnostic against the exact draft branch source image proved
+that installing `fr-FR` first caused Windows Update to offer an applicable
+Windows 10 LCU. The AIB Windows Update customizer installed it, restarted, and
+produced revision parity: OS `19045.6456` and language package `19041.6456`.
+The diagnostic then stopped intentionally before publication.
+
+This result validates the post-language Windows Update order for that exact
+source image only. It does not establish a universal production LCU source
+contract for every supported image or variant. The draft remains blocked until
+the post-language acquisition path is implemented and validated across Gen1,
+Gen2, and Multi-Session, or an approved managed immutable LCU URI and SHA-256
+contract is supplied. Do not hardcode a qualification KB, scrape unsupported
+Update Catalog pages, reuse undocumented caches, or use a transient URL.
+
+The recognized non-servicing pending-file-rename allowance is enabled only in
+the Windows 10 install path. Every PFRO pair must be well formed and match the
+validated allowlist. Unknown, mixed, malformed, servicing, language, FOD, LCU,
+or CBS-related entries remain blocking. PFRO registry data is never modified
+or cleared.
+
+## Using the scripts
+
+### Preconditions
+
+- Windows 10 client build 19044 or 19045.
+- SYSTEM or elevated AIB execution context.
+- Supported language names or BCP-47 tags accepted by the existing script
+  parameters.
+- Adequate disk space and network access to approved Microsoft endpoints.
+- No unsupported or ambiguous pending servicing state.
+- An approved LCU acquisition contract for the selected source image.
+
+Use the versioned entry points with the portal's existing parameters:
+
+```powershell
+.\InstallLanguagePacks.ps1 -LanguageList @('fr-FR', 'de-DE')
+# Existing first portal-managed restart.
+
+.\SetDefaultLang.ps1 -Language 'fr-FR'
+# Existing second portal-managed restart, followed by Sysprep.
+```
+
+`InstallLanguagePacks.ps1` installs every requested language deterministically;
+it does not silently choose a default. After the first restart,
+`SetDefaultLang.ps1` selects one installed language as the machine default.
+
+These commands describe the existing entry-point contract, not a production
+release endorsement. Do not run the draft as a final production workflow until
+the LCU acquisition/order and restart-timeout release gates above are approved.
 
 The Windows 10 support files are:
 
@@ -24,62 +82,73 @@ The Windows 10 support files are:
 - `Copy-UserInternationalSettingsToSystemCompat.ps1`
 - `Test-Windows10MachineLanguageHealth.ps1`
 
-The two entry scripts verify SHA-256 before using downloaded or durably staged
-support code. During draft validation, `InstallLanguagePacks.ps1` uses one
-isolated fork-branch base URI. Before the pull request can be marked ready, that
-single base URI must be switched mechanically to the corresponding
-`Azure/RDS-Templates` `master` raw-content location without changing the
-hash-pinned support files.
+Entry scripts must verify SHA-256 before using downloaded or durably staged
+support code. Branch validation may use a fork URL only when the exact commit
+and every downloaded file hash are pinned. The final design must use an
+immutable, supported upstream or managed-artifact contract.
 
-## Servicing behavior
+## Internal branch/AIB validation
 
-- `LanguageList` order is retained and duplicate language tags are removed
-  without selecting a default.
-- The official Microsoft Windows 10 language-pack ISO is downloaded once and
-  each missing client language CAB is extracted before language/FOD repair.
-- The latest applicable non-preview Windows 10 cumulative update offered by
-  Windows Update is selected and reapplied when language package revision does
-  not match the current Windows UBR. The workflow fails closed before changing
-  the image if no applicable LCU is offered. This is a required online
-  validation condition: Windows Update does not normally re-offer an
-  already-installed LCU, and the no-UX portal contract has no package input.
-  Production remains blocked if supported source images are fully current and
-  do not receive an applicable LCU; resolving that case requires a productized,
-  approved current-LCU acquisition contract rather than a hardcoded KB.
-- After the first restart, every installed language package must match the
-  current UBR before `SetDefaultLang.ps1` can apply machine-wide settings.
-- The recognized non-servicing pending-file-rename allowance is enabled only
-  in the Windows 10 install path. Every pair must be well formed and match the
-  validated allowlist. Unknown, mixed, malformed, servicing, language, FOD,
-  LCU, or CBS-related paths remain blocking. PFRO registry data is never
-  modified or deleted.
+1. Pin the exact branch commit and record SHA-256 for every downloaded entry
+   script and support file.
+2. Use a new isolated template and gallery version tagged
+   `qualification=true` and `productionApproved=false`; exclude it from latest.
+3. Use the validated Windows 10 restart settings for both existing boundaries:
+   - `restartTimeout`: at least `30m`.
+   - `restartCheckCommand`:
+     `powershell.exe -NoProfile -Command "Start-Sleep -Seconds 180; Get-Service WinRM | Where-Object Status -eq 'Running'"`
+4. Run Gen1, Gen2, and Multi-Session as separate qualifications.
 
-## Restart requirement
+The AVD UX default restart timeout is five minutes and is insufficient for the
+validated Windows 10 flow. Exporting a deployed template, editing the restart
+settings, deleting the original, and redeploying is an internal validation
+workaround only. It is pending Portal PM approval and is not final customer
+guidance. Production requires a conditional Windows 10-only timeout/check
+mechanism that does not slow or alter the Windows 11 path.
 
-The validated Windows 10 configuration requires both existing portal-managed
-restart customizers to use:
+## Produced-image validation
 
-- `restartTimeout`: at least `30m` (the validated value).
-- `restartCheckCommand`:
-  `powershell.exe -NoProfile -Command "Start-Sleep -Seconds 180; Get-Service WinRM | Where-Object Status -eq 'Running'"`
+After the final restart:
 
-The AVD UX default restart timeout is five minutes and is insufficient. For
-internal online validation only, a proposed workaround is to deploy/export the
-CIT template, update both restart settings, delete the original template, and
-redeploy the modified template. This workaround is pending AVD Portal PM
-confirmation and must not be presented as final customer guidance.
+- Verify every requested language is installed.
+- Verify each language-package revision equals the OS UBR and the expected
+  current LCU is installed.
+- Verify the selected machine language and Default User settings.
+- Verify firewall/RDP, Defender, required services, and the guest agent.
+- Review relevant servicing, system, and application events.
+- Run DISM `ScanHealth` and verify the pending-restart state is acceptable.
+- Perform one additional controlled reboot, then repeat health and pending-state
+  checks.
+- Preserve template, build, customization, servicing, and produced-image
+  evidence before deleting temporary resources.
 
-Production release remains blocked on restart-timeout productization. If online
-validation confirms the requirement, the recommended product solution is a
-conditional Windows 10-only portal timeout and restart-check configuration
-(feature-controlled if required). It must not slow or otherwise change the
-Windows 11 path.
+`Test-Windows10MachineLanguageHealth.ps1` can support external qualification;
+it is not a production AIB customizer.
 
-## Qualification
+## Failure handling
 
-This integration is independently reviewable but is not production-ready or
-merge-ready until the restart path is productized and Xian/Nini complete online
-Gen1, Gen2, and Multi-Session validation. After the final restart, use
-`Test-Windows10MachineLanguageHealth.ps1` (or equivalent produced-image checks)
-to verify language/UBR parity, machine and Default User settings, firewall and
-event health, and RDP when required.
+Fail closed and retain `customization.log`, durable state, update inventory, and
+qualification evidence. Never clear PFRO, bypass revision parity, substitute a
+hardcoded LCU, or suppress an unsupported servicing state.
+
+- **No LCU offered:** confirm the WUA search occurs after language/FOD
+  installation. If the selected source still has no applicable offer, stop and
+  require the approved managed LCU URI/SHA contract.
+- **Unknown PFRO:** inspect every pair; do not broaden the allowlist or delete
+  registry data.
+- **Restart timeout/stabilization:** use the validated 30-minute timeout and
+  180-second post-WinRM stabilization for internal qualification.
+- **Unsupported OS build:** stop; only builds 19044 and 19045 are supported.
+
+## Promotion checklist
+
+- [ ] Gen1 passes against the exact pull-request branch.
+- [ ] Gen2 passes against the exact pull-request branch.
+- [ ] Multi-Session passes against the exact pull-request branch.
+- [ ] The production LCU source/order contract is approved.
+- [ ] The Windows 10 restart-timeout/check mechanism is approved.
+- [ ] Windows 11 regression coverage passes with unchanged behavior.
+- [ ] External produced-image and additional-reboot qualification passes.
+- [ ] [Draft PR #840](https://github.com/Azure/RDS-Templates/pull/840) is
+      reviewed; internal tracking is recorded in ADO Task 64267767.
+- [ ] Only then mark the pull request ready for review.
