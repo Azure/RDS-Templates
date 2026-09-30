@@ -146,6 +146,11 @@ hardcoded LCU, or suppress an unsupported servicing state.
 - **No LCU offered:** confirm the WUA search occurs after language/FOD
   installation. If the selected source still has no applicable offer, stop and
   require the approved managed LCU URI/SHA contract.
+- **Windows Update busy (`0x80240016`):** the Windows 10 orchestrator waits for
+  active servicing installers and retries this status a bounded number of times
+  only when no reboot-pending signal is present. A reported mandatory restart,
+  a persistent busy state, or any other update error fails closed with the
+  pending signals and competing installer processes in the operation log.
 - **Unknown PFRO:** inspect every pair; do not broaden the allowlist or delete
   registry data.
 - **Language ISO has no drive letter:** retain the mount/volume/partition

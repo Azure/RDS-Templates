@@ -309,6 +309,30 @@ function Test-RebootPending {
     return @(Get-ServicingPendingReasons).Count -gt 0
 }
 
+function Get-ActiveServicingInstallerNames {
+    return @(
+        Get-Process `
+            -Name TiWorker, TrustedInstaller, MoUsoCoreWorker `
+            -ErrorAction SilentlyContinue |
+            ForEach-Object { $_.ProcessName } |
+            Sort-Object -Unique
+    )
+}
+
+function Test-ServicingReadyState {
+    param(
+        [string[]]$PendingReasons,
+        [string[]]$ActiveInstallerNames,
+        [switch]$AllowPendingRestart
+    )
+
+    if (@($ActiveInstallerNames).Count -gt 0) {
+        return $false
+    }
+
+    return $AllowPendingRestart -or @($PendingReasons).Count -eq 0
+}
+
 function Wait-ForServicingReady {
     param(
         [int]$TimeoutMinutes = 60,
@@ -318,32 +342,42 @@ function Wait-ForServicingReady {
     $deadline = (Get-Date).AddMinutes($TimeoutMinutes)
     $lastReasonSummary = $null
     $lastReasons = @()
+    $activeInstallerNames = @()
     $nextDiagnostic = [DateTime]::MinValue
     do {
         $lastReasons = @(Get-ServicingPendingReasons)
-        if ($AllowPendingRestart -or $lastReasons.Count -eq 0) {
+        $activeInstallerNames = @(Get-ActiveServicingInstallerNames)
+        if (
+            Test-ServicingReadyState `
+                -PendingReasons $lastReasons `
+                -ActiveInstallerNames $activeInstallerNames `
+                -AllowPendingRestart:$AllowPendingRestart
+        ) {
             return
         }
 
         $now = Get-Date
-        $reasonSummary = $lastReasons -join ', '
-        if ($reasonSummary -ne $lastReasonSummary -or $now -ge $nextDiagnostic) {
-            $installerProcesses = @(
-                Get-Process -Name TiWorker, TrustedInstaller -ErrorAction SilentlyContinue
-            )
-            $installerSummary = if ($installerProcesses.Count -gt 0) {
-                @($installerProcesses | ForEach-Object { $_.ProcessName } | Sort-Object -Unique) -join ', '
-            }
-            else {
-                'none'
-            }
+        $reasonSummary = if ($lastReasons.Count -gt 0) {
+            $lastReasons -join ', '
+        }
+        else {
+            'none'
+        }
+        $installerSummary = if ($activeInstallerNames.Count -gt 0) {
+            $activeInstallerNames -join ', '
+        }
+        else {
+            'none'
+        }
+        $diagnosticSummary = "$reasonSummary|$installerSummary"
+        if ($diagnosticSummary -ne $lastReasonSummary -or $now -ge $nextDiagnostic) {
             Write-Operation (
                 (
                     'Waiting for Windows servicing readiness. Pending signal(s): {0}. ' +
-                    'Installer process(es), diagnostic only: {1}.'
-                ) -f $reasonSummary, $installerSummary
+                    'Active installer process(es): {1}. AllowPendingRestart={2}.'
+                ) -f $reasonSummary, $installerSummary, [bool]$AllowPendingRestart
             )
-            $lastReasonSummary = $reasonSummary
+            $lastReasonSummary = $diagnosticSummary
             $nextDiagnostic = $now.AddMinutes(5)
         }
         Start-Sleep -Seconds 30
@@ -351,8 +385,26 @@ function Wait-ForServicingReady {
 
     throw (
         "Windows servicing did not become ready within $TimeoutMinutes minutes. " +
-        "Pending signal(s): $($lastReasons -join ', ')."
+        "Pending signal(s): $($lastReasons -join ', '). " +
+        "Active installer process(es): $($activeInstallerNames -join ', ')."
     )
+}
+
+function Get-WindowsUpdateInstallFailureDisposition {
+    param(
+        [long]$HResult,
+        [string[]]$PendingReasons
+    )
+
+    $hresultHex = '0x{0:X8}' -f ($HResult -band 0xffffffffL)
+    if ($hresultHex -ne '0x80240016') {
+        return 'Fatal'
+    }
+    if (@($PendingReasons).Count -gt 0) {
+        return 'PendingRestart'
+    }
+
+    return 'TransientBusy'
 }
 
 function Get-OsServicingInfo {
@@ -1432,7 +1484,12 @@ function Get-WindowsUpdateLcuSelection {
 }
 
 function Install-LcuFromWindowsUpdate {
-    param([Parameter(Mandatory = $true)]$Selection)
+    param(
+        [Parameter(Mandatory = $true)]$Selection,
+        [ValidateRange(1, 10)][int]$MaximumInstallAttempts = 3,
+        [ValidateRange(0, 600)][int]$BusyRetryDelaySeconds = 30,
+        [ValidateRange(1, 60)][int]$BusyReadinessTimeoutMinutes = 10
+    )
 
     $session = $Selection.Session
     $selected = $Selection.Update
@@ -1458,15 +1515,55 @@ function Install-LcuFromWindowsUpdate {
         }
     }
 
-    $installer = $session.CreateUpdateInstaller()
-    $installer.Updates = $updates
-    $installResult = $installer.Install()
-    if ($installResult.ResultCode -ne 2 -or $installResult.HResult -ne 0) {
-        $hresult = '0x{0:X8}' -f ($installResult.HResult -band 0xffffffffL)
-        throw "LCU installation failed. ResultCode=$($installResult.ResultCode), HResult=$hresult."
-    }
+    for ($attempt = 1; $attempt -le $MaximumInstallAttempts; $attempt++) {
+        $installer = $session.CreateUpdateInstaller()
+        $installer.Updates = $updates
+        $installResult = $installer.Install()
+        if ($installResult.ResultCode -eq 2 -and $installResult.HResult -eq 0) {
+            Write-Operation "LCU installation completed successfully. RebootRequired=$($installResult.RebootRequired)."
+            return
+        }
 
-    Write-Operation "LCU installation completed successfully. RebootRequired=$($installResult.RebootRequired)."
+        $hresult = '0x{0:X8}' -f ($installResult.HResult -band 0xffffffffL)
+        $pendingReasons = @(Get-ServicingPendingReasons)
+        $disposition = Get-WindowsUpdateInstallFailureDisposition `
+            -HResult $installResult.HResult `
+            -PendingReasons $pendingReasons
+        if ($disposition -eq 'PendingRestart') {
+            throw (
+                "LCU installation cannot continue because Windows Update returned $hresult and " +
+                "a servicing restart is pending. Pending signal(s): $($pendingReasons -join ', '). " +
+                'Complete the required restart before retrying; the workflow will not suppress this state.'
+            )
+        }
+        if ($disposition -ne 'TransientBusy') {
+            throw "LCU installation failed. ResultCode=$($installResult.ResultCode), HResult=$hresult."
+        }
+        if ($attempt -eq $MaximumInstallAttempts) {
+            throw (
+                "LCU installation remained blocked by transient Windows Update activity ($hresult) " +
+                "after $MaximumInstallAttempts attempts. No reboot-pending signal was detected. " +
+                'Inspect Windows Update, CBS, and UsoClient logs for the competing installation.'
+            )
+        }
+
+        $activeInstallerNames = @(Get-ActiveServicingInstallerNames)
+        $installerSummary = if ($activeInstallerNames.Count -gt 0) {
+            $activeInstallerNames -join ', '
+        }
+        else {
+            'none observed'
+        }
+        Write-Operation (
+            "Windows Update returned transient busy status $hresult on LCU install attempt " +
+            "$attempt of $MaximumInstallAttempts with no reboot-pending signal. " +
+            "Active installer process(es): $installerSummary. Waiting before retry."
+        )
+        Start-Sleep -Seconds $BusyRetryDelaySeconds
+        Wait-ForServicingReady `
+            -TimeoutMinutes $BusyReadinessTimeoutMinutes `
+            -AllowPendingRestart
+    }
 }
 
 function Request-Restart {

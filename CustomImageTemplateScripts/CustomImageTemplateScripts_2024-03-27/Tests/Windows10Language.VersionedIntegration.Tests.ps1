@@ -201,10 +201,22 @@ $installAndServicePhaseAst = $orchestratorAst.Find({
     $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
     $node.Name -eq 'Invoke-InstallAndServicePhase'
 }, $true)
+$servicingReadyStateAst = $orchestratorAst.Find({
+    param($node)
+    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
+    $node.Name -eq 'Test-ServicingReadyState'
+}, $true)
+$windowsUpdateFailureDispositionAst = $orchestratorAst.Find({
+    param($node)
+    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
+    $node.Name -eq 'Get-WindowsUpdateInstallFailureDisposition'
+}, $true)
 Assert-True ($null -ne $stateLanguageTagsAst) 'Get-StateLanguageTags is missing.'
 Assert-True ($null -ne $stateLanguagePackPathAst) 'Get-StateLanguagePackPath is missing.'
 Assert-True ($null -ne $initialPhaseAst) 'Invoke-InitialPhase is missing.'
 Assert-True ($null -ne $installAndServicePhaseAst) 'Invoke-InstallAndServicePhase is missing.'
+Assert-True ($null -ne $servicingReadyStateAst) 'Test-ServicingReadyState is missing.'
+Assert-True ($null -ne $windowsUpdateFailureDispositionAst) 'Get-WindowsUpdateInstallFailureDisposition is missing.'
 if ($null -ne $stateLanguageTagsAst -and $null -ne $stateLanguagePackPathAst) {
     . ([scriptblock]::Create($stateLanguageTagsAst.Extent.Text))
     . ([scriptblock]::Create($stateLanguagePackPathAst.Extent.Text))
@@ -238,6 +250,44 @@ if ($null -ne $initialPhaseAst) {
     Assert-True (
         $initialPhaseAst.Extent.Text -notmatch 'Get-WindowsUpdateLcuSelection'
     ) 'The initial phase still queries Windows Update before language installation.'
+}
+if ($null -ne $servicingReadyStateAst) {
+    . ([scriptblock]::Create($servicingReadyStateAst.Extent.Text))
+    Assert-True (
+        -not (Test-ServicingReadyState `
+            -PendingReasons @() `
+            -ActiveInstallerNames @('TiWorker') `
+            -AllowPendingRestart)
+    ) 'AllowPendingRestart incorrectly bypasses an active servicing installer.'
+    Assert-True (
+        (Test-ServicingReadyState `
+            -PendingReasons @('CBS RebootPending') `
+            -ActiveInstallerNames @() `
+            -AllowPendingRestart)
+    ) 'AllowPendingRestart no longer permits the planned pre-LCU restart state.'
+    Assert-True (
+        -not (Test-ServicingReadyState `
+            -PendingReasons @('CBS RebootPending') `
+            -ActiveInstallerNames @())
+    ) 'Normal servicing readiness no longer fails closed for a pending restart.'
+}
+if ($null -ne $windowsUpdateFailureDispositionAst) {
+    . ([scriptblock]::Create($windowsUpdateFailureDispositionAst.Extent.Text))
+    Assert-True (
+        (Get-WindowsUpdateInstallFailureDisposition `
+            -HResult -2145124330 `
+            -PendingReasons @()) -eq 'TransientBusy'
+    ) '0x80240016 without reboot signals is not classified as a transient servicing race.'
+    Assert-True (
+        (Get-WindowsUpdateInstallFailureDisposition `
+            -HResult -2145124330 `
+            -PendingReasons @('Windows Update RebootRequired')) -eq 'PendingRestart'
+    ) '0x80240016 with a reboot signal is not classified as a mandatory restart.'
+    Assert-True (
+        (Get-WindowsUpdateInstallFailureDisposition `
+            -HResult -2145124329 `
+            -PendingReasons @()) -eq 'Fatal'
+    ) 'An unrelated Windows Update error is incorrectly retryable.'
 }
 if ($null -ne $installAndServicePhaseAst) {
     $installAndServiceText = $installAndServicePhaseAst.Extent.Text
@@ -290,6 +340,11 @@ Assert-True (
 Assert-True (
     $orchestratorText -match 'Language/UBR parity requires LCU reapplication'
 ) 'The LCU reapplication decision does not preserve its diagnostic reason.'
+Assert-True (
+    $orchestratorText -match 'MaximumInstallAttempts = 3' -and
+    $orchestratorText -match "Get-WindowsUpdateInstallFailureDisposition" -and
+    $orchestratorText -match 'Inspect Windows Update, CBS, and UsoClient logs'
+) 'The Windows Update busy retry is not bounded or does not retain actionable failure diagnostics.'
 
 Assert-True ($guideText -match 'There is\s+no production `Validate` customizer') 'The guide does not document external-only validation.'
 Assert-True ($guideText -match 'restartTimeout`: at least `30m`') 'The guide does not document the validated restart timeout.'
