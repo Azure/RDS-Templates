@@ -58,6 +58,7 @@ if ($osBuildForDispatch -in @(19044, 19045)) {
         "Ukrainian (Ukraine)" = "uk-UA"
     }
 
+    $windows10SupportBaseUri = 'https://raw.githubusercontent.com/anshuljswl/RDS-Templates/dcaa3564c8975df11a09e152e3b852cc9277a6cb/CustomImageTemplateScripts/CustomImageTemplateScripts_2024-03-27'
     $windows10WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguage'
     $windows10OrchestratorPath = Join-Path $windows10WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
     $windows10CopyHelperPath = Join-Path $windows10WorkingDirectory 'Copy-UserInternationalSettingsToSystemCompat.ps1'
@@ -71,11 +72,11 @@ if ($osBuildForDispatch -in @(19044, 19045)) {
     }
     $actualOrchestratorSha256 = (Get-FileHash -LiteralPath $windows10OrchestratorPath -Algorithm SHA256).Hash
     if ($actualOrchestratorSha256 -ne $windows10OrchestratorSha256) {
-        throw 'The staged Windows 10 language orchestrator failed integrity validation.'
+        throw "The staged Windows 10 language orchestrator failed integrity validation against '$windows10SupportBaseUri'."
     }
     $actualCopyHelperSha256 = (Get-FileHash -LiteralPath $windows10CopyHelperPath -Algorithm SHA256).Hash
     if ($actualCopyHelperSha256 -ne $windows10CopyHelperSha256) {
-        throw 'The staged Windows 10 international-settings helper failed integrity validation.'
+        throw "The staged Windows 10 international-settings helper failed integrity validation against '$windows10SupportBaseUri'."
     }
 
     $languageTag = [string]$windows10LanguageTags[$Language]

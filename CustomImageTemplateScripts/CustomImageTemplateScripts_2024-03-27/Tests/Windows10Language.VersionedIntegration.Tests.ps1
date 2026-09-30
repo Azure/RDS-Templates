@@ -328,12 +328,21 @@ Assert-True ($installText -match [regex]::Escape($copyHelperHash)) 'InstallLangu
 Assert-True ($defaultText -match [regex]::Escape($copyHelperHash)) 'SetDefaultLang does not re-verify the compatibility-helper hash.'
 Assert-True (
     ([regex]::Matches($installText, 'windows10SupportBaseUri')).Count -ge 3
-) 'The draft support location is not isolated behind one base URI.'
+) 'The Windows 10 support location is not isolated behind one base URI.'
+$immutableSupportBaseUri = (
+    'https://raw.githubusercontent.com/anshuljswl/RDS-Templates/' +
+    'dcaa3564c8975df11a09e152e3b852cc9277a6cb/' +
+    'CustomImageTemplateScripts/CustomImageTemplateScripts_2024-03-27'
+)
 Assert-True (
-    $installText -match [regex]::Escape(
-        'https://raw.githubusercontent.com/anshuljswl/RDS-Templates/anshjaiswal-microsoft-windows10-setdefaultlang-servicing/'
-    )
-) 'The draft-only support source changed or is not explicit.'
+    $installText -match [regex]::Escape($immutableSupportBaseUri)
+) 'InstallLanguagePacks does not use the immutable validation support source.'
+Assert-True (
+    $defaultText -match [regex]::Escape($immutableSupportBaseUri)
+) 'SetDefaultLang does not identify the immutable validation support source.'
+Assert-True (
+    $immutableSupportBaseUri -match '/[0-9a-f]{40}/'
+) 'The Windows 10 support source is not pinned to a full commit SHA.'
 Assert-True (
     $orchestratorText -match 'Assert-PortalRestartCompleted[\s\S]+LastBootUpTime[\s\S]+did not run or did not complete'
 ) 'The second entry cannot detect a missing or incomplete portal restart.'

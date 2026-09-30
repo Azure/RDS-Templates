@@ -18,7 +18,7 @@
 
 $osBuildForDispatch = [System.Environment]::OSVersion.Version.Build
 if ($osBuildForDispatch -in @(19044, 19045)) {
-    $windows10SupportBaseUri = 'https://raw.githubusercontent.com/anshuljswl/RDS-Templates/anshjaiswal-microsoft-windows10-setdefaultlang-servicing/CustomImageTemplateScripts/CustomImageTemplateScripts_2024-03-27'
+    $windows10SupportBaseUri = 'https://raw.githubusercontent.com/anshuljswl/RDS-Templates/dcaa3564c8975df11a09e152e3b852cc9277a6cb/CustomImageTemplateScripts/CustomImageTemplateScripts_2024-03-27'
     $windows10WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguage'
     $windows10OrchestratorPath = Join-Path $windows10WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
     $windows10CopyHelperPath = Join-Path $windows10WorkingDirectory 'Copy-UserInternationalSettingsToSystemCompat.ps1'
