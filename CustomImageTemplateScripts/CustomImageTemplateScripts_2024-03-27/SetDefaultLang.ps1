@@ -14,6 +14,84 @@
         [string]$Language
 )
 
+$osBuildForDispatch = [System.Environment]::OSVersion.Version.Build
+if ($osBuildForDispatch -in @(19044, 19045)) {
+    $windows10LanguageTags = @{
+        "Arabic (Saudi Arabia)" = "ar-SA"
+        "Bulgarian (Bulgaria)" = "bg-BG"
+        "Chinese (Simplified, China)" = "zh-CN"
+        "Chinese (Traditional, Taiwan)" = "zh-TW"
+        "Croatian (Croatia)" = "hr-HR"
+        "Czech (Czech Republic)" = "cs-CZ"
+        "Danish (Denmark)" = "da-DK"
+        "Dutch (Netherlands)" = "nl-NL"
+        "English (Australia)" = "en-AU"
+        "English (United Kingdom)" = "en-GB"
+        "English (United States)" = "en-US"
+        "Estonian (Estonia)" = "et-EE"
+        "Finnish (Finland)" = "fi-FI"
+        "French (Canada)" = "fr-CA"
+        "French (France)" = "fr-FR"
+        "German (Germany)" = "de-DE"
+        "Greek (Greece)" = "el-GR"
+        "Hebrew (Israel)" = "he-IL"
+        "Hungarian (Hungary)" = "hu-HU"
+        "Italian (Italy)" = "it-IT"
+        "Japanese (Japan)" = "ja-JP"
+        "Korean (Korea)" = "ko-KR"
+        "Latvian (Latvia)" = "lv-LV"
+        "Lithuanian (Lithuania)" = "lt-LT"
+        "Norwegian, Bokmål (Norway)" = "nb-NO"
+        "Polish (Poland)" = "pl-PL"
+        "Portuguese (Brazil)" = "pt-BR"
+        "Portuguese (Portugal)" = "pt-PT"
+        "Romanian (Romania)" = "ro-RO"
+        "Russian (Russia)" = "ru-RU"
+        "Serbian (Latin, Serbia)" = "sr-Latn-RS"
+        "Slovak (Slovakia)" = "sk-SK"
+        "Slovenian (Slovenia)" = "sl-SI"
+        "Spanish (Mexico)" = "es-MX"
+        "Spanish (Spain)" = "es-ES"
+        "Swedish (Sweden)" = "sv-SE"
+        "Thai (Thailand)" = "th-TH"
+        "Turkish (Turkey)" = "tr-TR"
+        "Ukrainian (Ukraine)" = "uk-UA"
+    }
+
+    $windows10SupportBaseUri = 'https://raw.githubusercontent.com/anshuljswl/RDS-Templates/dcaa3564c8975df11a09e152e3b852cc9277a6cb/CustomImageTemplateScripts/CustomImageTemplateScripts_2024-03-27'
+    $windows10WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguage'
+    $windows10OrchestratorPath = Join-Path $windows10WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
+    $windows10CopyHelperPath = Join-Path $windows10WorkingDirectory 'Copy-UserInternationalSettingsToSystemCompat.ps1'
+    $windows10OrchestratorSha256 = '265C26DD99A02FC156F16601F2E071F7978C6E2968063CDEB991C566E2B371DE'
+    $windows10CopyHelperSha256 = '627BA579956AF437B2A865A99F4CCFBD8DEF7B6DCEBB2A14AA9CDA88ECBEC250'
+    if (-not (Test-Path -LiteralPath $windows10OrchestratorPath -PathType Leaf)) {
+        throw "Windows 10 language servicing state was not staged by InstallLanguagePacks.ps1."
+    }
+    if (-not (Test-Path -LiteralPath $windows10CopyHelperPath -PathType Leaf)) {
+        throw "Windows 10 international-settings support was not staged by InstallLanguagePacks.ps1."
+    }
+    $actualOrchestratorSha256 = (Get-FileHash -LiteralPath $windows10OrchestratorPath -Algorithm SHA256).Hash
+    if ($actualOrchestratorSha256 -ne $windows10OrchestratorSha256) {
+        throw "The staged Windows 10 language orchestrator failed integrity validation against '$windows10SupportBaseUri'."
+    }
+    $actualCopyHelperSha256 = (Get-FileHash -LiteralPath $windows10CopyHelperPath -Algorithm SHA256).Hash
+    if ($actualCopyHelperSha256 -ne $windows10CopyHelperSha256) {
+        throw "The staged Windows 10 international-settings helper failed integrity validation against '$windows10SupportBaseUri'."
+    }
+
+    $languageTag = [string]$windows10LanguageTags[$Language]
+    if ([string]::IsNullOrWhiteSpace($languageTag)) {
+        throw "Windows 10 language mapping was not found for '$Language'."
+    }
+
+    & $windows10OrchestratorPath `
+        -Resume `
+        -AibPhase ApplyMachineLanguage `
+        -ExpectedLanguageTag $languageTag `
+        -WorkingDirectory $windows10WorkingDirectory
+    return
+}
+
 function Get-RegionInfo($Name='*')
 {
   try {

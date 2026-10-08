@@ -16,6 +16,123 @@
         [System.String[]]$LanguageList
     )
 
+$osBuildForDispatch = [System.Environment]::OSVersion.Version.Build
+if ($osBuildForDispatch -in @(19044, 19045)) {
+    $windows10SupportBaseUri = 'https://raw.githubusercontent.com/anshuljswl/RDS-Templates/dcaa3564c8975df11a09e152e3b852cc9277a6cb/CustomImageTemplateScripts/CustomImageTemplateScripts_2024-03-27'
+    $windows10WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguage'
+    $windows10OrchestratorPath = Join-Path $windows10WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
+    $windows10CopyHelperPath = Join-Path $windows10WorkingDirectory 'Copy-UserInternationalSettingsToSystemCompat.ps1'
+    $windows10OrchestratorSha256 = '265C26DD99A02FC156F16601F2E071F7978C6E2968063CDEB991C566E2B371DE'
+    $windows10CopyHelperSha256 = '627BA579956AF437B2A865A99F4CCFBD8DEF7B6DCEBB2A14AA9CDA88ECBEC250'
+
+    function Save-VerifiedWindows10SupportFile {
+        param(
+            [Parameter(Mandatory = $true)][uri]$Uri,
+            [Parameter(Mandatory = $true)][string]$Destination,
+            [Parameter(Mandatory = $true)][string]$ExpectedSha256
+        )
+
+        if ($Uri.Scheme -ne 'https' -or $Uri.Host -ne 'raw.githubusercontent.com') {
+            throw "Windows 10 support files must use HTTPS from raw.githubusercontent.com."
+        }
+
+        $partialPath = "$Destination.partial"
+        Remove-Item -LiteralPath $partialPath -Force -ErrorAction SilentlyContinue
+        try {
+            Invoke-WebRequest `
+                -Uri $Uri.AbsoluteUri `
+                -OutFile $partialPath `
+                -UseBasicParsing `
+                -ErrorAction Stop
+            $actualSha256 = (Get-FileHash -LiteralPath $partialPath -Algorithm SHA256).Hash
+            if ($actualSha256 -ne $ExpectedSha256) {
+                throw "Windows 10 support file hash mismatch for '$($Uri.AbsolutePath)'."
+            }
+            Move-Item -LiteralPath $partialPath -Destination $Destination -Force
+        }
+        finally {
+            Remove-Item -LiteralPath $partialPath -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    $windows10LanguageTags = @{
+        "Arabic (Saudi Arabia)" = "ar-SA"
+        "Bulgarian (Bulgaria)" = "bg-BG"
+        "Chinese (Simplified, China)" = "zh-CN"
+        "Chinese (Traditional, Taiwan)" = "zh-TW"
+        "Croatian (Croatia)" = "hr-HR"
+        "Czech (Czech Republic)" = "cs-CZ"
+        "Danish (Denmark)" = "da-DK"
+        "Dutch (Netherlands)" = "nl-NL"
+        "English (Australia)" = "en-AU"
+        "English (United Kingdom)" = "en-GB"
+        "English (United States)" = "en-US"
+        "Estonian (Estonia)" = "et-EE"
+        "Finnish (Finland)" = "fi-FI"
+        "French (Canada)" = "fr-CA"
+        "French (France)" = "fr-FR"
+        "German (Germany)" = "de-DE"
+        "Greek (Greece)" = "el-GR"
+        "Hebrew (Israel)" = "he-IL"
+        "Hungarian (Hungary)" = "hu-HU"
+        "Italian (Italy)" = "it-IT"
+        "Japanese (Japan)" = "ja-JP"
+        "Korean (Korea)" = "ko-KR"
+        "Latvian (Latvia)" = "lv-LV"
+        "Lithuanian (Lithuania)" = "lt-LT"
+        "Norwegian, Bokmål (Norway)" = "nb-NO"
+        "Polish (Poland)" = "pl-PL"
+        "Portuguese (Brazil)" = "pt-BR"
+        "Portuguese (Portugal)" = "pt-PT"
+        "Romanian (Romania)" = "ro-RO"
+        "Russian (Russia)" = "ru-RU"
+        "Serbian (Latin, Serbia)" = "sr-Latn-RS"
+        "Slovak (Slovakia)" = "sk-SK"
+        "Slovenian (Slovenia)" = "sl-SI"
+        "Spanish (Mexico)" = "es-MX"
+        "Spanish (Spain)" = "es-ES"
+        "Swedish (Sweden)" = "sv-SE"
+        "Thai (Thailand)" = "th-TH"
+        "Turkish (Turkey)" = "tr-TR"
+        "Ukrainian (Ukraine)" = "uk-UA"
+    }
+
+    $languageTags = New-Object System.Collections.Generic.List[string]
+    $seenLanguageTags = New-Object System.Collections.Generic.HashSet[string](
+        [StringComparer]::OrdinalIgnoreCase
+    )
+    foreach ($language in $LanguageList) {
+        $languageTag = [string]$windows10LanguageTags[$language]
+        if ([string]::IsNullOrWhiteSpace($languageTag)) {
+            throw "Windows 10 language mapping was not found for '$language'."
+        }
+        if ($seenLanguageTags.Add($languageTag)) {
+            [void]$languageTags.Add($languageTag)
+        }
+    }
+    if ($languageTags.Count -eq 0) {
+        throw 'At least one Windows 10 language must be requested.'
+    }
+
+    New-Item -ItemType Directory -Path $windows10WorkingDirectory -Force | Out-Null
+    Save-VerifiedWindows10SupportFile `
+        -Uri "$windows10SupportBaseUri/Set-Windows10MachineLanguage.ps1" `
+        -Destination $windows10OrchestratorPath `
+        -ExpectedSha256 $windows10OrchestratorSha256
+    Save-VerifiedWindows10SupportFile `
+        -Uri "$windows10SupportBaseUri/Copy-UserInternationalSettingsToSystemCompat.ps1" `
+        -Destination $windows10CopyHelperPath `
+        -ExpectedSha256 $windows10CopyHelperSha256
+
+    & $windows10OrchestratorPath `
+        -LanguageTags $languageTags.ToArray() `
+        -UseWindowsUpdate `
+        -CopyNewUserSettingsScriptPath $windows10CopyHelperPath `
+        -AibPhase InstallAndService `
+        -AllowRecognizedNonServicingPendingFileRenames
+    return
+}
+
 function Install-LanguagePack {
   
    
