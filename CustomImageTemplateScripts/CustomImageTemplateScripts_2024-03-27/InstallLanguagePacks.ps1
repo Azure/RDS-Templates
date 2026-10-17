@@ -18,6 +18,17 @@
 
 $osBuildForDispatch = [System.Environment]::OSVersion.Version.Build
 if ($osBuildForDispatch -in @(19044, 19045)) {
+    $windows10EditionId = [string](Get-ItemPropertyValue `
+        -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' `
+        -Name 'EditionID' `
+        -ErrorAction Stop)
+    $windows10AibPhase = if ($windows10EditionId -ceq 'ServerRdsh') {
+        'InstallLanguage'
+    }
+    else {
+        'InstallAndService'
+    }
+
     $windows10SupportBaseUri = 'https://raw.githubusercontent.com/anshuljswl/RDS-Templates/317daab63337eafd30b0acd51829d5876dec19b1/CustomImageTemplateScripts/CustomImageTemplateScripts_2024-03-27'
     $windows10WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguage'
     $windows10OrchestratorPath = Join-Path $windows10WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
@@ -128,7 +139,7 @@ if ($osBuildForDispatch -in @(19044, 19045)) {
         -LanguageTags $languageTags.ToArray() `
         -UseWindowsUpdate `
         -CopyNewUserSettingsScriptPath $windows10CopyHelperPath `
-        -AibPhase InstallLanguage `
+        -AibPhase $windows10AibPhase `
         -AllowRecognizedNonServicingPendingFileRenames
     return
 }
