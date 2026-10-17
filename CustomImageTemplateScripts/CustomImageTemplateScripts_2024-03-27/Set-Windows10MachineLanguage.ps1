@@ -66,7 +66,7 @@ param(
     [Parameter(ParameterSetName = 'Package', DontShow = $true)]
     [Parameter(ParameterSetName = 'OnlineMultiLanguage', DontShow = $true)]
     [Parameter(ParameterSetName = 'Resume', DontShow = $true)]
-    [ValidateSet('InstallAndService', 'ApplyMachineLanguage', 'Validate')]
+    [ValidateSet('InstallLanguage', 'InstallLcu', 'InstallAndService', 'ApplyMachineLanguage', 'Validate')]
     [string]$AibPhase,
 
     [Parameter(ParameterSetName = 'Resume', DontShow = $true)]
@@ -1101,10 +1101,14 @@ function Backup-DefaultUserHive {
 }
 
 function Assert-DefaultUserLanguage {
-    param([Parameter(Mandatory = $true)][string]$TargetLanguageTag)
+    param(
+        [Parameter(Mandatory = $true)][string]$TargetLanguageTag,
+        [switch]$RepairGeoNation
+    )
 
     $hiveName = 'Windows10LanguageDefaultUser'
     $hivePath = Join-Path $env:SystemDrive 'Users\Default\NTUSER.DAT'
+    $expectedGeoId = (New-Object System.Globalization.RegionInfo($TargetLanguageTag)).GeoId
     $loadedHere = $false
     try {
         if (Test-Path "Registry::HKEY_USERS\$hiveName") {
@@ -1136,6 +1140,19 @@ function Assert-DefaultUserLanguage {
         $desktop = Get-ItemProperty `
             -LiteralPath "Registry::HKEY_USERS\$hiveName\Control Panel\Desktop" `
             -ErrorAction Stop
+        $geoPath = "Registry::HKEY_USERS\$hiveName\Control Panel\International\Geo"
+        if ($RepairGeoNation) {
+            if (-not (Test-Path -LiteralPath $geoPath)) {
+                [void](New-Item -Path $geoPath -Force)
+            }
+            Set-ItemProperty `
+                -LiteralPath $geoPath `
+                -Name Nation `
+                -Value ([string]$expectedGeoId) `
+                -Type String `
+                -Force
+        }
+        $geo = Get-ItemProperty -LiteralPath $geoPath -ErrorAction Stop
         $localeProperty = $international.PSObject.Properties['LocaleName']
         $localeName = if ($null -ne $localeProperty) { [string]$localeProperty.Value } else { '' }
         $preferredProperty = $desktop.PSObject.Properties['PreferredUILanguages']
@@ -1143,13 +1160,19 @@ function Assert-DefaultUserLanguage {
         if ($null -ne $preferredProperty) {
             $preferredLanguages = @($preferredProperty.Value)
         }
+        $nationProperty = $geo.PSObject.Properties['Nation']
+        $geoNation = if ($null -ne $nationProperty) { [string]$nationProperty.Value } else { '' }
         if (
             $localeName -ne $TargetLanguageTag -or
             $preferredLanguages.Count -eq 0 -or
-            [string]$preferredLanguages[0] -ne $TargetLanguageTag
+            [string]$preferredLanguages[0] -ne $TargetLanguageTag -or
+            $geoNation -ne [string]$expectedGeoId
         ) {
-            throw ("Default User language validation failed. LocaleName='{0}', PreferredUILanguages='{1}'." -f `
-                $localeName, ($preferredLanguages -join ','))
+            throw (
+                "Default User language validation failed. LocaleName='$localeName', " +
+                "PreferredUILanguages='$($preferredLanguages -join ',')', " +
+                "GeoNation='$geoNation', ExpectedGeoNation='$expectedGeoId'."
+            )
         }
     }
     finally {
@@ -1168,7 +1191,9 @@ function Assert-DefaultUserLanguage {
         }
     }
 
-    Write-Operation "Default User international settings match '$TargetLanguageTag'."
+    Write-Operation (
+        "Default User international settings match '$TargetLanguageTag', including Geo Nation '$expectedGeoId'."
+    )
 }
 
 function Assert-MicrosoftSignature {
@@ -1588,16 +1613,11 @@ function Request-Restart {
         elseif ([string]$state.Phase -eq 'PostLcuRestart') {
             'ApplyMachineLanguage'
         }
+        elseif ([string]$state.Phase -eq 'PostLanguageContentRestart') {
+            'InstallLcu'
+        }
         elseif ([string]$state.Phase -eq 'PostLanguageRestart') {
-            if (
-                $state.PSObject.Properties.Name -contains 'DeferLanguageSelection' -and
-                [bool]$state.DeferLanguageSelection
-            ) {
-                $null
-            }
-            else {
-                'Validate'
-            }
+            'Validate'
         }
         else {
             throw "Unsupported AIB restart state '$($state.Phase)'."
@@ -1690,6 +1710,90 @@ function Assert-PortalRestartCompleted {
     }
 }
 
+function Invoke-InstallLanguagePhase {
+    param([Parameter(Mandatory = $true)]$State)
+
+    $targetLanguageTags = @(Get-StateLanguageTags -State $State)
+    foreach ($targetLanguageTag in $targetLanguageTags) {
+        $languagePackPath = Get-StateLanguagePackPath `
+            -State $State `
+            -TargetLanguageTag $targetLanguageTag
+        Install-TargetLanguage `
+            -TargetLanguageTag $targetLanguageTag `
+            -ClientLanguagePackPath $languagePackPath
+        if (
+            -not [string]::IsNullOrWhiteSpace($languagePackPath) -and
+            [IO.Path]::GetFullPath($languagePackPath).StartsWith(
+                ([IO.Path]::GetFullPath($WorkingDirectory).TrimEnd('\') + '\'),
+                [StringComparison]::OrdinalIgnoreCase
+            )
+        ) {
+            Remove-Item -LiteralPath $languagePackPath -Force -ErrorAction Stop
+        }
+    }
+
+    Wait-ForServicingReady -AllowPendingRestart
+    foreach ($targetLanguageTag in $targetLanguageTags) {
+        [void](Wait-ForLanguagePackage -TargetLanguageTag $targetLanguageTag)
+        Write-Operation "Verified the '$targetLanguageTag' CBS client language package is installed before restart."
+    }
+
+    $State.Phase = 'PostLanguageContentRestart'
+    $State.PhaseStartedUtc = (Get-Date).ToUniversalTime().ToString('o')
+    $State.Error = $null
+    Write-State -State $State
+    Register-ResumeTask
+    Request-Restart -Reason 'Restarting after language and Features on Demand servicing before cumulative-update evaluation.'
+}
+
+function Invoke-InstallLcuPhase {
+    param([Parameter(Mandatory = $true)]$State)
+
+    Assert-PortalRestartCompleted -State $State
+    Start-Sleep -Seconds 60
+    Wait-ForServicingReady
+    $targetLanguageTags = @(Get-StateLanguageTags -State $State)
+    foreach ($targetLanguageTag in $targetLanguageTags) {
+        [void](Wait-ForLanguagePackage -TargetLanguageTag $targetLanguageTag)
+        Write-Operation "Verified the '$targetLanguageTag' CBS client language package after the pre-LCU restart."
+    }
+
+    $requiresLcuReapplication = $false
+    foreach ($targetLanguageTag in $targetLanguageTags) {
+        try {
+            Assert-LanguageServicedToCurrentUbr -TargetLanguageTag $targetLanguageTag
+        }
+        catch {
+            Write-Operation "Language/UBR parity requires LCU reapplication for '$targetLanguageTag': $($_.Exception.Message)"
+            $requiresLcuReapplication = $true
+        }
+    }
+
+    if ($requiresLcuReapplication) {
+        if ([string]$State.LcuMode -eq 'Package') {
+            Install-LcuFromPackage -PackagePath $State.LcuPackagePath
+        }
+        else {
+            $windowsUpdateSelection = Get-WindowsUpdateLcuSelection
+            if ($null -eq $windowsUpdateSelection.Update) {
+                throw ('Windows Update does not currently offer an applicable Windows 10 LCU. ' +
+                    'Supply the organization-approved current LCU with -LcuPackagePath.')
+            }
+            Install-LcuFromWindowsUpdate -Selection $windowsUpdateSelection
+        }
+    }
+    else {
+        Write-Operation 'LCU installation was not required after the pre-LCU restart.'
+    }
+
+    $State.Phase = 'PostLcuRestart'
+    $State.PhaseStartedUtc = (Get-Date).ToUniversalTime().ToString('o')
+    $State.Error = $null
+    Write-State -State $State
+    Register-ResumeTask
+    Request-Restart -Reason 'Restarting to complete cumulative-update servicing.'
+}
+
 function Invoke-InstallAndServicePhase {
     param([Parameter(Mandatory = $true)]$State)
 
@@ -1723,7 +1827,7 @@ function Invoke-InstallAndServicePhase {
             Write-State -State $State
         }
         Invoke-NewUserSettingsCopy -HelperPath $installedHelperPath
-        Assert-DefaultUserLanguage -TargetLanguageTag $State.LanguageTag
+        Assert-DefaultUserLanguage -TargetLanguageTag $State.LanguageTag -RepairGeoNation
     }
 
     Wait-ForServicingReady -AllowPendingRestart
@@ -1858,7 +1962,7 @@ function Invoke-InitialPhase {
     }
 
     $state = [pscustomobject][ordered]@{
-        Phase                = 'InstallingLanguageAndLcu'
+        Phase                = if ($isAibExecution -and $AibPhase -eq 'InstallLanguage') { 'InstallingLanguage' } else { 'InstallingLanguageAndLcu' }
         LanguageTag          = if ($initialParameterSetName -eq 'OnlineMultiLanguage') { $null } else { $LanguageTag }
         LanguageTags         = $requestedLanguageTags
         LcuMode              = $initialParameterSetName
@@ -1870,6 +1974,9 @@ function Invoke-InitialPhase {
         RequireRdp           = [bool]$RequireRdp
         AllowRecognizedNonServicingPendingFileRenames = [bool]$script:AllowRecognizedNonServicingPendingFileRenames
         RestartAutomatically = [bool]$RestartAutomatically
+        WorkingDirectory     = [IO.Path]::GetFullPath($WorkingDirectory)
+        OrchestratorSha256   = (Get-FileHash -LiteralPath $installedScriptPath -Algorithm SHA256).Hash
+        CopyHelperSha256     = (Get-FileHash -LiteralPath $installedHelperPath -Algorithm SHA256).Hash
         FailureCount         = 0
         Error                = $null
         DefaultUserHiveBackup = $null
@@ -1880,7 +1987,12 @@ function Invoke-InitialPhase {
     Write-State -State $state
     Register-ResumeTask
     $script:StateOwnedByCurrentInvocation = $true
-    Invoke-InstallAndServicePhase -State $state
+    if ($isAibExecution -and $AibPhase -eq 'InstallLanguage') {
+        Invoke-InstallLanguagePhase -State $state
+    }
+    else {
+        Invoke-InstallAndServicePhase -State $state
+    }
 }
 
 function Invoke-PostLcuRestartPhase {
@@ -1913,7 +2025,7 @@ function Invoke-PostLcuRestartPhase {
             Write-State -State $State
         }
         Invoke-NewUserSettingsCopy -HelperPath $installedHelperPath
-        Assert-DefaultUserLanguage -TargetLanguageTag $State.LanguageTag
+        Assert-DefaultUserLanguage -TargetLanguageTag $State.LanguageTag -RepairGeoNation
     }
 
     Import-Module LanguagePackManagement -ErrorAction Stop
@@ -1961,7 +2073,11 @@ if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProces
 if ($isAibExecution -and -not (Test-IsSystemAccount)) {
     throw 'Azure Image Builder mode must run as the local SYSTEM account.'
 }
-if ($isAibExecution -and $AibPhase -ne 'InstallAndService' -and -not $Resume) {
+if (
+    $isAibExecution -and
+    $AibPhase -notin @('InstallLanguage', 'InstallAndService') -and
+    -not $Resume
+) {
     throw "AIB phase '$AibPhase' requires -Resume."
 }
 
@@ -1997,7 +2113,13 @@ try {
         throw "Requested language '$ExpectedLanguageTag' was not recorded by InstallLanguagePacks.ps1."
     }
     if ($isAibExecution) {
-        $expectedPhase = if ($AibPhase -eq 'InstallAndService') {
+        $expectedPhase = if ($AibPhase -eq 'InstallLanguage') {
+            'InstallingLanguage'
+        }
+        elseif ($AibPhase -eq 'InstallLcu') {
+            'PostLanguageContentRestart'
+        }
+        elseif ($AibPhase -eq 'InstallAndService') {
             'InstallingLanguageAndLcu'
         }
         elseif ($AibPhase -eq 'ApplyMachineLanguage') {
@@ -2009,11 +2131,33 @@ try {
         else {
             throw "Unsupported AIB resume phase '$AibPhase'."
         }
+        $completedPhase = if ($AibPhase -eq 'InstallLanguage') {
+            'PostLanguageContentRestart'
+        }
+        elseif ($AibPhase -eq 'InstallLcu') {
+            'PostLcuRestart'
+        }
+        elseif ($AibPhase -eq 'Validate') {
+            'Completed'
+        }
+        else {
+            $null
+        }
+        if ($null -ne $completedPhase -and [string]$state.Phase -eq $completedPhase) {
+            Write-Operation "AIB phase '$AibPhase' is already complete in durable state '$completedPhase'."
+            return
+        }
         if ([string]$state.Phase -ne $expectedPhase) {
             throw "AIB phase '$AibPhase' requires state '$expectedPhase', found '$($state.Phase)'."
         }
     }
     switch ([string]$state.Phase) {
+        'InstallingLanguage' {
+            Invoke-InstallLanguagePhase -State $state
+        }
+        'PostLanguageContentRestart' {
+            Invoke-InstallLcuPhase -State $state
+        }
         'InstallingLanguageAndLcu' {
             Invoke-InstallAndServicePhase -State $state
         }
