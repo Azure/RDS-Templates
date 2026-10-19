@@ -62,8 +62,8 @@ if ($osBuildForDispatch -in @(19044, 19045)) {
     $windows10WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguage'
     $windows10OrchestratorPath = Join-Path $windows10WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
     $windows10CopyHelperPath = Join-Path $windows10WorkingDirectory 'Copy-UserInternationalSettingsToSystemCompat.ps1'
-    $windows10OrchestratorSha256 = 'FC812408526A077A4AC9231139047831949EAFBFB29B86235E5C49E7C7261D5A'
-    $windows10CopyHelperSha256 = '9E3AAA22DC87CAAE4186A878E91CBCE64964420668AD29D4C1A7768CB3FA878F'
+    $windows10OrchestratorSha256 = 'A714DC35F014F9C8847C98E75AACCED03743E7FC7576458157F3FAD4EFD6871B'
+    $windows10CopyHelperSha256 = '627BA579956AF437B2A865A99F4CCFBD8DEF7B6DCEBB2A14AA9CDA88ECBEC250'
     if (-not (Test-Path -LiteralPath $windows10OrchestratorPath -PathType Leaf)) {
         throw "Windows 10 language servicing state was not staged by InstallLanguagePacks.ps1."
     }

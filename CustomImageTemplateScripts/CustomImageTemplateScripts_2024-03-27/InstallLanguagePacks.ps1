@@ -18,23 +18,12 @@
 
 $osBuildForDispatch = [System.Environment]::OSVersion.Version.Build
 if ($osBuildForDispatch -in @(19044, 19045)) {
-    $windows10EditionId = [string](Get-ItemPropertyValue `
-        -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' `
-        -Name 'EditionID' `
-        -ErrorAction Stop)
-    $windows10AibPhase = if ($windows10EditionId -ceq 'ServerRdsh') {
-        'InstallLanguage'
-    }
-    else {
-        'InstallAndService'
-    }
-
     $windows10SupportBaseUri = 'https://raw.githubusercontent.com/anshuljswl/RDS-Templates/317daab63337eafd30b0acd51829d5876dec19b1/CustomImageTemplateScripts/CustomImageTemplateScripts_2024-03-27'
     $windows10WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguage'
     $windows10OrchestratorPath = Join-Path $windows10WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
     $windows10CopyHelperPath = Join-Path $windows10WorkingDirectory 'Copy-UserInternationalSettingsToSystemCompat.ps1'
-    $windows10OrchestratorSha256 = 'FC812408526A077A4AC9231139047831949EAFBFB29B86235E5C49E7C7261D5A'
-    $windows10CopyHelperSha256 = '9E3AAA22DC87CAAE4186A878E91CBCE64964420668AD29D4C1A7768CB3FA878F'
+    $windows10OrchestratorSha256 = 'A714DC35F014F9C8847C98E75AACCED03743E7FC7576458157F3FAD4EFD6871B'
+    $windows10CopyHelperSha256 = '627BA579956AF437B2A865A99F4CCFBD8DEF7B6DCEBB2A14AA9CDA88ECBEC250'
 
     function Save-VerifiedWindows10SupportFile {
         param(
@@ -139,7 +128,7 @@ if ($osBuildForDispatch -in @(19044, 19045)) {
         -LanguageTags $languageTags.ToArray() `
         -UseWindowsUpdate `
         -CopyNewUserSettingsScriptPath $windows10CopyHelperPath `
-        -AibPhase $windows10AibPhase `
+        -AibPhase InstallLanguage `
         -AllowRecognizedNonServicingPendingFileRenames
     return
 }
