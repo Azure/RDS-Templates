@@ -1,63 +1,31 @@
-#requires -Version 5.1
-
 [CmdletBinding()]
-param(
-    [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguage',
+param()
 
-    [Parameter()]
-    [string]$OrchestratorPath
-)
-
-Set-StrictMode -Version Latest
+Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
-$WorkingDirectory = [IO.Path]::GetFullPath($WorkingDirectory)
-if ([string]::IsNullOrWhiteSpace($OrchestratorPath)) {
-    $OrchestratorPath = Join-Path $WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
-}
-$OrchestratorPath = [IO.Path]::GetFullPath($OrchestratorPath)
+$windows10WorkingDirectory = 'C:\ProgramData\Windows10MachineLanguage'
+$windows10OrchestratorPath = Join-Path $windows10WorkingDirectory 'Set-Windows10MachineLanguage.ps1'
+$windows10CopyHelperPath = Join-Path $windows10WorkingDirectory 'Copy-UserInternationalSettingsToSystemCompat.ps1'
+$windows10OrchestratorSha256 = '3E30467BEDD23E8A81AEAD21D2C97C0AC50E5243813FAB463DCBFDA9B74C7D47'
+$windows10CopyHelperSha256 = '627BA579956AF437B2A865A99F4CCFBD8DEF7B6DCEBB2A14AA9CDA88ECBEC250'
 
-if (-not (Test-Path -LiteralPath $OrchestratorPath -PathType Leaf)) {
-    throw "The staged Windows 10 language orchestrator was not found at '$OrchestratorPath'."
+if (-not (Test-Path -LiteralPath $windows10OrchestratorPath -PathType Leaf)) {
+    throw "Windows 10 language servicing state was not staged by InstallLanguagePacks.ps1."
 }
-
-$statePath = Join-Path $WorkingDirectory 'state.json'
-if (-not (Test-Path -LiteralPath $statePath -PathType Leaf)) {
-    throw "The durable language-install state was not found at '$statePath'. Run the InstallLanguage phase and restart customizer first."
+if (-not (Test-Path -LiteralPath $windows10CopyHelperPath -PathType Leaf)) {
+    throw "Windows 10 international-settings support was not staged by InstallLanguagePacks.ps1."
 }
-
-$state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
-foreach ($requiredProperty in @('Phase', 'WorkingDirectory', 'OrchestratorSha256', 'CopyHelperSha256')) {
-    if (
-        $state.PSObject.Properties.Name -notcontains $requiredProperty -or
-        [string]::IsNullOrWhiteSpace([string]$state.$requiredProperty)
-    ) {
-        throw "The durable language-install state is missing required property '$requiredProperty'."
-    }
+$actualOrchestratorSha256 = (Get-FileHash -LiteralPath $windows10OrchestratorPath -Algorithm SHA256).Hash
+if ($actualOrchestratorSha256 -ne $windows10OrchestratorSha256) {
+    throw 'The staged Windows 10 language orchestrator failed integrity validation before LCU resume.'
 }
-if ([string]$state.Phase -ne 'PostLanguageContentRestart') {
-    throw "The standalone LCU phase requires durable state 'PostLanguageContentRestart', found '$($state.Phase)'."
-}
-if ([IO.Path]::GetFullPath([string]$state.WorkingDirectory) -ne $WorkingDirectory) {
-    throw 'The requested working directory does not match the directory pinned in durable state.'
+$actualCopyHelperSha256 = (Get-FileHash -LiteralPath $windows10CopyHelperPath -Algorithm SHA256).Hash
+if ($actualCopyHelperSha256 -ne $windows10CopyHelperSha256) {
+    throw 'The staged Windows 10 international-settings helper failed integrity validation before LCU resume.'
 }
 
-$orchestratorHash = (Get-FileHash -LiteralPath $OrchestratorPath -Algorithm SHA256).Hash
-if ($orchestratorHash -cne [string]$state.OrchestratorSha256) {
-    throw 'The staged Windows 10 language orchestrator failed its durable SHA-256 integrity check.'
-}
-$copyHelperPath = Join-Path $WorkingDirectory 'Copy-UserInternationalSettingsToSystemCompat.ps1'
-if (-not (Test-Path -LiteralPath $copyHelperPath -PathType Leaf)) {
-    throw "The staged Default User compatibility helper was not found at '$copyHelperPath'."
-}
-$copyHelperHash = (Get-FileHash -LiteralPath $copyHelperPath -Algorithm SHA256).Hash
-if ($copyHelperHash -cne [string]$state.CopyHelperSha256) {
-    throw 'The staged Default User compatibility helper failed its durable SHA-256 integrity check.'
-}
-
-& $OrchestratorPath `
+& $windows10OrchestratorPath `
     -Resume `
     -AibPhase InstallLcu `
-    -WorkingDirectory $WorkingDirectory
+    -WorkingDirectory $windows10WorkingDirectory
