@@ -27,6 +27,10 @@ Release notes: https://support.microsoft.com/help/5068781
 [CmdletBinding()]
 param()
 
+# Temporarily disabled: log only, without checks, downloads, installation, or file writes.
+Write-Host ('{0} [INFO] AVD AIB Customization : Windows 10 SSU - SKIP: Script disabled; no actions performed.' -f (Get-Date).ToUniversalTime().ToString('o'))
+return
+
 function Write-ServicingLog {
     param([string]$Message, [ValidateSet('INFO', 'WARN', 'ERROR')][string]$Level = 'INFO')
 
