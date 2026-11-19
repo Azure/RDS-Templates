@@ -151,7 +151,7 @@ try {
   Set-WinUILanguageOverride -Language $LanguageTag
   
   # Enable language Keyboard for Windows.
-  $userLanguageList = New-WinUserLanguageList -Language $languageCode
+  $userLanguageList = New-WinUserLanguageList -Language $LanguageTag
   $installedUserLanguagesList = Get-WinUserLanguageList
 
   foreach($language in $installedUserLanguagesList)
