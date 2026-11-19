@@ -23,9 +23,9 @@ function Set-RegKey($registryPath, $registryKey, $registryValue) {
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Disable auto updates for MSIX AA applications -  $((Get-Date).ToUniversalTime()) "
 
-Set-RegKey -registryPath "HKLM\Software\Policies\Microsoft\WindowsStore" -registryKey "AutoDownload" -registryValue "2"
-Set-RegKey -registryPath "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -registryKey "PreInstalledAppsEnabled" -registryValue "0"
-Set-RegKey -registryPath "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\Debug" -registryKey "ContentDeliveryAllowedOverride" -registryValue "0x2"
+Set-RegKey -registryPath "HKLM:\Software\Policies\Microsoft\WindowsStore" -registryKey "AutoDownload" -registryValue "2"
+Set-RegKey -registryPath "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -registryKey "PreInstalledAppsEnabled" -registryValue "0"
+Set-RegKey -registryPath "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\Debug" -registryKey "ContentDeliveryAllowedOverride" -registryValue "0x2"
 
 Disable-ScheduledTask -TaskPath "\Microsoft\Windows\WindowsUpdate\" -TaskName "Scheduled Start"
 
