@@ -67,16 +67,42 @@ function UpdateRegionSettings($GeoID)
     try {
       # try deleting reg key for deviceRegion for DMA compliance.
       Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Try deleting reg key"
-      Remove-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion" -Name "DeviceRegion" -Force -ErrorAction Continue
-      Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Remove DeviceRegion registry key succeeded."
+      $deviceRegionKey = "HKLM:\Software\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion"
+      if (Test-Path $deviceRegionKey) {
+        $deviceRegionValue = Get-ItemProperty -Path $deviceRegionKey -Name "DeviceRegion" -ErrorAction SilentlyContinue
+        if ($null -ne $deviceRegionValue) {
+          try {
+            Remove-ItemProperty -Path $deviceRegionKey -Name "DeviceRegion" -Force -ErrorAction Stop
+            Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Remove DeviceRegion registry value succeeded."
+          }
+          catch {
+            Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Failed removing DeviceRegion value: [$($_.Exception.Message)]"
+          }
+        } else {
+          Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - DeviceRegion value not present; nothing to remove."
+        }
+      } else {
+        Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - DeviceRegion key not found; nothing to remove."
+      }
     }
     catch 
     {
       Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Try deleting reg key failed with error: [$($_.Exception.Message)]"
     }
 
-    #Set Region in Default User Profile (applies to all new users)
-    New-ItemProperty -Path "HKU\.DEFAULT\Control Panel\International\Geo" -Name "Nation" -Value $GeoID -PropertyType String -Force
+    # Ensure HKU: registry drive is available
+    if (-not (Get-PSDrive -Name HKU -PSProvider Registry -ErrorAction SilentlyContinue)) {
+      New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS | Out-Null
+    }
+
+    # Ensure the target key exists (fix path and create if missing)
+    $regPath = "HKU:\.DEFAULT\Control Panel\International\Geo"
+    if (-not (Test-Path -Path $regPath)) {
+      New-Item -Path "HKU:\.DEFAULT\Control Panel\International" -Name "Geo" -Force | Out-Null
+    }
+
+    # Set Region in Default User Profile (applies to all new users)
+    New-ItemProperty -Path $regPath -Name "Nation" -Value $GeoID -PropertyType String -Force | Out-Null
     Set-WinHomeLocation -GeoId $GeoID
     Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Set default Language - Region update completed."
   }
